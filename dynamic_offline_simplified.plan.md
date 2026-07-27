@@ -6,7 +6,7 @@ Technical names and API names do not change.
 **Jira:** FFL-2837
 **Base branch:** `blake.thomas/FFL-2666`
 **Work branch:** `blake.thomas/FFL-2837`
-**Upstream reference:** DataDog/openfeature-js-client PR #336
+**Upstream references:** DataDog/openfeature-js-client PRs #343, #344, and #336
 
 ## Source documents
 
@@ -15,8 +15,9 @@ Technical names and API names do not change.
 - The ConfigurationWire specification defines the intended protobuf and base64 format.
 - The Obfuscation RFC defines the proposed client-rules protection.
 
-These documents are drafts.
-Names, versions, and formats can change.
+The RFC documents are drafts.
+Upstream PR #344 now defines the expected implementation contract.
+Names and versions can still change before publication.
 
 ## 1. Objective
 
@@ -53,66 +54,64 @@ configurationFromString -> setConfiguration -> evaluate
 
 ## 2. Current `@datadog/flagging-core` state
 
-### 2.1 Features in version 2.0.1
+### 2.1 Published version 2.0.2
 
-Version 2.0.1 already contains the rules engine.
-It exports the engine from the package root.
+PR #343 published flagging-core version 2.0.2.
+This version removes an unnecessary `@datadog/js-core` dependency.
+It does not contain the new rules wire features.
 
-It contains these parts:
-
-- `evaluateForSubject`
-- `evaluateRulesBasedConfiguration`
-- Rule operators and rule matching
-- Sharding and hashing
-- UFC v1 types
-- `TargetingKeyMissingError`
-- Evaluation metadata
-- MD5 utility functions
-- The `spark-md5` dependency
-
-Version 2.0.1 has these configuration limits:
-
-- `FlagsConfiguration` contains only `precomputed`.
-- The wire parser reads only precomputed data.
-- The package has one root export.
-- The package has no subpath exports.
+Version 2.0.2 still contains the existing rules engine.
+It exports `evaluateRulesBasedConfiguration` from the package root.
+It also contains sharding, MD5, UFC v1 types, and `spark-md5`.
 
 The React Native wire module already imports the package root.
-Metro does not remove the unused rules engine.
-Thus, the current application bundle already contains the rules engine and `spark-md5`.
+Thus, the current application bundle already contains the existing rules engine.
 
-### 2.2 Features in upstream PR #336
+### 2.2 Expected features from upstream PR #344
 
-PR #336 adds these core features:
+PR #344 is the required upstream dependency change.
+It adds these features:
 
-- A `rulesBased` wire branch
-- A `rulesBased` field in `FlagsConfiguration`
-- A combined `evaluate` function
+- The opaque `FlagsConfigurationWire` type
+- A version `1` wire with a `rules` branch
+- A `rules` field in `FlagsConfiguration`
+- A protobuf and base64 rules response
+- The checked-in UFC protobuf schema
+- Protobuf-ES decoding
+- Independent parsing of the precomputed and rules branches
+- Per-flag validation and feature-level rejection
+- `ONE_OF_SHA256` and `NOT_ONE_OF_SHA256`
+- A synchronous JavaScript SHA-256 implementation
+- An internal UTF-8 implementation
+- A React Native Metro smoke test
 
-React Native does not need the combined `evaluate` function.
-React Native selects the evaluation path itself.
-React Native calls `evaluateRulesBasedConfiguration` for the rules path.
+The parser keeps a valid branch when the other branch is malformed.
+The parser drops an unsupported or invalid rules flag.
+It does not invalidate the complete rules branch.
 
-The required dependency update must provide these two features:
+The published package will expose `configuration.rules.response`.
+Do not use the old planned name `rulesBased`.
 
-- Rules wire parsing
-- The parsed `rulesBased` field
+### 2.3 Expected features from upstream PR #336
 
-PR #336 is open.
-Its merge state is dirty.
-It requires review.
+PR #336 is stacked on PR #344.
+It adds the browser `CoreProvider` and a combined core `evaluate` function.
+It proves that `configurationFromString` returns a rules object that the evaluator can use.
 
-### 2.3 Browser provider behavior
+Use the browser `CoreProvider` as an integration reference.
 
-Use the browser `CoreProvider` as a reference.
-
-- A rules configuration is valid for any context.
-- A precomputed mismatch is an error only when no rules fallback exists.
-- `onContextChange` stores the new context.
+- A rules configuration is valid for each compatible context.
+- Matching precomputed data has priority.
+- Rules data is the fallback after a precomputed mismatch.
 - `onContextChange` does not fetch.
 - `setConfiguration` emits the applicable provider event.
 
-### 2.4 Evaluation path
+React Native can continue to use its decoded precomputed `Map`.
+It can call `evaluateRulesBasedConfiguration` only for the rules path.
+This keeps current precomputed validation and native tracking behavior.
+Do not adopt the combined `evaluate` function without a parity review.
+
+### 2.4 Evaluation and tracking path
 
 Select the path for each resolution.
 Do not select the path only during reconciliation.
@@ -120,15 +119,16 @@ Do not select the path only during reconciliation.
 Use this order:
 
 1. If precomputed data matches the effective context, use its decoded `Map`.
-2. Otherwise, if valid rules data exists, evaluate the rules.
+2. Otherwise, if rules data exists, evaluate the rules.
 3. Otherwise, if precomputed data exists, return `INVALID_CONTEXT`.
 4. Otherwise, return `PROVIDER_NOT_READY`.
 
-The rules evaluator converts `targetingKey` to the `id` subject attribute.
-It does this only when `targetingKey` is not null.
+The protobuf evaluator preserves a missing targeting key.
+It requires the key only when a shard uses the targeting key.
+An empty string is a real key.
 
 The evaluator returns `ResolutionDetails`.
-The metadata contains these applicable fields:
+The metadata can contain these fields:
 
 - `allocationKey`
 - `variationType`
@@ -138,118 +138,113 @@ The metadata contains these applicable fields:
 - `__dd_do_log`
 - `__dd_eval_timestamp_ms`
 
-The metadata does not contain `extraLogging`.
-This missing field blocks correct native tracking.
+The split serial ID and evaluation timestamp are server-side tracing metadata.
+The current Android and iOS mobile exposure APIs do not accept these fields.
+The native mobile SDK creates the exposure timestamp.
 
-The evaluator treats an empty targeting key as a real subject.
-It raises `TARGETING_KEY_MISSING` only for a null or undefined key.
+The `extraLogging` field is deprecated upstream.
+Do not wait for flagging-core to return it.
+Use an empty object only where the current Android bridge requires it.
 
-The React Native `EvaluationContext` requires a string key.
-Its documentation tells customers to use an empty string.
-The React Native `FlagErrorCode` does not contain `TARGETING_KEY_MISSING`.
+The rules evaluator is pure.
+React Native must call the existing native tracking bridge after each successful assignment.
+Native code applies `doLog` to exposure events.
+Native code also applies its RUM and evaluation settings.
 
-## 2.5 Wire format
+### 2.5 Wire format and compatibility
 
-The source documents use different wire formats.
+Use the PR #344 contract:
 
-- The ConfigurationWire specification uses version `1`, field `rules`, and protobuf/base64.
-- PR #336 uses version `1`, field `rulesBased`, and JSON.
-- The Portable Flag Configuration RFC uses version `2`, field `server`, and JSON.
-
-The intended rules response uses protobuf and base64.
-The current upstream code uses JSON.
-Do not depend on the JSON format.
-
-The Obfuscation RFC requests a binary format.
-This request does not select protobuf by itself.
-The ConfigurationWire decision selects protobuf.
-
-The protobuf schema must support these new operators:
-
-- `ONE_OF_SHA256`
-- `NOT_ONE_OF_SHA256`
-
-The schema must also support the salt fields.
+- Wire version `1`
+- Field `rules`
+- A protobuf rules response encoded as base64
+- Raw-byte SHA salts
+- Raw 32-byte SHA digests
+- `sha256(salt || UTF8(String(attributeValue)))`
 
 Keep all decoding in `@datadog/flagging-core`.
 Do not add a rules decoder to React Native.
+Do not serialize a decoded rules configuration.
+PR #344 makes `configurationToString` throw when rules are present.
 
-A future protobuf runtime will add bundle size.
-A future synchronous SHA-256 implementation can also add bundle size.
-Test both additions with Hermes and JSC.
+PR #344 adds Protobuf-ES to the bundle.
+Its browser measurement reports an increase of 6,229 bytes minified and 2,070 bytes compressed.
+Its React Native smoke test bundles Android and iOS with React Native 0.76.9.
+The test runs the Android bundle under Node without `TextEncoder`, `TextDecoder`, or `BigInt`.
+It does not run the bundle in Hermes or JSC.
 
-Publish the `.proto` schema before the protobuf migration.
-Pin React Native to a released flagging-core version.
-Verify the final field names and versions after publication.
-Do not hard-code the wire field name in React Native.
+Pin React Native to the released flagging-core version that contains PR #344.
+Verify the final version and package exports after publication.
 
 ## 3. Upstream gaps
 
 ### G1 — Rules wire parsing and parsed field
 
-**Status:** Blocking.
+**Status:** Implemented in PR #344. Publication is pending.
 
-Merge and publish the upstream rules wire changes.
-Bump `@datadog/flagging-core` in `packages/core/package.json`.
-Do not add the dependency to `packages/react-native-openfeature`.
-
-Use a linked package or an `npm pack` package during development.
+Use `FlagsConfiguration.rules.response`.
+Do not use `rulesBased`.
+Use an `npm pack` package during development.
+After publication, bump `@datadog/flagging-core` in `packages/core/package.json`.
 
 ### G2 — Protobuf rules response
 
-**Status:** Upstream release contract.
+**Status:** Mostly implemented in PR #344.
 
-Publish the `.proto` schema.
-Change the rules parser from JSON to protobuf.
-Test the protobuf runtime with Hermes and JSC.
+PR #344 includes the schema and the Protobuf-ES parser.
+React Native must use the opaque parser.
+Do not parse protobuf in this repository.
 
-React Native must continue to use the opaque parser.
+The raw `.proto` file is not part of the current npm package file list.
+Confirm whether repository publication is sufficient.
+Run the packed package in Hermes and JSC.
 
 ### G3 — Root exports
 
-**Status:** Mostly complete.
+**Status:** Implemented. Publication is pending.
 
-Version 2.0.1 exports these required symbols:
-
-- `UniversalFlagConfigurationV1`
-- `evaluateRulesBasedConfiguration`
-
-Verify that the new release populates the `rulesBased` field.
+The package root exports the parser and evaluator.
+PR #344 populates `rules`.
+PR #336 adds the optional combined `evaluate` function.
 
 ### G4 — Native tracking metadata
 
-**Status:** Blocking.
+**Status:** React Native adapter work. It is not an upstream blocker.
 
-The evaluator already returns the split serial ID and evaluation timestamp.
-React Native cannot send those fields through its current bridge.
+The current native bridge accepts a synthesized successful assignment.
+It already sends the fields that the current mobile exposure APIs use:
 
-The evaluator does not return `extraLogging`.
-React Native needs this field to build `FlagCacheEntry`.
+- Flag key
+- Allocation key
+- Variation key
+- Value
+- Reason
+- `doLog`
+- Evaluation context
 
-Define the exact native tracking payload.
-Then, select one upstream solution:
+The evaluator does not log by itself.
+Call the existing bridge after each successful rules assignment.
+Do not stop the bridge call when `doLog` is false.
+Native code applies the exposure policy.
 
-- Add `extraLogging` to the rules result.
-- Add a rules-tracking API.
+Use an internal `TrackableAssignment` type.
+Do not use `FlagCacheEntry` as the rules result type.
+Use an empty `extraLogging` object for Android bridge compatibility.
 
-Also verify the required variation type.
-The evaluator converts `INTEGER` and `NUMERIC` to `number`.
-The precomputed path keeps the original distinction.
+Confirm with the mobile and backend owners that rules exposures use the current mobile event contract.
+If they require split serial ID, evaluator timestamp, or error evaluations, add a new native tracking API.
 
 ### G5 — Bundle size and JavaScript engine support
 
-**Status:** Low for current code.
+**Status:** Measurement exists. Runtime verification remains.
 
-The rules engine and `spark-md5` already ship in the bundle.
-The rules wire branch adds little current bundle size.
+PR #343 removes an unnecessary dependency.
+PR #344 measures the browser protobuf cost.
+PR #344 also adds a React Native Metro smoke test.
 
-Two future changes can add significant code:
-
-- The protobuf runtime
-- A synchronous SHA-256 implementation
-
-Measure each change.
-Test each change with Hermes and JSC.
+Measure the packed dependency in this repository.
+Run the rules flow in Hermes and JSC.
+Test the supported React Native version range.
 
 Do not use a dynamic import.
 Metro does not create a smaller release bundle from this import.
@@ -259,58 +254,27 @@ This split requires a flagging-core subpath export.
 
 ### G6 — Unsupported obfuscation operators
 
-**Status:** Blocking.
+**Status:** Implemented with different semantics in PR #344.
 
-Version 2.0.1 does not support the SHA-256 operators.
-An unknown operator makes the current evaluator return `DEFAULT`.
-The evaluator does not return an error.
-This silent fallback can return the wrong value.
+PR #344 supports the SHA-256 operators.
+The protobuf schema contains a per-flag minimum feature level.
+The parser drops an unsupported or invalid flag.
+It keeps other valid rules flags.
 
-Do not maintain a separate operator list in React Native.
-Use one of these preferred upstream solutions:
-
-1. Export `validateRulesConfiguration`.
-2. Export evaluator capabilities.
-3. Return `GENERAL` for an unsupported operator.
-4. Reject the operator in the parser.
-
-If React Native needs a temporary check, use the pinned `OperatorType` enum.
-Do not create a second list.
-
-Define capability ownership.
-
-- An official fetch request must advertise evaluator capabilities.
-- The service must omit or reject unsupported flags.
-- A portable wire must state its required capabilities.
-- Alternatively, the parser must preserve and reject unknown operators.
-
-An unsupported operator invalidates the rules branch.
-It does not always invalidate a valid precomputed branch.
-
-Use this state matrix:
-
-- Rules only and unsupported operator: return `GENERAL`.
-- Matching precomputed data and unsupported rules: serve precomputed data.
-- Mismatched precomputed data and unsupported rules: return `GENERAL`.
-- Hook context falls through to unsupported rules: return `GENERAL` for that resolution.
-
-Keep the provider `READY` while matching precomputed data is usable.
-Invalidate the complete rules branch for one unsupported operator.
-Do not isolate an unsupported operator to one flag in this release.
+Do not add a second operator list in React Native.
+Do not invalidate the complete rules branch.
+For a dropped flag, return `FLAG_NOT_FOUND`.
+Matching precomputed data still has priority.
 
 ### G7 — Untrusted rules and regular expressions
 
-**Status:** High risk.
+**Status:** Structural validation is mostly implemented. Regular-expression safety remains.
 
-The evaluator reads `config.flags[flagKey]` before its `try` block.
-A malformed UFC can throw an exception.
+PR #344 validates the protobuf structure.
+It drops invalid rules flags.
+It rejects malformed indexes, values, ranges, and hashes.
 
-The rules engine creates regular expressions from wire values.
-A hostile expression can block the JavaScript thread.
-
-Validate the rules snapshot before storage.
-Validate the envelope, flags, allocations, splits, variations, and shard ranges.
-Validate reserved property names.
+Do not duplicate this validator in React Native after publication.
 
 Do not claim that structural validation stops ReDoS.
 Select one regular-expression protection:
@@ -322,31 +286,25 @@ Select one regular-expression protection:
 Run hostile-expression tests in a separate process.
 Set a time limit for that process.
 
-Clone the rules snapshot before you freeze it.
-Do not freeze the caller's object.
+Treat the parsed configuration as immutable.
+Add mutation tests for the public configuration object.
 
 ### G8 — Missing targeting key
 
-**Status:** Decision required.
+**Status:** Decided in PR #344.
 
-Decide if a missing key and an empty key are different.
-
-If they are different:
-
-- Preserve `undefined` for the rules path.
-- Relax the internal context type.
-- Add `TARGETING_KEY_MISSING` to `FlagErrorCode`.
-
-If they are not different:
-
-- Use the empty string.
-- Document that all keyless contexts use one subject bucket.
+Missing and empty targeting keys are different.
+Preserve `undefined` for the rules path.
+An empty string is a real key.
+Return `TARGETING_KEY_MISSING` only when a shard requires a missing key.
+Relax the internal context type and error union.
 
 ### G9 — Prototype-unsafe flag lookup
 
-**Status:** Bug.
+**Status:** Open upstream bug.
 
-The evaluator uses `config.flags[flagKey]`.
+Both upstream rules evaluators use an unsafe object lookup.
+The combined evaluator in PR #336 also uses an unsafe precomputed lookup.
 A missing reserved key can resolve through `Object.prototype`.
 
 Examples include:
@@ -355,13 +313,12 @@ Examples include:
 - `__proto__`
 - `constructor`
 
-The evaluator can return `DISABLED` instead of `FLAG_NOT_FOUND`.
+The protobuf evaluator can return `TYPE_MISMATCH` instead of `FLAG_NOT_FOUND`.
 
 Use an own-property check before evaluation.
-Alternatively, fix the lookup in flagging-core.
-A null-prototype dictionary is also acceptable.
-
-The precomputed path already uses a `Map`.
+Request the upstream fix in PR #344 and PR #336.
+Keep a React Native guard until the released dependency contains the fix.
+The React Native precomputed cache already uses a `Map`.
 
 ### G10 — OpenFeature type dependency
 
@@ -384,85 +341,62 @@ Prefer a separate internal entry point.
 
 ### G11 — Synchronous SHA-256
 
-**Status:** Blocking upstream work.
+**Status:** Implemented in PR #344. Runtime verification remains.
 
-Flag evaluation is synchronous.
-Web Crypto `SubtleCrypto.digest` is asynchronous.
-Do not use it in the synchronous evaluation path.
+PR #344 adds a synchronous JavaScript SHA-256 implementation.
+It uses `Uint8Array` and `DataView`.
+It does not use Node crypto, Web Crypto, or a browser-only API.
 
-Use a synchronous SHA-256 implementation.
-The implementation must work with Hermes and JSC.
-It must work across the supported React Native versions.
-
-Do not depend on Node `crypto`.
-Do not depend on a browser-only global.
-Do not depend on an unavailable runtime global.
-
-Measure bundle size and evaluation time in release builds.
+Run it in Hermes and JSC.
+Measure evaluation time in release builds.
 
 ### G12 — Portable salted-hash protocol
 
-**Status:** Blocking upstream contract.
+**Status:** Mostly defined in PR #344.
 
-The Obfuscation RFC does not fully define the hash protocol.
-Define these items:
+PR #344 defines these items:
 
-- Salt length
-- Salt encoding
-- Salt and value order
-- Input framing
+- Salt as raw protobuf bytes
+- Digest as raw 32-byte values
+- Salt before the attribute value
+- Direct concatenation without a separator
 - UTF-8 encoding
-- Unicode normalization
-- Digest encoding
-- Hexadecimal letter case
-- Base64 padding, if applicable
-- Number conversion
-- Boolean conversion
-- Empty-string behavior
-- Null and missing-attribute behavior
+- JavaScript string conversion for primitive values
+- False for null or missing attributes
 - `NOT_ONE_OF_SHA256` behavior
 
-Publish canonical cross-SDK test vectors.
-The generator and all evaluators must produce the same bytes.
+The parser validates the digest length.
+It does not define a salt length or reject an empty salt.
+It does not apply configuration-size, condition-count, or value-count limits.
+It does not publish canonical cross-SDK protocol vectors.
 
-Validate each SHA condition before the provider becomes `READY`.
-Reject these conditions:
-
-- Missing salt
-- Malformed salt
-- Excessively large salt
-- Incorrect salt length
-- Incorrect salt encoding
-- Incorrect digest length
-- Incorrect digest encoding
-- Non-string digest values
-- Malformed condition shape
-- Excessive condition count
-- Excessive value count
+Confirm the salt policy.
+Add size limits.
+Publish cross-SDK vectors.
 
 ## 4. React Native implementation
 
 ### Step 0 — Complete prerequisites
 
 - [ ] Publish flagging-core with rules wire parsing.
-- [ ] Publish the parsed `rulesBased` field.
-- [ ] Publish the required SHA operators before obfuscation support.
-- [ ] Define and publish the salted-hash protocol.
-- [ ] Provide a synchronous SHA-256 implementation.
-- [ ] Resolve the `extraLogging` tracking requirement.
+- [ ] Publish the parsed `rules` field.
+- [ ] Publish the SHA operators and synchronous SHA-256 implementation.
+- [ ] Confirm the remaining salt and size-limit rules.
+- [ ] Confirm the current mobile exposure contract.
+- [ ] Fix prototype-unsafe lookup upstream or keep the local guard.
+- [ ] Select a regular-expression safety policy.
 - [ ] Bump `@datadog/flagging-core` in `packages/core`.
 - [ ] Update `yarn.lock`.
 - [ ] Verify all final field names, versions, and exports.
-- [ ] Record the exact post-SHA flagging-core version.
+- [ ] Record the exact flagging-core version.
 
 ### Step 1 — Define the parsed configuration type
 
 Do not export a named rules or UFC type.
-Use `UniversalFlagConfigurationV1` only inside the flags implementation.
 
 `ParsedFlagsConfiguration` is already public.
 It is an alias of upstream `FlagsConfiguration`.
-The new upstream type will expose `rulesBased.response`.
+The new upstream type exposes `rules.response`.
 
 Select one API policy:
 
@@ -477,14 +411,15 @@ Do not claim that the type is opaque unless you enforce opacity.
 Do not add React Native parsing code.
 Re-export the upstream conversion functions.
 
-Add a round-trip test for a rules wire.
+Add a parser test for a rules wire.
 Use the encoding from the pinned upstream version.
+Confirm that `configurationToString` rejects a configuration that contains rules.
 
 ### Step 3 — Load and validate the configuration
 
 Keep the complete parsed `FlagsConfiguration`.
 Decode precomputed flags one time into a `Map`.
-Keep a validated rules snapshot.
+Keep the parsed protobuf rules object.
 
 Use this path order:
 
@@ -495,30 +430,14 @@ Use this path order:
 Select the path for each resolution.
 Do not freeze the selection during reconciliation.
 
-Treat parse failures and validation failures differently.
+The upstream parser validates each wire branch independently.
+Keep a valid sibling when the other branch is malformed.
+Return `GENERAL` only when the parser returns no usable branch.
 
-For a parse failure:
-
-- The current parser returns an empty object.
-- React Native cannot recover the valid sibling branch.
-- Return `GENERAL`.
-
-For a decoded validation failure:
-
-- Validate each branch separately.
-- Keep a valid sibling branch.
-- Mark the invalid branch as unusable.
-- Do not use the invalid branch as a fallback.
-
-Validate rules before the precomputed-only guard.
-Do not store an unvalidated UFC.
-
-Use the G6 state matrix for unsupported operators.
-Use upstream validation when it is available.
-If necessary, derive temporary validation from pinned `OperatorType`.
-
-Validate all SHA condition fields.
-Apply the size limits from G12.
+Do not add a second structural rules validator.
+Trust the parser to drop unsupported or malformed rules flags.
+Keep the own-property guard from G9 until upstream contains the fix.
+Apply the size policy from G12 after the policy is defined.
 
 ### Step 4 — Reconcile the context
 
@@ -526,7 +445,8 @@ For valid rules, accept every external context.
 Set `configurationStatus` to `ready`.
 Do not fill `flagsCache` for rules.
 
-Do not create an empty targeting key until D8 is complete.
+Preserve a missing targeting key.
+Do not replace it with an empty string.
 
 Keep the precomputed behavior.
 Return `INVALID_CONTEXT` only when no usable rules fallback exists.
@@ -553,10 +473,11 @@ Pass the resolution logger.
 The web SDK uses the static-context model.
 It has no invocation context.
 The effective context comes from global or domain state.
-A `before` hook can change this context for one resolution.
+Web SDK 1.8 freezes the hook context.
+A `before` hook cannot replace the resolution context.
 
 Check the precomputed context for every resolution.
-This check prevents an assignment leak after a hook changes context.
+This check keeps the path decision correct for the effective context.
 
 Resolve the OpenFeature dependency boundary before implementation.
 Prefer compatible internal types and an internal `FlagsClient` method.
@@ -577,10 +498,12 @@ Do not create this error again in React Native.
 Add an own-property check for the flag key.
 Return `FLAG_NOT_FOUND` for an absent reserved-name key.
 
+Convert a successful rules result to an internal `TrackableAssignment`.
 Track every successful assignment through the native bridge.
 Do not use `doLog` to stop the bridge call.
 Native code uses `doLog` only for the exposure event.
 RUM and evaluation telemetry use separate settings.
+Use an empty `extraLogging` object for Android bridge compatibility.
 
 Track only a real assigned variant.
 Do not track these results:
@@ -591,8 +514,6 @@ Do not track these results:
 - `TYPE_MISMATCH`
 - `FLAG_NOT_FOUND`
 - Error results
-
-Do not implement tracking until G4 is complete.
 
 Keep the online cache path unchanged.
 Keep the precomputed cache path unchanged.
@@ -607,7 +528,8 @@ Do not pass precomputed data to the rules evaluator.
 Do not bypass `decodePrecomputedFlags`.
 
 Create one shared result-mapping helper.
-Use it to build `FlagDetails` and `FlagCacheEntry`.
+Use it to build `FlagDetails` and `TrackableAssignment`.
+Do not put a rules result in the precomputed cache.
 
 Measure these bundle baselines separately:
 
@@ -630,7 +552,8 @@ Keep `onContextChange` network-free.
 For valid rules, reconciliation returns `ready`.
 Do not use the precomputed mismatch error for valid rules.
 
-Resolve D8 before you define empty-context behavior.
+Preserve an empty provider context.
+Return `TARGETING_KEY_MISSING` only when the selected rule needs a targeting key.
 
 Update the class comment.
 Remove the precomputed-only instruction that forbids `setContext`.
@@ -684,7 +607,7 @@ Document all data that remains visible:
 - Allocation keys
 - Split serial IDs
 - `doLog`
-- `extraLogging`
+- Precomputed `extraLogging`, when present
 - Environment metadata
 - Timestamps
 - Salts
@@ -701,18 +624,14 @@ Add this value import from `@datadog/flagging-core`:
 
 - `evaluateRulesBasedConfiguration`
 
-Add this internal type import:
-
-- `UniversalFlagConfigurationV1`
-
 Keep the existing wire and precomputed imports.
+Derive the rules response type from `FlagsConfiguration['rules']`.
 
 Do not import OpenFeature types directly into core unless D11 selects that policy.
 Prefer compatible internal context and logger interfaces.
 Use an internal `FlagsClient` entry point.
 
-Do not export `ParsedRulesBasedConfiguration`.
-Do not export `UniversalFlagConfigurationV1`.
+Do not export a named rules configuration type.
 
 Add one internal context adapter.
 Convert between these forms:
@@ -723,20 +642,20 @@ OpenFeature:  { targetingKey, ...attributes }
 ```
 
 No new native API is required.
-The existing tracking bridge accepts a synthesized flag object.
-G4 must supply the missing tracking metadata.
+The existing tracking bridge accepts `TrackableAssignment`.
+Add a native API only if the confirmed mobile contract requires more fields.
 
 ## 6. Test plan
 
 ### 6.1 Wire and configuration tests
 
-- [ ] Parse a rules wire into `rulesBased.response`.
-- [ ] Serialize the parsed rules configuration.
+- [ ] Parse a rules wire into `rules.response`.
+- [ ] Confirm that rules serialization throws.
 - [ ] Parse a wire with both branches.
 - [ ] Return an empty configuration for malformed wire data.
 - [ ] Return `GENERAL` when the loaded configuration is empty.
 - [ ] Detect a changed upstream field name or version.
-- [ ] Test the protobuf format after it becomes available.
+- [ ] Test the published protobuf fixture.
 - [ ] Verify unknown protobuf enum behavior.
 
 ### 6.2 Load and reconciliation tests
@@ -748,8 +667,9 @@ G4 must supply the missing tracking metadata.
 - [ ] Use matching precomputed data before rules.
 - [ ] Use rules after a precomputed mismatch.
 - [ ] Return `INVALID_CONTEXT` for a precomputed-only mismatch.
-- [ ] Apply the unsupported-operator state matrix.
-- [ ] Keep valid precomputed data when the rules branch is invalid.
+- [ ] Return `FLAG_NOT_FOUND` for a flag that upstream drops.
+- [ ] Keep valid flags when upstream drops one unsupported flag.
+- [ ] Keep valid precomputed data when the rules branch is malformed.
 
 ### 6.3 Rules evaluation tests
 
@@ -762,17 +682,19 @@ G4 must supply the missing tracking metadata.
 - [ ] Return `DISABLED` for a disabled flag.
 - [ ] Return `DEFAULT` when no allocation matches.
 - [ ] Return `DEFAULT` when no variant exists.
-- [ ] Test allocations before `startAt`.
-- [ ] Test allocations at or after `endAt`.
-- [ ] Test the selected missing-targeting-key policy.
+- [ ] Test time partitions before and after each range boundary.
+- [ ] Return `TARGETING_KEY_MISSING` when a shard requires a missing key.
+- [ ] Evaluate without a targeting key when the selected rule does not need it.
 - [ ] Treat an empty string as a real targeting key.
 
 ### 6.4 Per-resolution context tests
 
 - [ ] Load matching precomputed data and rules data.
-- [ ] Change one resolution context with a `before` hook.
-- [ ] Confirm that the resolution does not use mismatched precomputed data.
-- [ ] Confirm that the resolution uses rules or returns the applicable error.
+- [ ] Change the global context.
+- [ ] Change a domain context.
+- [ ] Confirm that a mismatched precomputed branch is not used.
+- [ ] Confirm that rules are used after the mismatch.
+- [ ] Confirm Web SDK 1.8 hook-context behavior.
 
 ### 6.5 Tracking tests
 
@@ -781,7 +703,9 @@ G4 must supply the missing tracking metadata.
 - [ ] Include the variation key.
 - [ ] Include the allocation key.
 - [ ] Include the string variation value.
-- [ ] Include `extraLogging`.
+- [ ] Include an empty `extraLogging` object for Android compatibility.
+- [ ] Confirm that native code emits an exposure only when `doLog` is true.
+- [ ] Confirm that native RUM and evaluation settings still apply.
 - [ ] Do not track `DISABLED`.
 - [ ] Do not track unmatched `DEFAULT`.
 - [ ] Do not track `FLAG_NOT_FOUND`.
@@ -790,28 +714,27 @@ G4 must supply the missing tracking metadata.
 
 ### 6.6 Validation and security tests
 
-- [ ] Reject a missing `flags` map.
-- [ ] Reject a malformed flag.
-- [ ] Reject a bad shard range.
+- [ ] Use upstream fixtures for malformed protobuf data.
+- [ ] Confirm that the parser drops a malformed flag.
+- [ ] Confirm that the parser rejects a bad shard range.
 - [ ] Test inherited property names.
 - [ ] Test mutation of the source object after load.
-- [ ] Clone the source object before freezing.
 - [ ] Run a hostile regex in an isolated process.
 - [ ] Stop the hostile-regex process at its time limit.
 - [ ] Verify the selected ReDoS protection.
-- [ ] Reject an unsupported operator as `GENERAL`.
-- [ ] Do not return a silent `DEFAULT` for an unsupported operator.
+- [ ] Confirm that an unsupported flag becomes `FLAG_NOT_FOUND`.
+- [ ] Confirm that an unsupported flag does not cause a silent `DEFAULT`.
 - [ ] Test a newer cached configuration with an older evaluator.
-- [ ] Reject malformed SHA salts and digests.
+- [ ] Reject malformed SHA digests.
+- [ ] Apply the selected empty-salt policy.
 - [ ] Reject oversized SHA conditions.
 
 ### 6.7 Mixed-configuration tests
 
-- [ ] Confirm that one parse failure currently removes both branches.
-- [ ] Confirm that React Native cannot recover a sibling after this parse failure.
-- [ ] Isolate a decoded structural failure to its branch.
-- [ ] Keep a valid sibling branch.
-- [ ] Return `GENERAL` when the active path uses an invalid rules branch.
+- [ ] Keep valid precomputed data when rules protobuf is malformed.
+- [ ] Keep valid rules data when precomputed JSON is malformed.
+- [ ] Parse both valid branches from one wire.
+- [ ] Return `GENERAL` when neither branch is usable.
 
 ### 6.8 Obfuscation tests
 
@@ -857,8 +780,8 @@ G4 must supply the missing tracking metadata.
 
 ### R1 — Unpublished upstream configuration support
 
-PR #336 is not merged.
-Its API can change.
+PR #344 and PR #336 are not published.
+Their APIs can change.
 Keep the React Native integration small.
 Use one dependency update as the integration point.
 
@@ -872,15 +795,15 @@ Test the selection order.
 
 ### R3 — Tracking parity
 
-The rules result does not contain `extraLogging`.
-Do not ship incomplete tracking.
-Resolve G4 first.
+The rules evaluator does not produce a native assignment.
+The React Native adapter must call the current native bridge.
+Confirm that the current mobile exposure contract is sufficient.
 
 ### R4 — Bundle size
 
 The current engine already ships.
-Protobuf and synchronous SHA-256 are future additions.
-Measure both additions.
+PR #344 adds Protobuf-ES and synchronous SHA-256.
+Measure the packed dependency in this repository.
 
 ### R5 — Hermes and JSC support
 
@@ -907,25 +830,28 @@ Add a contract test.
 
 ### R9 — Obfuscation
 
-The design is not supportable until G6, G11, and G12 are complete.
+PR #344 implements the required operators and SHA-256 function.
+The remaining protocol limits and cross-SDK vectors are in G12.
 Do not describe salted SHA-256 as confidentiality.
 It does not protect guessable values from offline enumeration.
 
 ### R10 — Untrusted input and ReDoS
 
-Malformed rules can throw.
+The upstream parser rejects malformed protobuf flags.
 Hostile regex data can block the JavaScript thread.
-Validate the snapshot and select a regex protection.
+Select a regex protection.
 
 ### R11 — Missing targeting key
 
-The current React Native type cannot represent a missing key.
-Complete D8 before you implement the adapter.
+The public React Native type requires a targeting key.
+The internal rules context must permit a missing key.
+Do not synthesize an empty key.
 
 ### R12 — Per-resolution path selection
 
-A hook can change one resolution context.
-Check precomputed compatibility after this change.
+Global and domain contexts can change.
+Select the path with the effective resolution context.
+Do not claim that a Web SDK 1.8 hook can replace this context.
 
 ### R13 — OpenFeature dependency
 
@@ -954,7 +880,9 @@ Complete D10 before you claim that the type is opaque.
 Call native tracking for every successful assignment.
 Do not stop the bridge call when `doLog` is false.
 Do not track default or error results.
-Complete G4 before implementation.
+Use `TrackableAssignment`.
+Use an empty `extraLogging` object for Android compatibility.
+Use the current native API unless the mobile contract review requires more fields.
 
 ### D4 — Evaluation paths
 
@@ -966,7 +894,7 @@ Select the path for each resolution.
 ### D5 — Bundle size
 
 The current rules engine already ships.
-Measure protobuf and synchronous SHA-256 as separate future additions.
+Measure the PR #344 dependency change in this repository.
 Do not use dynamic import as a size control.
 
 ### D6 — Security opt-in
@@ -983,8 +911,9 @@ The design uses salted SHA-256 membership operators and binary structure.
 It does not use a separate obfuscated payload mode.
 React Native does not pre-hash customer context.
 
-Do not claim support until G6, G11, and G12 are complete.
-Reject unsupported operators as `GENERAL`.
+Do not claim complete support until G12 is complete.
+Let the upstream parser drop unsupported flags.
+Return `FLAG_NOT_FOUND` for a dropped flag.
 Use canonical test vectors.
 
 A public salt stops reusable precomputation.
@@ -993,10 +922,11 @@ Document all visible UFC data.
 
 ### D8 — Targeting key
 
-**Status:** Open.
+**Decision:** Missing and empty keys are different.
 
-Decide whether missing and empty keys are different.
-Then, update the types, error codes, adapter, and documentation.
+Preserve `undefined` in the internal rules context.
+Treat an empty string as a real key.
+Return `TARGETING_KEY_MISSING` only when the selected shard requires a key.
 
 ### D9 — `id` and `targetingKey`
 
@@ -1033,46 +963,57 @@ Alternative:
 ### Q1 — Published flagging-core version
 
 - [ ] Identify the version that contains rules wire parsing.
-- [ ] Confirm the final rules field name.
-- [ ] Confirm the final wire version.
-- [ ] Confirm that `configurationFromString` populates the rules branch.
+- [x] Confirm the rules field name: `rules`.
+- [x] Confirm the wire version: `1`.
+- [x] Confirm that PR #344 `configurationFromString` populates the rules branch.
 
 ### Q2 — Protobuf implementation
 
-- [ ] Publish the `.proto` schema.
-- [ ] Define the protobuf runtime.
+- [x] Add the `.proto` schema to the upstream repository.
+- [x] Select Protobuf-ES as the runtime.
 - [ ] Confirm Hermes compatibility.
 - [ ] Confirm JSC compatibility.
-- [ ] Define unknown-enum behavior.
-- [ ] Add SHA operators and salt fields to the schema.
+- [x] Define per-flag feature-level and unknown-field behavior.
+- [x] Add SHA operators and salt fields to the schema.
+- [ ] Confirm the salt-length policy.
+- [ ] Define configuration-size limits.
+- [ ] Publish cross-SDK hash vectors.
 
 ### Q3 — Tracking metadata
 
-- [ ] Decide how rules evaluation returns `extraLogging`.
-- [ ] Confirm whether native telemetry needs the original UFC numeric type.
+- [x] Treat `extraLogging` as deprecated upstream.
+- [ ] Confirm that the current mobile exposure event is sufficient for rules evaluations.
+- [ ] Confirm whether mobile telemetry needs the original integer or numeric type.
+- [ ] Confirm whether default and error evaluations need a new native API.
 
 ## 10. Review history
 
 The plan had six review rounds on 2026-07-22 and 2026-07-23.
-The reviews checked local version 2.0.1, PR #336, native tracking, and OpenFeature behavior.
+The plan was updated on 2026-07-27 after review of PR #343, PR #344, and PR #336.
 
 The reviews produced these main corrections:
 
-- The rules engine already exists in version 2.0.1.
+- The rules engine already exists in the published package.
+- Version 2.0.2 removes an unnecessary dependency but does not add rules wire parsing.
+- PR #344 defines the expected `rules` protobuf contract.
+- PR #336 proves browser provider integration with that contract.
 - React Native must call the rules-only evaluator.
 - Path selection must occur for each resolution.
 - Native tracking must cross the bridge for every successful assignment.
+- The current native bridge is sufficient unless the mobile exposure contract changes.
+- `extraLogging` is deprecated and is not an upstream blocker.
 - The engine already adds bundle size today.
-- Protobuf and synchronous SHA-256 add future bundle size.
-- Rules validation must protect against malformed input and ReDoS.
+- PR #344 adds Protobuf-ES and synchronous SHA-256.
+- PR #344 performs structural validation.
+- Regular-expression safety still requires a decision.
 - A missing targeting key differs from an empty string in the evaluator.
 - The evaluator flag lookup is not safe for prototype names.
 - The public parsed configuration type is not fully opaque.
 - OpenFeature types currently resolve through hoisting.
 - Custom `id` can conflict with `targetingKey`.
-- Unsupported operators currently cause a silent `DEFAULT`.
-- Operator validation should belong to flagging-core.
-- Unsupported rules must not remove a valid precomputed branch.
+- PR #344 drops unsupported flags and keeps valid flags.
+- Unsupported flags must return `FLAG_NOT_FOUND`, not a silent `DEFAULT`.
+- A malformed branch must not remove a valid sibling branch.
 - The salted-hash protocol needs canonical cross-SDK test vectors.
 - Salted SHA-256 does not make low-entropy values confidential.
 - Platform opt-in does not apply to customer-supplied wires.

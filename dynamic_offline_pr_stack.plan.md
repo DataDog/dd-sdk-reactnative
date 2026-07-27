@@ -18,8 +18,9 @@ Keep all three pull requests in draft state.
 
 ## Temporary upstream code
 
-The published flagging-core package does not contain the final rules wire contract.
-It also does not contain all required validation and tracking metadata.
+Published flagging-core version 2.0.2 does not contain the new rules wire contract.
+Upstream PR #344 adds the protobuf rules parser, SHA-256 evaluation, validation, and React Native compatibility.
+Upstream PR #336 uses that parser in the browser `CoreProvider`.
 
 Put a `TODO` immediately before each temporary implementation.
 The `TODO` must identify the upstream replacement.
@@ -27,17 +28,31 @@ Do not hide temporary behavior in a general helper.
 Tests can use a fake rules engine.
 Production code must use one internal engine adapter.
 
+Remove temporary JSON rules-wire parsing and duplicate rules validation after the upstream package is published.
+Do not wait for upstream `extraLogging`.
+The field is deprecated.
+Use an empty object only where the current Android bridge requires it.
+
 ## PR1 — Rules configuration and engine boundary
 
 Add the internal boundary for the rules engine.
 
+- Bump to the flagging-core release that contains PR #344.
+- Use a packed PR #344 package before publication.
+- Use `FlagsConfiguration.rules.response`.
+- Remove the temporary `rulesBased` and JSON compatibility shapes.
+- Remove duplicate structural validation after the dependency bump.
 - Add internal rules configuration types.
 - Add a rules-engine adapter.
 - Convert SDK contexts to engine contexts.
 - Normalize engine results.
-- Validate rules before storage.
-- Clone valid rules before storage.
+- Use the upstream protobuf rules object.
+- Use upstream parser validation.
+- Add an own-property guard for flag lookup until upstream fixes it.
+- Keep regular-expression safety as an explicit open item.
 - Add adapter contract tests.
+- Add a protobuf wire contract test.
+- Confirm that rules serialization throws.
 - Add fake-engine test helpers.
 - Keep current provider behavior unchanged.
 - Keep precomputed evaluation unchanged.
@@ -57,11 +72,16 @@ Add dynamic evaluation to `FlagsClient`.
 - Use matching precomputed data first.
 - Use valid rules data second.
 - Return the applicable error when neither path is usable.
+- Treat a flag that the upstream parser drops as `FLAG_NOT_FOUND`.
+- Keep other valid rules flags.
 - Map rules results to `FlagDetails`.
-- Track only successful rules assignments.
+- Convert successful rules results to `TrackableAssignment`.
+- Track each successful rules assignment through the current native bridge.
+- Let native code apply `doLog` to exposure events.
+- Do not require split serial ID or evaluation timestamp in the mobile exposure payload unless the mobile contract changes.
 - Keep online and precomputed behavior unchanged.
 - Add rules-only and mixed-configuration tests.
-- Use the fake engine for state-matrix tests.
+- Use the fake engine for path-selection tests.
 
 The main review question is:
 
@@ -76,11 +96,14 @@ Expose dynamic evaluation through the existing offline provider.
 - Keep `initialize` network-free.
 - Keep `onContextChange` network-free.
 - Keep current provider event mapping.
-- Add hook-context tests.
+- Add global-context and domain-context tests.
+- Confirm the Web SDK 1.8 hook-context constraint.
 - Add real-provider integration tests.
+- Use a protobuf rules wire in integration tests and examples.
 - Update the provider documentation.
 - Update both example applications.
-- Add compatibility and bundle checks where the repository supports them.
+- Add Hermes and JSC checks where the repository supports them.
+- Record the upstream protobuf bundle-size measurement.
 
 The main review question is:
 
