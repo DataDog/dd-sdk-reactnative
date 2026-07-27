@@ -86,8 +86,8 @@ type LoadedConfigurationState =
           rules: LoadedBranch<UniversalFlagConfigurationV1>;
       };
 
-// TODO(FFL-2837): Remove this compatibility shape when the published
-// FlagsConfiguration type contains the rulesBased branch.
+// TODO(FFL-2837): Delete this legacy rulesBased compatibility shape after a
+// flagging-core release contains upstream PR #344 and its rules branch.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
 };
@@ -375,12 +375,13 @@ export class FlagsClient {
         }
 
         if (rules.status === 'ready') {
-            // TODO(FFL-2837): Replace this empty-key fallback after D8 defines
-            // whether an absent targeting key differs from an empty key.
-            this.evaluationContext = this.externalContext ?? {
-                targetingKey: '',
+            // The public SDK context currently requires a targeting key, but the
+            // rules evaluator distinguishes a missing key from an empty key.
+            const contextWithoutTargetingKey = {
                 attributes: {}
-            };
+            } as EvaluationContext;
+            this.evaluationContext =
+                this.externalContext ?? contextWithoutTargetingKey;
             this.flagsCache = new Map();
             return this.enterReady();
         }
@@ -564,8 +565,9 @@ export class FlagsClient {
             reason !== 'DISABLED';
 
         if (isAssigned) {
-            // TODO(FFL-2837): Replace the synthesized native flag after
-            // flagging-core and the native bridge publish one tracking payload.
+            // Rules evaluations use the same native assignment bridge as online
+            // and precomputed evaluations. The bridge still requires an
+            // extraLogging object, but the rules response does not provide one.
             this.track(
                 {
                     key,
@@ -576,7 +578,7 @@ export class FlagsClient {
                     variationValue: stringifyFlagValue(result.value),
                     reason,
                     doLog: result.metadata.doLog ?? false,
-                    extraLogging: result.metadata.extraLogging ?? {}
+                    extraLogging: {}
                 },
                 context
             );
