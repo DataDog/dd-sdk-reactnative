@@ -22,8 +22,8 @@ export const buildSampleWire = (): string =>
     JSON.stringify({
         version: 1,
         rulesBased: {
-            // TODO(FFL-2837): Replace this JSON rules fixture with the published
-            // portable wire fixture when flagging-core publishes the final format.
+            // TODO(FFL-2837): Replace this legacy rulesBased JSON fixture with
+            // a protobuf rules wire after flagging-core publishes PR #344.
             response: JSON.stringify({
                 createdAt: '2026-07-23T12:00:00.000Z',
                 format: 'SERVER',
@@ -54,9 +54,6 @@ export const buildSampleWire = (): string =>
                                     {
                                         variationKey: 'enabled',
                                         serialId: 1,
-                                        extraLogging: {
-                                            source: 'dynamic-offline-example'
-                                        },
                                         shards: [
                                             {
                                                 salt: 'offline-example-salt',
