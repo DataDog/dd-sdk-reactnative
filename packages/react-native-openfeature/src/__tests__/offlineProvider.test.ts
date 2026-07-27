@@ -90,6 +90,18 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(mockFlagsClient.setEvaluationContext).not.toHaveBeenCalled();
     });
 
+    it('does not replace a missing targeting key in an attributes-only context', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+
+        provider.onContextChange({}, { country: 'US' });
+
+        const context =
+            mockFlagsClient.setEvaluationContextWithoutFetching.mock
+                .calls[0][0];
+        expect(context).toEqual({ attributes: { country: 'US' } });
+        expect(context).not.toHaveProperty('targetingKey');
+    });
+
     it('rejects initialize when the initial context does not match', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
         mockFlagsClient.setEvaluationContextWithoutFetching.mockReturnValueOnce(
@@ -267,5 +279,83 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
             console
         );
         expect(mockFlagsClient.getBooleanDetails).not.toHaveBeenCalled();
+    });
+
+    it('passes an empty effective context through per-resolution evaluation', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        // eslint-disable-next-line no-console
+        const logger = console as never;
+
+        provider.resolveBooleanEvaluation('flag', false, {}, logger);
+
+        expect(mockFlagsClient.getDetailsForContext).toHaveBeenCalledWith(
+            'flag',
+            false,
+            'boolean',
+            { attributes: {} },
+            logger
+        );
+        expect(mockFlagsClient.getBooleanDetails).not.toHaveBeenCalled();
+    });
+
+    it('preserves a missing targeting key for per-resolution evaluation', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+
+        provider.resolveBooleanEvaluation(
+            'flag',
+            false,
+            { country: 'US' },
+            // eslint-disable-next-line no-console
+            console as never
+        );
+
+        const context = mockFlagsClient.getDetailsForContext.mock.calls[0][3];
+        expect(context).toEqual({ attributes: { country: 'US' } });
+        expect(context).not.toHaveProperty('targetingKey');
+    });
+
+    it('passes the effective context and logger through every resolver', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        const context = { targetingKey: 'user-1', country: 'US' };
+        // eslint-disable-next-line no-console
+        const logger = console as never;
+
+        provider.resolveStringEvaluation(
+            'string-flag',
+            'default',
+            context,
+            logger
+        );
+        provider.resolveNumberEvaluation('number-flag', 0, context, logger);
+        provider.resolveObjectEvaluation('object-flag', {}, context, logger);
+
+        const ddContext = {
+            targetingKey: 'user-1',
+            attributes: { country: 'US' }
+        };
+        expect(mockFlagsClient.getDetailsForContext).toHaveBeenNthCalledWith(
+            1,
+            'string-flag',
+            'default',
+            'string',
+            ddContext,
+            logger
+        );
+        expect(mockFlagsClient.getDetailsForContext).toHaveBeenNthCalledWith(
+            2,
+            'number-flag',
+            0,
+            'number',
+            ddContext,
+            logger
+        );
+        expect(mockFlagsClient.getDetailsForContext).toHaveBeenNthCalledWith(
+            3,
+            'object-flag',
+            {},
+            'object',
+            ddContext,
+            logger
+        );
     });
 });

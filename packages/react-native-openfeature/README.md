@@ -155,6 +155,10 @@ const isNewFeatureEnabled = client.getBooleanValue(
 );
 ```
 
+Keep the original wire when it contains rules.
+Do not use `configurationToString` to recreate a rules wire.
+The parsed rules object does not contain the original protobuf payload.
+
 Load the configuration before you set the provider.
 The provider starts in `ERROR` when it has no usable configuration.
 A later valid configuration can recover the provider.

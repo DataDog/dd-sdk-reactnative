@@ -85,7 +85,6 @@ const rulesResponseFor = (flagKey: string) => ({
                         {
                             variationKey: 'enabled',
                             serialId: 7,
-                            extraLogging: { source: 'dynamic-offline' },
                             shards: [
                                 {
                                     salt: 'test-salt',
@@ -102,6 +101,8 @@ const rulesResponseFor = (flagKey: string) => ({
     }
 });
 
+// TODO(FFL-2837): Replace this legacy rulesBased JSON wire with a canonical
+// protobuf rules wire after a flagging-core release contains upstream PR #344.
 const rulesWireFor = (flagKey: string): string =>
     JSON.stringify({
         version: 1,
@@ -194,6 +195,24 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
             '../../../core/src/specs/NativeDdFlags'
         ).default;
         expect(nativeFlags.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('does not synthesize an empty targeting key when a shard requires one', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(
+            configurationFromString(rulesWireFor('dynamic-feature'))
+        );
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        await OpenFeature.setContext(domain, { country: 'US' });
+
+        const details = OpenFeature.getClient(domain).getBooleanDetails(
+            'dynamic-feature',
+            false
+        );
+        expect(details.value).toBe(false);
+        expect(details.errorCode).toBe(ErrorCode.TARGETING_KEY_MISSING);
     });
 
     it('starts in ERROR when a context-specific configuration has no OpenFeature context', async () => {
