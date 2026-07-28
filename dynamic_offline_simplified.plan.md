@@ -4,7 +4,7 @@ This document uses Simplified Technical English.
 Technical names and API names do not change.
 
 **Jira:** FFL-2837
-**Base branch:** `blake.thomas/FFL-2666`
+**Base branch:** `develop`
 **Work branch:** `blake.thomas/FFL-2837`
 **Upstream references:** DataDog/openfeature-js-client PRs #343, #344, and #336
 
@@ -77,17 +77,21 @@ It adds these features:
 - A `rules` field in `FlagsConfiguration`
 - A protobuf and base64 rules response
 - The checked-in UFC protobuf schema
+- Generated Protobuf-ES message types from the canonical UFC schema
 - Protobuf-ES decoding
 - Independent parsing of the precomputed and rules branches
 - Per-flag validation and feature-level rejection
 - `ONE_OF_SHA256` and `NOT_ONE_OF_SHA256`
 - A synchronous JavaScript SHA-256 implementation
 - An internal UTF-8 implementation
+- Own-property lookup for legacy and protobuf rules flag maps
 - A React Native Metro smoke test
 
 The parser keeps a valid branch when the other branch is malformed.
 The parser drops an unsupported or invalid rules flag.
 It does not invalidate the complete rules branch.
+The schema is copied from the canonical `dd-source` UFC schema.
+The generated message types are compiled into the package output.
 
 The published package will expose `configuration.rules.response`.
 Do not use the old planned name `rulesBased`.
@@ -97,6 +101,8 @@ Do not use the old planned name `rulesBased`.
 PR #336 is stacked on PR #344.
 It adds the browser `CoreProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
+Its head did not change during the 2026-07-28 review.
+Its updated PR #344 base supplies the new decoder and lookup fixes.
 
 Use the browser `CoreProvider` as an integration reference.
 
@@ -138,6 +144,9 @@ The metadata can contain these fields:
 - `__dd_do_log`
 - `__dd_eval_timestamp_ms`
 
+The evaluator reports both protobuf integer and numeric variations as the OpenFeature type `number`.
+It does not preserve that distinction in `variationType`.
+
 The split serial ID and evaluation timestamp are server-side tracing metadata.
 The current Android and iOS mobile exposure APIs do not accept these fields.
 The native mobile SDK creates the exposure timestamp.
@@ -168,8 +177,14 @@ Do not serialize a decoded rules configuration.
 PR #344 makes `configurationToString` throw when rules are present.
 
 PR #344 adds Protobuf-ES to the bundle.
-Its browser measurement reports an increase of 6,229 bytes minified and 2,070 bytes compressed.
+`@bufbuild/protobuf` is a runtime dependency.
+The schema generators are development dependencies.
+Its browser measurement reports an increase of 6,229 bytes minified and 2,070 bytes gzipped.
+These increases are 9.6 percent and 10.4 percent.
+The React Native compatibility code accounts for 1,106 minified bytes and 459 gzipped bytes.
+The upstream decision accepts this cost to reduce decoder maintenance risk.
 Its React Native smoke test bundles Android and iOS with React Native 0.76.9.
+The test uses the packed flagging-core package and the export-condition order from this repository.
 The test runs the Android bundle under Node without `TextEncoder`, `TextDecoder`, or `BigInt`.
 It does not run the bundle in Hermes or JSC.
 
@@ -189,14 +204,16 @@ After publication, bump `@datadog/flagging-core` in `packages/core/package.json`
 
 ### G2 — Protobuf rules response
 
-**Status:** Mostly implemented in PR #344.
+**Status:** Implemented in PR #344. Publication and runtime verification are pending.
 
-PR #344 includes the schema and the Protobuf-ES parser.
+PR #344 includes the canonical schema, generated message types, and the Protobuf-ES parser.
 React Native must use the opaque parser.
 Do not parse protobuf in this repository.
 
-The raw `.proto` file is not part of the current npm package file list.
-Confirm whether repository publication is sufficient.
+The npm package contains compiled CommonJS, ESM, and declaration outputs.
+It does not contain the raw `.proto` source.
+The runtime does not need the raw source.
+Keep the schema and generation instructions in the upstream repository for review and regeneration.
 Run the packed package in Hermes and JSC.
 
 ### G3 — Root exports
@@ -241,6 +258,7 @@ If they require split serial ID, evaluator timestamp, or error evaluations, add 
 PR #343 removes an unnecessary dependency.
 PR #344 measures the browser protobuf cost.
 PR #344 also adds a React Native Metro smoke test.
+The upstream PR accepts the measured bundle increase.
 
 Measure the packed dependency in this repository.
 Run the rules flow in Hermes and JSC.
@@ -301,32 +319,25 @@ Relax the internal context type and error union.
 
 ### G9 — Prototype-unsafe flag lookup
 
-**Status:** Open upstream bug.
+**Status:** Implemented in PR #344. Publication is pending.
 
-Both upstream rules evaluators use an unsafe object lookup.
-The combined evaluator in PR #336 also uses an unsafe precomputed lookup.
-A missing reserved key can resolve through `Object.prototype`.
+PR #344 adds a shared own-property helper.
+The legacy rules evaluator and the protobuf evaluator use it.
+PR #336 uses it for the combined evaluator precomputed path.
 
-Examples include:
+Reserved names such as `toString`, `__proto__`, and `constructor` now return `FLAG_NOT_FOUND` when they are not real flag keys.
+The React Native precomputed cache also uses a `Map`.
 
-- `toString`
-- `__proto__`
-- `constructor`
-
-The protobuf evaluator can return `TYPE_MISMATCH` instead of `FLAG_NOT_FOUND`.
-
-Use an own-property check before evaluation.
-Request the upstream fix in PR #344 and PR #336.
-Keep a React Native guard until the released dependency contains the fix.
-The React Native precomputed cache already uses a `Map`.
+Pin the released dependency that contains this fix.
+Keep reserved-name contract tests in React Native.
+Do not add a duplicate local guard after that dependency is available.
 
 ### G10 — OpenFeature type dependency
 
 **Status:** Decision required.
 
-`packages/core` has no OpenFeature dependency.
 The flagging-core declaration files import `@openfeature/core`.
-Flagging-core lists that package only as a development dependency.
+Flagging-core lists that package as a development dependency, not as a runtime or peer dependency.
 Local hoisting hides this problem.
 
 Select one solution:
@@ -383,7 +394,7 @@ Publish cross-SDK vectors.
 - [ ] Publish the SHA operators and synchronous SHA-256 implementation.
 - [ ] Confirm the remaining salt and size-limit rules.
 - [ ] Confirm the current mobile exposure contract.
-- [ ] Fix prototype-unsafe lookup upstream or keep the local guard.
+- [ ] Pin the flagging-core release that contains the own-property lookup fix.
 - [ ] Select a regular-expression safety policy.
 - [ ] Bump `@datadog/flagging-core` in `packages/core`.
 - [ ] Update `yarn.lock`.
@@ -436,7 +447,8 @@ Return `GENERAL` only when the parser returns no usable branch.
 
 Do not add a second structural rules validator.
 Trust the parser to drop unsupported or malformed rules flags.
-Keep the own-property guard from G9 until upstream contains the fix.
+Trust the released evaluator to perform own-property lookup.
+Keep the reserved-name contract tests from G9.
 Apply the size policy from G12 after the policy is defined.
 
 ### Step 4 — Reconcile the context
@@ -495,8 +507,7 @@ Map all evaluator results to `FlagDetails`.
 The evaluator already returns `FLAG_NOT_FOUND`.
 Do not create this error again in React Native.
 
-Add an own-property check for the flag key.
-Return `FLAG_NOT_FOUND` for an absent reserved-name key.
+Verify that the pinned upstream evaluator returns `FLAG_NOT_FOUND` for an absent reserved-name key.
 
 Convert a successful rules result to an internal `TrackableAssignment`.
 Track every successful assignment through the native bridge.
@@ -860,8 +871,9 @@ Complete D11 before you transfer OpenFeature types into core.
 
 ### R14 — Prototype lookup
 
-Reserved-name keys can return the wrong result.
-Use an own-property check or an upstream fix.
+PR #344 fixes reserved-name lookup.
+Pin the release that contains the fix.
+Keep React Native contract tests to prevent a dependency regression.
 
 ### R15 — Subject identifier
 
@@ -982,14 +994,16 @@ Alternative:
 ### Q3 — Tracking metadata
 
 - [x] Treat `extraLogging` as deprecated upstream.
+- [x] Confirm that flagging-core reports integer and numeric variations as `number`.
 - [ ] Confirm that the current mobile exposure event is sufficient for rules evaluations.
-- [ ] Confirm whether mobile telemetry needs the original integer or numeric type.
+- [ ] Confirm whether mobile telemetry must distinguish the original integer and numeric types.
 - [ ] Confirm whether default and error evaluations need a new native API.
 
 ## 10. Review history
 
 The plan had six review rounds on 2026-07-22 and 2026-07-23.
 The plan was updated on 2026-07-27 after review of PR #343, PR #344, and PR #336.
+The plan was updated again on 2026-07-28 after PR #344 added generated Protobuf-ES support, package smoke tests, and safe flag lookup.
 
 The reviews produced these main corrections:
 
@@ -1004,10 +1018,13 @@ The reviews produced these main corrections:
 - `extraLogging` is deprecated and is not an upstream blocker.
 - The engine already adds bundle size today.
 - PR #344 adds Protobuf-ES and synchronous SHA-256.
+- PR #344 accepts a measured 6,229-byte minified and 2,070-byte gzipped browser bundle increase.
+- PR #344 tests a packed package with the React Native Metro export conditions.
 - PR #344 performs structural validation.
 - Regular-expression safety still requires a decision.
 - A missing targeting key differs from an empty string in the evaluator.
-- The evaluator flag lookup is not safe for prototype names.
+- PR #344 fixes prototype-name lookup in both rules evaluators.
+- PR #336 uses the same safe lookup for its precomputed evaluator.
 - The public parsed configuration type is not fully opaque.
 - OpenFeature types currently resolve through hoisting.
 - Custom `id` can conflict with `targetingKey`.
