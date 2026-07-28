@@ -381,6 +381,8 @@ describe('FlagsClient', () => {
             })
         );
 
+    // These builders exercise the temporary `rulesBased` shim from the complete
+    // portable JSON envelope. They do not model the external UFC service transport.
     const buildRulesConfig = (
         rulesResponse: unknown = buildRulesConfiguration()
     ) =>

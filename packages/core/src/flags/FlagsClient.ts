@@ -87,7 +87,9 @@ type LoadedConfigurationState =
 
 // TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
 // flagging-core release contains DataDog/openfeature-js-client#344. Read
-// `configuration.rules.response` directly.
+// `configuration.rules.response` directly. The configuration is already parsed
+// from the complete portable envelope. Do not add raw-service-response handling
+// or envelope construction to `FlagsClient`.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
 };
@@ -248,7 +250,7 @@ export class FlagsClient {
     };
 
     /**
-     * Load a configuration (parsed from a `ConfigurationWire` string via
+     * Load a configuration (parsed from a complete portable `FlagsConfigurationWire` via
      * `configurationFromString`) into the client for offline evaluation, then reconcile it
      * against the active context.
      *
@@ -280,8 +282,8 @@ export class FlagsClient {
      * reconcile against this stored state without re-decoding, and can never turn an invalid load
      * into a servable one.
      *
-     * FORWARD-COMPAT SEAM: when a rules-based configuration is supported, it must be handled here
-     * BEFORE the precomputed guard — rules are context-agnostic and must NOT be classified invalid.
+     * Rules are handled before the precomputed guard. They are context-agnostic and must not be
+     * classified as invalid when the precomputed branch has a context mismatch.
      */
     private loadConfiguration = (
         configuration: ParsedFlagsConfiguration
