@@ -1197,7 +1197,80 @@ describe('FlagsClient', () => {
             );
         });
 
-        it('does not track a default rules result', () => {
+        it.each([
+            ['INTEGER', 42],
+            ['NUMERIC', 1.5]
+        ] as const)(
+            'tracks %s assignments with number metadata',
+            (variationType, variationValue) => {
+                const configuration = buildRulesConfiguration();
+                const flag = configuration.flags['dynamic-flag'];
+                flag.variationType = variationType;
+                flag.variations.enabled.value = variationValue;
+                flag.variations.disabled.value = 0;
+
+                const flagsClient = DdFlags.getClient();
+                flagsClient.setConfiguration(buildRulesConfig(configuration));
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-1',
+                    attributes: { country: 'US' }
+                });
+
+                expect(flagsClient.getNumberValue('dynamic-flag', 0)).toBe(
+                    variationValue
+                );
+                expect(
+                    NativeModules.DdFlags.trackEvaluation
+                ).toHaveBeenCalledWith(
+                    'default',
+                    'dynamic-flag',
+                    expect.objectContaining({
+                        variationType: 'number',
+                        variationValue: String(variationValue)
+                    }),
+                    'user-1',
+                    { country: 'US' }
+                );
+            }
+        );
+
+        it('tracks a DEFAULT result that contains a real assignment', () => {
+            const evaluate = installFakeRulesEngine(() => ({
+                value: true,
+                reason: 'DEFAULT',
+                variant: 'default-variant',
+                metadata: {
+                    allocationKey: 'default-allocation',
+                    variationType: 'boolean',
+                    doLog: false
+                }
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                'default',
+                'dynamic-flag',
+                expect.objectContaining({
+                    allocationKey: 'default-allocation',
+                    variationKey: 'default-variant',
+                    reason: 'DEFAULT'
+                }),
+                'user-1',
+                {}
+            );
+
+            evaluate.mockRestore();
+        });
+
+        it('does not track an unmatched DEFAULT result', () => {
             const evaluate = installFakeRulesEngine(request => ({
                 value: request.defaultValue,
                 reason: 'DEFAULT',

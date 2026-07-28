@@ -20,7 +20,7 @@ import type { EvaluationContext, JsonValue, PrimitiveValue } from '../types';
 // as `bigint`, does not call global `BigInt` during safe conversion, and reports
 // unsafe conversions and malformed SHA digests as deterministic per-flag
 // `PARSE_ERROR` results.
-type RulesConfigurationResponse = UniversalFlagConfigurationV1;
+export type RulesConfigurationResponse = UniversalFlagConfigurationV1;
 
 export type RulesValueType = 'boolean' | 'string' | 'number' | 'object';
 
