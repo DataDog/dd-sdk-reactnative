@@ -23,6 +23,9 @@ import {
 
 import StarSvg from './assets/star.svg';
 import { HeartIcon, ShieldIcon } from './assets/icons';
+// Aliased via the 'module-resolver' babel plugin (see benchmarks/babel.config.js) —
+// tests that buildSvgMap resolves aliased local SVG imports (RUM-12185).
+import AliasedStarSvg from '@assets/star.svg';
 
 // Module-level const used in Case D1 to test findIdentifierInScope
 const BADGE_SIZE = 72;
@@ -341,6 +344,17 @@ function BarrelShieldImport() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// GROUP H — Aliased import (RUM-12185)
+// Same star.svg as F1, but imported via the '@assets' alias configured
+// through babel-plugin-module-resolver in babel.config.js.
+// ─────────────────────────────────────────────────────────────
+
+/** H1: Default import of a local .svg file via an aliased path */
+function AliasedStarImport() {
+    return <AliasedStarSvg width={64} height={64} />;
+}
+
+// ─────────────────────────────────────────────────────────────
 // GROUP I — Unsupported nested elements
 // AnimatedPath isn't a recognized SVG tag, so it's now spliced out of the tree
 // instead of breaking generation for the whole parent <Svg> (see RNSvgHandler).
@@ -432,6 +446,7 @@ export default function SvgTestCases() {
                 Group E: known limitation — absent from replay entirely (see comment).{'\n'}
                 Group F: appears after buildSvgMap fixes.{'\n'}
                 Group G: privacy overrides — verify masking behavior in replay.{'\n'}
+                Group H: aliased import — same star as F1, resolved via '@assets' alias.{'\n'}
                 Group I: I1 shows circle only (checkmark removed), I2 shows circle + checkmark.
             </RNText>
 
@@ -519,6 +534,12 @@ export default function SvgTestCases() {
                 </Case>
                 <Case label="F3 barrel ShieldIcon" sublabel="export { default as ShieldIcon }">
                     <BarrelShieldImport />
+                </Case>
+            </Section>
+
+            <Section title="H — Aliased import (RUM-12185)">
+                <Case label="H1 aliased import" sublabel="@assets/star.svg">
+                    <AliasedStarImport />
                 </Case>
             </Section>
 
