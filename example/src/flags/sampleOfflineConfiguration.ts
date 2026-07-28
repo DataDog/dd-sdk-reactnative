@@ -21,9 +21,10 @@ export const DYNAMIC_OFFLINE_CONTEXTS = {
 export const buildSampleWire = (): string =>
     JSON.stringify({
         version: 1,
+        // TODO(FFL-2837): Replace this complete legacy `rulesBased` JSON branch
+        // with a version 1 `rules.response` base64 fixture after a published
+        // flagging-core release contains DataDog/openfeature-js-client#344.
         rulesBased: {
-            // TODO(FFL-2837): Replace this legacy rulesBased JSON fixture with
-            // a protobuf rules wire after flagging-core publishes PR #344.
             response: JSON.stringify({
                 createdAt: '2026-07-23T12:00:00.000Z',
                 format: 'SERVER',
