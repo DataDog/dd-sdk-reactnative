@@ -5,9 +5,11 @@
  */
 
 // Wire (de)serialization is reused from `@datadog/flagging-core` (the canonical
-// implementation) rather than reimplemented here. `configurationFromString` is lenient:
-// it returns an empty configuration (`{}`) for malformed input or an unsupported wire
-// version rather than throwing. `configurationToString` is the inverse (its fix from
+// implementation) rather than reimplemented here. The input is the complete portable JSON
+// envelope. It is not the raw protobuf or legacy JSON response from the UFC service.
+// `configurationFromString` is lenient: it returns an empty configuration (`{}`) for
+// malformed input or an unsupported wire version rather than throwing.
+// `configurationToString` is the inverse (its fix from
 // https://github.com/DataDog/openfeature-js-client/pull/331 shipped in flagging-core 2.0.0).
 import {
     configurationFromString as coreConfigurationFromString,
@@ -20,7 +22,10 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344.
-// Re-export the upstream functions and use `FlagsConfiguration.rules`.
+// Re-export the upstream functions and use `FlagsConfiguration.rules`. The
+// distribution layer must put one base64 encoding of the raw dd-source#34959
+// protobuf response in the version 1 `rules.response` field. Do not add that
+// service transport or envelope construction here.
 type PendingRulesConfiguration = FlagsConfiguration & {
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
@@ -67,7 +72,8 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
 
     // TODO(FFL-2837): Delete this legacy JSON compatibility shim with the
     // pending types above. The upstream parser decodes `rules.response` as a
-    // generated Protobuf-ES message.
+    // generated Protobuf-ES message. Do not adapt this shim to decode a raw
+    // service response or to add a base64 layer.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
@@ -92,7 +98,8 @@ export const configurationToString = (
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
     // TODO(FFL-2837): Delete this local serialization guard with the pending
-    // types above. PR #344 makes the upstream serializer reject `rules`.
+    // types above. PR #344 makes the upstream serializer reject `rules`. The
+    // parsed protobuf does not contain the original portable-wire bytes.
     if (pendingConfiguration.rulesBased) {
         throw new Error(
             'Rules configurations cannot be serialized to the wire format'
