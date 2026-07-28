@@ -6,6 +6,7 @@
  */
 
 import { transformSync } from '@babel/core';
+import * as babelTypes from '@babel/types';
 import glob from 'fast-glob';
 import fs from 'fs';
 import path from 'path';
@@ -369,7 +370,15 @@ function generateSessionReplayAssets() {
     let processedCount = 0;
     const errors: Array<{ file: string; error: string }> = [];
 
-    const reactNativeSVG = new ReactNativeSVG(rootDir, assetsPath, true);
+    const reactNativeSVG = new ReactNativeSVG(
+        rootDir,
+        assetsPath,
+        true,
+        ignorePatterns,
+        cliOptions.followSymlinks
+    );
+    reactNativeSVG.setApiTypes(babelTypes);
+    reactNativeSVG.buildSvgMap();
 
     for (const file of files) {
         try {

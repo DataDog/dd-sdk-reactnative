@@ -44,8 +44,16 @@ export default declare(
         let assetsPath: string | null = null;
 
         return {
-            pre() {
+            pre(file) {
                 if (!options.sessionReplay.svgTracking) {
+                    return;
+                }
+
+                // Skip for web builds — the expensive buildSvgMap() scan below
+                // would otherwise run even though Program.enter skips all SVG
+                // handling for web anyway.
+                const platform = (file.opts?.caller as any)?.platform;
+                if (platform === 'web') {
                     return;
                 }
 
@@ -53,13 +61,17 @@ export default declare(
                     assetsPath = getAssetsPath();
                 }
 
-                reactNativeSVG = options.__internal_reactNativeSVG;
+                // Reuse the instance across files instead of rebuilding (and
+                // rescanning) it per file.
+                reactNativeSVG =
+                    options.__internal_reactNativeSVG ?? reactNativeSVG;
                 if (!reactNativeSVG && assetsPath) {
                     reactNativeSVG = new ReactNativeSVG(
                         process.cwd(),
                         assetsPath,
                         options.__internal_saveSvgMapToDisk || false
                     );
+                    reactNativeSVG.setApiTypes(api.types);
                     reactNativeSVG.buildSvgMap();
                 }
                 reactNativeSVG?.setApiTypes(api.types);

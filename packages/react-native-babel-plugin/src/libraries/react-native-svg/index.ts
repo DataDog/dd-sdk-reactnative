@@ -20,10 +20,17 @@ import { getNodeName } from '../../utils';
 import { HandlerResolver } from './handlers/HandlerResolver';
 import { writeAssetToDisk } from './processing/fs';
 
-type SvgOffset = {
-    start: number;
-    length: number;
-};
+// Used when the caller (e.g. the plugin's own pre() hook) doesn't have a more
+// specific set of patterns to pass in -- the generate-sr-assets CLI passes its
+// own (larger, user-configurable) ignore list instead of relying on this.
+const DEFAULT_SCAN_IGNORE_PATTERNS = [
+    '**/node_modules/**',
+    '**/lib/**',
+    '**/dist/**',
+    '**/*.d.ts',
+    '**/*.test.*',
+    '**/*.config.js'
+];
 
 /**
  * Internal processor responsible for detecting, transforming, and wrapping
@@ -36,10 +43,6 @@ type SvgOffset = {
  * the native Session Replay layer.
  */
 export class ReactNativeSVG {
-    svgMap: Record<string, { file: string; [key: string]: string }> = {};
-
-    svgOffset: Record<string, SvgOffset> = {};
-
     localSvgMap: Record<string, { path: string; content?: string }> = {};
 
     t: typeof Babel.types | null = null;
@@ -47,7 +50,9 @@ export class ReactNativeSVG {
     constructor(
         private rootDir: string,
         private assetsPath: string,
-        private saveSvgMapToDisk: boolean = false
+        private saveSvgMapToDisk: boolean = false,
+        private scanIgnorePatterns: string[] = DEFAULT_SCAN_IGNORE_PATTERNS,
+        private followSymlinks: boolean = false
     ) {}
 
     setApiTypes(t: typeof Babel.types) {
@@ -62,8 +67,7 @@ export class ReactNativeSVG {
      * The collected mappings are stored in `localSvgMap`, keyed by the local/imported variable
      * names (e.g., `Logo`, `IconSearch`), with their values pointing to the resolved file path.
      *
-     * This method ignores files in `node_modules`, `lib`, and `dist`, as well as `.d.ts`, test,
-     * and config files.
+     * Files matching `scanIgnorePatterns` (defaulted in the constructor) are skipped.
      *
      * If `saveSvgMapToDisk` is false, it will first attempt to load the mapping from a previously
      * saved `svg-map.json` file for better performance. If the file doesn't exist or can't be read,
@@ -97,21 +101,12 @@ export class ReactNativeSVG {
         }
 
         // TODO: Support aliased paths (RUM-12185)
-        const files = glob.sync(
-            ['**/*.{js,jsx,ts,tsx}', '**/*.{js,jsx,ts,tsx}'],
-            {
-                cwd: this.rootDir,
-                absolute: true,
-                ignore: [
-                    '**/node_modules/**',
-                    '**/lib/**',
-                    '**/dist/**',
-                    '**/*.d.ts',
-                    '**/*.test.*',
-                    '**/*.config.js'
-                ]
-            }
-        );
+        const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
+            cwd: this.rootDir,
+            absolute: true,
+            ignore: this.scanIgnorePatterns,
+            followSymbolicLinks: this.followSymlinks
+        });
 
         for (const file of files) {
             try {
@@ -169,9 +164,14 @@ export class ReactNativeSVG {
                         );
                         for (const spec of path.node.specifiers) {
                             if (spec.type === 'ExportSpecifier') {
+                                // spec.exported is the name consumers import under
+                                // ('default' would be wrong for `export { default as Logo }`)
+                                const exported = spec.exported;
                                 const name = getNodeName(
                                     this.t,
-                                    spec.local.name
+                                    this.t.isStringLiteral(exported)
+                                        ? exported.value
+                                        : exported.name
                                 );
                                 if (name) {
                                     this.localSvgMap[name] = {
@@ -214,8 +214,6 @@ export class ReactNativeSVG {
     /**
      * Processes a JSXElement representing an SVG-based component and transforms it into
      * a web-compliant SVG string with normalized attributes and extracted dimensions.
-     * The resulting SVG content and its metadata (e.g., width/height) are stored in `svgMap`,
-     * keyed by a generated UUID for later reference.
      *
      * Internally, the appropriate handler is selected based on the tag name and used to
      * perform the transformation.
@@ -277,11 +275,6 @@ export class ReactNativeSVG {
 
                 path.node.extra = {
                     __wrappedForSR: true
-                };
-
-                this.svgMap[id] = {
-                    file: optimized,
-                    ...dimensions
                 };
 
                 writeAssetToDisk(this.assetsPath, id, hash, optimized);

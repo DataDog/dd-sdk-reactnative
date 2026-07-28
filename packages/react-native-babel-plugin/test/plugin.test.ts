@@ -4,8 +4,12 @@
  */
 
 import { transform } from '@babel/core';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
 import plugin from '../src/index';
+import { ReactNativeSVG } from '../src/libraries/react-native-svg';
 import type { PluginOptions } from '../src/types';
 
 function transformCode(code: string, pluginOptions?: Partial<PluginOptions>) {
@@ -80,6 +84,91 @@ describe('Babel plugin: web platform', () => {
         expect(output).not.toContain('DdBabelInteractionTracking');
         expect(output).not.toContain('__DD_RN_BABEL_PLUGIN_ENABLED__');
         expect(output).not.toContain('@datadog/mobile-react-native');
+    });
+
+    // pre() runs before Program.enter's own platform check, so buildSvgMap()'s
+    // project-wide scan must skip web itself rather than relying on that later
+    // check -- otherwise every web build would pay for a scan whose results
+    // Program.enter/JSXElement would immediately discard anyway.
+    describe('buildSvgMap scanning', () => {
+        let projectDir: string;
+        let originalCwd: string;
+        let originalPluginDev: string | undefined;
+        let buildSvgMapSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            projectDir = fs.mkdtempSync(
+                path.join(os.tmpdir(), 'dd-plugin-web-platform-')
+            );
+            originalCwd = process.cwd();
+            originalPluginDev = process.env.pluginDev;
+            process.env.pluginDev = 'true';
+            process.chdir(projectDir);
+
+            buildSvgMapSpy = jest
+                .spyOn(ReactNativeSVG.prototype, 'buildSvgMap')
+                .mockImplementation(() => undefined);
+        });
+
+        afterEach(() => {
+            buildSvgMapSpy.mockRestore();
+            process.chdir(originalCwd);
+            if (originalPluginDev === undefined) {
+                delete process.env.pluginDev;
+            } else {
+                process.env.pluginDev = originalPluginDev;
+            }
+            fs.rmSync(projectDir, { recursive: true, force: true });
+        });
+
+        function transformSvg(caller: { name: string; platform: string }) {
+            transform('<Svg><Circle cx="1" cy="1" r="1" /></Svg>', {
+                filename: path.join(projectDir, 'file.tsx'),
+                // No node_modules under projectDir to resolve presets from.
+                parserOpts: { plugins: ['jsx'] },
+                plugins: [[plugin, { sessionReplay: { svgTracking: true } }]],
+                configFile: false,
+                caller
+            });
+        }
+
+        it('should not scan for SVGs on web platform builds even with svgTracking enabled', () => {
+            transformSvg({ name: 'metro', platform: 'web' });
+
+            expect(buildSvgMapSpy).not.toHaveBeenCalled();
+        });
+
+        it('should still scan for SVGs on non-web platform builds with svgTracking enabled', () => {
+            transformSvg({ name: 'metro', platform: 'ios' });
+
+            expect(buildSvgMapSpy).toHaveBeenCalledTimes(1);
+        });
+
+        // pre() reuses the ReactNativeSVG instance across files in the same
+        // worker instead of rebuilding (and rescanning) it per file.
+        it('should only scan once across multiple files processed by the same plugin instance', () => {
+            const pluginConfig: [typeof plugin, unknown] = [
+                plugin,
+                { sessionReplay: { svgTracking: true } }
+            ];
+
+            transform('<Svg><Circle cx="1" cy="1" r="1" /></Svg>', {
+                filename: path.join(projectDir, 'FileA.tsx'),
+                parserOpts: { plugins: ['jsx'] },
+                plugins: [pluginConfig],
+                configFile: false,
+                caller: { name: 'metro', platform: 'ios' }
+            });
+            transform('<Svg><Circle cx="1" cy="1" r="1" /></Svg>', {
+                filename: path.join(projectDir, 'FileB.tsx'),
+                parserOpts: { plugins: ['jsx'] },
+                plugins: [pluginConfig],
+                configFile: false,
+                caller: { name: 'metro', platform: 'ios' }
+            });
+
+            expect(buildSvgMapSpy).toHaveBeenCalledTimes(1);
+        });
     });
 });
 
