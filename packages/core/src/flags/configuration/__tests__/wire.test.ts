@@ -92,6 +92,20 @@ describe('configurationFromString', () => {
         expect(configurationFromString('not json')).toEqual({});
     });
 
+    it('does not treat a raw protobuf response as a portable wire', () => {
+        // A service or distribution layer must put one base64 encoding of
+        // these bytes in a version 1 `rules.response` JSON envelope.
+        const rawProtobufAsBase64 = 'CgR0ZXN0';
+
+        expect(configurationFromString(rawProtobufAsBase64)).toEqual({});
+    });
+
+    it('does not treat the legacy UFC JSON response as a portable wire', () => {
+        const legacyServiceResponse = JSON.stringify(buildRulesConfiguration());
+
+        expect(configurationFromString(legacyServiceResponse)).toEqual({});
+    });
+
     it('returns an empty config when the inner response is invalid JSON', () => {
         const wire = JSON.stringify({
             version: 1,
