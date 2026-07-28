@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getNodeName } from '../../utils';
 
 import { HandlerResolver } from './handlers/HandlerResolver';
+import { PathAliasResolver } from './pathAliasResolver';
 import { writeAssetToDisk } from './processing/fs';
 
 // Used when the caller (e.g. the plugin's own pre() hook) doesn't have a more
@@ -47,13 +48,17 @@ export class ReactNativeSVG {
 
     t: typeof Babel.types | null = null;
 
+    private pathAliasResolver: PathAliasResolver;
+
     constructor(
         private rootDir: string,
         private assetsPath: string,
         private saveSvgMapToDisk: boolean = false,
         private scanIgnorePatterns: string[] = DEFAULT_SCAN_IGNORE_PATTERNS,
         private followSymlinks: boolean = false
-    ) {}
+    ) {
+        this.pathAliasResolver = new PathAliasResolver(rootDir);
+    }
 
     setApiTypes(t: typeof Babel.types) {
         this.t = t;
@@ -100,7 +105,11 @@ export class ReactNativeSVG {
             }
         }
 
-        // TODO: Support aliased paths (RUM-12185)
+        // Drop any alias config cached from a previous buildSvgMap() run --
+        // otherwise edits to tsconfig.json/babel.config.js made since then
+        // would be invisible to a reused instance.
+        this.pathAliasResolver.reset();
+
         const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
             cwd: this.rootDir,
             absolute: true,
@@ -136,10 +145,7 @@ export class ReactNativeSVG {
                             return;
                         }
 
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
+                        const resolved = this.resolveImportSource(file, source);
                         for (const spec of path.node.specifiers) {
                             const name = getNodeName(this.t, spec.local.name);
                             if (name) {
@@ -158,10 +164,7 @@ export class ReactNativeSVG {
                             return;
                         }
 
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
+                        const resolved = this.resolveImportSource(file, source);
                         for (const spec of path.node.specifiers) {
                             if (spec.type === 'ExportSpecifier') {
                                 // spec.exported is the name consumers import under
@@ -209,6 +212,13 @@ export class ReactNativeSVG {
                 );
             }
         }
+    }
+
+    private resolveImportSource(file: string, source: string): string {
+        return (
+            this.pathAliasResolver.resolve(source, file) ??
+            pathN.resolve(pathN.dirname(file), source)
+        );
     }
 
     /**
