@@ -13,7 +13,7 @@ PODS:
     - DatadogInternal (= 3.11.0)
   - DatadogRUM (3.11.0):
     - DatadogInternal (= 3.11.0)
-  - DatadogSDKReactNative (3.5.3):
+  - DatadogSDKReactNative (3.5.4):
     - DatadogCore (= 3.11.0)
     - DatadogCrashReporting (= 3.11.0)
     - DatadogFlags (= 3.11.0)
@@ -41,7 +41,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNativeSessionReplay (3.5.3):
+  - DatadogSDKReactNativeSessionReplay (3.5.4):
     - DatadogSDKReactNative
     - DatadogSessionReplay (= 3.11.0)
     - DoubleConversion
@@ -64,7 +64,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNativeWebView (3.5.3):
+  - DatadogSDKReactNativeWebView (3.5.4):
     - DatadogInternal (= 3.11.0)
     - DatadogSDKReactNative
     - DatadogWebViewTracking (= 3.11.0)
@@ -2140,9 +2140,9 @@ SPEC CHECKSUMS:
   DatadogInternal: 00709affd9889ca9e8fd96e85e39ad865e651c32
   DatadogLogs: ef98708261f8f7ba82d15360f9951d43f578163b
   DatadogRUM: 67d130164f4a7663e05a3d02803be9e9dd1abbb7
-  DatadogSDKReactNative: 6624d3e07240342a531a177eadb7488648bf3994
-  DatadogSDKReactNativeSessionReplay: 3112eddb298f03fd4cd1b763d104849c6f946f78
-  DatadogSDKReactNativeWebView: 22d1735001cee2553ac86b619aa49ab20d08f789
+  DatadogSDKReactNative: 035e8fb7c9869e7f262e5da089b31d9272c78bf5
+  DatadogSDKReactNativeSessionReplay: ab89ce3ab236c30d8d8294321138036b6bd36507
+  DatadogSDKReactNativeWebView: c4315d965f0f124c58e0af7ecf3aebad227a1b2b
   DatadogSessionReplay: 23107da4c61d0c84435efc6111929d562988045b
   DatadogTrace: 17f50647107755fba79fc2298bf4cb282e0efb1f
   DatadogWebViewTracking: 1290fce6010bf65b5e0e0ffa9048b448782e469c
@@ -2221,7 +2221,7 @@ SPEC CHECKSUMS:
   RNScreens: 0f01bbed9bd8045a8d58e4b46993c28c7f498f3c
   RNSVG: 082ae2874b288a96c95326c4f6029793f7009d4b
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: 66a9a23a82dd4081b393babe509967097759b3d6
+  Yoga: e14bad835e12b6c7e2260fc320bd00e0f4b45add
 
 PODFILE CHECKSUM: 577d6cf3071879187b7e93b4f4af22b74b1895f3
 
