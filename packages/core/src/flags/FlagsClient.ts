@@ -4,8 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { UniversalFlagConfigurationV1 } from '@datadog/flagging-core';
-
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
@@ -21,6 +19,7 @@ import {
     toRulesEvaluationContext
 } from './configuration/rules';
 import type {
+    RulesConfigurationResponse,
     RulesEngine,
     RulesLogger,
     RulesValueType
@@ -31,7 +30,7 @@ import type {
     ParsedPrecomputedConfiguration
 } from './configuration';
 import { processEvaluationContext } from './internal';
-import type { FlagCacheEntry } from './internal';
+import type { FlagCacheEntry, TrackableAssignment } from './internal';
 import type { JsonValue, EvaluationContext, FlagDetails } from './types';
 
 /**
@@ -83,11 +82,12 @@ type LoadedConfigurationState =
     | {
           kind: 'configuration';
           precomputed: LoadedBranch<LoadedPrecomputed>;
-          rules: LoadedBranch<UniversalFlagConfigurationV1>;
+          rules: LoadedBranch<RulesConfigurationResponse>;
       };
 
-// TODO(FFL-2837): Delete this legacy rulesBased compatibility shape after a
-// flagging-core release contains upstream PR #344 and its rules branch.
+// TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
+// flagging-core release contains DataDog/openfeature-js-client#344. Read
+// `configuration.rules.response` directly.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
 };
@@ -315,7 +315,7 @@ export class FlagsClient {
             }
         }
 
-        let rulesBranch: LoadedBranch<UniversalFlagConfigurationV1> = {
+        let rulesBranch: LoadedBranch<RulesConfigurationResponse> = {
             status: 'absent'
         };
         if (rulesResponse !== undefined) {
@@ -441,7 +441,7 @@ export class FlagsClient {
         return { status: 'error', errorCode };
     };
 
-    private track = (flag: FlagCacheEntry, context: EvaluationContext) => {
+    private track = (flag: TrackableAssignment, context: EvaluationContext) => {
         // A non-blocking call; don't await this.
         this.nativeFlags
             .trackEvaluation(
@@ -532,7 +532,7 @@ export class FlagsClient {
     };
 
     private getRulesDetails = <T>(
-        configuration: UniversalFlagConfigurationV1,
+        configuration: RulesConfigurationResponse,
         context: EvaluationContext,
         logger: RulesLogger,
         key: string,
@@ -561,7 +561,6 @@ export class FlagsClient {
         const isAssigned =
             result.variant !== undefined &&
             result.metadata.allocationKey !== undefined &&
-            reason !== 'DEFAULT' &&
             reason !== 'DISABLED';
 
         if (isAssigned) {
