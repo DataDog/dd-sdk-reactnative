@@ -50,6 +50,8 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * exposure/RUM tracking — **except it never fetches configuration from the network**.
  * Instead of fetching on `initialize`/`onContextChange`, it evaluates against a configuration
  * supplied via {@link DatadogOfflineOpenFeatureProvider.setConfiguration}.
+ * Supply a configuration parsed from the complete portable JSON envelope. The provider does not
+ * accept a raw UFC protobuf response and does not build the envelope.
  *
  * A rules configuration evaluates each new context locally. Call `OpenFeature.setContext` to
  * change the subject. The provider does not fetch after this call.
@@ -129,8 +131,9 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     /**
      * Load a configuration into the provider for offline evaluation.
      *
-     * @param configuration A configuration parsed from a `ConfigurationWire` string via
-     * `configurationFromString`.
+     * @param configuration A configuration parsed from a complete portable
+     * `FlagsConfigurationWire` JSON envelope via `configurationFromString`. The provider does not
+     * fetch a UFC service response or construct this envelope.
      */
     setConfiguration(configuration: ParsedFlagsConfiguration): void {
         const result = this.flagsClient.setConfiguration(configuration);

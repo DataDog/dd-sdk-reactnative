@@ -13,17 +13,20 @@ export const DYNAMIC_OFFLINE_CONTEXTS = {
 };
 
 /**
- * Build a bundled rules `ConfigurationWire` string.
+ * Build a complete bundled portable rules `ConfigurationWire` string.
  *
  * The example is fully offline. It evaluates the same rules for each new
- * OpenFeature context. It does not fetch assignments.
+ * OpenFeature context. It does not fetch a UFC response or build a wire at runtime.
  */
 export const buildSampleWire = (): string =>
   JSON.stringify({
     version: 1,
     // TODO(FFL-2837): Replace this complete legacy `rulesBased` JSON branch
-    // with a version 1 `rules.response` base64 fixture after a published
-    // flagging-core release contains DataDog/openfeature-js-client#344.
+    // after a published flagging-core release contains
+    // DataDog/openfeature-js-client#344. Reuse the production-derived client
+    // fixture from the integration test: one base64 encoding of the canonical
+    // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
+    // Do not use raw protobuf or the legacy service JSON response here.
     rulesBased: {
       response: JSON.stringify({
         createdAt: '2026-07-23T12:00:00.000Z',

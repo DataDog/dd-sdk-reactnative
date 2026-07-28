@@ -101,10 +101,12 @@ const rulesResponseFor = (flagKey: string) => ({
     }
 });
 
-// TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper with a canonical
-// version 1 `rules.response` base64 fixture after a published flagging-core
-// release contains DataDog/openfeature-js-client#344. Reuse the fixture for
-// packed-package Metro, Hermes, and JSC checks.
+// TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
+// flagging-core release contains DataDog/openfeature-js-client#344. Use canonical
+// raw protobuf bytes produced from the dd-source#34959 client-distribution path.
+// Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
+// verify that decoding returns the original bytes, and record the source revision.
+// Reuse that portable-wire fixture for examples, Metro, Hermes, and JSC checks.
 const rulesWireFor = (flagKey: string): string =>
     JSON.stringify({
         version: 1,

@@ -155,6 +155,13 @@ const isNewFeatureEnabled = client.getBooleanValue(
 );
 ```
 
+`wire` must be the complete version `1` portable JSON envelope.
+For rules, `rules.response` contains one base64 encoding of the raw UFC protobuf bytes.
+Do not pass raw protobuf bytes to `configurationFromString`.
+Do not put the UFC service JSON response in `rules.response`.
+The provider does not fetch the UFC endpoint or build the portable envelope.
+The customer or configuration distribution layer must supply that envelope.
+
 Keep the original wire when it contains rules.
 Do not use `configurationToString` to recreate a rules wire.
 The parsed rules object does not contain the original protobuf payload.
