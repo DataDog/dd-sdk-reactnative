@@ -6,13 +6,14 @@ Technical names and API names do not change.
 **Jira:** FFL-2837
 **Base branch:** `develop`
 **Work branch:** `blake.thomas/FFL-2837`
-**Upstream references:** DataDog/openfeature-js-client PRs #343, #344, and #336
+**Upstream references:** DataDog/openfeature-js-client PRs #343, #344, and #336; ddoghq/dd-source PR #34959
 
 ## Source documents
 
 - The Portable Flag Configuration RFC defines the portable configuration APIs.
 - The Offline Initialization RFC defines the offline workflows.
-- The ConfigurationWire specification defines the intended protobuf and base64 format.
+- The ConfigurationWire specification defines the portable JSON envelope and its base64 protobuf field.
+- The canonical UFC schema defines the raw protobuf message.
 - The Obfuscation RFC defines the proposed client-rules protection.
 
 The RFC documents are drafts.
@@ -52,7 +53,7 @@ Use this existing flow:
 configurationFromString -> setConfiguration -> evaluate
 ```
 
-## 2. Current `@datadog/flagging-core` state
+## 2. Current upstream state
 
 ### 2.1 Published version 2.0.2
 
@@ -117,7 +118,43 @@ It can call `evaluateRulesBasedConfiguration` only for the rules path.
 This keeps current precomputed validation and native tracking behavior.
 Do not adopt the combined `evaluate` function without a parity review.
 
-### 2.4 Evaluation and tracking path
+### 2.4 Merged protobuf service support from dd-source PR #34959
+
+ddoghq/dd-source PR #34959 merged on 2026-07-28.
+It adds protobuf content negotiation to the existing UFC endpoints:
+
+- `/api/v2/feature-flagging/config/rules-based`
+- `/api/v2/feature-flagging/config/rules-based/server`
+
+The service returns raw `ufcpb.FlagsConfiguration` bytes when the `Accept` header contains `application/protobuf`.
+It sets `Content-Type` to `application/protobuf`.
+It adds `Vary: Accept` so the JSON and protobuf responses do not share one cache entry.
+It continues to return the existing JSON response for other requests.
+
+The service now builds one encoding-independent `FlagsConfiguration`.
+It converts that configuration to JSON or protobuf.
+Its ETag fingerprint is independent of the selected encoding and the build timestamp.
+The client endpoint continues to select client-distribution flags.
+The server endpoint continues to select server-distribution flags.
+
+The service protobuf response is not a complete `FlagsConfigurationWire`.
+It is the raw value that the portable wire stores in `rules.response`.
+A configuration producer must:
+
+1. Request `application/protobuf`.
+2. Verify the response content type.
+3. Base64-encode the raw response bytes one time.
+4. Put the base64 string in a version `1` `rules.response` envelope.
+
+The React Native SDK does not call this endpoint.
+It does not add this envelope.
+The customer or distribution layer supplies the complete portable wire to `configurationFromString`.
+
+PR #34959 proves that the service code can generate the canonical protobuf payload.
+It does not publish the flagging-core decoder.
+It does not complete the service-to-portable-wire distribution path.
+
+### 2.5 Evaluation and tracking path
 
 Select the path for each resolution.
 Do not select the path only during reconciliation.
@@ -160,7 +197,7 @@ React Native must call the existing native tracking bridge after each successful
 Native code applies `doLog` to exposure events.
 Native code also applies its RUM and evaluation settings.
 
-### 2.5 Wire format and compatibility
+### 2.6 Wire format and compatibility
 
 Use the PR #344 contract:
 
@@ -170,6 +207,17 @@ Use the PR #344 contract:
 - Raw-byte SHA salts
 - Raw 32-byte SHA digests
 - `sha256(salt || UTF8(String(attributeValue)))`
+
+Keep these transport formats separate:
+
+- The dd-source endpoint returns raw protobuf bytes.
+- `FlagsConfigurationWire` is a JSON envelope.
+- `rules.response` is one base64 encoding of the raw protobuf bytes.
+- The legacy endpoint JSON response is not a rules wire.
+
+Do not pass the raw protobuf response directly to `configurationFromString`.
+Do not pass the legacy JSON response as `rules.response`.
+Do not base64-encode an existing base64 string again.
 
 Keep all decoding in `@datadog/flagging-core`.
 Do not add a rules decoder to React Native.
@@ -204,11 +252,19 @@ After publication, bump `@datadog/flagging-core` in `packages/core/package.json`
 
 ### G2 — Protobuf rules response
 
-**Status:** Implemented in PR #344. Publication and runtime verification are pending.
+**Status:** The service encoder code is merged. Decoder publication, distribution packaging, and runtime verification are pending.
 
 PR #344 includes the canonical schema, generated message types, and the Protobuf-ES parser.
 React Native must use the opaque parser.
 Do not parse protobuf in this repository.
+
+ddoghq/dd-source PR #34959 serves the canonical raw protobuf response.
+It preserves the JSON response when the caller does not request protobuf.
+The raw protobuf response is not the portable wire.
+
+Identify the component that creates the version `1` envelope.
+That component must request `application/protobuf`, validate the content type, and put one base64 encoding of the response bytes in `rules.response`.
+Do not make the React Native SDK own this transport conversion.
 
 The npm package contains compiled CommonJS, ESM, and declaration outputs.
 It does not contain the raw `.proto` source.
@@ -389,6 +445,10 @@ Publish cross-SDK vectors.
 
 ### Step 0 — Complete prerequisites
 
+- [x] Merge raw protobuf response support in dd-source.
+- [ ] Identify the component that packages the raw service response into `FlagsConfigurationWire`.
+- [ ] Confirm that the producer requests and receives `application/protobuf`.
+- [ ] Confirm that the producer base64-encodes the raw bytes one time in `rules.response`.
 - [ ] Publish flagging-core with rules wire parsing.
 - [ ] Publish the parsed `rules` field.
 - [ ] Publish the SHA operators and synchronous SHA-256 implementation.
@@ -422,8 +482,13 @@ Do not claim that the type is opaque unless you enforce opacity.
 Do not add React Native parsing code.
 Re-export the upstream conversion functions.
 
+The parser input is the complete version `1` JSON envelope.
+It is not the raw HTTP protobuf response.
+
 Add a parser test for a rules wire.
-Use the encoding from the pinned upstream version.
+Build the fixture from canonical raw protobuf bytes.
+Base64-encode those bytes one time in `rules.response`.
+Use the envelope encoding from the pinned upstream version.
 Confirm that `configurationToString` rejects a configuration that contains rules.
 
 ### Step 3 — Load and validate the configuration
@@ -661,6 +726,9 @@ Add a native API only if the confirmed mobile contract requires more fields.
 ### 6.1 Wire and configuration tests
 
 - [ ] Parse a rules wire into `rules.response`.
+- [ ] Use raw protobuf bytes produced by the dd-source schema as a fixture.
+- [ ] Confirm that base64-decoding `rules.response` returns those exact bytes.
+- [ ] Confirm that the fixture uses one base64 layer.
 - [ ] Confirm that rules serialization throws.
 - [ ] Parse a wire with both branches.
 - [ ] Return an empty configuration for malformed wire data.
@@ -777,7 +845,9 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Parse a real rules wire.
 - [ ] Evaluate several flags and contexts.
 - [ ] Verify native tracking calls.
-- [ ] Use a service or flagging-core fixture.
+- [ ] Use a dd-source protobuf fixture in a version `1` portable wire.
+- [ ] Verify that the fixture represents the client distribution channel.
+- [ ] Link the fixture to the source schema or generator revision.
 - [ ] Measure all bundle baselines from Step 6.
 - [ ] Measure the protobuf addition separately.
 - [ ] Measure the synchronous SHA addition separately.
@@ -835,7 +905,13 @@ Document both cases.
 
 ### R8 — Wire changes
 
-The source documents use different names and versions.
+The service response and the portable wire are different formats.
+The service returns raw protobuf bytes.
+The portable wire stores one base64 encoding of those bytes in a JSON envelope.
+The service returns legacy JSON when the producer does not request protobuf.
+
+A producer can accidentally use the JSON fallback, pass raw protobuf directly, or encode base64 twice.
+Identify the producer and add a byte-for-byte contract fixture.
 Pin the released dependency.
 Add a contract test.
 
@@ -970,6 +1046,16 @@ Alternative:
 - Add an explicit core OpenFeature dependency.
 - Fix the flagging-core published dependency.
 
+### D12 — Service transport boundary
+
+**Decision:** Keep service transport outside the React Native SDK.
+
+The React Native SDK accepts the complete portable wire through the existing configuration API.
+It does not fetch the dd-source endpoint.
+It does not convert the raw protobuf HTTP response into `FlagsConfigurationWire`.
+
+The configuration producer owns content negotiation, content-type validation, and the single base64 layer.
+
 ## 9. Open questions
 
 ### Q1 — Published flagging-core version
@@ -999,11 +1085,23 @@ Alternative:
 - [ ] Confirm whether mobile telemetry must distinguish the original integer and numeric types.
 - [ ] Confirm whether default and error evaluations need a new native API.
 
+### Q4 — Service-to-wire packaging
+
+- [x] Serve raw UFC protobuf when `Accept` contains `application/protobuf`.
+- [x] Set `Content-Type` to `application/protobuf`.
+- [x] Vary the service cache by `Accept`.
+- [x] Keep the existing JSON response for callers that do not request protobuf.
+- [ ] Identify the producer that builds `FlagsConfigurationWire`.
+- [ ] Confirm that the producer rejects an unexpected JSON response.
+- [ ] Confirm that the producer adds exactly one base64 layer.
+- [ ] Publish a production-derived contract fixture.
+
 ## 10. Review history
 
 The plan had six review rounds on 2026-07-22 and 2026-07-23.
 The plan was updated on 2026-07-27 after review of PR #343, PR #344, and PR #336.
 The plan was updated again on 2026-07-28 after PR #344 added generated Protobuf-ES support, package smoke tests, and safe flag lookup.
+The plan was updated on 2026-07-28 after ddoghq/dd-source PR #34959 merged.
 
 The reviews produced these main corrections:
 
@@ -1011,6 +1109,9 @@ The reviews produced these main corrections:
 - Version 2.0.2 removes an unnecessary dependency but does not add rules wire parsing.
 - PR #344 defines the expected `rules` protobuf contract.
 - PR #336 proves browser provider integration with that contract.
+- dd-source PR #34959 serves the canonical raw protobuf response.
+- The raw service response is not the portable JSON wire.
+- A distribution component must add one base64 layer and the version `1` envelope.
 - React Native must call the rules-only evaluator.
 - Path selection must occur for each resolution.
 - Native tracking must cross the bridge for every successful assignment.
