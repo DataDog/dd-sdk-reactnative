@@ -101,8 +101,10 @@ const rulesResponseFor = (flagKey: string) => ({
     }
 });
 
-// TODO(FFL-2837): Replace this legacy rulesBased JSON wire with a canonical
-// protobuf rules wire after a flagging-core release contains upstream PR #344.
+// TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper with a canonical
+// version 1 `rules.response` base64 fixture after a published flagging-core
+// release contains DataDog/openfeature-js-client#344. Reuse the fixture for
+// packed-package Metro, Hermes, and JSC checks.
 const rulesWireFor = (flagKey: string): string =>
     JSON.stringify({
         version: 1,

@@ -251,6 +251,9 @@ Treat a client rules configuration as public data.
 Do not put secrets in flag names, variant values, attributes, regular expressions, salts, or metadata.
 Salted hashes do not make low-entropy values confidential.
 An attacker can test likely values offline.
+Only load a rules configuration from a trusted source.
+The rules evaluator uses JavaScript regular expressions without an execution limit.
+A hostile expression can block the JavaScript thread.
 
 This provider requires `@openfeature/web-sdk` `^1.8.0`.
 
