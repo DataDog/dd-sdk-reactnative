@@ -174,6 +174,39 @@ describe('rules configuration', () => {
         });
     });
 
+    it.each([
+        ['INTEGER', 42],
+        ['NUMERIC', 1.5]
+    ] as const)(
+        'normalizes %s variation metadata to number',
+        (variationType, variationValue) => {
+            const configuration = buildRulesConfiguration();
+            const flag = configuration.flags['dynamic-flag'];
+            flag.variationType = variationType;
+            flag.variations.enabled.value = variationValue;
+            flag.variations.disabled.value = 0;
+
+            const result = flaggingCoreRulesEngine.evaluate({
+                configuration,
+                type: 'number',
+                flagKey: 'dynamic-flag',
+                defaultValue: 0,
+                context: {
+                    targetingKey: 'user-1',
+                    country: 'US'
+                },
+                logger: getNoopRulesLogger()
+            });
+
+            expect(result).toMatchObject({
+                value: variationValue,
+                metadata: {
+                    variationType: 'number'
+                }
+            });
+        }
+    );
+
     it.each(['toString', 'constructor', '__proto__'])(
         'checks own properties before it evaluates %s',
         flagKey => {
