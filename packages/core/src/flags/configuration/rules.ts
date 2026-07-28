@@ -12,6 +12,11 @@ import type { UniversalFlagConfigurationV1 } from '@datadog/flagging-core';
 
 import type { EvaluationContext, JsonValue, PrimitiveValue } from '../types';
 
+// TODO(FFL-2837): Replace this legacy UFC v1 alias with
+// `NonNullable<FlagsConfiguration['rules']>['response']` after a flagging-core
+// release contains DataDog/openfeature-js-client#344.
+type RulesConfigurationResponse = UniversalFlagConfigurationV1;
+
 export type RulesValueType = 'boolean' | 'string' | 'number' | 'object';
 
 type RulesValueByType = {
@@ -49,7 +54,7 @@ export interface RulesEvaluationDetails<T> {
 }
 
 export interface RulesEvaluationRequest<T extends RulesValueType> {
-    configuration: UniversalFlagConfigurationV1;
+    configuration: RulesConfigurationResponse;
     type: T;
     flagKey: string;
     defaultValue: RulesValueByType[T];
@@ -73,7 +78,7 @@ type RawEvaluationDetails<T> = {
 };
 
 type EvaluateRules = <T extends RulesValueType>(
-    configuration: UniversalFlagConfigurationV1,
+    configuration: RulesConfigurationResponse,
     type: T,
     flagKey: string,
     defaultValue: RulesValueByType[T],
@@ -187,7 +192,7 @@ const validateCondition = (value: unknown): string | undefined => {
             try {
                 // TODO(FFL-2837): Define a bounded regular expression policy before
                 // dynamic offline rules leave draft state. Upstream PR #344 validates
-                // regular expression syntax, but it does not limit expensive patterns.
+                // the protobuf indexes, but it does not limit expensive patterns.
                 RegExp(value.value); // dd-iac-scan ignore-line
             } catch {
                 return 'A regular expression condition is not valid.';
@@ -408,7 +413,7 @@ const freezeValue = (value: unknown): void => {
 export type PreparedRulesConfiguration =
     | {
           status: 'ready';
-          configuration: UniversalFlagConfigurationV1;
+          configuration: RulesConfigurationResponse;
       }
     | {
           status: 'error';
@@ -425,13 +430,14 @@ export const prepareRulesConfiguration = (
 
     // TODO(FFL-2837): Delete this legacy JSON clone and validator after a
     // flagging-core release contains upstream PR #344. That implementation
-    // decodes the protobuf response and omits unsupported or invalid flags.
+    // decodes a generated Protobuf-ES response and omits unsupported or invalid
+    // flags. Do not adapt this validator to the generated response type.
     const errorMessage = validateRulesConfigurationEnvelope(clone);
     if (errorMessage) {
         return { status: 'error', errorMessage };
     }
 
-    const flags = (clone as UniversalFlagConfigurationV1).flags;
+    const flags = (clone as RulesConfigurationResponse).flags;
     for (const [flagKey, flag] of Object.entries(flags)) {
         if (validateFlag(flag)) {
             delete flags[flagKey];
@@ -441,7 +447,7 @@ export const prepareRulesConfiguration = (
     freezeValue(clone);
     return {
         status: 'ready',
-        configuration: clone as UniversalFlagConfigurationV1
+        configuration: clone as RulesConfigurationResponse
     };
 };
 
@@ -468,8 +474,12 @@ const normalizeVariationType = (
     }
 };
 
+// TODO(FFL-2837): Delete this legacy UFC v1 metadata fallback after the
+// flagging-core dependency contains DataDog/openfeature-js-client#344.
+// The protobuf evaluator supplies `variationType` and maps integer and numeric
+// variations to the OpenFeature type `number`.
 const recoverVariationType = (
-    configuration: UniversalFlagConfigurationV1,
+    configuration: RulesConfigurationResponse,
     flagKey: string
 ): RulesValueType | undefined => {
     const flags = configuration.flags as Record<string, unknown>;
@@ -490,6 +500,10 @@ export const flaggingCoreRulesEngine: RulesEngine = {
         request: RulesEvaluationRequest<T>
     ): RulesEvaluationDetails<RulesValueByType[T]> {
         const flags = request.configuration.flags as Record<string, unknown>;
+
+        // TODO(FFL-2837): Delete this local compatibility guard after the
+        // flagging-core dependency contains DataDog/openfeature-js-client#344.
+        // Keep the reserved-name contract tests for the upstream implementation.
         if (!hasOwn(flags, request.flagKey)) {
             return {
                 value: request.defaultValue,
