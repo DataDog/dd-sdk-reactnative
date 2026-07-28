@@ -18,6 +18,9 @@ import type {
     UniversalFlagConfigurationV1
 } from '@datadog/flagging-core';
 
+// TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
+// after a flagging-core release contains DataDog/openfeature-js-client#344.
+// Re-export the upstream functions and use `FlagsConfiguration.rules`.
 type PendingRulesConfiguration = FlagsConfiguration & {
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
@@ -62,8 +65,9 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
         source
     ) as PendingRulesConfiguration;
 
-    // TODO(FFL-2837): Delete this legacy JSON compatibility shim after a
-    // flagging-core release contains DataDog/openfeature-js-client#344.
+    // TODO(FFL-2837): Delete this legacy JSON compatibility shim with the
+    // pending types above. The upstream parser decodes `rules.response` as a
+    // generated Protobuf-ES message.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
@@ -86,6 +90,9 @@ export const configurationToString = (
     configuration: FlagsConfiguration
 ): string => {
     const pendingConfiguration = configuration as PendingRulesConfiguration;
+
+    // TODO(FFL-2837): Delete this local serialization guard with the pending
+    // types above. PR #344 makes the upstream serializer reject `rules`.
     if (pendingConfiguration.rulesBased) {
         throw new Error(
             'Rules configurations cannot be serialized to the wire format'
