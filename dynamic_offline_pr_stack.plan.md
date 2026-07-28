@@ -25,6 +25,16 @@ Its packed-package smoke test uses the Metro export conditions from this reposit
 Upstream PR #336 uses that parser in the browser `CoreProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
 
+ddoghq/dd-source PR #34959 is merged.
+It adds protobuf content negotiation to the existing UFC service endpoints.
+The service returns raw UFC protobuf bytes for `Accept: application/protobuf`.
+It continues to return JSON for other requests.
+
+The raw service response is not a complete `FlagsConfigurationWire`.
+A configuration producer must base64-encode the raw bytes one time and put the result in a version `1` `rules.response` envelope.
+The React Native SDK does not fetch the service response.
+It does not build the portable envelope.
+
 Put a `TODO` immediately before each temporary implementation.
 The `TODO` must identify the upstream replacement.
 Do not hide temporary behavior in a general helper.
@@ -33,6 +43,8 @@ Production code must use one internal engine adapter.
 
 Remove temporary JSON rules-wire parsing, duplicate rules validation, and local lookup guards after the upstream package is published.
 Do not add a local protobuf parser.
+Do not add a service HTTP client.
+Do not add service-to-wire packaging to the React Native SDK.
 Do not wait for upstream `extraLogging`.
 The field is deprecated.
 Use an empty object only where the current Android bridge requires it.
@@ -60,16 +72,23 @@ Add the internal boundary for the rules engine.
 - Verify that the pinned evaluator returns `FLAG_NOT_FOUND` for absent reserved-name keys.
 - Keep regular-expression safety as an explicit open item.
 - Add adapter contract tests.
-- Add a protobuf wire contract test.
+- Add a protobuf wire contract test from canonical dd-source bytes.
+- Put one base64 encoding of those bytes in a version `1` `rules.response` fixture.
+- Confirm that base64-decoding the fixture returns the original bytes.
+- Record the source schema or generator revision for the fixture.
+- Confirm that the fixture represents the client distribution channel.
 - Add reserved-name flag-key contract tests.
 - Confirm that rules serialization throws.
 - Add fake-engine test helpers.
+- Do not add a fetch or transport-conversion API.
 - Keep current provider behavior unchanged.
 - Keep precomputed evaluation unchanged.
 
-The main review question is:
+The main review questions are:
 
 > Does this boundary isolate the SDK from the upstream rules engine?
+>
+> Does the wire contract test keep raw service protobuf separate from the portable JSON envelope?
 
 ## PR2 — Core dynamic and mixed evaluation
 
@@ -111,8 +130,13 @@ Expose dynamic evaluation through the existing offline provider.
 - Add global-context and domain-context tests.
 - Confirm the Web SDK 1.8 hook-context constraint.
 - Add real-provider integration tests.
-- Use a protobuf rules wire in integration tests and examples.
+- Use the PR1 production-derived portable wire fixture in integration tests and examples.
+- Do not use the raw protobuf response as the `configurationFromString` input.
+- Do not use the legacy service JSON response as `rules.response`.
+- Reuse the same fixture for Metro, Hermes, and JSC checks.
 - Update the provider documentation.
+- State that customers must supply the complete version `1` portable wire.
+- State that the offline provider does not fetch the UFC endpoint.
 - Update both example applications.
 - Add Hermes and JSC checks where the repository supports them.
 - Test the packed dependency with the repository Metro export conditions.
@@ -123,6 +147,22 @@ Expose dynamic evaluation through the existing offline provider.
 The main review question is:
 
 > Does the existing offline provider expose dynamic rules without changing online or precomputed behavior?
+
+## External distribution work
+
+This PR stack does not implement the component that creates `FlagsConfigurationWire`.
+Track that work with the service or distribution owner.
+
+That component must:
+
+1. Request `application/protobuf`.
+2. Reject an unexpected response content type.
+3. Base64-encode the raw protobuf bytes one time.
+4. Put the result in a version `1` `rules.response` envelope.
+5. Preserve the client distribution policy.
+
+The PR stack can use a checked-in production-derived fixture before this distribution component is complete.
+The fixture must make the service-to-wire contract reviewable.
 
 ## CI loop
 
