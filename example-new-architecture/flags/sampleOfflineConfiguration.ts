@@ -23,13 +23,14 @@ export const buildSampleWire = (): string =>
     version: 1,
     // TODO(FFL-2837): Replace this complete legacy `rulesBased` JSON branch
     // after a published flagging-core release contains
-    // DataDog/openfeature-js-client#344. Reuse the production-derived client
+    // DataDog/openfeature-js-client#344 through `4f6f40c`. Reuse the
+    // production-derived client
     // fixture from the integration test: one base64 encoding of the canonical
     // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
     // Let the upstream configuration subpath decode it. Do not use raw protobuf,
     // the legacy service JSON response, or a local strict base64 validator here.
-    // Pin PR #344 at or after `be0d886` so invalid flags return `PARSE_ERROR`
-    // and unknown protobuf fields do not reject supported known data.
+    // The final fixture must preserve protobuf integers as `bigint`, return
+    // `PARSE_ERROR` for unsafe number conversion, and tolerate unknown fields.
     rulesBased: {
       response: JSON.stringify({
         createdAt: '2026-07-23T12:00:00.000Z',
