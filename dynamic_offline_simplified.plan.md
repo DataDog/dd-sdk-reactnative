@@ -85,6 +85,7 @@ It adds these features:
 - Per-flag validation and feature-level errors
 - Evaluation-time `PARSE_ERROR` results for invalid rules flags
 - Forward-compatible handling of unknown protobuf fields
+- Lossless parsing of protobuf integer values
 - `ONE_OF_SHA256` and `NOT_ONE_OF_SHA256`
 - A synchronous JavaScript SHA-256 implementation
 - An internal UTF-8 implementation
@@ -99,6 +100,11 @@ The evaluator returns `PARSE_ERROR` when a customer evaluates that flag.
 Other valid rules flags remain usable.
 Unknown protobuf fields do not cause an error when the known fields still define a supported value.
 An unknown enum or oneof value that leaves no supported known value causes a per-flag `PARSE_ERROR`.
+The parser preserves a protobuf integer as a `bigint`.
+A safe integer evaluates as an OpenFeature `number`.
+An integer that is outside the JavaScript safe range stays in the parsed configuration.
+The evaluator returns `PARSE_ERROR` and does not convert that integer to an imprecise number.
+An unsafe integer in a flag does not invalidate the complete rules branch.
 The schema is copied from the canonical `dd-source` UFC schema.
 The generated message types are compiled into the package output.
 
@@ -125,8 +131,8 @@ It adds the browser `CoreProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
 Its head remains `c7b75e8d`.
 Its base moved to the first new PR #344 commit, `73ed037d`.
-Its base does not contain the later PR #344 commits through `be0d886`.
-These later commits include the base64 decoder, per-flag `PARSE_ERROR` behavior, and unknown-field tolerance.
+Its base does not contain the later PR #344 commits through `4f6f40c`.
+These later commits include the base64 decoder, per-flag `PARSE_ERROR` behavior, unknown-field tolerance, and lossless protobuf integer parsing.
 GitHub currently reports the stack as non-mergeable.
 PR #336 must be restacked on the final PR #344 head before it is an integration reference for the released contract.
 
@@ -208,6 +214,9 @@ The metadata can contain these fields:
 
 The evaluator reports both protobuf integer and numeric variations as the OpenFeature type `number`.
 It does not preserve that distinction in `variationType`.
+A safe protobuf integer becomes a JavaScript number during evaluation.
+An unsafe protobuf integer returns `PARSE_ERROR`.
+Do not track that error result.
 
 The split serial ID and evaluation timestamp are server-side tracing metadata.
 The current Android and iOS mobile exposure APIs do not accept these fields.
@@ -296,6 +305,11 @@ It no longer guarantees strict rejection of non-canonical padding.
 Treat one standard base64 encoding as a producer contract.
 Do not add a second base64 decoder or stricter validation in React Native without a cross-SDK protocol decision.
 
+PR #344 preserves protobuf integer values as `bigint` during parsing.
+It does not reject the complete rules branch only because one flag contains an unsafe integer.
+The evaluator returns `PARSE_ERROR` when an integer variation, shard count, or range cannot be represented safely as a JavaScript number.
+Do not convert these values in React Native.
+
 ddoghq/dd-source PR #34959 serves the canonical raw protobuf response.
 It preserves the JSON response when the caller does not request protobuf.
 The raw protobuf response is not the portable wire.
@@ -309,6 +323,7 @@ It does not contain the raw `.proto` source.
 The runtime does not need the raw source.
 Keep the schema and generation instructions in the upstream repository for review and regeneration.
 Run the packed package in Hermes and JSC.
+Include safe and unsafe 64-bit integer fixtures.
 
 ### G3 — Package exports
 
@@ -367,6 +382,7 @@ Measure the packed dependency in this repository.
 Measure the React Native package root separately from the upstream configuration subpath.
 Run the rules flow in Hermes and JSC.
 Test the supported React Native version range.
+Verify that protobuf `bigint` values parse in each supported engine.
 
 Do not use a dynamic import.
 Metro does not create a smaller release bundle from this import.
@@ -400,6 +416,7 @@ The evaluator reports these errors as `PARSE_ERROR`.
 It rejects malformed indexes, values, ranges, and hashes.
 It ignores unknown protobuf fields when known fields still define a supported value.
 It reports a per-flag error when an unknown enum or oneof leaves no supported value.
+It preserves unsafe protobuf integers during parsing and reports the affected flag during evaluation.
 
 Do not duplicate this validator in React Native after publication.
 
@@ -631,6 +648,8 @@ Map all evaluator results to `FlagDetails`.
 The evaluator already returns `FLAG_NOT_FOUND`.
 Do not create this error again in React Native.
 Preserve `PARSE_ERROR` and its `errorMessage`.
+Do not coerce a protobuf `bigint` in React Native.
+Let the evaluator return `PARSE_ERROR` for an unsafe integer.
 
 Verify that the pinned upstream evaluator returns `FLAG_NOT_FOUND` for an absent reserved-name key.
 
@@ -803,6 +822,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Test the published protobuf fixture.
 - [ ] Ignore an unknown protobuf field when a supported known value remains.
 - [ ] Return `PARSE_ERROR` when an unknown enum or oneof leaves no supported value.
+- [ ] Preserve an out-of-range protobuf integer in the parsed rules object.
 
 ### 6.2 Load and reconciliation tests
 
@@ -816,6 +836,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Return `PARSE_ERROR` for an invalid rules flag.
 - [ ] Preserve the upstream validation message.
 - [ ] Keep valid flags when one rules flag has a validation error.
+- [ ] Keep valid rules flags when another flag contains an unsafe integer.
 - [ ] Keep valid precomputed data when the rules branch is malformed.
 
 ### 6.3 Rules evaluation tests
@@ -833,6 +854,9 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Return `TARGETING_KEY_MISSING` when a shard requires a missing key.
 - [ ] Evaluate without a targeting key when the selected rule does not need it.
 - [ ] Treat an empty string as a real targeting key.
+- [ ] Evaluate a safe protobuf integer as an OpenFeature number.
+- [ ] Return `PARSE_ERROR` for an integer outside the JavaScript safe range.
+- [ ] Do not return a rounded or imprecise integer value.
 
 ### 6.4 Per-resolution context tests
 
@@ -866,6 +890,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Confirm that the parser preserves a malformed flag.
 - [ ] Confirm that evaluating the malformed flag returns `PARSE_ERROR`.
 - [ ] Confirm that a bad shard range returns `PARSE_ERROR`.
+- [ ] Confirm that an unsafe shard count or range returns `PARSE_ERROR` for its flag.
 - [ ] Confirm that supported known data remains usable when the protobuf contains unknown fields.
 - [ ] Test inherited property names.
 - [ ] Test mutation of the source object after load.
@@ -964,7 +989,7 @@ Measure the packed dependency in this repository.
 
 ### R5 — Hermes and JSC support
 
-Test sharding, MD5, protobuf, and SHA-256.
+Test sharding, MD5, protobuf, protobuf `bigint`, and SHA-256.
 Test release builds across the supported React Native range.
 
 ### R6 — Context and logger transfer
@@ -1157,6 +1182,8 @@ The configuration producer owns content negotiation, content-type validation, an
 - [x] Define per-flag feature-level and unknown-field behavior.
 - [x] Preserve invalid flags and report `PARSE_ERROR` during evaluation.
 - [x] Ignore unknown fields when a supported known value remains.
+- [x] Preserve protobuf integers during parsing.
+- [x] Return `PARSE_ERROR` instead of an imprecise number for an unsafe integer.
 - [x] Add SHA operators and salt fields to the schema.
 - [ ] Confirm the salt-length policy.
 - [ ] Define configuration-size limits.
@@ -1166,6 +1193,7 @@ The configuration producer owns content negotiation, content-type validation, an
 
 - [x] Treat `extraLogging` as deprecated upstream.
 - [x] Confirm that flagging-core reports integer and numeric variations as `number`.
+- [x] Confirm that only safely represented integer variations become `number`.
 - [ ] Confirm that the current mobile exposure event is sufficient for rules evaluations.
 - [ ] Confirm whether mobile telemetry must distinguish the original integer and numeric types.
 - [ ] Confirm whether default and error evaluations need a new native API.
@@ -1196,6 +1224,7 @@ The plan was updated again on 2026-07-28 after PR #344 added generated Protobuf-
 The plan was updated on 2026-07-28 after ddoghq/dd-source PR #34959 merged.
 The plan was updated again on 2026-07-28 after PR #344 added an opt-in parser entry point and adopted the Protobuf-ES base64 decoder.
 The plan was updated on 2026-07-29 after PR #344 added per-flag evaluation errors and unknown-field tolerance.
+The plan was updated again on 2026-07-29 after PR #344 preserved protobuf integers during parsing.
 
 The reviews produced these main corrections:
 
@@ -1222,6 +1251,7 @@ The reviews produced these main corrections:
 - PR #344 performs structural validation.
 - PR #344 preserves invalid flags and reports `PARSE_ERROR` when they are evaluated.
 - PR #344 ignores unknown protobuf fields when supported known data remains.
+- PR #344 preserves protobuf integers and rejects unsafe numeric conversion during evaluation.
 - Regular-expression safety still requires a decision.
 - A missing targeting key differs from an empty string in the evaluator.
 - PR #344 fixes prototype-name lookup in both rules evaluators.

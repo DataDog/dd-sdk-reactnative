@@ -30,12 +30,14 @@ It does not promise strict rejection of non-canonical base64 padding.
 The parser preserves invalid flags and records their validation errors.
 The evaluator returns `PARSE_ERROR` when a customer evaluates one of those flags.
 The parser ignores unknown protobuf fields when supported known fields remain.
+The parser preserves protobuf integers as `bigint`.
+The evaluator returns `PARSE_ERROR` instead of an imprecise number when an integer is outside the JavaScript safe range.
 
 Upstream PR #336 uses that parser in the browser `CoreProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
 Its head did not change.
 Its base moved to the first new PR #344 commit, but not to the latest PR #344 head.
-Its base does not include the per-flag error or unknown-field changes.
+Its base does not include the per-flag error, unknown-field, or integer-preservation changes.
 GitHub currently reports PR #336 as non-mergeable.
 Recheck it after the upstream stack is repaired.
 
@@ -93,6 +95,8 @@ Add the internal boundary for the rules engine.
 - Preserve `PARSE_ERROR` and its message from the upstream evaluator.
 - Add a contract test for an invalid flag that returns `PARSE_ERROR`.
 - Add a contract test that unknown protobuf fields do not reject supported known data.
+- Add a contract test that preserves an out-of-range protobuf integer during parsing.
+- Add a contract test that returns `PARSE_ERROR` instead of an imprecise number during evaluation.
 - Add a protobuf wire contract test from canonical dd-source bytes.
 - Put one base64 encoding of those bytes in a version `1` `rules.response` fixture.
 - Confirm that base64-decoding the fixture returns the original bytes.
@@ -139,6 +143,8 @@ Add dynamic evaluation to `FlagsClient`.
 - Let native code apply `doLog` to exposure events.
 - Do not require split serial ID or evaluation timestamp in the mobile exposure payload unless the mobile contract changes.
 - Record that integer and numeric variations both use the OpenFeature type `number`.
+- Record that only safely represented integer variations become JavaScript numbers.
+- Preserve the upstream `PARSE_ERROR` and message for an unsafe integer.
 - Confirm whether mobile telemetry must preserve the original integer or numeric type.
 - Keep online and precomputed behavior unchanged.
 - Add rules-only and mixed-configuration tests.
