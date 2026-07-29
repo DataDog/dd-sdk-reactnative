@@ -14,9 +14,10 @@ import type { EvaluationContext, JsonValue, PrimitiveValue } from '../types';
 
 // TODO(FFL-2837): Replace this legacy UFC v1 alias with
 // `NonNullable<FlagsConfiguration['rules']>['response']` after a flagging-core
-// release contains DataDog/openfeature-js-client#344. Keep the
+// release contains DataDog/openfeature-js-client#344 through `4f6f40c`. Keep the
 // `FlagsConfiguration` type import on the flagging-core package root. PR #344
-// now preserves invalid flags and reports their stored errors during evaluation.
+// preserves protobuf integers as `bigint`, and it reports unsafe conversions as
+// stored per-flag errors during evaluation.
 type RulesConfigurationResponse = UniversalFlagConfigurationV1;
 
 export type RulesValueType = 'boolean' | 'string' | 'number' | 'object';
@@ -127,9 +128,9 @@ const hasOwn = (value: object, key: PropertyKey): boolean =>
     Object.prototype.hasOwnProperty.call(value, key);
 
 // TODO(FFL-2837): Delete this compatibility error store after a flagging-core
-// release contains DataDog/openfeature-js-client#344 at or after `ba1dbaf`.
+// release contains DataDog/openfeature-js-client#344 at or after `4f6f40c`.
 // The generated protobuf parser uses the same per-configuration error model,
-// and its evaluator returns `PARSE_ERROR` with the stored validation message.
+// including `PARSE_ERROR` for an integer that is not a safe JavaScript number.
 const errorsByConfiguration = new WeakMap<
     RulesConfigurationResponse,
     ReadonlyMap<string, string>
@@ -168,6 +169,7 @@ const variationValueIsValid = (
         case 'STRING':
             return typeof value === 'string';
         case 'INTEGER':
+            return typeof value === 'number' && Number.isSafeInteger(value);
         case 'NUMERIC':
             return typeof value === 'number' && Number.isFinite(value);
         case 'JSON':
@@ -202,8 +204,8 @@ const validateCondition = (value: unknown): string | undefined => {
             }
             try {
                 // TODO(FFL-2837): Define a bounded regular expression policy before
-                // dynamic offline rules leave draft state. Upstream PR #344 validates
-                // the protobuf indexes, but it does not limit expensive patterns.
+                // dynamic offline rules leave draft state. Upstream PR #344 through
+                // `4f6f40c` validates protobuf data, but it does not limit patterns.
                 RegExp(value.value); // dd-iac-scan ignore-line
             } catch {
                 return 'A regular expression condition is not valid.';
@@ -270,6 +272,9 @@ const validateShards = (value: unknown): string | undefined => {
         ) {
             return 'A shard has an invalid shape.';
         }
+        if (!Number.isSafeInteger(shard.totalShards)) {
+            return 'Protobuf uint64 cannot be represented safely as a JavaScript number';
+        }
 
         for (const range of shard.ranges) {
             if (
@@ -281,6 +286,12 @@ const validateShards = (value: unknown): string | undefined => {
                 (range.end as number) > (shard.totalShards as number)
             ) {
                 return 'A shard range is not valid.';
+            }
+            if (
+                !Number.isSafeInteger(range.start) ||
+                !Number.isSafeInteger(range.end)
+            ) {
+                return 'Protobuf uint64 cannot be represented safely as a JavaScript number';
             }
         }
     }
@@ -359,6 +370,14 @@ const validateFlag = (value: unknown): string | undefined => {
     }
 
     for (const variation of Object.values(value.variations)) {
+        if (
+            value.variationType === 'INTEGER' &&
+            isRecord(variation) &&
+            typeof variation.value === 'number' &&
+            !Number.isSafeInteger(variation.value)
+        ) {
+            return 'Integer variation value cannot be represented safely as a JavaScript number';
+        }
         if (
             !isRecord(variation) ||
             typeof variation.key !== 'string' ||
@@ -440,10 +459,10 @@ export const prepareRulesConfiguration = (
     const clone = cloneValue(value);
 
     // TODO(FFL-2837): Delete this legacy JSON clone and validator after a
-    // flagging-core release contains upstream PR #344. That implementation
-    // decodes a generated Protobuf-ES response, preserves invalid flags, and
-    // records per-flag errors for evaluation. Do not adapt this validator to
-    // the generated response type.
+    // flagging-core release contains upstream PR #344 through `4f6f40c`. That
+    // implementation preserves protobuf integers as `bigint` and records a
+    // per-flag error when evaluation cannot produce a safe JavaScript number.
+    // Do not adapt this validator to the generated response type.
     const errorMessage = validateRulesConfigurationEnvelope(clone);
     if (errorMessage) {
         return { status: 'error', errorMessage };
@@ -493,9 +512,9 @@ const normalizeVariationType = (
 };
 
 // TODO(FFL-2837): Delete this legacy UFC v1 metadata fallback after the
-// flagging-core dependency contains DataDog/openfeature-js-client#344.
-// The protobuf evaluator supplies `variationType` and maps integer and numeric
-// variations to the OpenFeature type `number`.
+// flagging-core dependency contains DataDog/openfeature-js-client#344 through
+// `4f6f40c`. The protobuf evaluator maps only safely represented integer
+// variations, and all numeric variations, to the OpenFeature type `number`.
 const recoverVariationType = (
     configuration: RulesConfigurationResponse,
     flagKey: string
@@ -520,8 +539,8 @@ export const flaggingCoreRulesEngine: RulesEngine = {
         const flags = request.configuration.flags as Record<string, unknown>;
 
         // TODO(FFL-2837): Delete this local compatibility guard after the
-        // flagging-core dependency contains DataDog/openfeature-js-client#344.
-        // Keep the reserved-name contract tests for the upstream implementation.
+        // flagging-core dependency contains DataDog/openfeature-js-client#344
+        // through `4f6f40c`. Keep the reserved-name contract tests.
         if (!hasOwn(flags, request.flagKey)) {
             return {
                 value: request.defaultValue,
@@ -532,7 +551,8 @@ export const flaggingCoreRulesEngine: RulesEngine = {
         }
 
         // TODO(FFL-2837): Delete this compatibility check with the local error
-        // store after the published PR #344 evaluator reports parser errors.
+        // store after the published PR #344 evaluator at or after `4f6f40c`
+        // reports parser errors, including unsafe integer conversions.
         const configurationError = errorsByConfiguration
             .get(request.configuration)
             ?.get(request.flagKey);

@@ -199,7 +199,7 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this legacy JSON compatibility test with a
     // generated protobuf fixture after a flagging-core release contains
-    // DataDog/openfeature-js-client#344 at or after `be0d886`.
+    // DataDog/openfeature-js-client#344 at or after `4f6f40c`.
     it('keeps supported known data when an unknown field is present', () => {
         const source = buildRulesConfiguration();
         (source.flags['dynamic-flag'] as typeof source.flags['dynamic-flag'] & {
@@ -222,6 +222,75 @@ describe('rules configuration', () => {
                 logger: getNoopRulesLogger()
             })
         ).toMatchObject({ value: true, errorCode: undefined });
+    });
+
+    // TODO(FFL-2837): Replace this unsafe JSON number with an out-of-range
+    // protobuf `int64` fixture after flagging-core contains PR #344 at or after
+    // `4f6f40c`. The generated parser must preserve the source value as `bigint`.
+    it('returns PARSE_ERROR instead of serving an unsafe integer', () => {
+        const source = buildRulesConfiguration();
+        const flag = source.flags['dynamic-flag'];
+        flag.variationType = 'INTEGER';
+        flag.variations.enabled.value = Number.MAX_SAFE_INTEGER + 1;
+        flag.variations.disabled.value = 0;
+
+        const prepared = prepareRulesConfiguration(source);
+
+        expect(prepared.status).toBe('ready');
+        if (prepared.status !== 'ready') {
+            throw new Error(prepared.errorMessage);
+        }
+        expect(
+            prepared.configuration.flags['dynamic-flag'].variations.enabled
+                .value
+        ).toBe(Number.MAX_SAFE_INTEGER + 1);
+        expect(
+            flaggingCoreRulesEngine.evaluate({
+                configuration: prepared.configuration,
+                type: 'number',
+                flagKey: 'dynamic-flag',
+                defaultValue: 0,
+                context: { targetingKey: 'user-1', country: 'US' },
+                logger: getNoopRulesLogger()
+            })
+        ).toMatchObject({
+            value: 0,
+            reason: 'ERROR',
+            errorCode: 'PARSE_ERROR',
+            errorMessage:
+                'Integer variation value cannot be represented safely as a JavaScript number'
+        });
+    });
+
+    it('returns PARSE_ERROR for an unsafe shard integer', () => {
+        const source = buildRulesConfiguration();
+        source.flags[
+            'dynamic-flag'
+        ].allocations[0].splits[0].shards[0].totalShards =
+            Number.MAX_SAFE_INTEGER + 1;
+
+        const prepared = prepareRulesConfiguration(source);
+
+        expect(prepared.status).toBe('ready');
+        if (prepared.status !== 'ready') {
+            throw new Error(prepared.errorMessage);
+        }
+        expect(
+            flaggingCoreRulesEngine.evaluate({
+                configuration: prepared.configuration,
+                type: 'boolean',
+                flagKey: 'dynamic-flag',
+                defaultValue: false,
+                context: { targetingKey: 'user-1', country: 'US' },
+                logger: getNoopRulesLogger()
+            })
+        ).toMatchObject({
+            value: false,
+            reason: 'ERROR',
+            errorCode: 'PARSE_ERROR',
+            errorMessage:
+                'Protobuf uint64 cannot be represented safely as a JavaScript number'
+        });
     });
 
     it('normalizes a real flagging-core evaluation', () => {
