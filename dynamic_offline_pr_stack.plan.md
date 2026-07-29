@@ -27,11 +27,15 @@ The default flagging-core entry point keeps the evaluator and shared types.
 It does not load Protobuf-ES.
 The configuration subpath uses the Protobuf-ES base64 decoder.
 It does not promise strict rejection of non-canonical base64 padding.
+The parser preserves invalid flags and records their validation errors.
+The evaluator returns `PARSE_ERROR` when a customer evaluates one of those flags.
+The parser ignores unknown protobuf fields when supported known fields remain.
 
 Upstream PR #336 uses that parser in the browser `CoreProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
 Its head did not change.
 Its base moved to the first new PR #344 commit, but not to the latest PR #344 head.
+Its base does not include the per-flag error or unknown-field changes.
 GitHub currently reports PR #336 as non-mergeable.
 Recheck it after the upstream stack is repaired.
 
@@ -86,6 +90,9 @@ Add the internal boundary for the rules engine.
 - Verify that the pinned evaluator returns `FLAG_NOT_FOUND` for absent reserved-name keys.
 - Keep regular-expression safety as an explicit open item.
 - Add adapter contract tests.
+- Preserve `PARSE_ERROR` and its message from the upstream evaluator.
+- Add a contract test for an invalid flag that returns `PARSE_ERROR`.
+- Add a contract test that unknown protobuf fields do not reject supported known data.
 - Add a protobuf wire contract test from canonical dd-source bytes.
 - Put one base64 encoding of those bytes in a version `1` `rules.response` fixture.
 - Confirm that base64-decoding the fixture returns the original bytes.
@@ -122,11 +129,13 @@ Add dynamic evaluation to `FlagsClient`.
 - Use matching precomputed data first.
 - Use valid rules data second.
 - Return the applicable error when neither path is usable.
-- Treat a flag that the upstream parser drops as `FLAG_NOT_FOUND`.
+- Preserve `PARSE_ERROR` when a rules flag has a validation error.
+- Return `FLAG_NOT_FOUND` only when the flag key is absent.
 - Keep other valid rules flags.
 - Map rules results to `FlagDetails`.
 - Convert successful rules results to `TrackableAssignment`.
 - Track each successful rules assignment through the current native bridge.
+- Do not track `PARSE_ERROR` results.
 - Let native code apply `doLog` to exposure events.
 - Do not require split serial ID or evaluation timestamp in the mobile exposure payload unless the mobile contract changes.
 - Record that integer and numeric variations both use the OpenFeature type `number`.

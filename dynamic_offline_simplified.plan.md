@@ -82,7 +82,9 @@ It adds these features:
 - Protobuf-ES decoding
 - An opt-in `@datadog/flagging-core/configuration` entry point
 - Independent parsing of the precomputed and rules branches
-- Per-flag validation and feature-level rejection
+- Per-flag validation and feature-level errors
+- Evaluation-time `PARSE_ERROR` results for invalid rules flags
+- Forward-compatible handling of unknown protobuf fields
 - `ONE_OF_SHA256` and `NOT_ONE_OF_SHA256`
 - A synchronous JavaScript SHA-256 implementation
 - An internal UTF-8 implementation
@@ -91,8 +93,12 @@ It adds these features:
 - A check that the default flagging-core entry point does not load Protobuf-ES
 
 The parser keeps a valid branch when the other branch is malformed.
-The parser drops an unsupported or invalid rules flag.
-It does not invalidate the complete rules branch.
+The parser preserves an unsupported or invalid rules flag.
+It records the validation error for that flag.
+The evaluator returns `PARSE_ERROR` when a customer evaluates that flag.
+Other valid rules flags remain usable.
+Unknown protobuf fields do not cause an error when the known fields still define a supported value.
+An unknown enum or oneof value that leaves no supported known value causes a per-flag `PARSE_ERROR`.
 The schema is copied from the canonical `dd-source` UFC schema.
 The generated message types are compiled into the package output.
 
@@ -119,7 +125,8 @@ It adds the browser `CoreProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
 Its head remains `c7b75e8d`.
 Its base moved to the first new PR #344 commit, `73ed037d`.
-Its base does not contain the later base64-decoder commit, `3e0462be`.
+Its base does not contain the later PR #344 commits through `be0d886`.
+These later commits include the base64 decoder, per-flag `PARSE_ERROR` behavior, and unknown-field tolerance.
 GitHub currently reports the stack as non-mergeable.
 PR #336 must be restacked on the final PR #344 head before it is an integration reference for the released contract.
 
@@ -374,12 +381,13 @@ Decide whether React Native needs its own optional configuration subpath only af
 
 PR #344 supports the SHA-256 operators.
 The protobuf schema contains a per-flag minimum feature level.
-The parser drops an unsupported or invalid flag.
+The parser preserves an unsupported or invalid flag.
+The evaluator returns `PARSE_ERROR` and the validation message for that flag.
 It keeps other valid rules flags.
 
 Do not add a second operator list in React Native.
 Do not invalidate the complete rules branch.
-For a dropped flag, return `FLAG_NOT_FOUND`.
+Preserve the upstream `PARSE_ERROR` result for an invalid flag.
 Matching precomputed data still has priority.
 
 ### G7 — Untrusted rules and regular expressions
@@ -387,8 +395,11 @@ Matching precomputed data still has priority.
 **Status:** Structural validation is mostly implemented. Regular-expression safety remains.
 
 PR #344 validates the protobuf structure.
-It drops invalid rules flags.
+It records per-flag validation errors.
+The evaluator reports these errors as `PARSE_ERROR`.
 It rejects malformed indexes, values, ranges, and hashes.
+It ignores unknown protobuf fields when known fields still define a supported value.
+It reports a per-flag error when an unknown enum or oneof leaves no supported value.
 
 Do not duplicate this validator in React Native after publication.
 
@@ -559,7 +570,7 @@ Keep a valid sibling when the other branch is malformed.
 Return `GENERAL` only when the parser returns no usable branch.
 
 Do not add a second structural rules validator.
-Trust the parser to drop unsupported or malformed rules flags.
+Trust the parser and evaluator to report unsupported or malformed rules flags as `PARSE_ERROR`.
 Trust the released evaluator to perform own-property lookup.
 Keep the reserved-name contract tests from G9.
 Apply the size policy from G12 after the policy is defined.
@@ -619,6 +630,7 @@ Test that targeting and sharding use the same identifier.
 Map all evaluator results to `FlagDetails`.
 The evaluator already returns `FLAG_NOT_FOUND`.
 Do not create this error again in React Native.
+Preserve `PARSE_ERROR` and its `errorMessage`.
 
 Verify that the pinned upstream evaluator returns `FLAG_NOT_FOUND` for an absent reserved-name key.
 
@@ -637,6 +649,7 @@ Do not track these results:
 - No-variant `DEFAULT`
 - `TYPE_MISMATCH`
 - `FLAG_NOT_FOUND`
+- `PARSE_ERROR`
 - Error results
 
 Keep the online cache path unchanged.
@@ -788,7 +801,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Return `GENERAL` when the loaded configuration is empty.
 - [ ] Detect a changed upstream field name or version.
 - [ ] Test the published protobuf fixture.
-- [ ] Verify unknown protobuf enum behavior.
+- [ ] Ignore an unknown protobuf field when a supported known value remains.
+- [ ] Return `PARSE_ERROR` when an unknown enum or oneof leaves no supported value.
 
 ### 6.2 Load and reconciliation tests
 
@@ -799,8 +813,9 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Use matching precomputed data before rules.
 - [ ] Use rules after a precomputed mismatch.
 - [ ] Return `INVALID_CONTEXT` for a precomputed-only mismatch.
-- [ ] Return `FLAG_NOT_FOUND` for a flag that upstream drops.
-- [ ] Keep valid flags when upstream drops one unsupported flag.
+- [ ] Return `PARSE_ERROR` for an invalid rules flag.
+- [ ] Preserve the upstream validation message.
+- [ ] Keep valid flags when one rules flag has a validation error.
 - [ ] Keep valid precomputed data when the rules branch is malformed.
 
 ### 6.3 Rules evaluation tests
@@ -842,20 +857,23 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Do not track unmatched `DEFAULT`.
 - [ ] Do not track `FLAG_NOT_FOUND`.
 - [ ] Do not track `TYPE_MISMATCH`.
+- [ ] Do not track `PARSE_ERROR`.
 - [ ] Do not track error results.
 
 ### 6.6 Validation and security tests
 
 - [ ] Use upstream fixtures for malformed protobuf data.
-- [ ] Confirm that the parser drops a malformed flag.
-- [ ] Confirm that the parser rejects a bad shard range.
+- [ ] Confirm that the parser preserves a malformed flag.
+- [ ] Confirm that evaluating the malformed flag returns `PARSE_ERROR`.
+- [ ] Confirm that a bad shard range returns `PARSE_ERROR`.
+- [ ] Confirm that supported known data remains usable when the protobuf contains unknown fields.
 - [ ] Test inherited property names.
 - [ ] Test mutation of the source object after load.
 - [ ] Run a hostile regex in an isolated process.
 - [ ] Stop the hostile-regex process at its time limit.
 - [ ] Verify the selected ReDoS protection.
-- [ ] Confirm that an unsupported flag becomes `FLAG_NOT_FOUND`.
-- [ ] Confirm that an unsupported flag does not cause a silent `DEFAULT`.
+- [ ] Confirm that an unsupported flag becomes `PARSE_ERROR`.
+- [ ] Confirm that an unsupported flag does not cause `FLAG_NOT_FOUND` or a silent `DEFAULT`.
 - [ ] Test a newer cached configuration with an older evaluator.
 - [ ] Reject malformed SHA digests.
 - [ ] Apply the selected empty-salt policy.
@@ -982,7 +1000,8 @@ It does not protect guessable values from offline enumeration.
 
 ### R10 — Untrusted input and ReDoS
 
-The upstream parser rejects malformed protobuf flags.
+The upstream parser records malformed protobuf flag errors.
+The evaluator returns `PARSE_ERROR` when the affected key is evaluated.
 Hostile regex data can block the JavaScript thread.
 Select a regex protection.
 
@@ -1060,8 +1079,8 @@ It does not use a separate obfuscated payload mode.
 React Native does not pre-hash customer context.
 
 Do not claim complete support until G12 is complete.
-Let the upstream parser drop unsupported flags.
-Return `FLAG_NOT_FOUND` for a dropped flag.
+Let the upstream parser record unsupported flags.
+Return the upstream `PARSE_ERROR` for an unsupported flag.
 Use canonical test vectors.
 
 A public salt stops reusable precomputation.
@@ -1136,6 +1155,8 @@ The configuration producer owns content negotiation, content-type validation, an
 - [ ] Confirm Hermes compatibility.
 - [ ] Confirm JSC compatibility.
 - [x] Define per-flag feature-level and unknown-field behavior.
+- [x] Preserve invalid flags and report `PARSE_ERROR` during evaluation.
+- [x] Ignore unknown fields when a supported known value remains.
 - [x] Add SHA operators and salt fields to the schema.
 - [ ] Confirm the salt-length policy.
 - [ ] Define configuration-size limits.
@@ -1174,6 +1195,7 @@ The plan was updated on 2026-07-27 after review of PR #343, PR #344, and PR #336
 The plan was updated again on 2026-07-28 after PR #344 added generated Protobuf-ES support, package smoke tests, and safe flag lookup.
 The plan was updated on 2026-07-28 after ddoghq/dd-source PR #34959 merged.
 The plan was updated again on 2026-07-28 after PR #344 added an opt-in parser entry point and adopted the Protobuf-ES base64 decoder.
+The plan was updated on 2026-07-29 after PR #344 added per-flag evaluation errors and unknown-field tolerance.
 
 The reviews produced these main corrections:
 
@@ -1198,6 +1220,8 @@ The reviews produced these main corrections:
 - PR #344 accepts a measured 6,229-byte minified and 2,070-byte gzipped browser bundle increase.
 - PR #344 tests a packed package with the React Native Metro export conditions.
 - PR #344 performs structural validation.
+- PR #344 preserves invalid flags and reports `PARSE_ERROR` when they are evaluated.
+- PR #344 ignores unknown protobuf fields when supported known data remains.
 - Regular-expression safety still requires a decision.
 - A missing targeting key differs from an empty string in the evaluator.
 - PR #344 fixes prototype-name lookup in both rules evaluators.
@@ -1205,8 +1229,8 @@ The reviews produced these main corrections:
 - The public parsed configuration type is not fully opaque.
 - OpenFeature types currently resolve through hoisting.
 - Custom `id` can conflict with `targetingKey`.
-- PR #344 drops unsupported flags and keeps valid flags.
-- Unsupported flags must return `FLAG_NOT_FOUND`, not a silent `DEFAULT`.
+- PR #344 records unsupported flag errors and keeps valid flags.
+- Unsupported flags must return `PARSE_ERROR`, not `FLAG_NOT_FOUND` or a silent `DEFAULT`.
 - A malformed branch must not remove a valid sibling branch.
 - The salted-hash protocol needs canonical cross-SDK test vectors.
 - Salted SHA-256 does not make low-entropy values confidential.
