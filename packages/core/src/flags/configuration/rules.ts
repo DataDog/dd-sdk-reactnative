@@ -15,7 +15,8 @@ import type { EvaluationContext, JsonValue, PrimitiveValue } from '../types';
 // TODO(FFL-2837): Replace this legacy UFC v1 alias with
 // `NonNullable<FlagsConfiguration['rules']>['response']` after a flagging-core
 // release contains DataDog/openfeature-js-client#344. Keep the
-// `FlagsConfiguration` type import on the flagging-core package root.
+// `FlagsConfiguration` type import on the flagging-core package root. PR #344
+// now preserves invalid flags and reports their stored errors during evaluation.
 type RulesConfigurationResponse = UniversalFlagConfigurationV1;
 
 export type RulesValueType = 'boolean' | 'string' | 'number' | 'object';
@@ -124,6 +125,15 @@ export const toRulesEvaluationContext = (
 
 const hasOwn = (value: object, key: PropertyKey): boolean =>
     Object.prototype.hasOwnProperty.call(value, key);
+
+// TODO(FFL-2837): Delete this compatibility error store after a flagging-core
+// release contains DataDog/openfeature-js-client#344 at or after `ba1dbaf`.
+// The generated protobuf parser uses the same per-configuration error model,
+// and its evaluator returns `PARSE_ERROR` with the stored validation message.
+const errorsByConfiguration = new WeakMap<
+    RulesConfigurationResponse,
+    ReadonlyMap<string, string>
+>();
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -431,24 +441,31 @@ export const prepareRulesConfiguration = (
 
     // TODO(FFL-2837): Delete this legacy JSON clone and validator after a
     // flagging-core release contains upstream PR #344. That implementation
-    // decodes a generated Protobuf-ES response and omits unsupported or invalid
-    // flags. Do not adapt this validator to the generated response type.
+    // decodes a generated Protobuf-ES response, preserves invalid flags, and
+    // records per-flag errors for evaluation. Do not adapt this validator to
+    // the generated response type.
     const errorMessage = validateRulesConfigurationEnvelope(clone);
     if (errorMessage) {
         return { status: 'error', errorMessage };
     }
 
-    const flags = (clone as RulesConfigurationResponse).flags;
+    const configuration = clone as RulesConfigurationResponse;
+    const flags = configuration.flags;
+    const errors = new Map<string, string>();
     for (const [flagKey, flag] of Object.entries(flags)) {
-        if (validateFlag(flag)) {
-            delete flags[flagKey];
+        const flagError = validateFlag(flag);
+        if (flagError) {
+            errors.set(flagKey, flagError);
         }
     }
 
     freezeValue(clone);
+    if (errors.size > 0) {
+        errorsByConfiguration.set(configuration, errors);
+    }
     return {
         status: 'ready',
-        configuration: clone as RulesConfigurationResponse
+        configuration
     };
 };
 
@@ -510,6 +527,21 @@ export const flaggingCoreRulesEngine: RulesEngine = {
                 value: request.defaultValue,
                 reason: 'ERROR',
                 errorCode: 'FLAG_NOT_FOUND',
+                metadata: {}
+            };
+        }
+
+        // TODO(FFL-2837): Delete this compatibility check with the local error
+        // store after the published PR #344 evaluator reports parser errors.
+        const configurationError = errorsByConfiguration
+            .get(request.configuration)
+            ?.get(request.flagKey);
+        if (configurationError) {
+            return {
+                value: request.defaultValue,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: configurationError,
                 metadata: {}
             };
         }

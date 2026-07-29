@@ -66,7 +66,7 @@ describe('rules configuration', () => {
         ).toBe(true);
     });
 
-    it('omits a flag that uses an unsupported operator', () => {
+    it('preserves a flag with an unsupported operator and reports PARSE_ERROR', () => {
         const source = buildRulesConfiguration();
         const condition =
             source.flags['dynamic-flag'].allocations[0].rules?.[0]
@@ -83,10 +83,25 @@ describe('rules configuration', () => {
         if (prepared.status !== 'ready') {
             throw new Error(prepared.errorMessage);
         }
-        expect(prepared.configuration.flags).toEqual({});
+        expect(prepared.configuration.flags).toHaveProperty('dynamic-flag');
+        expect(
+            flaggingCoreRulesEngine.evaluate({
+                configuration: prepared.configuration,
+                type: 'boolean',
+                flagKey: 'dynamic-flag',
+                defaultValue: false,
+                context: { targetingKey: 'user-1' },
+                logger: getNoopRulesLogger()
+            })
+        ).toMatchObject({
+            value: false,
+            reason: 'ERROR',
+            errorCode: 'PARSE_ERROR',
+            errorMessage: expect.stringContaining('FUTURE_OPERATOR')
+        });
     });
 
-    it('omits a flag that contains an invalid regular expression', () => {
+    it('reports PARSE_ERROR for a flag with an invalid regular expression', () => {
         const source = buildRulesConfiguration();
         const conditions =
             source.flags['dynamic-flag'].allocations[0].rules?.[0].conditions;
@@ -105,10 +120,22 @@ describe('rules configuration', () => {
         if (prepared.status !== 'ready') {
             throw new Error(prepared.errorMessage);
         }
-        expect(prepared.configuration.flags).toEqual({});
+        expect(
+            flaggingCoreRulesEngine.evaluate({
+                configuration: prepared.configuration,
+                type: 'boolean',
+                flagKey: 'dynamic-flag',
+                defaultValue: false,
+                context: { targetingKey: 'user-1' },
+                logger: getNoopRulesLogger()
+            })
+        ).toMatchObject({
+            errorCode: 'PARSE_ERROR',
+            errorMessage: 'A regular expression condition is not valid.'
+        });
     });
 
-    it('omits a flag whose split points to an absent variation', () => {
+    it('reports PARSE_ERROR when a split points to an absent variation', () => {
         const source = buildRulesConfiguration();
         source.flags['dynamic-flag'].allocations[0].splits[0].variationKey =
             'absent';
@@ -119,10 +146,22 @@ describe('rules configuration', () => {
         if (prepared.status !== 'ready') {
             throw new Error(prepared.errorMessage);
         }
-        expect(prepared.configuration.flags).toEqual({});
+        expect(
+            flaggingCoreRulesEngine.evaluate({
+                configuration: prepared.configuration,
+                type: 'boolean',
+                flagKey: 'dynamic-flag',
+                defaultValue: false,
+                context: { targetingKey: 'user-1' },
+                logger: getNoopRulesLogger()
+            })
+        ).toMatchObject({
+            errorCode: 'PARSE_ERROR',
+            errorMessage: 'A split has an invalid variation key.'
+        });
     });
 
-    it('keeps valid flags when it omits an invalid flag', () => {
+    it('keeps valid flags usable when another flag has a parse error', () => {
         const source = buildRulesConfiguration();
         const validFlag = buildRulesConfiguration().flags['dynamic-flag'];
         validFlag.key = 'valid-flag';
@@ -143,8 +182,46 @@ describe('rules configuration', () => {
             throw new Error(prepared.errorMessage);
         }
         expect(Object.keys(prepared.configuration.flags)).toEqual([
+            'dynamic-flag',
             'valid-flag'
         ]);
+        expect(
+            flaggingCoreRulesEngine.evaluate({
+                configuration: prepared.configuration,
+                type: 'boolean',
+                flagKey: 'valid-flag',
+                defaultValue: false,
+                context: { targetingKey: 'user-1', country: 'US' },
+                logger: getNoopRulesLogger()
+            })
+        ).toMatchObject({ value: true, errorCode: undefined });
+    });
+
+    // TODO(FFL-2837): Replace this legacy JSON compatibility test with a
+    // generated protobuf fixture after a flagging-core release contains
+    // DataDog/openfeature-js-client#344 at or after `be0d886`.
+    it('keeps supported known data when an unknown field is present', () => {
+        const source = buildRulesConfiguration();
+        (source.flags['dynamic-flag'] as typeof source.flags['dynamic-flag'] & {
+            futureField: string;
+        }).futureField = 'ignored';
+
+        const prepared = prepareRulesConfiguration(source);
+
+        expect(prepared.status).toBe('ready');
+        if (prepared.status !== 'ready') {
+            throw new Error(prepared.errorMessage);
+        }
+        expect(
+            flaggingCoreRulesEngine.evaluate({
+                configuration: prepared.configuration,
+                type: 'boolean',
+                flagKey: 'dynamic-flag',
+                defaultValue: false,
+                context: { targetingKey: 'user-1', country: 'US' },
+                logger: getNoopRulesLogger()
+            })
+        ).toMatchObject({ value: true, errorCode: undefined });
     });
 
     it('normalizes a real flagging-core evaluation', () => {
