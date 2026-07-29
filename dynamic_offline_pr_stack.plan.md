@@ -22,8 +22,18 @@ Published flagging-core version 2.0.2 does not contain the new rules wire contra
 Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, validation, safe flag lookup, and React Native compatibility.
 It adds `@bufbuild/protobuf` as a runtime dependency.
 Its packed-package smoke test uses the Metro export conditions from this repository.
+It moves wire parsing and `FlagsConfigurationWire` to `@datadog/flagging-core/configuration`.
+The default flagging-core entry point keeps the evaluator and shared types.
+It does not load Protobuf-ES.
+The configuration subpath uses the Protobuf-ES base64 decoder.
+It does not promise strict rejection of non-canonical base64 padding.
+
 Upstream PR #336 uses that parser in the browser `CoreProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
+Its head did not change.
+Its base moved to the first new PR #344 commit, but not to the latest PR #344 head.
+GitHub currently reports PR #336 as non-mergeable.
+Recheck it after the upstream stack is repaired.
 
 ddoghq/dd-source PR #34959 is merged.
 It adds protobuf content negotiation to the existing UFC service endpoints.
@@ -43,6 +53,7 @@ Production code must use one internal engine adapter.
 
 Remove temporary JSON rules-wire parsing, duplicate rules validation, and local lookup guards after the upstream package is published.
 Do not add a local protobuf parser.
+Do not copy the removed strict base64 validator.
 Do not add a service HTTP client.
 Do not add service-to-wire packaging to the React Native SDK.
 Do not wait for upstream `extraLogging`.
@@ -55,6 +66,9 @@ Add the internal boundary for the rules engine.
 
 - Bump to the flagging-core release that contains PR #344.
 - Use a packed PR #344 package before publication.
+- Import wire parsing from `@datadog/flagging-core/configuration`.
+- Keep the evaluator and shared configuration types on the package root.
+- Do not import wire parsing from the package root.
 - Use `FlagsConfiguration.rules.response`.
 - Remove the temporary `rulesBased` and JSON compatibility shapes.
 - Remove duplicate structural validation after the dependency bump.
@@ -75,11 +89,16 @@ Add the internal boundary for the rules engine.
 - Add a protobuf wire contract test from canonical dd-source bytes.
 - Put one base64 encoding of those bytes in a version `1` `rules.response` fixture.
 - Confirm that base64-decoding the fixture returns the original bytes.
+- Do not require stricter base64 rejection than the upstream Protobuf-ES decoder.
 - Record the source schema or generator revision for the fixture.
 - Confirm that the fixture represents the client distribution channel.
 - Add reserved-name flag-key contract tests.
 - Confirm that rules serialization throws.
 - Add fake-engine test helpers.
+- Add a package contract check for the configuration subpath.
+- Confirm that the default flagging-core entry point does not load Protobuf-ES.
+- Measure whether the React Native package root still loads Protobuf-ES through its public re-export.
+- Decide whether React Native needs its own configuration subpath.
 - Do not add a fetch or transport-conversion API.
 - Keep current provider behavior unchanged.
 - Keep precomputed evaluation unchanged.
@@ -89,6 +108,8 @@ The main review questions are:
 > Does this boundary isolate the SDK from the upstream rules engine?
 >
 > Does the wire contract test keep raw service protobuf separate from the portable JSON envelope?
+>
+> Does the import boundary keep Protobuf-ES out of code that does not use configuration parsing?
 
 ## PR2 — Core dynamic and mixed evaluation
 
@@ -140,8 +161,9 @@ Expose dynamic evaluation through the existing offline provider.
 - Update both example applications.
 - Add Hermes and JSC checks where the repository supports them.
 - Test the packed dependency with the repository Metro export conditions.
-- Record the 6,229-byte minified and 2,070-byte gzipped browser bundle increase.
+- Record that the 6,229-byte minified and 2,070-byte gzipped browser increase applies to configuration parsing, not the default flagging-core entry point.
 - Record the 1,106-byte minified and 459-byte gzipped React Native compatibility cost.
+- Measure the default flagging-core entry point, its configuration subpath, and the React Native package root separately.
 - Measure the packed dependency in this repository.
 
 The main review question is:
