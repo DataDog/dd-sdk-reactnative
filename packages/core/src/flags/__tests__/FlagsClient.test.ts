@@ -1295,6 +1295,37 @@ describe('FlagsClient', () => {
             evaluate.mockRestore();
         });
 
+        it('preserves PARSE_ERROR details and does not track the result', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'ERROR',
+                variant: 'invalid-variant',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Unsupported flag',
+                metadata: {
+                    allocationKey: 'invalid-allocation',
+                    variationType: 'boolean',
+                    doLog: true
+                }
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+
+            expect(
+                flagsClient.getBooleanDetails('dynamic-flag', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Unsupported flag'
+            });
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
         it('maps an unknown engine error to GENERAL', () => {
             const evaluate = installFakeRulesEngine(request => ({
                 value: request.defaultValue,
