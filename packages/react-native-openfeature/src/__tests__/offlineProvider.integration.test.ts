@@ -106,7 +106,10 @@ const rulesResponseFor = (flagKey: string) => ({
 // raw protobuf bytes produced from the dd-source#34959 client-distribution path.
 // Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
 // verify that decoding returns the original bytes, and record the source revision.
-// Reuse that portable-wire fixture for examples, Metro, Hermes, and JSC checks.
+// Use the upstream `@datadog/flagging-core/configuration` parser. Do not copy the
+// strict base64 validator removed by PR #344. Reuse the portable-wire fixture for
+// examples, Metro, Hermes, and JSC checks. Also confirm that the default flagging-core
+// entry point excludes Protobuf-ES and measure whether the React Native root includes it.
 const rulesWireFor = (flagKey: string): string =>
     JSON.stringify({
         version: 1,

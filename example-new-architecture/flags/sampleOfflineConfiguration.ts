@@ -26,7 +26,8 @@ export const buildSampleWire = (): string =>
     // DataDog/openfeature-js-client#344. Reuse the production-derived client
     // fixture from the integration test: one base64 encoding of the canonical
     // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
-    // Do not use raw protobuf or the legacy service JSON response here.
+    // Let the upstream configuration subpath decode it. Do not use raw protobuf,
+    // the legacy service JSON response, or a local strict base64 validator here.
     rulesBased: {
       response: JSON.stringify({
         createdAt: '2026-07-23T12:00:00.000Z',

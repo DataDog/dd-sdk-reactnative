@@ -157,6 +157,8 @@ const isNewFeatureEnabled = client.getBooleanValue(
 
 `wire` must be the complete version `1` portable JSON envelope.
 For rules, `rules.response` contains one base64 encoding of the raw UFC protobuf bytes.
+Use standard base64.
+The SDK delegates decoding to flagging-core and does not add a second stricter base64 validator.
 Do not pass raw protobuf bytes to `configurationFromString`.
 Do not put the UFC service JSON response in `rules.response`.
 The provider does not fetch the UFC endpoint or build the portable envelope.
