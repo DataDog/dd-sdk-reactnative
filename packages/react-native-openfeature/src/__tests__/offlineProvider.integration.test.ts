@@ -102,7 +102,8 @@ const rulesResponseFor = (flagKey: string) => ({
 });
 
 // TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
-// flagging-core release contains DataDog/openfeature-js-client#344. Use canonical
+// flagging-core release contains DataDog/openfeature-js-client#344 through
+// `4f6f40c`. Use canonical
 // raw protobuf bytes produced from the dd-source#34959 client-distribution path.
 // Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
 // verify that decoding returns the original bytes, and record the source revision.
@@ -110,8 +111,9 @@ const rulesResponseFor = (flagKey: string) => ({
 // strict base64 validator removed by PR #344. Reuse the portable-wire fixture for
 // examples, Metro, Hermes, and JSC checks. Also confirm that the default flagging-core
 // entry point excludes Protobuf-ES and measure whether the React Native root includes it.
-// Pin PR #344 at or after `be0d886`: invalid flags must return `PARSE_ERROR` with
-// their message, and unknown protobuf fields must not reject supported known data.
+// The fixture must prove that unknown fields preserve supported known data and
+// that an out-of-range `int64` stays a `bigint` before evaluation returns
+// `PARSE_ERROR`. Run the same fixture in the supported Hermes and JSC versions.
 const rulesWireFor = (
     flagKey: string,
     response = rulesResponseFor(flagKey)
@@ -227,16 +229,15 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         expect(details.errorCode).toBe(ErrorCode.TARGETING_KEY_MISSING);
     });
 
-    it('preserves an invalid flag PARSE_ERROR and does not track it', async () => {
+    it('preserves an unsafe-integer PARSE_ERROR and does not track it', async () => {
         const { domain, clientName } = freshNames();
         const response = rulesResponseFor('invalid-feature');
-        const condition =
-            response.flags['invalid-feature'].allocations[0].rules?.[0]
-                .conditions[0];
-        if (!condition) {
-            throw new Error('The fixture has no condition.');
-        }
-        (condition as { operator: string }).operator = 'FUTURE_OPERATOR';
+        const flag = (response.flags['invalid-feature'] as unknown) as {
+            variationType: string;
+            variations: { enabled: { value: unknown } };
+        };
+        flag.variationType = 'INTEGER';
+        flag.variations.enabled.value = Number.MAX_SAFE_INTEGER + 1;
 
         const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
         provider.setConfiguration(
@@ -244,15 +245,16 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         );
         await OpenFeature.setProviderAndWait(domain, provider);
 
-        const details = OpenFeature.getClient(domain).getBooleanDetails(
+        const details = OpenFeature.getClient(domain).getNumberDetails(
             'invalid-feature',
-            false
+            0
         );
         expect(details).toMatchObject({
-            value: false,
+            value: 0,
             reason: 'ERROR',
             errorCode: ErrorCode.PARSE_ERROR,
-            errorMessage: expect.stringContaining('FUTURE_OPERATOR')
+            errorMessage:
+                'Integer variation value cannot be represented safely as a JavaScript number'
         });
 
         const nativeFlags = jest.requireMock(

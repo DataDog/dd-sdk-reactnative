@@ -169,6 +169,10 @@ An evaluation of that flag returns `PARSE_ERROR` and the validation message.
 The SDK does not track that error result.
 Other valid rules flags remain usable.
 Unknown protobuf fields do not reject supported known data.
+Protobuf integer values stay as `bigint` in the parsed rules object.
+Safe integers evaluate as OpenFeature numbers.
+An integer outside the JavaScript safe range returns `PARSE_ERROR`.
+The SDK does not return a rounded or imprecise value.
 
 Keep the original wire when it contains rules.
 Do not use `configurationToString` to recreate a rules wire.
