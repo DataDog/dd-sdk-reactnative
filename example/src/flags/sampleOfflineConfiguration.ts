@@ -28,6 +28,8 @@ export const buildSampleWire = (): string =>
         // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
         // Let the upstream configuration subpath decode it. Do not use raw protobuf,
         // the legacy service JSON response, or a local strict base64 validator here.
+        // Pin PR #344 at or after `be0d886` so invalid flags return `PARSE_ERROR`
+        // and unknown protobuf fields do not reject supported known data.
         rulesBased: {
             response: JSON.stringify({
                 createdAt: '2026-07-23T12:00:00.000Z',

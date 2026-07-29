@@ -110,11 +110,16 @@ const rulesResponseFor = (flagKey: string) => ({
 // strict base64 validator removed by PR #344. Reuse the portable-wire fixture for
 // examples, Metro, Hermes, and JSC checks. Also confirm that the default flagging-core
 // entry point excludes Protobuf-ES and measure whether the React Native root includes it.
-const rulesWireFor = (flagKey: string): string =>
+// Pin PR #344 at or after `be0d886`: invalid flags must return `PARSE_ERROR` with
+// their message, and unknown protobuf fields must not reject supported known data.
+const rulesWireFor = (
+    flagKey: string,
+    response = rulesResponseFor(flagKey)
+): string =>
     JSON.stringify({
         version: 1,
         rulesBased: {
-            response: JSON.stringify(rulesResponseFor(flagKey))
+            response: JSON.stringify(response)
         }
     });
 
@@ -220,6 +225,40 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         );
         expect(details.value).toBe(false);
         expect(details.errorCode).toBe(ErrorCode.TARGETING_KEY_MISSING);
+    });
+
+    it('preserves an invalid flag PARSE_ERROR and does not track it', async () => {
+        const { domain, clientName } = freshNames();
+        const response = rulesResponseFor('invalid-feature');
+        const condition =
+            response.flags['invalid-feature'].allocations[0].rules?.[0]
+                .conditions[0];
+        if (!condition) {
+            throw new Error('The fixture has no condition.');
+        }
+        (condition as { operator: string }).operator = 'FUTURE_OPERATOR';
+
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(
+            configurationFromString(rulesWireFor('invalid-feature', response))
+        );
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        const details = OpenFeature.getClient(domain).getBooleanDetails(
+            'invalid-feature',
+            false
+        );
+        expect(details).toMatchObject({
+            value: false,
+            reason: 'ERROR',
+            errorCode: ErrorCode.PARSE_ERROR,
+            errorMessage: expect.stringContaining('FUTURE_OPERATOR')
+        });
+
+        const nativeFlags = jest.requireMock(
+            '../../../core/src/specs/NativeDdFlags'
+        ).default;
+        expect(nativeFlags.trackEvaluation).not.toHaveBeenCalled();
     });
 
     it('starts in ERROR when a context-specific configuration has no OpenFeature context', async () => {

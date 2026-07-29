@@ -164,6 +164,12 @@ Do not put the UFC service JSON response in `rules.response`.
 The provider does not fetch the UFC endpoint or build the portable envelope.
 The customer or configuration distribution layer must supply that envelope.
 
+Flagging-core keeps an invalid or unsupported rules flag in the parsed configuration.
+An evaluation of that flag returns `PARSE_ERROR` and the validation message.
+The SDK does not track that error result.
+Other valid rules flags remain usable.
+Unknown protobuf fields do not reject supported known data.
+
 Keep the original wire when it contains rules.
 Do not use `configurationToString` to recreate a rules wire.
 The parsed rules object does not contain the original protobuf payload.
