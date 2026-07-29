@@ -4,8 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-// Wire (de)serialization is reused from `@datadog/flagging-core` (the canonical
-// implementation) rather than reimplemented here. The input is the complete portable JSON
+// Published flagging-core 2.0.2 exports wire conversion from its package root. PR #344 moves
+// that conversion to the opt-in `@datadog/flagging-core/configuration` entry point so the default
+// entry point does not load Protobuf-ES. In both versions, the input is the complete portable JSON
 // envelope. It is not the raw protobuf or legacy JSON response from the UFC service.
 // `configurationFromString` is lenient: it returns an empty configuration (`{}`) for
 // malformed input or an unsupported wire version rather than throwing.
@@ -22,10 +23,12 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344.
-// Re-export the upstream functions and use `FlagsConfiguration.rules`. The
-// distribution layer must put one base64 encoding of the raw dd-source#34959
-// protobuf response in the version 1 `rules.response` field. Do not add that
-// service transport or envelope construction here.
+// Import and re-export the wire functions and `FlagsConfigurationWire` type from
+// `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
+// evaluator on the package root. Use `FlagsConfiguration.rules`. The distribution
+// layer must put one base64 encoding of the raw dd-source#34959 protobuf response
+// in the version 1 `rules.response` field. Do not add that service transport or
+// envelope construction here.
 type PendingRulesConfiguration = FlagsConfiguration & {
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
@@ -73,7 +76,8 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // TODO(FFL-2837): Delete this legacy JSON compatibility shim with the
     // pending types above. The upstream parser decodes `rules.response` as a
     // generated Protobuf-ES message. Do not adapt this shim to decode a raw
-    // service response or to add a base64 layer.
+    // service response or to add a base64 layer. Do not copy the strict base64
+    // validator that PR #344 removed in favor of the Protobuf-ES decoder.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
