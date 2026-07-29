@@ -28,7 +28,8 @@ import type {
 // evaluator on the package root. Use `FlagsConfiguration.rules`. The distribution
 // layer must put one base64 encoding of the raw dd-source#34959 protobuf response
 // in the version 1 `rules.response` field. Do not add that service transport or
-// envelope construction here.
+// envelope construction here. PR #344 preserves invalid protobuf flags and
+// reports their validation errors when the flag is evaluated.
 type PendingRulesConfiguration = FlagsConfiguration & {
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
@@ -77,7 +78,8 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // pending types above. The upstream parser decodes `rules.response` as a
     // generated Protobuf-ES message. Do not adapt this shim to decode a raw
     // service response or to add a base64 layer. Do not copy the strict base64
-    // validator that PR #344 removed in favor of the Protobuf-ES decoder.
+    // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
+    // published parser must also include PR #344's unknown-field tolerance.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
