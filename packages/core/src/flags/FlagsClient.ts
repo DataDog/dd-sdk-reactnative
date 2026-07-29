@@ -92,6 +92,8 @@ type LoadedConfigurationState =
 // or envelope construction to `FlagsClient`. PR #344 moves parsing to
 // `@datadog/flagging-core/configuration`; keep that opt-in import in the local
 // wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
+// The released evaluator must also include PR #344's per-flag `PARSE_ERROR`
+// results and unknown-field tolerance.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
 };
@@ -471,6 +473,7 @@ export class FlagsClient {
         errorCode:
             | ConfigurationErrorCode
             | 'FLAG_NOT_FOUND'
+            | 'PARSE_ERROR'
             | 'TARGETING_KEY_MISSING'
             | 'TYPE_MISMATCH',
         errorMessage?: string
@@ -521,12 +524,14 @@ export class FlagsClient {
     ):
         | ConfigurationErrorCode
         | 'FLAG_NOT_FOUND'
+        | 'PARSE_ERROR'
         | 'TARGETING_KEY_MISSING'
         | 'TYPE_MISMATCH' => {
         switch (errorCode) {
             case 'INVALID_CONTEXT':
             case 'PROVIDER_NOT_READY':
             case 'FLAG_NOT_FOUND':
+            case 'PARSE_ERROR':
             case 'TARGETING_KEY_MISSING':
             case 'TYPE_MISMATCH':
                 return errorCode;
