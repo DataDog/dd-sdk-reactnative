@@ -89,7 +89,9 @@ type LoadedConfigurationState =
 // flagging-core release contains DataDog/openfeature-js-client#344. Read
 // `configuration.rules.response` directly. The configuration is already parsed
 // from the complete portable envelope. Do not add raw-service-response handling
-// or envelope construction to `FlagsClient`.
+// or envelope construction to `FlagsClient`. PR #344 moves parsing to
+// `@datadog/flagging-core/configuration`; keep that opt-in import in the local
+// wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
 };
