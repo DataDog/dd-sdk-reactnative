@@ -22,14 +22,15 @@ import type {
 } from '@datadog/flagging-core';
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
-// after a flagging-core release contains DataDog/openfeature-js-client#344.
+// after a flagging-core release contains DataDog/openfeature-js-client#344
+// through `4f6f40c`.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
 // `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
 // evaluator on the package root. Use `FlagsConfiguration.rules`. The distribution
 // layer must put one base64 encoding of the raw dd-source#34959 protobuf response
 // in the version 1 `rules.response` field. Do not add that service transport or
 // envelope construction here. PR #344 preserves invalid protobuf flags and
-// reports their validation errors when the flag is evaluated.
+// protobuf integers, and reports unsafe integer conversion when evaluated.
 type PendingRulesConfiguration = FlagsConfiguration & {
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
@@ -79,7 +80,8 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // generated Protobuf-ES message. Do not adapt this shim to decode a raw
     // service response or to add a base64 layer. Do not copy the strict base64
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
-    // published parser must also include PR #344's unknown-field tolerance.
+    // published parser must also include PR #344's unknown-field tolerance and
+    // lossless integer parsing through `4f6f40c`.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
@@ -105,7 +107,8 @@ export const configurationToString = (
 
     // TODO(FFL-2837): Delete this local serialization guard with the pending
     // types above. PR #344 makes the upstream serializer reject `rules`. The
-    // parsed protobuf does not contain the original portable-wire bytes.
+    // parsed protobuf does not contain the original portable-wire bytes and can
+    // contain `bigint` values after `4f6f40c`.
     if (pendingConfiguration.rulesBased) {
         throw new Error(
             'Rules configurations cannot be serialized to the wire format'
