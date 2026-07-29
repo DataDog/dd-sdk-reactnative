@@ -86,14 +86,17 @@ type LoadedConfigurationState =
       };
 
 // TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
-// flagging-core release contains DataDog/openfeature-js-client#344. Read
+// flagging-core release contains DataDog/openfeature-js-client#344 through
+// `4f6f40c`. Read
 // `configuration.rules.response` directly. The configuration is already parsed
 // from the complete portable envelope. Do not add raw-service-response handling
 // or envelope construction to `FlagsClient`. PR #344 moves parsing to
 // `@datadog/flagging-core/configuration`; keep that opt-in import in the local
 // wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
 // The released evaluator must also include PR #344's per-flag `PARSE_ERROR`
-// results and unknown-field tolerance.
+// results, unknown-field tolerance, and lossless protobuf integer parsing.
+// `FlagsClient` must not convert a parsed `bigint`; it must preserve the
+// evaluator's `PARSE_ERROR` when the value is not a safe JavaScript number.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
 };

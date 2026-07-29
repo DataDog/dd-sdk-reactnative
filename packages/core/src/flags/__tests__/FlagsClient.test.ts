@@ -1301,16 +1301,17 @@ describe('FlagsClient', () => {
             evaluate.mockRestore();
         });
 
-        it('preserves PARSE_ERROR details and does not track the result', () => {
+        it('preserves an unsafe-integer PARSE_ERROR and does not track it', () => {
             const evaluate = installFakeRulesEngine(request => ({
                 value: request.defaultValue,
                 reason: 'ERROR',
                 variant: 'invalid-variant',
                 errorCode: 'PARSE_ERROR',
-                errorMessage: 'Unsupported flag',
+                errorMessage:
+                    'Integer variation value cannot be represented safely as a JavaScript number',
                 metadata: {
                     allocationKey: 'invalid-allocation',
-                    variationType: 'boolean',
+                    variationType: 'number',
                     doLog: true
                 }
             }));
@@ -1318,12 +1319,13 @@ describe('FlagsClient', () => {
             flagsClient.setConfiguration(buildRulesConfig());
 
             expect(
-                flagsClient.getBooleanDetails('dynamic-flag', false)
+                flagsClient.getNumberDetails('dynamic-flag', 0)
             ).toMatchObject({
-                value: false,
+                value: 0,
                 reason: 'ERROR',
                 errorCode: 'PARSE_ERROR',
-                errorMessage: 'Unsupported flag'
+                errorMessage:
+                    'Integer variation value cannot be represented safely as a JavaScript number'
             });
             expect(
                 NativeModules.DdFlags.trackEvaluation
