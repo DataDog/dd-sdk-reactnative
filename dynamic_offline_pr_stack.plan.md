@@ -19,7 +19,7 @@ Keep all three pull requests in draft state.
 ## Temporary upstream code
 
 Published flagging-core version 2.0.2 does not contain the new rules wire contract.
-Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, validation, safe flag lookup, and React Native compatibility.
+Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, evaluation-time validation, safe flag lookup, and React Native compatibility.
 It adds `@bufbuild/protobuf` as a runtime dependency.
 Its packed-package smoke test uses the Metro export conditions from this repository.
 It moves wire parsing and `FlagsConfigurationWire` to `@datadog/flagging-core/configuration`.
@@ -27,19 +27,28 @@ The default flagging-core entry point keeps the evaluator and shared types.
 It does not load Protobuf-ES.
 The configuration subpath uses the Protobuf-ES base64 decoder.
 It does not promise strict rejection of non-canonical base64 padding.
-The parser preserves invalid flags and records their validation errors.
-The evaluator returns `PARSE_ERROR` when a customer evaluates one of those flags.
+The parser preserves decoded rules data.
+The evaluator validates the requested flag and the data that evaluation reaches.
+It returns a deterministic `PARSE_ERROR` for invalid data.
 The parser ignores unknown protobuf fields when supported known fields remain.
 The parser preserves protobuf integers as `bigint`.
 The evaluator returns `PARSE_ERROR` instead of an imprecise number when an integer is outside the JavaScript safe range.
+PR #344 now serializes rules configurations.
+It validates precomputed configuration data during parsing.
+It records complete precomputed branch errors and per-flag precomputed errors.
+It requires composite conditions to reference preceding conditions.
+It compiles and caches regular expressions lazily.
+This cache does not solve ReDoS.
+The latest protobuf evaluator no longer validates that SHA-256 digests are 32 bytes.
+An upstream fix is required before the dependency is pinned.
 
 Upstream PR #336 uses that parser in the browser `CoreProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
-Its head did not change.
-Its base moved to the first new PR #344 commit, but not to the latest PR #344 head.
-Its base does not include the per-flag error, unknown-field, or integer-preservation changes.
-GitHub currently reports PR #336 as non-mergeable.
-Recheck it after the upstream stack is repaired.
+Its head is `9e1fefd`.
+Its merge base is the current PR #344 head, `41dff20`.
+GitHub reports both PRs as mergeable.
+The combined evaluator returns `precomputedError` before it checks rules.
+React Native must keep its separate-path behavior so valid rules can survive a malformed precomputed sibling.
 
 ddoghq/dd-source PR #34959 is merged.
 It adds protobuf content negotiation to the existing UFC service endpoints.
@@ -57,7 +66,7 @@ Do not hide temporary behavior in a general helper.
 Tests can use a fake rules engine.
 Production code must use one internal engine adapter.
 
-Remove temporary JSON rules-wire parsing, duplicate rules validation, and local lookup guards after the upstream package is published.
+Remove temporary JSON rules-wire parsing, duplicate rules evaluation checks, and local lookup guards after the upstream package is published.
 Do not add a local protobuf parser.
 Do not copy the removed strict base64 validator.
 Do not add a service HTTP client.
@@ -77,14 +86,14 @@ Add the internal boundary for the rules engine.
 - Do not import wire parsing from the package root.
 - Use `FlagsConfiguration.rules.response`.
 - Remove the temporary `rulesBased` and JSON compatibility shapes.
-- Remove duplicate structural validation after the dependency bump.
+- Remove duplicate rules evaluation checks after the dependency bump.
 - Remove the temporary own-property guard after the dependency bump.
 - Add internal rules configuration types.
 - Add a rules-engine adapter.
 - Convert SDK contexts to engine contexts.
 - Normalize engine results.
 - Use the upstream protobuf rules object.
-- Use upstream parser validation.
+- Use upstream evaluation-time validation.
 - Derive the rules response type from `FlagsConfiguration['rules']`.
 - Do not export generated UFC message types.
 - Keep OpenFeature types out of React Native core.
@@ -94,6 +103,10 @@ Add the internal boundary for the rules engine.
 - Add adapter contract tests.
 - Preserve `PARSE_ERROR` and its message from the upstream evaluator.
 - Add a contract test for an invalid flag that returns `PARSE_ERROR`.
+- Add a contract test for deterministic `PARSE_ERROR` messages.
+- Add contract tests for backward-only composite condition references.
+- Add a contract test for lazy regular-expression compilation.
+- Add a contract test that malformed SHA-256 digests return `PARSE_ERROR`.
 - Add a contract test that unknown protobuf fields do not reject supported known data.
 - Add a contract test that preserves an out-of-range protobuf integer during parsing.
 - Add a contract test that returns `PARSE_ERROR` instead of an imprecise number during evaluation.
@@ -104,7 +117,7 @@ Add the internal boundary for the rules engine.
 - Record the source schema or generator revision for the fixture.
 - Confirm that the fixture represents the client distribution channel.
 - Add reserved-name flag-key contract tests.
-- Confirm that rules serialization throws.
+- Confirm that rules serialization round-trips.
 - Add fake-engine test helpers.
 - Add a package contract check for the configuration subpath.
 - Confirm that the default flagging-core entry point does not load Protobuf-ES.
@@ -128,12 +141,14 @@ Add dynamic evaluation to `FlagsClient`.
 
 - Store precomputed and rules branches independently.
 - Keep a valid branch when its sibling is invalid.
+- Keep valid rules data when the parsed configuration also contains `precomputedError`.
+- Do not copy the combined PR #336 evaluator precedence for `precomputedError`.
 - Reconcile a rules branch as ready for each context.
 - Select the evaluation path for each resolution.
 - Use matching precomputed data first.
 - Use valid rules data second.
 - Return the applicable error when neither path is usable.
-- Preserve `PARSE_ERROR` when a rules flag has a validation error.
+- Preserve `PARSE_ERROR` when a rules flag contains invalid data.
 - Return `FLAG_NOT_FOUND` only when the flag key is absent.
 - Keep other valid rules flags.
 - Map rules results to `FlagDetails`.

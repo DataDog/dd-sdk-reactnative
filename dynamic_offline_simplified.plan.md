@@ -82,10 +82,15 @@ It adds these features:
 - Protobuf-ES decoding
 - An opt-in `@datadog/flagging-core/configuration` entry point
 - Independent parsing of the precomputed and rules branches
-- Per-flag validation and feature-level errors
+- Evaluation-time validation and feature-level errors
 - Evaluation-time `PARSE_ERROR` results for invalid rules flags
 - Forward-compatible handling of unknown protobuf fields
 - Lossless parsing of protobuf integer values
+- Rules configuration serialization
+- Precomputed branch and per-flag parse errors
+- Deterministic rules parse errors
+- Backward-only condition references
+- Lazy regular-expression compilation
 - `ONE_OF_SHA256` and `NOT_ONE_OF_SHA256`
 - A synchronous JavaScript SHA-256 implementation
 - An internal UTF-8 implementation
@@ -93,10 +98,9 @@ It adds these features:
 - A React Native Metro smoke test
 - A check that the default flagging-core entry point does not load Protobuf-ES
 
-The parser keeps a valid branch when the other branch is malformed.
-The parser preserves an unsupported or invalid rules flag.
-It records the validation error for that flag.
-The evaluator returns `PARSE_ERROR` when a customer evaluates that flag.
+The parser keeps decoded rules data when the protobuf payload is valid binary data.
+The evaluator validates the requested flag and the data that its evaluation reaches.
+It returns a deterministic `PARSE_ERROR` when that data is invalid.
 Other valid rules flags remain usable.
 Unknown protobuf fields do not cause an error when the known fields still define a supported value.
 An unknown enum or oneof value that leaves no supported known value causes a per-flag `PARSE_ERROR`.
@@ -117,7 +121,15 @@ Keep `evaluateRulesBasedConfiguration` and `FlagsConfiguration` imports on the p
 
 The combined parser uses separate precomputed and rules parsers.
 It merges the valid results from both parsers.
-This keeps valid sibling data when one branch is malformed.
+It can return `precomputedError` with valid rules data.
+The combined evaluator from PR #336 checks `precomputedError` before rules data.
+React Native does not use that combined evaluator.
+React Native must keep its planned valid-sibling fallback behavior.
+
+PR #344 validates the precomputed branch during parsing.
+It records a branch error in `precomputedError`.
+It removes malformed precomputed flags from the response and records their errors in `precomputed.flagErrors`.
+The combined evaluator returns `PARSE_ERROR` for those errors.
 
 PR #344 now uses the Protobuf-ES base64 decoder directly.
 It removed its stricter custom padding and canonical-encoding checks.
@@ -129,12 +141,10 @@ Do not depend on the parser to reject every non-canonical base64 spelling.
 PR #336 is stacked on PR #344.
 It adds the browser `CoreProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
-Its head remains `c7b75e8d`.
-Its base moved to the first new PR #344 commit, `73ed037d`.
-Its base does not contain the later PR #344 commits through `4f6f40c`.
-These later commits include the base64 decoder, per-flag `PARSE_ERROR` behavior, unknown-field tolerance, and lossless protobuf integer parsing.
-GitHub currently reports the stack as non-mergeable.
-PR #336 must be restacked on the final PR #344 head before it is an integration reference for the released contract.
+Its head is `9e1fefd`.
+Its merge base is the current PR #344 head, `41dff20`.
+GitHub reports both PRs as mergeable.
+PR #336 now uses the current decoder contract and a real rules wire fixture.
 
 Use the browser `CoreProvider` as an integration reference.
 
@@ -148,6 +158,7 @@ React Native can continue to use its decoded precomputed `Map`.
 It can call `evaluateRulesBasedConfiguration` only for the rules path.
 This keeps current precomputed validation and native tracking behavior.
 Do not adopt the combined `evaluate` function without a parity review.
+The parity review must include `precomputedError` precedence.
 
 ### 2.4 Merged protobuf service support from dd-source PR #34959
 
@@ -255,8 +266,9 @@ Do not base64-encode an existing base64 string again.
 
 Keep all decoding in `@datadog/flagging-core`.
 Do not add a rules decoder to React Native.
-Do not serialize a decoded rules configuration.
-PR #344 makes `configurationToString` throw when rules are present.
+PR #344 now serializes decoded precomputed and rules configurations.
+Use `configurationToString` only through the upstream configuration entry point.
+Add a rules round-trip contract test.
 
 PR #344 adds Protobuf-ES to the opt-in configuration entry point.
 `@bufbuild/protobuf` is a runtime dependency.
@@ -393,12 +405,12 @@ Decide whether React Native needs its own optional configuration subpath only af
 
 ### G6 — Unsupported obfuscation operators
 
-**Status:** Implemented with different semantics in PR #344.
+**Status:** Implemented with evaluation-time semantics in PR #344.
 
 PR #344 supports the SHA-256 operators.
 The protobuf schema contains a per-flag minimum feature level.
-The parser preserves an unsupported or invalid flag.
-The evaluator returns `PARSE_ERROR` and the validation message for that flag.
+The parser preserves decoded flag data.
+The evaluator returns `PARSE_ERROR` and a deterministic message when the requested flag uses unsupported or invalid data.
 It keeps other valid rules flags.
 
 Do not add a second operator list in React Native.
@@ -408,19 +420,23 @@ Matching precomputed data still has priority.
 
 ### G7 — Untrusted rules and regular expressions
 
-**Status:** Structural validation is mostly implemented. Regular-expression safety remains.
+**Status:** Evaluation-time structural validation is mostly implemented. Regular-expression safety remains.
 
-PR #344 validates the protobuf structure.
-It records per-flag validation errors.
-The evaluator reports these errors as `PARSE_ERROR`.
+PR #344 validates the requested flag and the data that evaluation reaches.
+The evaluator reports invalid data as `PARSE_ERROR`.
 It rejects malformed indexes, values, ranges, and hashes.
+It requires composite conditions to reference only preceding conditions.
+It returns deterministic error messages that do not include attacker-controlled indexes or feature levels.
 It ignores unknown protobuf fields when known fields still define a supported value.
 It reports a per-flag error when an unknown enum or oneof leaves no supported value.
 It preserves unsafe protobuf integers during parsing and reports the affected flag during evaluation.
 
-Do not duplicate this validator in React Native after publication.
+Do not duplicate these evaluation checks in React Native after publication.
 
 Do not claim that structural validation stops ReDoS.
+PR #344 compiles regular expressions lazily and caches the result by configuration and regex index.
+This reduces repeated compilation.
+It does not make hostile expressions safe.
 Select one regular-expression protection:
 
 - An upstream safe-regex guarantee
@@ -431,6 +447,7 @@ Run hostile-expression tests in a separate process.
 Set a time limit for that process.
 
 Treat the parsed configuration as immutable.
+The regular-expression cache assumes that the parsed regex table does not change after first use.
 Add mutation tests for the public configuration object.
 
 ### G8 — Missing targeting key
@@ -502,7 +519,10 @@ PR #344 defines these items:
 - False for null or missing attributes
 - `NOT_ONE_OF_SHA256` behavior
 
-The parser validates the digest length.
+The latest protobuf evaluator does not validate the digest length.
+A malformed digest becomes a non-match.
+For `NOT_ONE_OF_SHA256`, that non-match can make the condition match.
+Add 32-byte digest validation upstream before publication.
 It does not define a salt length or reject an empty salt.
 It does not apply configuration-size, condition-count, or value-count limits.
 It does not publish canonical cross-SDK protocol vectors.
@@ -522,6 +542,7 @@ Publish cross-SDK vectors.
 - [ ] Publish flagging-core with rules wire parsing.
 - [ ] Publish the parsed `rules` field.
 - [ ] Publish the SHA operators and synchronous SHA-256 implementation.
+- [ ] Restore 32-byte SHA digest validation in the upstream protobuf evaluator.
 - [ ] Confirm the remaining salt and size-limit rules.
 - [ ] Confirm the current mobile exposure contract.
 - [ ] Pin the flagging-core release that contains the own-property lookup fix.
@@ -563,7 +584,7 @@ Add a parser test for a rules wire.
 Build the fixture from canonical raw protobuf bytes.
 Base64-encode those bytes one time in `rules.response`.
 Use the envelope encoding from the pinned upstream version.
-Confirm that `configurationToString` rejects a configuration that contains rules.
+Confirm that `configurationToString` round-trips a configuration that contains rules.
 Do not add stricter base64 validation in React Native.
 The upstream parser now uses the Protobuf-ES base64 decoder.
 
@@ -582,12 +603,14 @@ Use this path order:
 Select the path for each resolution.
 Do not freeze the selection during reconciliation.
 
-The upstream parser validates each wire branch independently.
+The upstream parser decodes each wire branch independently.
+It can retain `precomputedError` with valid rules data.
 Keep a valid sibling when the other branch is malformed.
+Do not copy the combined PR #336 evaluator precedence that returns `precomputedError` before it checks rules.
 Return `GENERAL` only when the parser returns no usable branch.
 
 Do not add a second structural rules validator.
-Trust the parser and evaluator to report unsupported or malformed rules flags as `PARSE_ERROR`.
+Trust the evaluator to report unsupported or malformed rules data as `PARSE_ERROR` when evaluation reaches it.
 Trust the released evaluator to perform own-property lookup.
 Keep the reserved-name contract tests from G9.
 Apply the size policy from G12 after the policy is defined.
@@ -814,7 +837,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Confirm that the fixture uses one base64 layer.
 - [ ] Confirm that the SDK does not require strict canonical base64 padding.
 - [ ] Do not copy the removed upstream base64 validator into React Native.
-- [ ] Confirm that rules serialization throws.
+- [ ] Round-trip a rules configuration through `configurationToString`.
 - [ ] Parse a wire with both branches.
 - [ ] Return an empty configuration for malformed wire data.
 - [ ] Return `GENERAL` when the loaded configuration is empty.
@@ -834,8 +857,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Use rules after a precomputed mismatch.
 - [ ] Return `INVALID_CONTEXT` for a precomputed-only mismatch.
 - [ ] Return `PARSE_ERROR` for an invalid rules flag.
-- [ ] Preserve the upstream validation message.
-- [ ] Keep valid flags when one rules flag has a validation error.
+- [ ] Preserve the deterministic upstream validation message.
+- [ ] Keep valid flags when another rules flag has invalid data.
 - [ ] Keep valid rules flags when another flag contains an unsafe integer.
 - [ ] Keep valid precomputed data when the rules branch is malformed.
 
@@ -887,8 +910,10 @@ Add a native API only if the confirmed mobile contract requires more fields.
 ### 6.6 Validation and security tests
 
 - [ ] Use upstream fixtures for malformed protobuf data.
-- [ ] Confirm that the parser preserves a malformed flag.
+- [ ] Confirm that the parser preserves decoded malformed flag data.
 - [ ] Confirm that evaluating the malformed flag returns `PARSE_ERROR`.
+- [ ] Confirm that a composite condition cannot reference itself or a later condition.
+- [ ] Confirm that a valid earlier condition reference evaluates.
 - [ ] Confirm that a bad shard range returns `PARSE_ERROR`.
 - [ ] Confirm that an unsafe shard count or range returns `PARSE_ERROR` for its flag.
 - [ ] Confirm that supported known data remains usable when the protobuf contains unknown fields.
@@ -896,6 +921,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Test mutation of the source object after load.
 - [ ] Run a hostile regex in an isolated process.
 - [ ] Stop the hostile-regex process at its time limit.
+- [ ] Confirm that repeated evaluation reuses the lazy compiled-regex cache.
+- [ ] Confirm the behavior when a parsed regex table is mutated after first evaluation.
 - [ ] Verify the selected ReDoS protection.
 - [ ] Confirm that an unsupported flag becomes `PARSE_ERROR`.
 - [ ] Confirm that an unsupported flag does not cause `FLAG_NOT_FOUND` or a silent `DEFAULT`.
@@ -961,10 +988,11 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 PR #344 and PR #336 are not published.
 Their APIs can change.
-PR #336 is not on the latest PR #344 head and GitHub reports it as non-mergeable.
+PR #336 is now on the latest PR #344 head.
+GitHub reports both PRs as mergeable.
 Keep the React Native integration small.
 Use one dependency update as the integration point.
-Recheck PR #336 after it is restacked.
+Recheck both heads before the dependency is pinned.
 
 ### R2 — Two evaluation paths
 
@@ -1025,8 +1053,9 @@ It does not protect guessable values from offline enumeration.
 
 ### R10 — Untrusted input and ReDoS
 
-The upstream parser records malformed protobuf flag errors.
-The evaluator returns `PARSE_ERROR` when the affected key is evaluated.
+The upstream evaluator validates malformed protobuf flag data when the affected key is evaluated.
+It returns a deterministic `PARSE_ERROR`.
+It compiles and caches regular expressions lazily.
 Hostile regex data can block the JavaScript thread.
 Select a regex protection.
 
@@ -1104,7 +1133,7 @@ It does not use a separate obfuscated payload mode.
 React Native does not pre-hash customer context.
 
 Do not claim complete support until G12 is complete.
-Let the upstream parser record unsupported flags.
+Let the upstream evaluator report unsupported flag data.
 Return the upstream `PARSE_ERROR` for an unsupported flag.
 Use canonical test vectors.
 
@@ -1225,6 +1254,8 @@ The plan was updated on 2026-07-28 after ddoghq/dd-source PR #34959 merged.
 The plan was updated again on 2026-07-28 after PR #344 added an opt-in parser entry point and adopted the Protobuf-ES base64 decoder.
 The plan was updated on 2026-07-29 after PR #344 added per-flag evaluation errors and unknown-field tolerance.
 The plan was updated again on 2026-07-29 after PR #344 preserved protobuf integers during parsing.
+The plan was updated on 2026-07-30 after PR #344 added evaluation-time validation, rules serialization, deterministic errors, and lazy regular-expression compilation.
+The plan was updated on 2026-07-30 after PR #336 was restacked on the latest PR #344 head.
 
 The reviews produced these main corrections:
 
@@ -1232,7 +1263,7 @@ The reviews produced these main corrections:
 - Version 2.0.2 removes an unnecessary dependency but does not add rules wire parsing.
 - PR #344 defines the expected `rules` protobuf contract.
 - PR #336 proves browser provider integration with that contract.
-- PR #336 has not been restacked on the latest PR #344 head.
+- PR #336 is restacked on the latest PR #344 head.
 - Configuration parsing moved to `@datadog/flagging-core/configuration`.
 - The default flagging-core entry point does not load Protobuf-ES.
 - The upstream parser no longer promises strict canonical base64 rejection.
@@ -1248,8 +1279,8 @@ The reviews produced these main corrections:
 - PR #344 adds Protobuf-ES and synchronous SHA-256.
 - PR #344 accepts a measured 6,229-byte minified and 2,070-byte gzipped browser bundle increase.
 - PR #344 tests a packed package with the React Native Metro export conditions.
-- PR #344 performs structural validation.
-- PR #344 preserves invalid flags and reports `PARSE_ERROR` when they are evaluated.
+- PR #344 performs structural validation during evaluation.
+- PR #344 preserves decoded invalid flag data and reports `PARSE_ERROR` when evaluation reaches it.
 - PR #344 ignores unknown protobuf fields when supported known data remains.
 - PR #344 preserves protobuf integers and rejects unsafe numeric conversion during evaluation.
 - Regular-expression safety still requires a decision.
@@ -1259,9 +1290,13 @@ The reviews produced these main corrections:
 - The public parsed configuration type is not fully opaque.
 - OpenFeature types currently resolve through hoisting.
 - Custom `id` can conflict with `targetingKey`.
-- PR #344 records unsupported flag errors and keeps valid flags.
+- PR #344 reports deterministic unsupported flag errors during evaluation and keeps other valid flags.
 - Unsupported flags must return `PARSE_ERROR`, not `FLAG_NOT_FOUND` or a silent `DEFAULT`.
 - A malformed branch must not remove a valid sibling branch.
+- PR #344 supports rules configuration serialization.
+- PR #344 requires composite conditions to reference preceding conditions.
+- PR #344 compiles and caches regular expressions lazily, but this does not solve ReDoS.
+- PR #336 returns `precomputedError` before rules; React Native keeps valid-sibling fallback with separate paths.
 - The salted-hash protocol needs canonical cross-SDK test vectors.
 - Salted SHA-256 does not make low-entropy values confidential.
 - Platform opt-in does not apply to customer-supplied wires.
