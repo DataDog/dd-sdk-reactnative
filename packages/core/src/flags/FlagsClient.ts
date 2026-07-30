@@ -75,7 +75,10 @@ type LoadedBranch<T> =
 type LoadedPrecomputed = {
     configuration: ParsedPrecomputedConfiguration;
     flags: Map<string, FlagCacheEntry>;
+    flagErrors: ReadonlyMap<string, string>;
 };
+
+const NO_FLAG_ERRORS: ReadonlyMap<string, string> = new Map();
 
 type LoadedConfigurationState =
     | { kind: 'none' }
@@ -87,18 +90,25 @@ type LoadedConfigurationState =
 
 // TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `4f6f40c`. Read
+// `41dff20`. Read
 // `configuration.rules.response` directly. The configuration is already parsed
 // from the complete portable envelope. Do not add raw-service-response handling
 // or envelope construction to `FlagsClient`. PR #344 moves parsing to
 // `@datadog/flagging-core/configuration`; keep that opt-in import in the local
 // wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
-// The released evaluator must also include PR #344's per-flag `PARSE_ERROR`
-// results, unknown-field tolerance, and lossless protobuf integer parsing.
+// Keep `precomputedError` and `precomputed.flagErrors` when the released type
+// provides them. Do not copy PR #336's precedence that blocks valid rules when
+// `precomputedError` is present. The released evaluator must also include PR
+// #344's deterministic per-flag `PARSE_ERROR` results, unknown-field tolerance,
+// and lossless protobuf integer parsing.
 // `FlagsClient` must not convert a parsed `bigint`; it must preserve the
 // evaluator's `PARSE_ERROR` when the value is not a safe JavaScript number.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
+    precomputedError?: string;
+    precomputed?: ParsedPrecomputedConfiguration & {
+        flagErrors?: Record<string, string>;
+    };
 };
 
 export class FlagsClient {
@@ -295,20 +305,28 @@ export class FlagsClient {
     private loadConfiguration = (
         configuration: ParsedFlagsConfiguration
     ): LoadedConfigurationState => {
-        const precomputed = configuration?.precomputed;
         const pendingConfiguration = configuration as ConfigurationWithPendingRules;
+        const precomputed = pendingConfiguration?.precomputed;
         const rulesResponse = pendingConfiguration?.rulesBased?.response;
 
         let precomputedBranch: LoadedBranch<LoadedPrecomputed> = {
             status: 'absent'
         };
-        if (precomputed) {
+        if (pendingConfiguration.precomputedError !== undefined) {
+            precomputedBranch = {
+                status: 'invalid',
+                errorMessage: pendingConfiguration.precomputedError
+            };
+        } else if (precomputed) {
             try {
                 precomputedBranch = {
                     status: 'ready',
                     value: {
                         configuration: precomputed,
-                        flags: decodePrecomputedFlags(precomputed.response)
+                        flags: decodePrecomputedFlags(precomputed.response),
+                        flagErrors: new Map(
+                            Object.entries(precomputed.flagErrors ?? {})
+                        )
                     }
                 };
             } catch (error) {
@@ -490,11 +508,22 @@ export class FlagsClient {
 
     private getCachedDetails = <T>(
         flags: Map<string, FlagCacheEntry>,
+        flagErrors: ReadonlyMap<string, string>,
         context: EvaluationContext,
         key: string,
         defaultValue: T,
         type: RulesValueType
     ): FlagDetails<T> => {
+        const flagError = flagErrors.get(key);
+        if (flagError !== undefined) {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                'PARSE_ERROR',
+                flagError
+            );
+        }
+
         const flag = flags.get(key);
 
         if (!flag) {
@@ -621,6 +650,7 @@ export class FlagsClient {
         ) {
             return this.getCachedDetails(
                 loaded.precomputed.value.flags,
+                loaded.precomputed.value.flagErrors,
                 context,
                 key,
                 defaultValue,
@@ -721,6 +751,7 @@ export class FlagsClient {
 
         return this.getCachedDetails(
             this.flagsCache,
+            NO_FLAG_ERRORS,
             effectiveContext,
             key,
             defaultValue,

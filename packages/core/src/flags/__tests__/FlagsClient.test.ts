@@ -1148,6 +1148,65 @@ describe('FlagsClient', () => {
             );
         });
 
+        it('keeps valid rules when the parser reports precomputedError', () => {
+            const configuration = buildRulesConfig() as ReturnType<
+                typeof buildRulesConfig
+            > & {
+                precomputedError?: string;
+            };
+            configuration.precomputedError =
+                'Invalid precomputed configuration wire entry';
+
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+        });
+
+        it('preserves a matching precomputed flag error before rules fallback', () => {
+            const configuration = buildMixedConfig({
+                targetingKey: 'user-1'
+            }) as ReturnType<typeof buildMixedConfig> & {
+                precomputed?: {
+                    flagErrors?: Record<string, string>;
+                };
+            };
+            if (!configuration.precomputed) {
+                throw new Error('The fixture has no precomputed branch.');
+            }
+            configuration.precomputed.flagErrors = {
+                'offline-bool': 'Invalid precomputed flag configuration'
+            };
+            const evaluate = jest.spyOn(flaggingCoreRulesEngine, 'evaluate');
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Invalid precomputed flag configuration'
+            });
+            expect(evaluate).not.toHaveBeenCalled();
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
         it('selects the path again for a per-resolution context', () => {
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(
