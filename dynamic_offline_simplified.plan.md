@@ -41,7 +41,7 @@ A wire can contain precomputed data, rules data, or both.
 
 Use this evaluation order:
 
-1. Use precomputed data when its context matches.
+1. Use precomputed data or its per-flag parse error when its context matches.
 2. Otherwise, use rules data when it is usable.
 3. Otherwise, return a configuration error.
 
@@ -203,7 +203,7 @@ Do not select the path only during reconciliation.
 
 Use this order:
 
-1. If precomputed data matches the effective context, use its decoded `Map`.
+1. If precomputed data matches the effective context, use its decoded `Map` or its per-flag parse error.
 2. Otherwise, if rules data exists, evaluate the rules.
 3. Otherwise, if precomputed data exists, return `INVALID_CONTEXT`.
 4. Otherwise, return `PROVIDER_NOT_READY`.
@@ -592,6 +592,7 @@ The upstream parser now uses the Protobuf-ES base64 decoder.
 
 Keep the complete parsed `FlagsConfiguration`.
 Decode precomputed flags one time into a `Map`.
+Keep `precomputedError` and `precomputed.flagErrors`.
 Keep the parsed protobuf rules object.
 
 Use this path order:
@@ -607,6 +608,8 @@ The upstream parser decodes each wire branch independently.
 It can retain `precomputedError` with valid rules data.
 Keep a valid sibling when the other branch is malformed.
 Do not copy the combined PR #336 evaluator precedence that returns `precomputedError` before it checks rules.
+When precomputed data matches, return its per-flag `PARSE_ERROR` before `FLAG_NOT_FOUND`.
+Do not fall back to rules for that key.
 Return `GENERAL` only when the parser returns no usable branch.
 
 Do not add a second structural rules validator.
@@ -654,6 +657,8 @@ A `before` hook cannot replace the resolution context.
 
 Check the precomputed context for every resolution.
 This check keeps the path decision correct for the effective context.
+If it matches, check `precomputed.flagErrors` before the decoded `Map`.
+Preserve the upstream `PARSE_ERROR` and `errorMessage`.
 
 Resolve the OpenFeature dependency boundary before implementation.
 Prefer compatible internal types and an internal `FlagsClient` method.
@@ -861,6 +866,10 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Keep valid flags when another rules flag has invalid data.
 - [ ] Keep valid rules flags when another flag contains an unsafe integer.
 - [ ] Keep valid precomputed data when the rules branch is malformed.
+- [ ] Keep valid rules data when `precomputedError` is present.
+- [ ] Preserve `precomputed.flagErrors` for matching precomputed data.
+- [ ] Return the precomputed `PARSE_ERROR` before `FLAG_NOT_FOUND`.
+- [ ] Do not fall back to rules for a malformed flag in matching precomputed data.
 
 ### 6.3 Rules evaluation tests
 
@@ -935,6 +944,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 - [ ] Keep valid precomputed data when rules protobuf is malformed.
 - [ ] Keep valid rules data when precomputed JSON is malformed.
+- [ ] Keep valid rules data when the parser returns `precomputedError`.
 - [ ] Parse both valid branches from one wire.
 - [ ] Return `GENERAL` when neither branch is usable.
 

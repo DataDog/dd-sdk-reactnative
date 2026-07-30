@@ -143,6 +143,9 @@ Add dynamic evaluation to `FlagsClient`.
 - Keep a valid branch when its sibling is invalid.
 - Keep valid rules data when the parsed configuration also contains `precomputedError`.
 - Do not copy the combined PR #336 evaluator precedence for `precomputedError`.
+- Preserve `precomputed.flagErrors` beside the decoded precomputed `Map`.
+- Return a matching precomputed flag error as `PARSE_ERROR` before `FLAG_NOT_FOUND`.
+- Do not fall back to rules for a malformed key in matching precomputed data.
 - Reconcile a rules branch as ready for each context.
 - Select the evaluation path for each resolution.
 - Use matching precomputed data first.
