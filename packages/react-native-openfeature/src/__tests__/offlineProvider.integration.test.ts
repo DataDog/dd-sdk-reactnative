@@ -103,8 +103,8 @@ const rulesResponseFor = (flagKey: string) => ({
 
 // TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `4f6f40c`. Use canonical
-// raw protobuf bytes produced from the dd-source#34959 client-distribution path.
+// `41dff20` and restores 32-byte SHA digest validation. Use canonical raw
+// protobuf bytes produced from the dd-source#34959 client-distribution path.
 // Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
 // verify that decoding returns the original bytes, and record the source revision.
 // Use the upstream `@datadog/flagging-core/configuration` parser. Do not copy the
@@ -113,7 +113,8 @@ const rulesResponseFor = (flagKey: string) => ({
 // entry point excludes Protobuf-ES and measure whether the React Native root includes it.
 // The fixture must prove that unknown fields preserve supported known data and
 // that an out-of-range `int64` stays a `bigint` before evaluation returns
-// `PARSE_ERROR`. Run the same fixture in the supported Hermes and JSC versions.
+// `PARSE_ERROR`. Round-trip it through `configurationToString`. Run the same
+// fixture in the supported Hermes and JSC versions.
 const rulesWireFor = (
     flagKey: string,
     response = rulesResponseFor(flagKey)
