@@ -23,14 +23,15 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344
-// through `4f6f40c`.
+// through `41dff20`.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
 // `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
 // evaluator on the package root. Use `FlagsConfiguration.rules`. The distribution
 // layer must put one base64 encoding of the raw dd-source#34959 protobuf response
 // in the version 1 `rules.response` field. Do not add that service transport or
-// envelope construction here. PR #344 preserves invalid protobuf flags and
-// protobuf integers, and reports unsafe integer conversion when evaluated.
+// envelope construction here. PR #344 preserves decoded protobuf flags and
+// protobuf integers. Its evaluator reports invalid reached data and unsafe
+// integer conversion as deterministic `PARSE_ERROR` results.
 type PendingRulesConfiguration = FlagsConfiguration & {
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
@@ -81,7 +82,7 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // service response or to add a base64 layer. Do not copy the strict base64
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
     // published parser must also include PR #344's unknown-field tolerance and
-    // lossless integer parsing through `4f6f40c`.
+    // lossless integer parsing through `41dff20`.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
@@ -105,14 +106,19 @@ export const configurationToString = (
 ): string => {
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
-    // TODO(FFL-2837): Delete this local serialization guard with the pending
-    // types above. PR #344 makes the upstream serializer reject `rules`. The
-    // parsed protobuf does not contain the original portable-wire bytes and can
-    // contain `bigint` values after `4f6f40c`.
+    // TODO(FFL-2837): Delete this legacy serialization wrapper with the pending
+    // types above after the dependency contains PR #344 through `41dff20`.
+    // The upstream serializer encodes generated protobuf rules back to base64.
+    // This temporary UFC v1 shim serializes its legacy JSON response instead.
     if (pendingConfiguration.rulesBased) {
-        throw new Error(
-            'Rules configurations cannot be serialized to the wire format'
-        );
+        const serialized = JSON.parse(
+            coreConfigurationToString(configuration)
+        ) as PendingRulesWire;
+        serialized.rulesBased = {
+            ...pendingConfiguration.rulesBased,
+            response: JSON.stringify(pendingConfiguration.rulesBased.response)
+        };
+        return JSON.stringify(serialized);
     }
 
     return coreConfigurationToString(configuration);

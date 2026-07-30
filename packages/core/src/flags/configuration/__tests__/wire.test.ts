@@ -164,20 +164,24 @@ describe('temporary rules configuration wire compatibility', () => {
         expect(parsed.rulesBased).toEqual(rulesBased);
     });
 
-    it('does not serialize a rules configuration', () => {
-        const configuration = {
+    it('round-trips a legacy rules configuration', () => {
+        const original = {
             rulesBased: {
-                response: buildRulesConfiguration()
+                response: buildRulesConfiguration(),
+                fetchedAt: 123,
+                etag: 'rules-etag'
             }
         };
 
-        expect(() =>
+        const restored = configurationFromString(
             configurationToString(
-                (configuration as unknown) as ParsedFlagsConfiguration
+                (original as unknown) as ParsedFlagsConfiguration
             )
-        ).toThrow(
-            'Rules configurations cannot be serialized to the wire format'
-        );
+        ) as {
+            rulesBased?: typeof original.rulesBased;
+        };
+
+        expect(restored.rulesBased).toEqual(original.rulesBased);
     });
 
     it('keeps both branches in a mixed configuration', () => {
