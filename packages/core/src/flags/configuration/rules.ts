@@ -14,10 +14,12 @@ import type { EvaluationContext, JsonValue, PrimitiveValue } from '../types';
 
 // TODO(FFL-2837): Replace this legacy UFC v1 alias with
 // `NonNullable<FlagsConfiguration['rules']>['response']` after a flagging-core
-// release contains DataDog/openfeature-js-client#344 through `41dff20`. Keep the
-// `FlagsConfiguration` type import on the flagging-core package root. PR #344
-// preserves protobuf integers as `bigint`, and its evaluator reports unsafe
-// conversions as deterministic per-flag `PARSE_ERROR` results.
+// release contains DataDog/openfeature-js-client#344 through `41dff20`, restores
+// 32-byte SHA digest validation, and defines or fixes integer evaluation without
+// global `BigInt`. Keep the `FlagsConfiguration` type import on the flagging-core
+// package root. PR #344 preserves protobuf integers as `bigint`, and its evaluator
+// reports unsafe conversions as deterministic per-flag `PARSE_ERROR` results when
+// `BigInt` is available.
 type RulesConfigurationResponse = UniversalFlagConfigurationV1;
 
 export type RulesValueType = 'boolean' | 'string' | 'number' | 'object';
@@ -128,7 +130,8 @@ const hasOwn = (value: object, key: PropertyKey): boolean =>
     Object.prototype.hasOwnProperty.call(value, key);
 
 // TODO(FFL-2837): Delete this compatibility error store after a flagging-core
-// release contains DataDog/openfeature-js-client#344 through `41dff20`.
+// release contains DataDog/openfeature-js-client#344 through `41dff20` and fixes
+// or explicitly excludes integer and shard evaluation without global `BigInt`.
 // The generated protobuf evaluator validates the requested flag and the data
 // that evaluation reaches. It does not build this error map during parsing.
 // It returns deterministic `PARSE_ERROR` results, including for an integer that
@@ -462,10 +465,11 @@ export const prepareRulesConfiguration = (
     const clone = cloneValue(value);
 
     // TODO(FFL-2837): Delete this legacy JSON clone and validator after a
-    // flagging-core release contains upstream PR #344 through `41dff20`. That
+    // flagging-core release contains upstream PR #344 through `41dff20` and the
+    // no-`BigInt` integer contract is fixed or declared unsupported. That
     // implementation preserves protobuf integers as `bigint` and validates only
-    // the requested flag data that evaluation reaches. It returns a deterministic
-    // per-flag error when evaluation cannot produce a safe JavaScript number.
+    // the requested flag data that evaluation reaches. With `BigInt`, it returns a
+    // deterministic per-flag error when evaluation cannot produce a safe number.
     // Do not adapt this validator to the generated response type.
     const errorMessage = validateRulesConfigurationEnvelope(clone);
     if (errorMessage) {
@@ -557,7 +561,7 @@ export const flaggingCoreRulesEngine: RulesEngine = {
         // TODO(FFL-2837): Delete this compatibility check with the local error
         // store after the published PR #344 evaluator through `41dff20` validates
         // reached flag data and reports deterministic errors, including unsafe
-        // integer conversions.
+        // integer conversions with and without global `BigInt` when supported.
         const configurationError = errorsByConfiguration
             .get(request.configuration)
             ?.get(request.flagKey);

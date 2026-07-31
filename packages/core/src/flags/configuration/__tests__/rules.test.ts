@@ -200,7 +200,8 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this legacy JSON compatibility test with a
     // generated protobuf fixture after a flagging-core release contains
-    // DataDog/openfeature-js-client#344 through `41dff20`.
+    // DataDog/openfeature-js-client#344 through `41dff20`. Round-trip the
+    // generated fixture and confirm that serialization preserves the unknown field.
     it('keeps supported known data when an unknown field is present', () => {
         const source = buildRulesConfiguration();
         (source.flags['dynamic-flag'] as typeof source.flags['dynamic-flag'] & {
@@ -227,7 +228,9 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this unsafe JSON number with an out-of-range
     // protobuf `int64` fixture after flagging-core contains PR #344 at or after
-    // `41dff20`. The generated parser must preserve the source value as `bigint`.
+    // `41dff20` plus the no-`BigInt` follow-up. The generated parser must preserve
+    // the source value as `bigint` where supported. Run the same evaluation with
+    // global `BigInt` unavailable and require `PARSE_ERROR`, not `GENERAL`.
     it('returns PARSE_ERROR instead of serving an unsafe integer', () => {
         const source = buildRulesConfiguration();
         const flag = source.flags['dynamic-flag'];

@@ -23,7 +23,7 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344
-// through `41dff20`.
+// through `41dff20` plus the required SHA digest and no-`BigInt` follow-ups.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
 // `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
 // evaluator on the package root. Use `FlagsConfiguration.rules`. The distribution
@@ -81,8 +81,9 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // generated Protobuf-ES message. Do not adapt this shim to decode a raw
     // service response or to add a base64 layer. Do not copy the strict base64
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
-    // published parser must also include PR #344's unknown-field tolerance and
-    // lossless integer parsing through `41dff20`.
+    // published parser must also include PR #344's unknown-field tolerance,
+    // unknown-field serialization, and lossless integer parsing through
+    // `41dff20`, plus the final no-`BigInt` runtime decision.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
@@ -107,8 +108,9 @@ export const configurationToString = (
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
     // TODO(FFL-2837): Delete this legacy serialization wrapper with the pending
-    // types above after the dependency contains PR #344 through `41dff20`.
-    // The upstream serializer encodes generated protobuf rules back to base64.
+    // types above after the dependency contains PR #344 through `41dff20` and
+    // its required follow-ups. The upstream serializer encodes generated protobuf
+    // rules back to base64 and preserves unknown protobuf fields.
     // This temporary UFC v1 shim serializes its legacy JSON response instead.
     if (pendingConfiguration.rulesBased) {
         const serialized = JSON.parse(
