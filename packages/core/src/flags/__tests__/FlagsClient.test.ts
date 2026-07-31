@@ -1354,7 +1354,7 @@ describe('FlagsClient', () => {
             evaluate.mockRestore();
         });
 
-        it('preserves an unsafe-integer PARSE_ERROR and does not track it', () => {
+        it('preserves an upstream unsafe-integer PARSE_ERROR and does not track it', () => {
             const evaluate = installFakeRulesEngine(request => ({
                 value: request.defaultValue,
                 reason: 'ERROR',
