@@ -165,9 +165,15 @@ describe('temporary rules configuration wire compatibility', () => {
     });
 
     it('round-trips a legacy rules configuration', () => {
+        const response = buildRulesConfiguration() as ReturnType<
+            typeof buildRulesConfiguration
+        > & {
+            futureField?: { value: number };
+        };
+        response.futureField = { value: 7 };
         const original = {
             rulesBased: {
-                response: buildRulesConfiguration(),
+                response,
                 fetchedAt: 123,
                 etag: 'rules-etag'
             }
