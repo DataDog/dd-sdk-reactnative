@@ -20,9 +20,12 @@ Keep all three pull requests in draft state.
 
 Published flagging-core version 2.0.2 does not contain the new rules wire contract.
 Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, evaluation-time validation, safe flag lookup, and React Native compatibility.
+Its code head remains `41dff20` as of 2026-07-31.
+The PR description changed after the previous review, but the code did not change.
 It adds `@bufbuild/protobuf` as a runtime dependency.
 Its packed-package smoke test uses the Metro export conditions from this repository.
 It moves wire parsing and `FlagsConfigurationWire` to `@datadog/flagging-core/configuration`.
+The browser package re-exports them from `@datadog/openfeature-browser/configuration`.
 The default flagging-core entry point keeps the evaluator and shared types.
 It does not load Protobuf-ES.
 The configuration subpath uses the Protobuf-ES base64 decoder.
@@ -34,6 +37,7 @@ The parser ignores unknown protobuf fields when supported known fields remain.
 The parser preserves protobuf integers as `bigint`.
 The evaluator returns `PARSE_ERROR` instead of an imprecise number when an integer is outside the JavaScript safe range.
 PR #344 now serializes rules configurations.
+Rules serialization preserves unknown protobuf fields.
 It validates precomputed configuration data during parsing.
 It records complete precomputed branch errors and per-flag precomputed errors.
 It requires composite conditions to reference preceding conditions.
@@ -41,12 +45,16 @@ It compiles and caches regular expressions lazily.
 This cache does not solve ReDoS.
 The latest protobuf evaluator no longer validates that SHA-256 digests are 32 bytes.
 An upstream fix is required before the dependency is pinned.
+The React Native smoke test runs without global `BigInt`, but it evaluates only a static boolean.
+The protobuf evaluator still calls global `BigInt(...)` for integer and shard safety checks.
+Upstream must test and fix this path or declare `BigInt` as a runtime requirement before publication.
 
 Upstream PR #336 uses that parser in the browser `CoreProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
 Its head is `9e1fefd`.
 Its merge base is the current PR #344 head, `41dff20`.
 GitHub reports both PRs as mergeable.
+PR #336 also has no new code commit as of 2026-07-31.
 The combined evaluator returns `precomputedError` before it checks rules.
 React Native must keep its separate-path behavior so valid rules can survive a malformed precomputed sibling.
 
@@ -110,6 +118,8 @@ Add the internal boundary for the rules engine.
 - Add a contract test that unknown protobuf fields do not reject supported known data.
 - Add a contract test that preserves an out-of-range protobuf integer during parsing.
 - Add a contract test that returns `PARSE_ERROR` instead of an imprecise number during evaluation.
+- Add safe and unsafe integer and shard tests without global `BigInt`.
+- Require `PARSE_ERROR`, not `GENERAL`, for invalid integer data without global `BigInt`.
 - Add a protobuf wire contract test from canonical dd-source bytes.
 - Put one base64 encoding of those bytes in a version `1` `rules.response` fixture.
 - Confirm that base64-decoding the fixture returns the original bytes.
@@ -118,6 +128,7 @@ Add the internal boundary for the rules engine.
 - Confirm that the fixture represents the client distribution channel.
 - Add reserved-name flag-key contract tests.
 - Confirm that rules serialization round-trips.
+- Confirm that rules serialization preserves unknown protobuf fields.
 - Add fake-engine test helpers.
 - Add a package contract check for the configuration subpath.
 - Confirm that the default flagging-core entry point does not load Protobuf-ES.
@@ -188,6 +199,7 @@ Expose dynamic evaluation through the existing offline provider.
 - Do not use the raw protobuf response as the `configurationFromString` input.
 - Do not use the legacy service JSON response as `rules.response`.
 - Reuse the same fixture for Metro, Hermes, and JSC checks.
+- Exercise integer variations, shard counts, and ranges without global `BigInt`.
 - Update the provider documentation.
 - State that customers must supply the complete version `1` portable wire.
 - State that the offline provider does not fetch the UFC endpoint.
