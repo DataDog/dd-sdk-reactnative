@@ -100,9 +100,13 @@ type LoadedConfigurationState =
 // provides them. Do not copy PR #336's precedence that blocks valid rules when
 // `precomputedError` is present. The released evaluator must also include PR
 // #344's deterministic per-flag `PARSE_ERROR` results, unknown-field tolerance,
-// and lossless protobuf integer parsing.
-// `FlagsClient` must not convert a parsed `bigint`; it must preserve the
-// evaluator's `PARSE_ERROR` when the value is not a safe JavaScript number.
+// lossless protobuf integer parsing, and the required SHA-256 digest-length
+// validation. The released evaluator must also either support integer and shard
+// evaluation when global `BigInt` is unavailable or document `BigInt` as a
+// runtime requirement. The smoke test in `41dff20` does not cover those paths.
+// `FlagsClient` must not convert a parsed `bigint` or repair an upstream
+// `GENERAL` result. It must preserve the evaluator's `PARSE_ERROR` when a value
+// cannot be represented safely as a JavaScript number.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     rulesBased?: { response?: unknown };
     precomputedError?: string;
