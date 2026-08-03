@@ -6,7 +6,7 @@ Technical names and API names do not change.
 **Jira:** FFL-2837
 **Base branch:** `develop`
 **Work branch:** `blake.thomas/FFL-2837`
-**Upstream references:** DataDog/openfeature-js-client PRs #343, #344, and #336; ddoghq/dd-source PR #34959
+**Upstream references:** DataDog/openfeature-js-client PRs #343, #344, and #336; ddoghq/dd-source PRs #34959 and #40304
 
 ## Source documents
 
@@ -71,8 +71,9 @@ Thus, the current application bundle already contains the existing rules engine.
 ### 2.2 Expected features from upstream PR #344
 
 PR #344 is the required upstream dependency change.
-Its code head remains `41dff20` as of 2026-07-31.
-The PR description changed after the previous review, but the code did not change.
+Its code head is `9f794c7` as of 2026-08-03.
+Commits `cf9ef2e` and `9f794c7` were added after the previous review.
+They align the unsupported feature-level contract and add capability-specific entry points.
 It adds these features:
 
 - The opaque `FlagsConfigurationWire` type
@@ -83,7 +84,9 @@ It adds these features:
 - Generated Protobuf-ES message types from the canonical UFC schema
 - Protobuf-ES decoding
 - An opt-in `@datadog/flagging-core/configuration` entry point
-- An opt-in `@datadog/openfeature-browser/configuration` re-export
+- A protobuf-free `@datadog/flagging-core/precomputed` entry point
+- A full-featured `@datadog/openfeature-browser` package root
+- A protobuf-free `@datadog/openfeature-browser/precomputed` entry point
 - Independent parsing of the precomputed and rules branches
 - Evaluation-time validation and feature-level errors
 - Evaluation-time `PARSE_ERROR` results for invalid rules flags
@@ -100,6 +103,7 @@ It adds these features:
 - Own-property lookup for legacy and protobuf rules flag maps
 - A React Native Metro smoke test
 - A check that the default flagging-core entry point does not load Protobuf-ES
+- A check that the flagging-core and browser precomputed entry points do not load Protobuf-ES
 
 The parser keeps decoded rules data when the protobuf payload is valid binary data.
 The evaluator validates the requested flag and the data that its evaluation reaches.
@@ -113,7 +117,9 @@ A safe integer evaluates as an OpenFeature `number`.
 An integer that is outside the JavaScript safe range stays in the parsed configuration.
 The evaluator returns `PARSE_ERROR` and does not convert that integer to an imprecise number.
 An unsafe integer in a flag does not invalidate the complete rules branch.
-The schema is copied from the canonical `dd-source` UFC schema.
+The schema is copied from merged ddoghq/dd-source PR #40304 at commit `071c4ad`.
+The schema says that an unsupported feature level must produce an informative flag-scoped error.
+The evaluator returns a deterministic `PARSE_ERROR` for that case.
 The generated message types are compiled into the package output.
 
 The published package will expose `configuration.rules.response`.
@@ -122,7 +128,8 @@ Do not use the old planned name `rulesBased`.
 The parser and `FlagsConfigurationWire` type are no longer package-root exports.
 Import them from `@datadog/flagging-core/configuration`.
 Keep `evaluateRulesBasedConfiguration` and `FlagsConfiguration` imports on the package root.
-Browser customers can use `@datadog/openfeature-browser/configuration`.
+Browser customers use the package root for the full parser and provider.
+Precomputed-only browser customers can use `@datadog/openfeature-browser/precomputed` to exclude Protobuf-ES.
 React Native must use the flagging-core subpath directly.
 
 The combined parser uses separate precomputed and rules parsers.
@@ -148,10 +155,14 @@ PR #336 is stacked on PR #344.
 It adds the browser `CoreProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
 Its head is `9e1fefd`.
-Its merge base is the current PR #344 head, `41dff20`.
-GitHub reports both PRs as mergeable.
-PR #336 also has no new code commit as of 2026-07-31.
-PR #336 now uses the current decoder contract and a real rules wire fixture.
+Its merge base is the previous PR #344 head, `41dff20`.
+PR #336 has no new code commit as of 2026-08-03.
+GitHub reports PR #344 as mergeable and PR #336 as not mergeable.
+PR #336 must be restacked on PR #344 head `9f794c7`.
+Its description still says that the browser package root excludes the parser.
+That statement is stale after PR #344 commit `9f794c7`.
+PR #336 uses the decoder contract at `41dff20` and a real rules wire fixture.
+Run that integration test again after the restack.
 
 Use the browser `CoreProvider` as an integration reference.
 
@@ -203,7 +214,20 @@ PR #34959 proves that the service code can generate the canonical protobuf paylo
 It does not publish the flagging-core decoder.
 It does not complete the service-to-portable-wire distribution path.
 
-### 2.5 Evaluation and tracking path
+### 2.5 Merged feature-level contract from dd-source PR #40304
+
+ddoghq/dd-source PR #40304 merged on 2026-08-01.
+Its schema commit is `071c4ad`.
+It says that an SDK must not evaluate a flag that requires an unsupported feature level.
+The SDK must return an informative flag-scoped error instead of treating that flag as absent.
+
+This PR changes schema comments only.
+It does not change the protobuf wire encoding.
+It does not change the service response or the portable envelope.
+Use this revision as the canonical schema reference for fixtures.
+Continue to use PR #34959 as the service producer reference.
+
+### 2.6 Evaluation and tracking path
 
 Select the path for each resolution.
 Do not select the path only during reconciliation.
@@ -249,7 +273,7 @@ React Native must call the existing native tracking bridge after each successful
 Native code applies `doLog` to exposure events.
 Native code also applies its RUM and evaluation settings.
 
-### 2.6 Wire format and compatibility
+### 2.7 Wire format and compatibility
 
 Use the PR #344 contract:
 
@@ -278,20 +302,23 @@ Use `configurationToString` only through the upstream configuration entry point.
 Add a rules round-trip contract test.
 Confirm that the round trip preserves unknown protobuf fields.
 
-PR #344 adds Protobuf-ES to the opt-in configuration entry point.
+PR #344 adds Protobuf-ES to the flagging-core configuration entry point and to the full browser package root.
 `@bufbuild/protobuf` is a runtime dependency.
 The schema generators are development dependencies.
 Its browser measurement reports an increase of 6,229 bytes minified and 2,070 bytes gzipped.
 These increases are 9.6 percent and 10.4 percent.
 The React Native compatibility code accounts for 1,106 minified bytes and 459 gzipped bytes.
-The upstream decision accepts this cost for applications that import configuration parsing.
+The upstream decision accepts this cost for the full browser capability.
 The default flagging-core entry point no longer imports the parser or Protobuf-ES.
+The new `@datadog/flagging-core/precomputed` entry point parses and serializes only precomputed data.
+It ignores rules and does not load Protobuf-ES.
+The new `@datadog/openfeature-browser/precomputed` entry point exposes the provider and precomputed parser without Protobuf-ES.
 Its React Native smoke test bundles Android and iOS with React Native 0.76.9.
 The test uses the packed flagging-core package and the export-condition order from this repository.
 The test runs the Android bundle under Node without `TextEncoder`, `TextDecoder`, or `BigInt`.
 It parses, serializes, and evaluates one static boolean flag.
 It does not evaluate an integer variation, shard count, or shard range without `BigInt`.
-It also checks that the default flagging-core entry point does not load `@bufbuild/protobuf`.
+It also checks that the default flagging-core and precomputed entry points do not load `@bufbuild/protobuf`.
 It does not run the bundle in Hermes or JSC.
 
 The React Native SDK currently re-exports configuration parsing from its package root.
@@ -366,6 +393,11 @@ The opt-in `@datadog/flagging-core/configuration` subpath exports:
 
 The package root does not export the parser.
 Its default entry point does not load Protobuf-ES.
+The `@datadog/flagging-core/precomputed` subpath exports the same wire function names for precomputed data only.
+It ignores rules and does not load Protobuf-ES.
+The full browser package root exports the complete parser and provider.
+The `@datadog/openfeature-browser/precomputed` subpath is the protobuf-free browser capability.
+Do not use the removed planned browser `/configuration` subpath.
 PR #344 populates `rules`.
 PR #336 adds the optional combined `evaluate` function.
 
@@ -403,11 +435,11 @@ If they require split serial ID, evaluator timestamp, or error evaluations, add 
 PR #343 removes an unnecessary dependency.
 PR #344 measures the browser protobuf cost.
 PR #344 also adds a React Native Metro smoke test.
-The upstream PR accepts the measured increase for the configuration entry point.
-It verifies that the default flagging-core entry point does not load Protobuf-ES.
+The upstream PR accepts the measured increase for the full browser entry point.
+It verifies that the default flagging-core entry point and both precomputed capability entry points do not load Protobuf-ES.
 
 Measure the packed dependency in this repository.
-Measure the React Native package root separately from the upstream configuration subpath.
+Measure the React Native package root separately from the upstream configuration and precomputed subpaths.
 Run the rules flow in Hermes and JSC.
 Test the supported React Native version range.
 Verify that protobuf `bigint` values parse in each supported engine.
@@ -416,8 +448,9 @@ Verify integer and shard evaluation when global `BigInt` is unavailable.
 Do not use a dynamic import.
 Metro does not create a smaller release bundle from this import.
 
-The upstream configuration subpath still contains both precomputed and rules parsing.
+The upstream configuration subpath contains both precomputed and rules parsing.
 It includes Protobuf-ES.
+The upstream precomputed subpath ignores rules and excludes Protobuf-ES.
 Decide whether React Native needs its own optional configuration subpath only after measurement.
 
 ### G6 — Unsupported obfuscation operators
@@ -426,6 +459,7 @@ Decide whether React Native needs its own optional configuration subpath only af
 
 PR #344 supports the SHA-256 operators.
 The protobuf schema contains a per-flag minimum feature level.
+dd-source PR #40304 says that an unsupported level must produce a flag-scoped error.
 The parser preserves decoded flag data.
 The evaluator returns `PARSE_ERROR` and a deterministic message when the requested flag uses unsupported or invalid data.
 It keeps other valid rules flags.
@@ -553,6 +587,7 @@ Publish cross-SDK vectors.
 ### Step 0 — Complete prerequisites
 
 - [x] Merge raw protobuf response support in dd-source.
+- [x] Merge the flag-scoped feature-level contract in dd-source PR #40304.
 - [ ] Identify the component that packages the raw service response into `FlagsConfigurationWire`.
 - [ ] Confirm that the producer requests and receives `application/protobuf`.
 - [ ] Confirm that the producer base64-encodes the raw bytes one time in `rules.response`.
@@ -568,6 +603,7 @@ Publish cross-SDK vectors.
 - [ ] Update `yarn.lock`.
 - [ ] Change parser imports to `@datadog/flagging-core/configuration`.
 - [ ] Keep evaluator and shared configuration imports on the package root.
+- [ ] Verify that `@datadog/flagging-core/precomputed` ignores rules and excludes Protobuf-ES.
 - [ ] Decide whether the React Native package root continues to export configuration parsing.
 - [ ] Verify all final field names, versions, and exports.
 - [ ] Record the exact flagging-core version.
@@ -738,12 +774,13 @@ Measure these bundle baselines separately:
 1. Current baseline
 2. Default flagging-core entry point
 3. Flagging-core configuration subpath
-4. React Native root SDK import
-5. Online flags
-6. Precomputed offline flags
-7. Dynamic offline flags
-8. Post-protobuf dependency
-9. Post-SHA dependency
+4. Flagging-core precomputed subpath
+5. React Native root SDK import
+6. Online flags
+7. Precomputed offline flags
+8. Dynamic offline flags
+9. Post-protobuf dependency
+10. Post-SHA dependency
 
 Do not add a dynamic import.
 The upstream configuration subpath is the static opt-in boundary.
@@ -856,6 +893,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 - [ ] Parse a rules wire into `rules.response`.
 - [ ] Use raw protobuf bytes produced by the dd-source schema as a fixture.
+- [ ] Record dd-source PR #40304 commit `071c4ad` as the fixture schema revision.
+- [ ] Record dd-source PR #34959 as the service producer path.
 - [ ] Confirm that base64-decoding `rules.response` returns those exact bytes.
 - [ ] Confirm that the fixture uses one base64 layer.
 - [ ] Confirm that the SDK does not require strict canonical base64 padding.
@@ -956,6 +995,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Confirm the behavior when a parsed regex table is mutated after first evaluation.
 - [ ] Verify the selected ReDoS protection.
 - [ ] Confirm that an unsupported flag becomes `PARSE_ERROR`.
+- [ ] Confirm that an unsupported feature level returns flag-scoped `PARSE_ERROR`.
 - [ ] Confirm that an unsupported flag does not cause `FLAG_NOT_FOUND` or a silent `DEFAULT`.
 - [ ] Test a newer cached configuration with an older evaluator.
 - [ ] Reject malformed SHA digests.
@@ -1006,6 +1046,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Measure all bundle baselines from Step 6.
 - [ ] Measure the protobuf addition separately.
 - [ ] Confirm that the default flagging-core entry point does not load Protobuf-ES.
+- [ ] Confirm that the flagging-core precomputed subpath ignores rules and does not load Protobuf-ES.
 - [ ] Measure whether the React Native package root loads Protobuf-ES.
 - [ ] Measure the synchronous SHA addition separately.
 - [ ] Run rules evaluation with Hermes.
@@ -1020,8 +1061,11 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 PR #344 and PR #336 are not published.
 Their APIs can change.
-PR #336 is now on the latest PR #344 head.
-GitHub reports both PRs as mergeable.
+PR #336 is still based on PR #344 head `41dff20`.
+PR #344 is now at `9f794c7`.
+GitHub reports PR #336 as not mergeable.
+Its browser entry-point description conflicts with the latest PR #344 design.
+Require a successful restack before publication.
 Keep the React Native integration small.
 Use one dependency update as the integration point.
 Recheck both heads before the dependency is pinned.
@@ -1043,7 +1087,9 @@ Confirm that the current mobile exposure contract is sufficient.
 ### R4 — Bundle size
 
 The current engine already ships.
-PR #344 keeps the evaluator on the default entry point and moves protobuf parsing to an opt-in subpath.
+PR #344 keeps the evaluator on the default flagging-core entry point and moves protobuf parsing to an opt-in flagging-core subpath.
+The full browser package root now includes protobuf parsing.
+The browser and flagging-core precomputed subpaths exclude Protobuf-ES.
 The React Native package root can still include that subpath through its public re-export.
 Measure the packed dependency in this repository.
 
@@ -1275,6 +1321,7 @@ The configuration producer owns content negotiation, content-type validation, an
 ### Q5 — React Native configuration entry point
 
 - [x] Keep Protobuf-ES out of the default flagging-core entry point.
+- [x] Add a protobuf-free flagging-core precomputed entry point upstream.
 - [ ] Measure whether the React Native package root includes Protobuf-ES.
 - [ ] Decide whether React Native keeps configuration parsing on its root export.
 - [ ] If required, add a React Native configuration subpath without breaking the current API.
@@ -1291,6 +1338,8 @@ The plan was updated again on 2026-07-29 after PR #344 preserved protobuf intege
 The plan was updated on 2026-07-30 after PR #344 added evaluation-time validation, rules serialization, deterministic errors, and lazy regular-expression compilation.
 The plan was updated on 2026-07-30 after PR #336 was restacked on the latest PR #344 head.
 The plan was updated on 2026-07-31 after live verification found no new code heads but found new PR-description details and an uncovered no-`BigInt` evaluator path.
+The plan was updated on 2026-08-03 after PR #344 added the canonical feature-level wording and capability-specific entry points.
+PR #336 had no new commit and required a new restack.
 
 The reviews produced these main corrections:
 
@@ -1298,12 +1347,14 @@ The reviews produced these main corrections:
 - Version 2.0.2 removes an unnecessary dependency but does not add rules wire parsing.
 - PR #344 defines the expected `rules` protobuf contract.
 - PR #336 proves browser provider integration with that contract.
-- PR #336 is restacked on the latest PR #344 head.
+- PR #336 must be restacked on the latest PR #344 head.
 - Configuration parsing moved to `@datadog/flagging-core/configuration`.
-- The browser package re-exports parsing from `@datadog/openfeature-browser/configuration`.
+- The full browser package root now exports configuration parsing.
+- The browser and flagging-core precomputed entry points exclude Protobuf-ES.
 - The default flagging-core entry point does not load Protobuf-ES.
 - The upstream parser no longer promises strict canonical base64 rejection.
 - dd-source PR #34959 serves the canonical raw protobuf response.
+- dd-source PR #40304 defines the flag-scoped unsupported feature-level contract.
 - The raw service response is not the portable JSON wire.
 - A distribution component must add one base64 layer and the version `1` envelope.
 - React Native must call the rules-only evaluator.
