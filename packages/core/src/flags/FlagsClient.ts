@@ -90,7 +90,7 @@ type LoadedConfigurationState =
 
 // TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `41dff20`. Read
+// `9f794c7`. Read
 // `configuration.rules.response` directly. The configuration is already parsed
 // from the complete portable envelope. Do not add raw-service-response handling
 // or envelope construction to `FlagsClient`. PR #344 moves parsing to
@@ -98,12 +98,14 @@ type LoadedConfigurationState =
 // wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
 // Keep `precomputedError` and `precomputed.flagErrors` when the released type
 // provides them. Do not copy PR #336's precedence that blocks valid rules when
-// `precomputedError` is present. The released evaluator must also include PR
-// #344's deterministic per-flag `PARSE_ERROR` results, unknown-field tolerance,
-// lossless protobuf integer parsing, and the required SHA-256 digest-length
-// validation. The released evaluator must also either support integer and shard
+// `precomputedError` is present. PR #336 remains at `9e1fefd`, is based on the
+// old PR #344 head, and must be restacked before it is a release reference. The
+// released evaluator must include PR #344's deterministic flag-scoped
+// `PARSE_ERROR` results, including unsupported feature levels, unknown-field
+// tolerance, lossless protobuf integer parsing, and the required SHA-256
+// digest-length validation. It must also either support integer and shard
 // evaluation when global `BigInt` is unavailable or document `BigInt` as a
-// runtime requirement. The smoke test in `41dff20` does not cover those paths.
+// runtime requirement. The smoke test at `9f794c7` does not cover those paths.
 // `FlagsClient` must not convert a parsed `bigint` or repair an upstream
 // `GENERAL` result. It must preserve the evaluator's `PARSE_ERROR` when a value
 // cannot be represented safely as a JavaScript number.
