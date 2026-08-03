@@ -23,15 +23,19 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344
-// through `41dff20` plus the required SHA digest and no-`BigInt` follow-ups.
+// through `9f794c7` plus the required SHA digest and no-`BigInt` follow-ups.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
 // `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
-// evaluator on the package root. Use `FlagsConfiguration.rules`. The distribution
-// layer must put one base64 encoding of the raw dd-source#34959 protobuf response
-// in the version 1 `rules.response` field. Do not add that service transport or
-// envelope construction here. PR #344 preserves decoded protobuf flags and
-// protobuf integers. Its evaluator reports invalid reached data and unsafe
-// integer conversion as deterministic `PARSE_ERROR` results.
+// evaluator on the package root. The new `@datadog/flagging-core/precomputed`
+// subpath is protobuf-free, ignores rules, and is not the parser for this module.
+// Use `FlagsConfiguration.rules`. The distribution layer must put one base64
+// encoding of the raw dd-source#34959 protobuf response in the version 1
+// `rules.response` field. Record dd-source#40304 commit `071c4ad` as the schema
+// revision and dd-source#34959 as the service producer path. Do not add that
+// service transport or envelope construction here. PR #344 preserves decoded
+// protobuf flags and integers. Its evaluator reports invalid reached data,
+// unsupported feature levels, and unsafe integer conversion as deterministic
+// flag-scoped `PARSE_ERROR` results.
 type PendingRulesConfiguration = FlagsConfiguration & {
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
@@ -83,7 +87,7 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
     // published parser must also include PR #344's unknown-field tolerance,
     // unknown-field serialization, and lossless integer parsing through
-    // `41dff20`, plus the final no-`BigInt` runtime decision.
+    // `9f794c7`, plus the final no-`BigInt` runtime decision.
     const pendingRules = readPendingRulesWire(source);
     if (pendingRules) {
         try {
@@ -108,7 +112,7 @@ export const configurationToString = (
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
     // TODO(FFL-2837): Delete this legacy serialization wrapper with the pending
-    // types above after the dependency contains PR #344 through `41dff20` and
+    // types above after the dependency contains PR #344 through `9f794c7` and
     // its required follow-ups. The upstream serializer encodes generated protobuf
     // rules back to base64 and preserves unknown protobuf fields.
     // This temporary UFC v1 shim serializes its legacy JSON response instead.
