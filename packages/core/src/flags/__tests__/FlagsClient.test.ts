@@ -1154,7 +1154,7 @@ describe('FlagsClient', () => {
             );
         });
 
-        it('keeps valid rules when the parser reports precomputedError', () => {
+        it('keeps valid rules instead of applying combined precomputedError precedence', () => {
             const configuration = buildRulesConfig() as ReturnType<
                 typeof buildRulesConfig
             > & {
