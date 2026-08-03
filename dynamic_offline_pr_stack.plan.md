@@ -20,15 +20,20 @@ Keep all three pull requests in draft state.
 
 Published flagging-core version 2.0.2 does not contain the new rules wire contract.
 Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, evaluation-time validation, safe flag lookup, and React Native compatibility.
-Its code head remains `41dff20` as of 2026-07-31.
-The PR description changed after the previous review, but the code did not change.
+Its code head is `9f794c7` as of 2026-08-03.
+Commits `cf9ef2e` and `9f794c7` were added after the previous review.
+They align the unsupported feature-level contract and add capability-specific entry points.
 It adds `@bufbuild/protobuf` as a runtime dependency.
 Its packed-package smoke test uses the Metro export conditions from this repository.
 It moves wire parsing and `FlagsConfigurationWire` to `@datadog/flagging-core/configuration`.
-The browser package re-exports them from `@datadog/openfeature-browser/configuration`.
+It also adds `@datadog/flagging-core/precomputed` for protobuf-free precomputed parsing and serialization.
+The browser package root now includes the complete parser and provider.
+The browser package adds `@datadog/openfeature-browser/precomputed` as the protobuf-free capability entry point.
+The old planned `@datadog/openfeature-browser/configuration` entry point no longer exists.
 The default flagging-core entry point keeps the evaluator and shared types.
 It does not load Protobuf-ES.
 The configuration subpath uses the Protobuf-ES base64 decoder.
+The precomputed subpath ignores rules and does not load Protobuf-ES.
 It does not promise strict rejection of non-canonical base64 padding.
 The parser preserves decoded rules data.
 The evaluator validates the requested flag and the data that evaluation reaches.
@@ -43,6 +48,9 @@ It records complete precomputed branch errors and per-flag precomputed errors.
 It requires composite conditions to reference preceding conditions.
 It compiles and caches regular expressions lazily.
 This cache does not solve ReDoS.
+It uses the canonical schema from merged ddoghq/dd-source PR #40304 at `071c4ad`.
+That schema requires an informative flag-scoped error for an unsupported feature level.
+The evaluator already returns a deterministic `PARSE_ERROR` for that case.
 The latest protobuf evaluator no longer validates that SHA-256 digests are 32 bytes.
 An upstream fix is required before the dependency is pinned.
 The React Native smoke test runs without global `BigInt`, but it evaluates only a static boolean.
@@ -52,9 +60,12 @@ Upstream must test and fix this path or declare `BigInt` as a runtime requiremen
 Upstream PR #336 uses that parser in the browser `CoreProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
 Its head is `9e1fefd`.
-Its merge base is the current PR #344 head, `41dff20`.
-GitHub reports both PRs as mergeable.
-PR #336 also has no new code commit as of 2026-07-31.
+Its merge base is the previous PR #344 head, `41dff20`.
+PR #336 has no new code commit as of 2026-08-03.
+GitHub reports PR #344 as mergeable and PR #336 as not mergeable.
+PR #336 must be restacked on `9f794c7` and must resolve the new browser entry-point contract.
+Its description still says that the browser root excludes the parser.
+That statement is stale.
 The combined evaluator returns `precomputedError` before it checks rules.
 React Native must keep its separate-path behavior so valid rules can survive a malformed precomputed sibling.
 
@@ -62,6 +73,10 @@ ddoghq/dd-source PR #34959 is merged.
 It adds protobuf content negotiation to the existing UFC service endpoints.
 The service returns raw UFC protobuf bytes for `Accept: application/protobuf`.
 It continues to return JSON for other requests.
+
+ddoghq/dd-source PR #40304 is also merged.
+It changes only the canonical schema comments for unsupported feature levels.
+It does not change the protobuf wire encoding or the service-to-envelope contract.
 
 The raw service response is not a complete `FlagsConfigurationWire`.
 A configuration producer must base64-encode the raw bytes one time and put the result in a version `1` `rules.response` envelope.
@@ -111,6 +126,7 @@ Add the internal boundary for the rules engine.
 - Add adapter contract tests.
 - Preserve `PARSE_ERROR` and its message from the upstream evaluator.
 - Add a contract test for an invalid flag that returns `PARSE_ERROR`.
+- Add a contract test that an unsupported feature level returns flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`.
 - Add a contract test for deterministic `PARSE_ERROR` messages.
 - Add contract tests for backward-only composite condition references.
 - Add a contract test for lazy regular-expression compilation.
@@ -124,7 +140,8 @@ Add the internal boundary for the rules engine.
 - Put one base64 encoding of those bytes in a version `1` `rules.response` fixture.
 - Confirm that base64-decoding the fixture returns the original bytes.
 - Do not require stricter base64 rejection than the upstream Protobuf-ES decoder.
-- Record the source schema or generator revision for the fixture.
+- Record dd-source PR #40304 commit `071c4ad` as the schema revision for the fixture.
+- Record dd-source PR #34959 as the service producer path for the fixture.
 - Confirm that the fixture represents the client distribution channel.
 - Add reserved-name flag-key contract tests.
 - Confirm that rules serialization round-trips.
@@ -132,6 +149,7 @@ Add the internal boundary for the rules engine.
 - Add fake-engine test helpers.
 - Add a package contract check for the configuration subpath.
 - Confirm that the default flagging-core entry point does not load Protobuf-ES.
+- Confirm that the flagging-core precomputed subpath ignores rules and does not load Protobuf-ES.
 - Measure whether the React Native package root still loads Protobuf-ES through its public re-export.
 - Decide whether React Native needs its own configuration subpath.
 - Do not add a fetch or transport-conversion API.
@@ -206,9 +224,10 @@ Expose dynamic evaluation through the existing offline provider.
 - Update both example applications.
 - Add Hermes and JSC checks where the repository supports them.
 - Test the packed dependency with the repository Metro export conditions.
-- Record that the 6,229-byte minified and 2,070-byte gzipped browser increase applies to configuration parsing, not the default flagging-core entry point.
+- Record that the 6,229-byte minified and 2,070-byte gzipped increase applies to the full browser entry point, which now includes configuration parsing.
+- Record that the flagging-core root and both precomputed entry points exclude Protobuf-ES.
 - Record the 1,106-byte minified and 459-byte gzipped React Native compatibility cost.
-- Measure the default flagging-core entry point, its configuration subpath, and the React Native package root separately.
+- Measure the default flagging-core entry point, its configuration and precomputed subpaths, and the React Native package root separately.
 - Measure the packed dependency in this repository.
 
 The main review question is:
