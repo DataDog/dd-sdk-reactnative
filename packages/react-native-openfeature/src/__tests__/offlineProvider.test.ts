@@ -240,6 +240,10 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(emitSpy).toHaveBeenCalledWith(
             ProviderEvents.ConfigurationChanged
         );
+        expect(emitSpy.mock.calls.slice(-2).map(([event]) => event)).toEqual([
+            ProviderEvents.Ready,
+            ProviderEvents.ConfigurationChanged
+        ]);
     });
 
     it('rejects initialize when a config was loaded (pre-registration) and is invalid', async () => {

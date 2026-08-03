@@ -109,6 +109,8 @@ const rulesResponseFor = (flagKey: string) => ({
 // `BigInt`. Use canonical raw protobuf bytes produced from the dd-source#34959
 // client-distribution path. Record dd-source#40304 commit `071c4ad` as the schema
 // revision and dd-source#34959 as the service producer path.
+// PR #336 through `33113d2` does not change this wire contract. Keep the existing
+// React Native provider name and its Ready-before-ConfigurationChanged recovery order.
 // Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
 // verify that decoding returns the original bytes, and record the source revision.
 // Use the upstream `@datadog/flagging-core/configuration` parser. Do not copy the
