@@ -57,15 +57,18 @@ The React Native smoke test runs without global `BigInt`, but it evaluates only 
 The protobuf evaluator still calls global `BigInt(...)` for integer and shard safety checks.
 Upstream must test and fix this path or declare `BigInt` as a runtime requirement before publication.
 
-Upstream PR #336 uses that parser in the browser `CoreProvider`.
+Upstream PR #336 uses that parser in the browser `DatadogOfflineProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
-Its head is `9e1fefd`.
-Its merge base is the previous PR #344 head, `41dff20`.
-PR #336 has no new code commit as of 2026-08-03.
-GitHub reports PR #344 as mergeable and PR #336 as not mergeable.
-PR #336 must be restacked on `9f794c7` and must resolve the new browser entry-point contract.
-Its description still says that the browser root excludes the parser.
-That statement is stale.
+Its head is `33113d2` as of 2026-08-03.
+Its merge base is the current PR #344 head, `9f794c7`.
+GitHub reports both PRs as mergeable.
+Commits `f4e41ce` and `33113d2` align the capability entry points and replace the public `CoreProvider` name with `DatadogOfflineProvider`.
+The browser root and `/precomputed` entry points both export `DatadogOfflineProvider`.
+The `/precomputed` entry point still loads no Protobuf-ES modules.
+The shared `DatadogCoreProvider` is internal.
+This provider hierarchy explicitly follows the React Native integration.
+The browser provider emits `Ready` before `ConfigurationChanged` when valid configuration recovers an error.
+It emits `ConfigurationChanged` for every valid replacement and `Error` for unusable configuration.
 The combined evaluator returns `precomputedError` before it checks rules.
 React Native must keep its separate-path behavior so valid rules can survive a malformed precomputed sibling.
 
@@ -210,6 +213,10 @@ Expose dynamic evaluation through the existing offline provider.
 - Keep `initialize` network-free.
 - Keep `onContextChange` network-free.
 - Keep current provider event mapping.
+- Use the browser `DatadogOfflineProvider` lifecycle as the parity reference.
+- Keep the existing React Native public provider name.
+- Confirm that recovery emits `Ready` before `ConfigurationChanged`.
+- Confirm that valid replacement emits `ConfigurationChanged` and invalid replacement emits `Error`.
 - Add global-context and domain-context tests.
 - Confirm the Web SDK 1.8 hook-context constraint.
 - Add real-provider integration tests.

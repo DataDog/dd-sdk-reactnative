@@ -152,25 +152,29 @@ Do not depend on the parser to reject every non-canonical base64 spelling.
 ### 2.3 Expected features from upstream PR #336
 
 PR #336 is stacked on PR #344.
-It adds the browser `CoreProvider` and a combined core `evaluate` function.
+It adds the browser `DatadogOfflineProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
-Its head is `9e1fefd`.
-Its merge base is the previous PR #344 head, `41dff20`.
-PR #336 has no new code commit as of 2026-08-03.
-GitHub reports PR #344 as mergeable and PR #336 as not mergeable.
-PR #336 must be restacked on PR #344 head `9f794c7`.
-Its description still says that the browser package root excludes the parser.
-That statement is stale after PR #344 commit `9f794c7`.
-PR #336 uses the decoder contract at `41dff20` and a real rules wire fixture.
-Run that integration test again after the restack.
+Its head is `33113d2` as of 2026-08-03.
+Its merge base is the current PR #344 head, `9f794c7`.
+GitHub reports both PRs as mergeable.
+Commits `f4e41ce` and `33113d2` align the capability entry points and expose `DatadogOfflineProvider`.
+The full browser root and the protobuf-free browser `/precomputed` entry point export that provider.
+The shared `DatadogCoreProvider` base is internal.
+PR #336 says that this hierarchy follows the React Native integration.
+PR #336 uses the current decoder contract and a real rules wire fixture.
 
-Use the browser `CoreProvider` as an integration reference.
+Use the browser `DatadogOfflineProvider` as an integration reference.
 
 - A rules configuration is valid for each compatible context.
 - Matching precomputed data has priority.
 - Rules data is the fallback after a precomputed mismatch.
 - `onContextChange` does not fetch.
-- `setConfiguration` emits the applicable provider event.
+- `setConfiguration` emits `ConfigurationChanged` for valid configuration.
+- Recovery emits `Ready` before `ConfigurationChanged`.
+- Unusable configuration emits `Error`.
+
+React Native already follows this lifecycle behavior.
+Keep the existing React Native public provider name.
 
 React Native can continue to use its decoded precomputed `Map`.
 It can call `evaluateRulesBasedConfiguration` only for the rules path.
@@ -400,6 +404,8 @@ The `@datadog/openfeature-browser/precomputed` subpath is the protobuf-free brow
 Do not use the removed planned browser `/configuration` subpath.
 PR #344 populates `rules`.
 PR #336 adds the optional combined `evaluate` function.
+PR #336 exports `DatadogOfflineProvider` from the full browser root and browser `/precomputed` subpath.
+It does not export the shared `DatadogCoreProvider` base.
 
 ### G4 — Native tracking metadata
 
@@ -802,6 +808,11 @@ Remove the precomputed-only instruction that forbids `setContext`.
 Explain that `setContext` is required for dynamic rules.
 
 Keep the existing provider event mapping.
+PR #336 now confirms the same mapping in the browser provider.
+On recovery, emit `READY` before `CONFIGURATION_CHANGED`.
+Emit `CONFIGURATION_CHANGED` for each valid replacement.
+Emit `PROVIDER_ERROR` for an invalid replacement.
+Keep the existing React Native public provider name.
 Test all transitions.
 
 Do not add a separate SDK gate.
@@ -1031,6 +1042,7 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Do not require a `RECONCILING` event.
 - [ ] Emit `CONFIGURATION_CHANGED` for valid replacement data.
 - [ ] Emit `READY` when valid data recovers an error.
+- [ ] Emit `READY` before `CONFIGURATION_CHANGED` during recovery.
 - [ ] Emit `PROVIDER_ERROR` for invalid data.
 - [ ] Return the same result for the same context and configuration.
 - [ ] Keep all precomputed regression tests.
@@ -1061,11 +1073,11 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 PR #344 and PR #336 are not published.
 Their APIs can change.
-PR #336 is still based on PR #344 head `41dff20`.
-PR #344 is now at `9f794c7`.
-GitHub reports PR #336 as not mergeable.
-Its browser entry-point description conflicts with the latest PR #344 design.
-Require a successful restack before publication.
+PR #336 is based on PR #344 head `9f794c7`.
+Its head is `33113d2`.
+GitHub reports both PRs as mergeable.
+PR #344 still calls the follow-up `CoreProvider` in its description.
+Use the current PR #336 `DatadogOfflineProvider` name.
 Keep the React Native integration small.
 Use one dependency update as the integration point.
 Recheck both heads before the dependency is pinned.
@@ -1340,6 +1352,7 @@ The plan was updated on 2026-07-30 after PR #336 was restacked on the latest PR 
 The plan was updated on 2026-07-31 after live verification found no new code heads but found new PR-description details and an uncovered no-`BigInt` evaluator path.
 The plan was updated on 2026-08-03 after PR #344 added the canonical feature-level wording and capability-specific entry points.
 PR #336 had no new commit and required a new restack.
+The plan was updated again on 2026-08-03 after PR #336 was restacked and exposed `DatadogOfflineProvider`.
 
 The reviews produced these main corrections:
 
@@ -1347,7 +1360,9 @@ The reviews produced these main corrections:
 - Version 2.0.2 removes an unnecessary dependency but does not add rules wire parsing.
 - PR #344 defines the expected `rules` protobuf contract.
 - PR #336 proves browser provider integration with that contract.
-- PR #336 must be restacked on the latest PR #344 head.
+- PR #336 is restacked on the latest PR #344 head.
+- PR #336 exposes `DatadogOfflineProvider` and keeps `DatadogCoreProvider` internal.
+- The browser offline-provider lifecycle matches the React Native lifecycle.
 - Configuration parsing moved to `@datadog/flagging-core/configuration`.
 - The full browser package root now exports configuration parsing.
 - The browser and flagging-core precomputed entry points exclude Protobuf-ES.
