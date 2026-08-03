@@ -1387,6 +1387,32 @@ describe('FlagsClient', () => {
             evaluate.mockRestore();
         });
 
+        it('preserves an unsupported-feature-level PARSE_ERROR and does not track it', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Flag requires an unsupported feature level',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+
+            expect(
+                flagsClient.getBooleanDetails('dynamic-flag', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Flag requires an unsupported feature level'
+            });
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
         it('maps an unknown engine error to GENERAL', () => {
             const evaluate = installFakeRulesEngine(request => ({
                 value: request.defaultValue,
