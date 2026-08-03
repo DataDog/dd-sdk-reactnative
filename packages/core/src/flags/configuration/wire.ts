@@ -28,6 +28,8 @@ import type {
 // `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
 // evaluator on the package root. The new `@datadog/flagging-core/precomputed`
 // subpath is protobuf-free, ignores rules, and is not the parser for this module.
+// PR #336 through `33113d2` adds browser providers but does not change this core
+// parser boundary. Do not import `@datadog/openfeature-browser` in React Native.
 // Use `FlagsConfiguration.rules`. The distribution layer must put one base64
 // encoding of the raw dd-source#34959 protobuf response in the version 1
 // `rules.response` field. Record dd-source#40304 commit `071c4ad` as the schema
