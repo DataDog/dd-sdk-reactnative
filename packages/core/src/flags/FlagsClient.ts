@@ -98,9 +98,11 @@ type LoadedConfigurationState =
 // wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
 // Keep `precomputedError` and `precomputed.flagErrors` when the released type
 // provides them. Do not copy PR #336's precedence that blocks valid rules when
-// `precomputedError` is present. PR #336 remains at `9e1fefd`, is based on the
-// old PR #344 head, and must be restacked before it is a release reference. The
-// released evaluator must include PR #344's deterministic flag-scoped
+// `precomputedError` is present. PR #336 is now restacked at `33113d2`, and its
+// combined evaluator still has that precedence. Its browser
+// `DatadogOfflineProvider` uses the combined evaluator, but React Native must keep
+// its separate paths until that behavior reaches parity. The released evaluator
+// must include PR #344's deterministic flag-scoped
 // `PARSE_ERROR` results, including unsupported feature levels, unknown-field
 // tolerance, lossless protobuf integer parsing, and the required SHA-256
 // digest-length validation. It must also either support integer and shard
