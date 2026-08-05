@@ -31,17 +31,20 @@ export const toDdContext = (
 };
 
 /**
- * Whether an OpenFeature evaluation context carries no information — no targeting key and no
- * attributes with a defined value (so `{}` and `{ targetingKey: undefined }` are both empty).
- * Used by the offline provider to avoid overwriting a configuration's embedded context with an
- * empty context stamped by the OpenFeature lifecycle.
- *
- * Note: an explicit `targetingKey: ''` is **not** empty. An empty string is a real (anonymous)
- * targeting key — a distinct subject — not the absence of a context. Only a genuinely absent
- * context (`{}` / `clearContext()`) re-adopts the configuration's embedded context; `{ targetingKey:
- * '' }` is reconciled as a real context, so it must match the precomputed snapshot or the provider
- * enters `ERROR` (serving coded defaults) rather than silently serving another subject's flags.
+ * Convert an OpenFeature context for offline evaluation without inventing a targeting key.
+ * Rules distinguish a missing targeting key from an empty targeting key.
  */
-export const isEmptyContext = (context: OFEvaluationContext): boolean => {
-    return Object.values(context).every(value => value === undefined);
+export const toDdContextPreservingTargetingKey = (
+    context: OFEvaluationContext
+): DdEvaluationContext => {
+    const { targetingKey, ...attributes } = context;
+    const ddContext = {
+        attributes: attributes as Record<string, PrimitiveValue>
+    } as DdEvaluationContext;
+
+    if (targetingKey !== undefined) {
+        ddContext.targetingKey = targetingKey;
+    }
+
+    return ddContext;
 };
