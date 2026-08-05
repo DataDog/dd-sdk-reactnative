@@ -124,58 +124,65 @@ the network** — you supply it with `setConfiguration`.
 import { DdFlags } from '@datadog/mobile-react-native';
 import {
     DatadogOfflineOpenFeatureProvider,
-    configurationFromString
+    configurationFromString,
+    getPrecomputedContext
 } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 await DdFlags.enable();
 
-const provider = new DatadogOfflineOpenFeatureProvider();
+const domain = 'offline-flags';
+const configuration = configurationFromString(wire);
+const context = getPrecomputedContext(configuration);
 
-// `wire` is a ConfigurationWire string you fetched yourself.
-provider.setConfiguration(configurationFromString(wire));
+// A context-specific precomputed configuration must use its matching OpenFeature context.
+if (context !== undefined) {
+    await OpenFeature.setContext(domain, context);
+}
+
+const provider = new DatadogOfflineOpenFeatureProvider();
+provider.setConfiguration(configuration);
 
 // Set the provider after loading the configuration so it is ready with real flag values.
-await OpenFeature.setProviderAndWait(provider);
+await OpenFeature.setProviderAndWait(domain, provider);
 
 // Evaluate flags — no network request is made.
-const client = OpenFeature.getClient();
-const isNewFeatureEnabled = client.getBooleanValue('new-feature-enabled', false);
+const client = OpenFeature.getClient(domain);
+const isNewFeatureEnabled = client.getBooleanValue(
+    'new-feature-enabled',
+    false
+);
 ```
 
-The configuration carries the evaluation context it was computed for, and the provider adopts it
-automatically. A precomputed configuration is a **single-subject snapshot**: it can only be served
-against the context it was computed for. Per-context evaluation is a future (rules-based) capability.
+A context-specific precomputed configuration is a **single-subject snapshot**. The effective
+OpenFeature context must match the context that was used to compute the snapshot. Use
+`getPrecomputedContext(configuration)` to get a detached copy through a supported API. Do not inspect
+the parsed configuration or wire format. The helper does not call OpenFeature and does not change
+provider state.
 
-> **Warning:** Do **not** call `OpenFeature.setContext` with a _different_ context for the offline
-> precomputed flow. A runtime context that does not match the configuration's embedded context
-> (compared after the SDK's context normalization, not raw deep-equality) cannot be served (offline
-> never fetches), so the provider enters the OpenFeature **`ERROR`** state and evaluations fall back
-> to your **coded default values** (evaluation `errorCode: INVALID_CONTEXT`). The provider recovers to
-> `READY` once the effective context is empty or matches the snapshot again. Note that a blank
-> `{ targetingKey: '' }` is **not** "empty" — an empty string is a real (anonymous) targeting key, a
-> distinct subject that must match the snapshot; use `clearContext()` (or omit context) to fall back
-> to the embedded context.
+If a context-specific snapshot does not match the effective context, the provider enters the
+OpenFeature **`ERROR`** state. Evaluations return their coded default values with
+`errorCode: INVALID_CONTEXT`. Set the matching context to recover the provider to `READY`.
+
+An empty context (`{}`) is a real OpenFeature context. It does not restore the context in the
+configuration. An empty targeting key (`{ targetingKey: '' }`) is also a real context and is
+different from a missing targeting key. A context-agnostic precomputed configuration has no
+embedded context. `getPrecomputedContext` returns `undefined` for that configuration, and it can be
+used with any effective context.
 
 Recommended setup for a hybrid app that also uses other OpenFeature providers, hooks, or domains:
 
-- **Bind the offline provider to a dedicated OpenFeature domain, and give that domain an explicit
-  empty context** at registration (`OpenFeature.setContext(domain, {})`) — which this provider reads
-  as "no override, use the embedded context". A domain with no context of its own **inherits the
-  global context**, so a global `OpenFeature.setContext` (or a mismatching global context) would
-  otherwise reach the provider and force it into `ERROR`.
+- **Bind the offline provider to a dedicated OpenFeature domain.** Set the helper context on that
+  domain before provider registration. A domain with no context of its own inherits the global
+  context.
 - **Use a unique Datadog `clientName`** (`new DatadogOfflineOpenFeatureProvider({ clientName })`):
   separate OpenFeature domains otherwise share the same underlying `DdFlags.getClient('default')`, and
   an online provider on that shared client would discard the offline configuration.
 
-Because you do not set an OpenFeature context, note the **context split**: OpenFeature hooks observe
-the OpenFeature evaluation context (`{}` when unset), while Datadog exposure tracking attributes
-evaluations to the configuration's embedded context.
-
-> **Note (recovery caveat):** "clearing context recovers" holds only when the resulting *effective*
-> context is empty or matches the snapshot. `OpenFeature.clearContext(domain)` removes the domain
-> context and **falls back to the global context** — if that global context is non-empty and does not
-> match, the provider stays in `ERROR`.
+`OpenFeature.clearContext(domain)` removes the domain context and uses the global context. If the
+global context is empty or does not match a context-specific snapshot, the provider enters `ERROR`.
+Call `OpenFeature.setContext(domain, matchingContext)` to recover. A global `clearContext()` supplies
+`{}` to the provider; it does not restore the context in the configuration.
 
 > **Note (startup order):** Load the configuration with `setConfiguration` _before_
 > `setProviderAndWait`, as shown above. If you register the provider before any successful
