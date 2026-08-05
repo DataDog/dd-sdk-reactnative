@@ -14,6 +14,7 @@ import { SAMPLING_PRIORITY_HEADER_KEY } from '../distributedTracing/headers';
 import { XMLHttpRequestMock } from './__utils__/XMLHttpRequestMock';
 
 const DdRum = NativeModules.DdRum;
+const originalFetch = global.fetch;
 
 const flushPromises = () =>
     new Promise(jest.requireActual('timers').setImmediate);
@@ -26,7 +27,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    DdRumResourceTracking.stopTracking();
     global.XMLHttpRequest = undefined;
+    global.fetch = originalFetch;
 });
 
 const executeRequest = (url: string = 'https://api.example.com/v2/user') => {
@@ -90,6 +93,104 @@ describe('DdRumResourceTracking', () => {
         // THEN
         expect(DdRum.startResource).not.toHaveBeenCalled();
         expect(DdRum.stopResource).not.toHaveBeenCalled();
+    });
+
+    it('tracks Expo Fetch and XHR resources when Fetch tracking is enabled', async () => {
+        const fetchResponse = ({
+            status: 200,
+            headers: {
+                get: (header: string) =>
+                    header.toLowerCase() === 'content-length' ? '12' : null
+            }
+        } as unknown) as Response;
+        const expoFetch = jest
+            .fn()
+            .mockResolvedValue(fetchResponse) as jest.MockedFunction<
+            typeof fetch
+        >;
+        global.fetch = expoFetch;
+        DdRumResourceTracking.startTracking({
+            resourceTraceSampleRate: 100,
+            firstPartyHosts: [],
+            trackFetchResources: true
+        });
+
+        executeRequest();
+        await global.fetch('https://api.example.com/v2/user');
+        await flushPromises();
+
+        expect(DdRum.startResource).toHaveBeenCalledTimes(2);
+        expect(DdRum.stopResource).toHaveBeenCalledTimes(2);
+        expect(DdRum.stopResource.mock.calls.map(call => call[2])).toEqual(
+            expect.arrayContaining(['xhr', 'fetch'])
+        );
+        expect(expoFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('tracks a native Fetch implementation without relying on an Expo marker', () => {
+        const fetchImplementation = jest.fn() as jest.MockedFunction<
+            typeof fetch
+        >;
+        global.fetch = fetchImplementation;
+
+        DdRumResourceTracking.startTracking({
+            resourceTraceSampleRate: 100,
+            firstPartyHosts: [],
+            trackFetchResources: true
+        });
+
+        expect(global.fetch).not.toBe(fetchImplementation);
+    });
+
+    it('does not wrap Expo Fetch when Fetch tracking is disabled', () => {
+        const expoFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+        global.fetch = expoFetch;
+
+        DdRumResourceTracking.startTracking({
+            resourceTraceSampleRate: 100,
+            firstPartyHosts: []
+        });
+
+        expect(global.fetch).toBe(expoFetch);
+    });
+
+    it('does not double report an XHR-backed Fetch and still tracks direct XHR', async () => {
+        const fetchResponse = ({
+            status: 200,
+            headers: { get: () => null }
+        } as unknown) as Response;
+        const xhrBackedFetch = jest.fn(
+            (input: RequestInfo | URL, init?: RequestInit) => {
+                const xhr = new XMLHttpRequestMock();
+                xhr.open(init?.method ?? 'GET', String(input));
+                new Headers(init?.headers).forEach((value, header) => {
+                    xhr.setRequestHeader(header, value);
+                });
+                xhr.send();
+                xhr.notifyResponseArrived();
+                xhr.complete(200, 'ok');
+                return Promise.resolve(fetchResponse);
+            }
+        ) as jest.MockedFunction<typeof fetch>;
+        global.fetch = xhrBackedFetch;
+
+        DdRumResourceTracking.startTracking({
+            resourceTraceSampleRate: 100,
+            firstPartyHosts: [],
+            trackFetchResources: true
+        });
+
+        await global.fetch('https://api.example.com/fetch');
+        executeRequest('https://api.example.com/xhr');
+        await flushPromises();
+
+        expect(global.fetch).not.toBe(xhrBackedFetch);
+        expect(xhrBackedFetch).toHaveBeenCalledTimes(1);
+        expect(DdRum.startResource).toHaveBeenCalledTimes(2);
+        expect(DdRum.stopResource).toHaveBeenCalledTimes(2);
+        expect(DdRum.stopResource.mock.calls.map(call => call[2])).toEqual(
+            expect.arrayContaining(['fetch', 'xhr'])
+        );
     });
 
     describe('updateTrackingContext', () => {

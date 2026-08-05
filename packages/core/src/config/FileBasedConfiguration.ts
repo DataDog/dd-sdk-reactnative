@@ -170,6 +170,8 @@ export const getJSONConfiguration = (
                 trackInteractions:
                     configuration.rumConfiguration.trackInteractions,
                 trackResources: configuration.rumConfiguration.trackResources,
+                trackFetchResources:
+                    configuration.rumConfiguration.trackFetchResources,
                 trackErrors: configuration.rumConfiguration.trackErrors,
                 nativeLongTaskThresholdMs:
                     configuration.rumConfiguration.nativeLongTaskThresholdMs,

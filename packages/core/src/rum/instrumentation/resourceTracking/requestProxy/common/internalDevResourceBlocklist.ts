@@ -4,24 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { RUMResource } from '../../interfaces/RumResource';
+import type { RUMResource } from '../interfaces/RumResource';
 
-/**
- * Expo sends all console.* calls to the packager. As we log all API calls
- * when the SDKVerbosity is DEBUG, this would result in an infinite loop of
- * `console.log` and API calls, creating 250 RUM resources per second.
- *
- * The hostname is always going to be localhost or a local IP.
- *
- * An example URL is http://192.168.1.20:8081/logs or http://10.46.29.155:19000/logs
- */
 const EXPO_DEV_LOGS_REGEX = new RegExp(
     '^http://((10|172|192).[0-9]+.[0-9]+.[0-9]+|localhost|127.0.0.1):808[0-9]/logs$'
 );
 
-/**
- * This call is made every time the RN packager reloads the js in dev mode.
- */
 const RN_PACKAGER_SYMBOLICATE_REGEX = new RegExp(
     '^http://localhost:808[0-9]/symbolicate$'
 );
@@ -31,10 +19,6 @@ const internalDevResourceBlocklist: RegExp[] = [
     RN_PACKAGER_SYMBOLICATE_REGEX
 ];
 
-/**
- * Filters RN symbolicate calls and Expo logs calls that happen only in dev.
- * @param resource RUMResource
- */
 export const filterDevResource = (
     resource: RUMResource
 ): RUMResource | null => {

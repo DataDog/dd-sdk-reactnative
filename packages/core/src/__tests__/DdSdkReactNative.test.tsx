@@ -614,7 +614,9 @@ describe('DdSdkReactNative', () => {
             configuration.rumConfiguration = new RumConfiguration(
                 fakeAppId,
                 false,
-                true
+                true,
+                false,
+                { trackFetchResources: true }
             );
             configuration.rumConfiguration.resourceTraceSampleRate = 42;
             configuration.rumConfiguration.firstPartyHosts = [
@@ -676,7 +678,8 @@ describe('DdSdkReactNative', () => {
                         match: 'something.fr',
                         propagatorTypes: ['datadog']
                     }
-                ]
+                ],
+                trackFetchResources: true
             });
         });
 
