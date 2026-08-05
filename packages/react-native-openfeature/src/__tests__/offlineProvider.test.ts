@@ -57,18 +57,16 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         );
     });
 
-    it('re-adopts the embedded context on an empty initialize context', async () => {
+    it('records an empty initialize context without fetching', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
 
         await provider.initialize({});
 
-        // An empty context means "no external override": reset to the embedded context rather
-        // than setting an (empty) override.
-        expect(
-            mockFlagsClient.resetEvaluationContextWithoutFetching
-        ).toHaveBeenCalled();
         expect(
             mockFlagsClient.setEvaluationContextWithoutFetching
+        ).toHaveBeenCalledWith({ attributes: {} });
+        expect(
+            mockFlagsClient.resetEvaluationContextWithoutFetching
         ).not.toHaveBeenCalled();
         expect(mockFlagsClient.setEvaluationContext).not.toHaveBeenCalled();
     });
@@ -99,7 +97,7 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
 
     it('rejects initialize when no configuration is loaded (provider-first)', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
-        mockFlagsClient.resetEvaluationContextWithoutFetching.mockReturnValueOnce(
+        mockFlagsClient.setEvaluationContextWithoutFetching.mockReturnValueOnce(
             notReady
         );
 
@@ -140,32 +138,40 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         ).toThrow(InvalidContextError);
     });
 
-    it('re-adopts the embedded context on clearContext / empty context change', () => {
+    it('treats a cleared or empty context as the effective context', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
 
         provider.onContextChange({ targetingKey: 'user-1' }, {});
 
-        // Clearing context is not a mismatch: it re-adopts the embedded context and does not throw.
-        expect(
-            mockFlagsClient.resetEvaluationContextWithoutFetching
-        ).toHaveBeenCalled();
         expect(
             mockFlagsClient.setEvaluationContextWithoutFetching
+        ).toHaveBeenCalledWith({ attributes: {} });
+        expect(
+            mockFlagsClient.resetEvaluationContextWithoutFetching
         ).not.toHaveBeenCalled();
     });
 
-    it('treats a context with only an undefined targetingKey as empty', () => {
+    it('does not invent a targeting key when it is undefined', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
 
         provider.onContextChange({}, { targetingKey: undefined });
 
-        // `{ targetingKey: undefined }` carries no information: reset to the embedded context.
-        expect(
-            mockFlagsClient.resetEvaluationContextWithoutFetching
-        ).toHaveBeenCalled();
         expect(
             mockFlagsClient.setEvaluationContextWithoutFetching
+        ).toHaveBeenCalledWith({ attributes: {} });
+        expect(
+            mockFlagsClient.resetEvaluationContextWithoutFetching
         ).not.toHaveBeenCalled();
+    });
+
+    it('preserves an explicit empty targeting key', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+
+        provider.onContextChange({}, { targetingKey: '' });
+
+        expect(
+            mockFlagsClient.setEvaluationContextWithoutFetching
+        ).toHaveBeenCalledWith({ targetingKey: '', attributes: {} });
     });
 
     it('delegates setConfiguration to the client and emits CONFIGURATION_CHANGED', () => {
@@ -226,7 +232,7 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         // A pre-registration setConfiguration error had no listeners, and the empty initialize
         // context reconciles to the same error, so initialize rejects -> the Web SDK starts the
         // provider in ERROR rather than a misleading READY.
-        mockFlagsClient.resetEvaluationContextWithoutFetching.mockReturnValueOnce(
+        mockFlagsClient.setEvaluationContextWithoutFetching.mockReturnValueOnce(
             generalError
         );
         await expect(provider.initialize({})).rejects.toThrow(GeneralError);

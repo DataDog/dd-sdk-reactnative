@@ -28,9 +28,9 @@ describe('normalizeWireContext', () => {
         });
     });
 
-    it('defaults a missing targeting key to an empty string', () => {
+    it('preserves a missing targeting key', () => {
         expect(normalizeWireContext({ country: 'US' })).toEqual({
-            targetingKey: '',
+            targetingKey: undefined,
             attributes: { country: 'US' }
         });
     });
@@ -77,6 +77,14 @@ describe('contextMatchesConfiguration', () => {
                 { targetingKey: 'user-1', country: 'US' },
                 active
             )
+        ).toBe(true);
+    });
+
+    it('matches empty contexts without inventing a targeting key', () => {
+        expect(
+            contextMatchesConfiguration({}, {
+                attributes: {}
+            } as EvaluationContext)
         ).toBe(true);
     });
 
