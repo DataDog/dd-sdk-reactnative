@@ -10,7 +10,6 @@ import DatadogInternal
 import DatadogLogs
 import DatadogRUM
 import DatadogTrace
-import DatadogWebViewTracking
 import Foundation
 import React
 
