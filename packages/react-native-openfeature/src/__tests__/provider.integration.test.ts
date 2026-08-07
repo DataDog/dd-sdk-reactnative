@@ -97,6 +97,49 @@ describe('DatadogOpenFeatureProvider RUM user integration', () => {
         );
     });
 
+    it('omits RUM attributes explicitly set to undefined', async () => {
+        UserInfoSingleton.getInstance().setUserInfo({
+            id: 'rum-user',
+            email: 'rum@example.com',
+            extraInfo: { plan: 'pro' }
+        });
+        const provider = new DatadogOpenFeatureProvider({
+            clientName: 'rum-suppressed-attributes'
+        });
+
+        await provider.initialize({});
+        await provider.onContextChange(
+            {},
+            { email: undefined, plan: undefined }
+        );
+        provider.resolveBooleanEvaluation(
+            'test-flag',
+            false,
+            {},
+            // eslint-disable-next-line no-console
+            console as never
+        );
+
+        expect(NativeDdFlags.setEvaluationContext).toHaveBeenNthCalledWith(
+            1,
+            'rum-suppressed-attributes',
+            'rum-user',
+            { email: 'rum@example.com', plan: 'pro' }
+        );
+        expect(NativeDdFlags.setEvaluationContext).toHaveBeenLastCalledWith(
+            'rum-suppressed-attributes',
+            'rum-user',
+            {}
+        );
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            'rum-suppressed-attributes',
+            'test-flag',
+            expect.any(Object),
+            'rum-user',
+            {}
+        );
+    });
+
     it('uses the latest RUM user after context reconciliation', async () => {
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user-a' });
         const provider = new DatadogOpenFeatureProvider({

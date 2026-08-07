@@ -72,7 +72,9 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 When RUM integration is enabled (the default), the online provider includes the user set through
 `DdSdkReactNative.setUserInfo()` in the OpenFeature evaluation context. The RUM user ID supplies the
 targeting key, while `name`, `email`, and flat string, number, or boolean `extraInfo` properties become
-evaluation attributes. Fields set explicitly through `OpenFeature.setContext()` take precedence.
+evaluation attributes. Fields set explicitly through `OpenFeature.setContext()` take precedence. An
+explicitly `undefined` field suppresses the corresponding RUM value and is omitted from the effective
+evaluation context.
 
 Set the RUM user before registering the provider:
 

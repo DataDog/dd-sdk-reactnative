@@ -62,6 +62,23 @@ describe('enrichEvaluationContextWithRumUser', () => {
         ).toEqual({ targetingKey: '' });
     });
 
+    it('uses explicitly undefined fields to remove RUM defaults', () => {
+        UserInfoSingleton.getInstance().setUserInfo({
+            id: 'rum-user',
+            email: 'rum@example.com',
+            extraInfo: { plan: 'pro' }
+        });
+
+        expect(
+            enrichEvaluationContextWithRumUser({
+                targetingKey: undefined,
+                email: undefined,
+                plan: undefined,
+                request_attribute: 'request-value'
+            })
+        ).toStrictEqual({ request_attribute: 'request-value' });
+    });
+
     it('uses the latest RUM user whenever context is reconciled', () => {
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user-a' });
         expect(enrichEvaluationContextWithRumUser({})).toEqual({
