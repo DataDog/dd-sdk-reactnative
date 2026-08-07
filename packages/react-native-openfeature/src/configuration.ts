@@ -14,7 +14,9 @@ import type {
 // flagging-core release contains DataDog/openfeature-js-client#353 through
 // `499c31b` and `@datadog/mobile-react-native` re-exports the upstream helper.
 // Import and re-export `getPrecomputedContext` from the React Native SDK instead.
-// Keep the React Native forwarding, provider, and bootstrap integration tests.
+// Raise the React Native SDK peer and development dependency minimums to the first
+// release that exports it. Replace these semantic tests with one package-root
+// forwarding test. Keep the provider and bootstrap integration tests.
 const cloneContextValue = (
     value: EvaluationContextValue
 ): EvaluationContextValue => {
