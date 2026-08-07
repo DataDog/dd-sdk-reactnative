@@ -37,11 +37,13 @@ import type { JsonValue, EvaluationContext, FlagDetails } from './types';
  * Error codes an offline configuration result can carry:
  * - `INVALID_CONTEXT`: the active context does not match the precomputed snapshot.
  * - `PROVIDER_NOT_READY`: an offline operation ran with no configuration loaded.
- * - `GENERAL`: the loaded configuration is unusable (malformed/unsupported/undecodable).
+ * - `PARSE_ERROR`: a supplied configuration has no usable capability.
+ * - `GENERAL`: an unexpected rules-engine error occurred during evaluation.
  */
 export type ConfigurationErrorCode =
     | 'INVALID_CONTEXT'
     | 'PROVIDER_NOT_READY'
+    | 'PARSE_ERROR'
     | 'GENERAL';
 
 /**
@@ -84,34 +86,37 @@ type LoadedConfigurationState =
     | { kind: 'none' }
     | {
           kind: 'configuration';
+          configurationError?: string;
           precomputed: LoadedBranch<LoadedPrecomputed>;
           rules: LoadedBranch<RulesConfigurationResponse>;
       };
 
 // TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `9f794c7`. Read
+// `82bfc2e`. Read
 // `configuration.rules.response` directly. The configuration is already parsed
 // from the complete portable envelope. Do not add raw-service-response handling
 // or envelope construction to `FlagsClient`. PR #344 moves parsing to
 // `@datadog/flagging-core/configuration`; keep that opt-in import in the local
 // wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
-// Keep `precomputedError` and `precomputed.flagErrors` when the released type
-// provides them. Do not copy PR #336's precedence that blocks valid rules when
-// `precomputedError` is present. PR #336 is now restacked at `33113d2`, and its
-// combined evaluator still has that precedence. Its browser
-// `DatadogOfflineProvider` uses the combined evaluator, but React Native must keep
-// its separate paths until that behavior reaches parity. The released evaluator
+// Keep `configurationError`, `rulesError`, `precomputedError`, and
+// `precomputed.flagErrors` when the released type provides them. PR #336 through
+// `4d0f24e` now selects valid matching precomputed data, then valid rules, before
+// it returns an applicable parse error. Keep these separate paths for the native
+// precomputed cache and tracking behavior, but use the same capability and error
+// precedence. Replace compatible lifecycle checks with the upstream
+// `getFlagsConfigurationError` helper after publication. The released evaluator
 // must include PR #344's deterministic flag-scoped
 // `PARSE_ERROR` results, including unsupported feature levels, unknown-field
 // tolerance, lossless protobuf integer parsing, and the required SHA-256
-// digest-length validation. It must also either support integer and shard
-// evaluation when global `BigInt` is unavailable or document `BigInt` as a
-// runtime requirement. The smoke test at `9f794c7` does not cover those paths.
-// `FlagsClient` must not convert a parsed `bigint` or repair an upstream
-// `GENERAL` result. It must preserve the evaluator's `PARSE_ERROR` when a value
-// cannot be represented safely as a JavaScript number.
+// digest-length validation. Its safe-integer conversion no longer calls global
+// `BigInt`; keep coverage for unsafe integers and shard values without that
+// global. `FlagsClient` must not convert a parsed `bigint`. It must preserve the
+// evaluator's `PARSE_ERROR` when a value cannot be represented safely as a
+// JavaScript number.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
+    configurationError?: string;
+    rulesError?: string;
     rulesBased?: { response?: unknown };
     precomputedError?: string;
     precomputed?: ParsedPrecomputedConfiguration & {
@@ -281,7 +286,7 @@ export class FlagsClient {
      *
      * For a precomputed configuration this decodes the snapshot once and adopts its embedded
      * evaluation context when none is set — **no network request is made**. An unusable
-     * configuration reconciles to an error (`GENERAL`); a context mismatch to `INVALID_CONTEXT`.
+     * configuration reconciles to an error (`PARSE_ERROR`); a context mismatch to `INVALID_CONTEXT`.
      *
      * @param configuration The configuration to load.
      *
@@ -320,12 +325,7 @@ export class FlagsClient {
         let precomputedBranch: LoadedBranch<LoadedPrecomputed> = {
             status: 'absent'
         };
-        if (pendingConfiguration.precomputedError !== undefined) {
-            precomputedBranch = {
-                status: 'invalid',
-                errorMessage: pendingConfiguration.precomputedError
-            };
-        } else if (precomputed) {
+        if (precomputed) {
             try {
                 precomputedBranch = {
                     status: 'ready',
@@ -348,6 +348,11 @@ export class FlagsClient {
                 );
                 precomputedBranch = { status: 'invalid', errorMessage };
             }
+        } else if (pendingConfiguration.precomputedError !== undefined) {
+            precomputedBranch = {
+                status: 'invalid',
+                errorMessage: pendingConfiguration.precomputedError
+            };
         }
 
         let rulesBranch: LoadedBranch<RulesConfigurationResponse> = {
@@ -365,10 +370,16 @@ export class FlagsClient {
                           status: 'invalid',
                           errorMessage: prepared.errorMessage
                       };
+        } else if (pendingConfiguration.rulesError !== undefined) {
+            rulesBranch = {
+                status: 'invalid',
+                errorMessage: pendingConfiguration.rulesError
+            };
         }
 
         return {
             kind: 'configuration',
+            configurationError: pendingConfiguration.configurationError,
             precomputed: precomputedBranch,
             rules: rulesBranch
         };
@@ -392,7 +403,7 @@ export class FlagsClient {
             );
         }
 
-        const { precomputed, rules } = loaded;
+        const { configurationError, precomputed, rules } = loaded;
 
         if (
             precomputed.status === 'ready' &&
@@ -421,18 +432,16 @@ export class FlagsClient {
             return this.enterReady();
         }
 
+        if (configurationError !== undefined) {
+            return this.enterError('PARSE_ERROR', configurationError);
+        }
+
         if (rules.status === 'invalid') {
-            return this.enterError(
-                'GENERAL',
-                `The rules configuration for '${this.clientName}' is not usable: ${rules.errorMessage}`
-            );
+            return this.enterError('PARSE_ERROR', rules.errorMessage);
         }
 
         if (precomputed.status === 'invalid') {
-            return this.enterError(
-                'GENERAL',
-                `The precomputed configuration for '${this.clientName}' is not usable: ${precomputed.errorMessage}`
-            );
+            return this.enterError('PARSE_ERROR', precomputed.errorMessage);
         }
 
         if (precomputed.status === 'ready') {
@@ -443,8 +452,8 @@ export class FlagsClient {
         }
 
         return this.enterError(
-            'GENERAL',
-            `The loaded configuration for '${this.clientName}' does not contain a usable branch.`
+            'PARSE_ERROR',
+            'Flags configuration contains no usable capability'
         );
     };
 
@@ -502,7 +511,6 @@ export class FlagsClient {
         errorCode:
             | ConfigurationErrorCode
             | 'FLAG_NOT_FOUND'
-            | 'PARSE_ERROR'
             | 'TARGETING_KEY_MISSING'
             | 'TYPE_MISMATCH',
         errorMessage?: string
@@ -564,7 +572,6 @@ export class FlagsClient {
     ):
         | ConfigurationErrorCode
         | 'FLAG_NOT_FOUND'
-        | 'PARSE_ERROR'
         | 'TARGETING_KEY_MISSING'
         | 'TYPE_MISMATCH' => {
         switch (errorCode) {
@@ -677,11 +684,20 @@ export class FlagsClient {
             );
         }
 
+        if (loaded.configurationError !== undefined) {
+            return this.errorDetails(
+                key,
+                defaultValue,
+                'PARSE_ERROR',
+                loaded.configurationError
+            );
+        }
+
         if (loaded.rules.status === 'invalid') {
             return this.errorDetails(
                 key,
                 defaultValue,
-                'GENERAL',
+                'PARSE_ERROR',
                 loaded.rules.errorMessage
             );
         }
@@ -690,7 +706,7 @@ export class FlagsClient {
             return this.errorDetails(
                 key,
                 defaultValue,
-                'GENERAL',
+                'PARSE_ERROR',
                 loaded.precomputed.errorMessage
             );
         }
@@ -707,8 +723,8 @@ export class FlagsClient {
         return this.errorDetails(
             key,
             defaultValue,
-            'GENERAL',
-            `The loaded configuration for '${this.clientName}' does not contain a usable branch.`
+            'PARSE_ERROR',
+            'Flags configuration contains no usable capability'
         );
     };
 
@@ -737,7 +753,7 @@ export class FlagsClient {
         }
 
         // An offline configuration that cannot be served against the active context surfaces the
-        // precise error code (INVALID_CONTEXT / GENERAL / PROVIDER_NOT_READY) with the coded
+        // precise error code (INVALID_CONTEXT / PARSE_ERROR / PROVIDER_NOT_READY) with the coded
         // default. The OpenFeature provider maps this to a PROVIDER_ERROR / ERROR state.
         if (this.configurationStatus === 'error' && this.configurationError) {
             return this.errorDetails(

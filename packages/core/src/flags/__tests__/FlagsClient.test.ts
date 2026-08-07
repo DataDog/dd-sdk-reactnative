@@ -20,6 +20,7 @@ import type {
     RulesValueType
 } from '../configuration/rules';
 import { configurationFromString } from '../configuration';
+import type { ParsedFlagsConfiguration } from '../configuration';
 
 jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
     'test-boolean-flag': {
@@ -504,37 +505,61 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('errors with GENERAL for an empty/unparseable configuration', () => {
+        it('errors with PARSE_ERROR for an unparseable configuration', () => {
             const flagsClient = DdFlags.getClient();
 
             const result = flagsClient.setConfiguration(
                 configurationFromString('garbage')
             );
 
-            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
             ).toMatchObject({
                 value: false,
                 reason: 'ERROR',
-                errorCode: 'GENERAL'
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Invalid flags configuration wire format'
             });
         });
 
-        it('errors with GENERAL for an unsupported (obfuscated) configuration', () => {
+        it('distinguishes an empty supplied configuration from no configuration', () => {
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration({})).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                errorCode: 'PARSE_ERROR',
+                errorMessage:
+                    'Flags configuration contains no usable capability'
+            });
+        });
+
+        it('errors with PARSE_ERROR for an unsupported (obfuscated) configuration', () => {
             const flagsClient = DdFlags.getClient();
 
             const result = flagsClient.setConfiguration(
                 buildConfig(offlineFlags, { targetingKey: 'user-1' }, true)
             );
 
-            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({ errorCode: 'GENERAL' });
+            ).toMatchObject({ errorCode: 'PARSE_ERROR' });
         });
 
-        it('errors with GENERAL for a structurally malformed response envelope', () => {
+        it('errors with PARSE_ERROR for a structurally malformed response envelope', () => {
             const flagsClient = DdFlags.getClient();
 
             // A wire whose precomputed response omits `data.attributes.flags` entirely.
@@ -550,10 +575,13 @@ describe('FlagsClient', () => {
                 configurationFromString(wire)
             );
 
-            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+            ).toMatchObject({ value: false, errorCode: 'PARSE_ERROR' });
         });
 
         it('serves a context-agnostic configuration (no embedded context)', () => {
@@ -700,7 +728,7 @@ describe('FlagsClient', () => {
             // Invalid replacement.
             expect(
                 flagsClient.setConfiguration(configurationFromString('garbage'))
-            ).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            ).toEqual({ status: 'error', errorCode: 'PARSE_ERROR' });
 
             // A later context change must NOT promote the invalid load back to ready.
             const afterContextChange = flagsClient.setEvaluationContextWithoutFetching(
@@ -708,11 +736,11 @@ describe('FlagsClient', () => {
             );
             expect(afterContextChange).toEqual({
                 status: 'error',
-                errorCode: 'GENERAL'
+                errorCode: 'PARSE_ERROR'
             });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+            ).toMatchObject({ value: false, errorCode: 'PARSE_ERROR' });
 
             // A valid replacement recovers.
             expect(
@@ -1109,7 +1137,7 @@ describe('FlagsClient', () => {
             );
         });
 
-        it('returns GENERAL when mismatched precomputed data falls through to invalid rules', () => {
+        it('returns PARSE_ERROR when mismatched precomputed data falls through to invalid rules', () => {
             const flagsClient = DdFlags.getClient();
             flagsClient.setConfiguration(
                 buildMixedConfig({ targetingKey: 'user-1' }, {})
@@ -1120,10 +1148,10 @@ describe('FlagsClient', () => {
                     targetingKey: 'user-2',
                     attributes: {}
                 })
-            ).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            ).toEqual({ status: 'error', errorCode: 'PARSE_ERROR' });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+            ).toMatchObject({ value: false, errorCode: 'PARSE_ERROR' });
         });
 
         it('keeps valid rules when the precomputed branch is invalid', () => {
@@ -1148,7 +1176,7 @@ describe('FlagsClient', () => {
             );
         });
 
-        it('keeps valid rules instead of applying combined precomputedError precedence', () => {
+        it('keeps valid rules when precomputedError is present', () => {
             const configuration = buildRulesConfig() as ReturnType<
                 typeof buildRulesConfig
             > & {
@@ -1169,6 +1197,82 @@ describe('FlagsClient', () => {
             expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
                 true
             );
+        });
+
+        it('keeps matching precomputed data when rulesError is present', () => {
+            const configuration = buildConfig(offlineFlags, {
+                targetingKey: 'user-1'
+            }) as ReturnType<typeof buildConfig> & {
+                rulesError?: string;
+            };
+            configuration.rulesError = 'Malformed rules data';
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('returns rulesError when precomputed data does not match', () => {
+            const configuration = buildConfig(offlineFlags, {
+                targetingKey: 'user-1'
+            }) as ReturnType<typeof buildConfig> & {
+                rulesError?: string;
+            };
+            configuration.rulesError = 'Malformed rules data';
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(configuration);
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: {}
+                })
+            ).toEqual({ status: 'error', errorCode: 'PARSE_ERROR' });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Malformed rules data'
+            });
+        });
+
+        it('keeps valid rules when configurationError is present', () => {
+            const configuration = buildRulesConfig() as ReturnType<
+                typeof buildRulesConfig
+            > & {
+                configurationError?: string;
+            };
+            configuration.configurationError =
+                'Malformed configuration envelope';
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+        });
+
+        it('uses configurationError before branch errors when no capability is usable', () => {
+            const flagsClient = DdFlags.getClient();
+            const configuration = ({
+                configurationError: 'Malformed configuration envelope',
+                rulesError: 'Malformed rules data',
+                precomputedError: 'Malformed precomputed data'
+            } as unknown) as ParsedFlagsConfiguration;
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Malformed configuration envelope'
+            });
         });
 
         it('preserves a matching precomputed flag error before rules fallback', () => {

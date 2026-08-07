@@ -572,8 +572,8 @@ export const flaggingCoreRulesEngine: RulesEngine = {
         // TODO(FFL-2837): Delete this compatibility check with the local error
         // store after the published PR #344 evaluator through `78a0c14` validates
         // reached flag data and reports deterministic flag-scoped errors, including
-        // unsupported feature levels and unsafe integer conversions with and
-        // without global `BigInt` when supported.
+        // unsupported feature levels and unsafe integer conversions without
+        // calling global `BigInt`.
         const configurationError = errorsByConfiguration
             .get(request.configuration)
             ?.get(request.flagKey);
