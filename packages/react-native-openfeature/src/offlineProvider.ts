@@ -12,6 +12,7 @@ import {
     ErrorCode,
     GeneralError,
     InvalidContextError,
+    ParseError,
     ProviderEvents,
     ProviderNotReadyError
 } from '@openfeature/web-sdk';
@@ -40,6 +41,7 @@ type ProviderErrorEvent = { message: string; errorCode: ErrorCode };
 const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
     INVALID_CONTEXT: ErrorCode.INVALID_CONTEXT,
     PROVIDER_NOT_READY: ErrorCode.PROVIDER_NOT_READY,
+    PARSE_ERROR: ErrorCode.PARSE_ERROR,
     GENERAL: ErrorCode.GENERAL
 };
 
@@ -185,6 +187,10 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
             case 'PROVIDER_NOT_READY':
                 return new ProviderNotReadyError(
                     'The Datadog offline provider has no configuration loaded. Provide one via setConfiguration.'
+                );
+            case 'PARSE_ERROR':
+                return new ParseError(
+                    'The Datadog offline provider cannot parse the loaded configuration.'
                 );
             default:
                 return new GeneralError(

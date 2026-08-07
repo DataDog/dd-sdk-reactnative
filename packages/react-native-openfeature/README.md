@@ -174,12 +174,14 @@ Safe integers evaluate as OpenFeature numbers.
 An integer outside the JavaScript safe range returns `PARSE_ERROR`.
 The SDK does not return a rounded or imprecise value.
 
-Keep the original wire when it contains rules.
-Do not use `configurationToString` to recreate a rules wire.
-The parsed rules object does not contain the original protobuf payload.
+`configurationToString` serializes precomputed and rules configurations.
+It preserves unknown protobuf fields in the rules response.
+Keep the original wire until the published flagging-core dependency provides this contract.
 
 Load the configuration before you set the provider.
-The provider starts in `ERROR` when it has no usable configuration.
+The provider starts in `ERROR` with `PROVIDER_NOT_READY` when no configuration was supplied.
+A supplied but unusable configuration reports `PARSE_ERROR`.
+A valid matching precomputed branch or valid rules branch remains usable when its sibling branch is invalid.
 A later valid configuration can recover the provider.
 
 Do not call the non-waiting `OpenFeature.setProvider` and then call `setConfiguration`.

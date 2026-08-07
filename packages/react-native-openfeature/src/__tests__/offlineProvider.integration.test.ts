@@ -103,14 +103,16 @@ const rulesResponseFor = (flagKey: string) => ({
 
 // TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `9f794c7`, restores 32-byte SHA digest validation, and either supports integer
-// and shard evaluation without global `BigInt` or declares `BigInt` as a runtime
-// requirement. The `9f794c7` smoke test covers only a static boolean without
-// `BigInt`. Use canonical raw protobuf bytes produced from the dd-source#34959
+// `82bfc2e` and restores 32-byte SHA digest validation. Safe integer conversion
+// no longer calls global `BigInt`. The `82bfc2e` smoke test covers a static
+// boolean and a safe integer, but not unsafe integers or shard values. Use
+// canonical raw protobuf bytes produced from the dd-source#34959
 // client-distribution path. Record dd-source#40304 commit `071c4ad` as the schema
 // revision and dd-source#34959 as the service producer path.
-// PR #336 through `33113d2` does not change this wire contract. Keep the existing
-// React Native provider name and its Ready-before-ConfigurationChanged recovery order.
+// PR #336 through `4d0f24e` does not change this wire contract. It defines
+// valid-sibling and parse-error precedence and the `{ message, errorCode? }`
+// provider error event. Keep the existing React Native provider name and its
+// Ready-before-ConfigurationChanged recovery order.
 // Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
 // verify that decoding returns the original bytes, and record the source revision.
 // Use the upstream `@datadog/flagging-core/configuration` parser. Do not copy the
@@ -222,6 +224,24 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
             '../../../core/src/specs/NativeDdFlags'
         ).default;
         expect(nativeFlags.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('reports PARSE_ERROR for a supplied unusable configuration', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString('not json'));
+
+        await expect(
+            OpenFeature.setProviderAndWait(domain, provider)
+        ).rejects.toMatchObject({ code: ErrorCode.PARSE_ERROR });
+
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+        expect(client.getBooleanDetails('new-feature', false)).toMatchObject({
+            value: false,
+            errorCode: ErrorCode.PARSE_ERROR,
+            errorMessage: 'Invalid flags configuration wire format'
+        });
     });
 
     it('does not synthesize an empty targeting key when a shard requires one', async () => {

@@ -23,9 +23,9 @@ export const buildSampleWire = (): string =>
         version: 1,
         // TODO(FFL-2837): Replace this complete legacy `rulesBased` JSON branch
         // after a published flagging-core release contains
-        // DataDog/openfeature-js-client#344 through `9f794c7`, restores
-        // 32-byte SHA digest validation, and finalizes the runtime contract for
-        // integer and shard evaluation without global `BigInt`. Reuse the
+        // DataDog/openfeature-js-client#344 through `82bfc2e` and restores
+        // 32-byte SHA digest validation. Safe integer conversion no longer calls
+        // global `BigInt`; retain tests for unsafe integers and shard values. Reuse the
         // production-derived client
         // fixture from the integration test: one base64 encoding of the canonical
         // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
@@ -36,8 +36,8 @@ export const buildSampleWire = (): string =>
         // The final fixture must preserve protobuf integers as `bigint`, return
         // `PARSE_ERROR` for unsafe number conversion, tolerate unknown fields,
         // preserve them through `configurationToString`, return flag-scoped
-        // `PARSE_ERROR` for an unsupported feature level, and follow the final
-        // global-`BigInt` runtime requirement.
+        // `PARSE_ERROR` for an unsupported feature level, and work without the
+        // global `BigInt` function.
         rulesBased: {
             response: JSON.stringify({
                 createdAt: '2026-07-23T12:00:00.000Z',
