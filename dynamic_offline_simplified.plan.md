@@ -71,9 +71,9 @@ Thus, the current application bundle already contains the existing rules engine.
 ### 2.2 Expected features from upstream PR #344
 
 PR #344 is the required upstream dependency change.
-Its code head is `9f794c7` as of 2026-08-03.
-Commits `cf9ef2e` and `9f794c7` were added after the previous review.
-They align the unsupported feature-level contract and add capability-specific entry points.
+Its code head is `82bfc2e` as of 2026-08-07.
+Commits `dfa1e38` and `82bfc2e` were added after the previous review.
+They remove the evaluator dependency on the global `BigInt` function and preserve configuration parse errors.
 It adds these features:
 
 - The opaque `FlagsConfigurationWire` type
@@ -93,6 +93,7 @@ It adds these features:
 - Forward-compatible handling of unknown protobuf fields
 - Lossless parsing of protobuf integer values
 - Rules configuration serialization
+- Complete-envelope and rules-branch parse errors
 - Precomputed branch and per-flag parse errors
 - Deterministic rules parse errors
 - Backward-only condition references
@@ -134,15 +135,18 @@ React Native must use the flagging-core subpath directly.
 
 The combined parser uses separate precomputed and rules parsers.
 It merges the valid results from both parsers.
-It can return `precomputedError` with valid rules data.
-The combined evaluator from PR #336 checks `precomputedError` before rules data.
-React Native does not use that combined evaluator.
-React Native must keep its planned valid-sibling fallback behavior.
+It can return `configurationError`, `rulesError`, or `precomputedError` with a valid sibling branch.
+The combined evaluator from PR #336 now selects a valid matching capability before it returns a parse error.
+Matching precomputed data has priority over rules.
+Valid rules have priority over a precomputed mismatch or `precomputedError`.
+React Native must use the same valid-sibling fallback behavior.
 
 PR #344 validates the precomputed branch during parsing.
 It records a branch error in `precomputedError`.
 It removes malformed precomputed flags from the response and records their errors in `precomputed.flagErrors`.
-The combined evaluator returns `PARSE_ERROR` for those errors.
+It records an invalid complete envelope in `configurationError`.
+It records an invalid rules entry or response in `rulesError`.
+The combined evaluator returns `PARSE_ERROR` when no valid capability can take priority over an applicable error.
 
 PR #344 now uses the Protobuf-ES base64 decoder directly.
 It removed its stricter custom padding and canonical-encoding checks.
@@ -154,10 +158,11 @@ Do not depend on the parser to reject every non-canonical base64 spelling.
 PR #336 is stacked on PR #344.
 It adds the browser `DatadogOfflineProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
-Its head is `33113d2` as of 2026-08-03.
-Its merge base is the current PR #344 head, `9f794c7`.
+Its head is `4d0f24e` as of 2026-08-07.
+Its merge base is the current PR #344 head, `82bfc2e`.
 GitHub reports both PRs as mergeable.
-Commits `f4e41ce` and `33113d2` align the capability entry points and expose `DatadogOfflineProvider`.
+New commits add valid-sibling fallback, make configuration optional at construction, align parse errors, and standardize provider error events.
+The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
 The full browser root and the protobuf-free browser `/precomputed` entry point export that provider.
 The shared `DatadogCoreProvider` base is internal.
 PR #336 says that this hierarchy follows the React Native integration.
@@ -169,9 +174,14 @@ Use the browser `DatadogOfflineProvider` as an integration reference.
 - Matching precomputed data has priority.
 - Rules data is the fallback after a precomputed mismatch.
 - `onContextChange` does not fetch.
+- The constructor takes no configuration.
+- The customer supplies configuration later with `setConfiguration`.
 - `setConfiguration` emits `ConfigurationChanged` for valid configuration.
 - Recovery emits `Ready` before `ConfigurationChanged`.
 - Unusable configuration emits `Error`.
+- Error events use `{ message, errorCode? }`.
+- No configuration returns `PROVIDER_NOT_READY`.
+- A supplied but unusable configuration returns `PARSE_ERROR`.
 
 React Native already follows this lifecycle behavior.
 Keep the existing React Native public provider name.
@@ -180,7 +190,8 @@ React Native can continue to use its decoded precomputed `Map`.
 It can call `evaluateRulesBasedConfiguration` only for the rules path.
 This keeps current precomputed validation and native tracking behavior.
 Do not adopt the combined `evaluate` function without a parity review.
-The parity review must include `precomputedError` precedence.
+The parity review must include the upstream capability selector, parse-error precedence, and native tracking.
+Use `getFlagsConfigurationError` as the lifecycle parity contract after the dependency is published.
 
 ### 2.4 Merged protobuf service support from dd-source PR #34959
 
@@ -320,8 +331,9 @@ The new `@datadog/openfeature-browser/precomputed` entry point exposes the provi
 Its React Native smoke test bundles Android and iOS with React Native 0.76.9.
 The test uses the packed flagging-core package and the export-condition order from this repository.
 The test runs the Android bundle under Node without `TextEncoder`, `TextDecoder`, or `BigInt`.
-It parses, serializes, and evaluates one static boolean flag.
-It does not evaluate an integer variation, shard count, or shard range without `BigInt`.
+It parses, serializes, and evaluates one static boolean flag and one safe integer flag.
+The shared safe-integer conversion no longer calls the global `BigInt` function.
+The smoke test does not evaluate an unsafe integer, shard count, or shard range without `BigInt`.
 It also checks that the default flagging-core and precomputed entry points do not load `@bufbuild/protobuf`.
 It does not run the bundle in Hermes or JSC.
 
@@ -363,11 +375,10 @@ It does not reject the complete rules branch only because one flag contains an u
 The evaluator returns `PARSE_ERROR` when an integer variation, shard count, or range cannot be represented safely as a JavaScript number.
 Do not convert these values in React Native.
 
-The upstream no-`BigInt` smoke test does not cover these integer paths.
-The protobuf evaluator still calls global `BigInt(...)` in its safe-integer check.
-If `BigInt` is absent, this call can produce `GENERAL` instead of the required `PARSE_ERROR`.
-Before publication, upstream must either support integer evaluation without global `BigInt` or declare `BigInt` as a runtime requirement.
-Test safe and unsafe integer variations, shard counts, and ranges with global `BigInt` unavailable.
+PR #344 no longer calls global `BigInt(...)` in its safe-integer check.
+Its React Native smoke test evaluates a safe integer without global `BigInt`.
+The shared conversion also covers shard counts and ranges.
+Keep React Native contract tests for safe and unsafe integer variations, shard counts, and ranges without global `BigInt`.
 
 ddoghq/dd-source PR #34959 serves the canonical raw protobuf response.
 It preserves the JSON response when the caller does not request protobuf.
@@ -652,7 +663,7 @@ The upstream parser now uses the Protobuf-ES base64 decoder.
 
 Keep the complete parsed `FlagsConfiguration`.
 Decode precomputed flags one time into a `Map`.
-Keep `precomputedError` and `precomputed.flagErrors`.
+Keep `configurationError`, `rulesError`, `precomputedError`, and `precomputed.flagErrors`.
 Keep the parsed protobuf rules object.
 
 Use this path order:
@@ -665,12 +676,15 @@ Select the path for each resolution.
 Do not freeze the selection during reconciliation.
 
 The upstream parser decodes each wire branch independently.
-It can retain `precomputedError` with valid rules data.
+It can retain a branch error with valid sibling data.
 Keep a valid sibling when the other branch is malformed.
-Do not copy the combined PR #336 evaluator precedence that returns `precomputedError` before it checks rules.
+Follow the PR #336 capability precedence.
 When precomputed data matches, return its per-flag `PARSE_ERROR` before `FLAG_NOT_FOUND`.
 Do not fall back to rules for that key.
-Return `GENERAL` only when the parser returns no usable branch.
+Return `PROVIDER_NOT_READY` only when no configuration was supplied.
+Return `PARSE_ERROR` when a supplied configuration has no usable branch.
+Use the upstream error order: `configurationError`, `rulesError`, then `precomputedError`.
+Use the upstream `getFlagsConfigurationError` helper for lifecycle checks when it can replace local compatibility code without changing native precomputed behavior.
 
 Do not add a second structural rules validator.
 Trust the evaluator to report unsupported or malformed rules data as `PARSE_ERROR` when evaluation reaches it.
@@ -912,8 +926,9 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Do not copy the removed upstream base64 validator into React Native.
 - [ ] Round-trip a rules configuration through `configurationToString`.
 - [ ] Parse a wire with both branches.
-- [ ] Return an empty configuration for malformed wire data.
-- [ ] Return `GENERAL` when the loaded configuration is empty.
+- [ ] Preserve `configurationError` for malformed wire data.
+- [ ] Preserve `rulesError` for a malformed rules entry or response.
+- [ ] Return `PARSE_ERROR` when the loaded configuration has no usable capability.
 - [ ] Detect a changed upstream field name or version.
 - [ ] Test the published protobuf fixture.
 - [ ] Ignore an unknown protobuf field when a supported known value remains.
@@ -935,6 +950,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Keep valid rules flags when another flag contains an unsafe integer.
 - [ ] Keep valid precomputed data when the rules branch is malformed.
 - [ ] Keep valid rules data when `precomputedError` is present.
+- [ ] Keep valid precomputed data when `rulesError` is present.
+- [ ] Return a branch parse error only when no valid capability applies.
 - [ ] Preserve `precomputed.flagErrors` for matching precomputed data.
 - [ ] Return the precomputed `PARSE_ERROR` before `FLAG_NOT_FOUND`.
 - [ ] Do not fall back to rules for a malformed flag in matching precomputed data.
@@ -1018,8 +1035,10 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Keep valid precomputed data when rules protobuf is malformed.
 - [ ] Keep valid rules data when precomputed JSON is malformed.
 - [ ] Keep valid rules data when the parser returns `precomputedError`.
+- [ ] Keep valid precomputed data when the parser returns `rulesError`.
 - [ ] Parse both valid branches from one wire.
-- [ ] Return `GENERAL` when neither branch is usable.
+- [ ] Return `PARSE_ERROR` when a supplied configuration has no usable branch.
+- [ ] Return `PROVIDER_NOT_READY` when no configuration was supplied.
 
 ### 6.8 Obfuscation tests
 
@@ -1073,8 +1092,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 PR #344 and PR #336 are not published.
 Their APIs can change.
-PR #336 is based on PR #344 head `9f794c7`.
-Its head is `33113d2`.
+PR #336 is based on PR #344 head `82bfc2e`.
+Its head is `4d0f24e`.
 GitHub reports both PRs as mergeable.
 PR #344 still calls the follow-up `CoreProvider` in its description.
 Use the current PR #336 `DatadogOfflineProvider` name.
@@ -1298,8 +1317,8 @@ The configuration producer owns content negotiation, content-type validation, an
 - [ ] Decide whether non-canonical base64 must be rejected across SDKs.
 - [ ] Confirm Hermes compatibility.
 - [ ] Confirm JSC compatibility.
-- [ ] Decide whether global `BigInt` is required.
-- [ ] Confirm integer and shard evaluation without global `BigInt` if it is not required.
+- [x] Remove the evaluator dependency on global `BigInt`.
+- [ ] Confirm safe and unsafe integer and shard evaluation without global `BigInt` in Hermes and JSC.
 - [x] Define per-flag feature-level and unknown-field behavior.
 - [x] Preserve invalid flags and report `PARSE_ERROR` during evaluation.
 - [x] Ignore unknown fields when a supported known value remains.
@@ -1353,6 +1372,8 @@ The plan was updated on 2026-07-31 after live verification found no new code hea
 The plan was updated on 2026-08-03 after PR #344 added the canonical feature-level wording and capability-specific entry points.
 PR #336 had no new commit and required a new restack.
 The plan was updated again on 2026-08-03 after PR #336 was restacked and exposed `DatadogOfflineProvider`.
+The plan was updated on 2026-08-07 after PR #344 removed the runtime `BigInt` call and preserved configuration parse errors.
+The plan was updated again on 2026-08-07 after PR #336 added valid-sibling fallback, aligned the configuration API, and standardized provider errors.
 
 The reviews produced these main corrections:
 
@@ -1399,8 +1420,9 @@ The reviews produced these main corrections:
 - Rules serialization preserves unknown protobuf fields.
 - PR #344 requires composite conditions to reference preceding conditions.
 - PR #344 compiles and caches regular expressions lazily, but this does not solve ReDoS.
-- PR #336 returns `precomputedError` before rules; React Native keeps valid-sibling fallback with separate paths.
-- The upstream no-`BigInt` smoke test does not cover integer or shard evaluation.
+- PR #336 now selects a valid sibling before it returns a branch parse error.
+- PR #344 no longer requires the global `BigInt` function for safe integer conversion.
+- The upstream no-`BigInt` smoke test covers a safe integer but not unsafe integers or shard values.
 - The salted-hash protocol needs canonical cross-SDK test vectors.
 - Salted SHA-256 does not make low-entropy values confidential.
 - Platform opt-in does not apply to customer-supplied wires.
