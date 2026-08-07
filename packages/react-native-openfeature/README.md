@@ -86,12 +86,18 @@ await DdSdkReactNative.setUserInfo({
 await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
 ```
 
-If the RUM user changes after provider initialization, reconcile the provider with the latest user
-while preserving explicitly configured OpenFeature properties:
+Calling `DdSdkReactNative.setUserInfo()` after provider initialization does not automatically update
+the OpenFeature evaluation context. After a login or account switch, update the RUM user and then
+reconcile the provider while preserving explicitly configured OpenFeature properties:
 
 ```tsx
+await DdSdkReactNative.setUserInfo(newUser);
 await OpenFeature.setContext(OpenFeature.getContext());
 ```
+
+Until reconciliation completes, the provider continues using its previous effective evaluation
+context. Reconciliation refetches assignments, and subsequent evaluations and evaluation tracking
+use the new RUM user context.
 
 Nested RUM user properties are not included. Setting `rumIntegrationEnabled: false` in
 `DdFlags.enable()` disables both RUM feature flag tracking and RUM user context enrichment. The
