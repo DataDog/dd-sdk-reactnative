@@ -217,20 +217,34 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(emitSpy).not.toHaveBeenCalledWith(ProviderEvents.Ready);
     });
 
-    it('emits PROVIDER_ERROR with a top-level errorCode on an invalid configuration', () => {
+    it('emits PROVIDER_ERROR with a top-level parse error code on an invalid configuration', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
-        mockFlagsClient.setConfiguration.mockReturnValueOnce(generalError);
+        mockFlagsClient.setConfiguration.mockReturnValueOnce(parseError);
         provider.setConfiguration({} as never);
 
         expect(emitSpy).toHaveBeenCalledWith(
             ProviderEvents.Error,
             expect.objectContaining({
                 message: expect.any(String),
-                errorCode: ErrorCode.GENERAL
+                errorCode: ErrorCode.PARSE_ERROR
             })
         );
+    });
+
+    it('preserves a general code for an unexpected configuration error', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        const emitSpy = jest.spyOn(provider.events, 'emit');
+
+        mockFlagsClient.setConfiguration.mockReturnValueOnce(generalError);
+        provider.setConfiguration({} as never);
+
+        expect(emitSpy).toHaveBeenCalledWith(ProviderEvents.Error, {
+            message:
+                'The Datadog offline provider cannot serve the loaded configuration for the current context.',
+            errorCode: ErrorCode.GENERAL
+        });
     });
 
     it('recovers on a later valid configuration, emitting READY then CONFIGURATION_CHANGED', () => {
@@ -259,15 +273,24 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
 
     it('rejects initialize when a config was loaded (pre-registration) and is invalid', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
-        mockFlagsClient.setConfiguration.mockReturnValueOnce(generalError);
+        mockFlagsClient.setConfiguration.mockReturnValueOnce(parseError);
         provider.setConfiguration({} as never);
 
         // A pre-registration setConfiguration error had no listeners, and the empty initialize
         // context reconciles to the same error, so initialize rejects -> the Web SDK starts the
         // provider in ERROR rather than a misleading READY.
         mockFlagsClient.setEvaluationContextWithoutFetching.mockReturnValueOnce(
+            parseError
+        );
+        await expect(provider.initialize({})).rejects.toThrow(ParseError);
+    });
+
+    it('maps unexpected initialize errors to GeneralError', async () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        mockFlagsClient.setEvaluationContextWithoutFetching.mockReturnValueOnce(
             generalError
         );
+
         await expect(provider.initialize({})).rejects.toThrow(GeneralError);
     });
 
