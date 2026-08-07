@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { __ddEnrichEvaluationContextWithRumUser } from '@datadog/mobile-react-native';
+import * as DatadogSdk from '@datadog/mobile-react-native';
 import type {
     EvaluationContext as OFEvaluationContext,
     ProviderMetadata
@@ -15,13 +15,19 @@ import { toDdContext } from './mappers';
 
 export type { DatadogOpenFeatureProviderOptions } from './coreProvider';
 
+type RumContextEnricher = (context: OFEvaluationContext) => OFEvaluationContext;
+
+const rumContextEnricher = (DatadogSdk as {
+    __ddEnrichEvaluationContextWithRumUser?: RumContextEnricher;
+}).__ddEnrichEvaluationContextWithRumUser;
+
 const enrichEvaluationContextWithRumUser = (
     context: OFEvaluationContext
 ): OFEvaluationContext => {
     // The OpenFeature package supports older compatible core SDK versions. Enrichment is available
     // when the installed core exposes the integration helper; otherwise preserve existing behavior.
-    return typeof __ddEnrichEvaluationContextWithRumUser === 'function'
-        ? __ddEnrichEvaluationContextWithRumUser(context)
+    return typeof rumContextEnricher === 'function'
+        ? rumContextEnricher(context)
         : context;
 };
 
