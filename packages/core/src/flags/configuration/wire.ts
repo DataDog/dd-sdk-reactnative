@@ -8,8 +8,9 @@
 // that conversion to the opt-in `@datadog/flagging-core/configuration` entry point so the default
 // entry point does not load Protobuf-ES. In both versions, the input is the complete portable JSON
 // envelope. It is not the raw protobuf or legacy JSON response from the UFC service.
-// `configurationFromString` is lenient: it returns an empty configuration (`{}`) for
-// malformed input or an unsupported wire version rather than throwing.
+// Published `configurationFromString` is lenient: it returns an empty configuration
+// (`{}`) for malformed input or an unsupported wire version rather than throwing.
+// PR #344 preserves that failure as `configurationError` instead.
 // `configurationToString` is the inverse (its fix from
 // https://github.com/DataDog/openfeature-js-client/pull/331 shipped in flagging-core 2.0.0).
 import {
@@ -23,13 +24,14 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344
-// through `9f794c7` plus the required SHA digest and no-`BigInt` follow-ups.
+// through `82bfc2e` plus the required SHA digest follow-up.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
 // `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
 // evaluator on the package root. The new `@datadog/flagging-core/precomputed`
 // subpath is protobuf-free, ignores rules, and is not the parser for this module.
-// PR #336 through `33113d2` adds browser providers but does not change this core
-// parser boundary. Do not import `@datadog/openfeature-browser` in React Native.
+// PR #336 through `4d0f24e` adds browser providers and shared lifecycle error
+// selection but does not change this core parser boundary. Do not import
+// `@datadog/openfeature-browser` in React Native.
 // Use `FlagsConfiguration.rules`. The distribution layer must put one base64
 // encoding of the raw dd-source#34959 protobuf response in the version 1
 // `rules.response` field. Record dd-source#40304 commit `071c4ad` as the schema
@@ -39,12 +41,20 @@ import type {
 // unsupported feature levels, and unsafe integer conversion as deterministic
 // flag-scoped `PARSE_ERROR` results.
 type PendingRulesConfiguration = FlagsConfiguration & {
+    configurationError?: string;
+    rulesError?: string;
     rulesBased?: {
         response: UniversalFlagConfigurationV1;
         fetchedAt?: number;
         etag?: string;
     };
 };
+
+const INVALID_CONFIGURATION_WIRE_ERROR =
+    'Invalid flags configuration wire format';
+const INVALID_RULES_WIRE_ENTRY_ERROR = 'Invalid rules configuration wire entry';
+const INVALID_RULES_RESPONSE_ERROR =
+    'Rules configuration response could not be decoded';
 
 type PendingRulesWire = {
     version: 1;
@@ -55,22 +65,41 @@ type PendingRulesWire = {
     };
 };
 
-const readPendingRulesWire = (
-    source: string
-): PendingRulesWire['rulesBased'] | undefined => {
+type PendingRulesWireResult =
+    | { status: 'invalid-configuration' }
+    | { status: 'no-rules' }
+    | { status: 'invalid-rules' }
+    | {
+          status: 'rules';
+          rules: NonNullable<PendingRulesWire['rulesBased']>;
+      };
+
+const readPendingRulesWire = (source: string): PendingRulesWireResult => {
     try {
-        const wire = JSON.parse(source) as PendingRulesWire;
+        const wire = JSON.parse(source) as Partial<PendingRulesWire> | null;
         if (
-            wire.version !== 1 ||
+            !wire ||
+            typeof wire !== 'object' ||
+            Array.isArray(wire) ||
+            wire.version !== 1
+        ) {
+            return { status: 'invalid-configuration' };
+        }
+        if (wire.rulesBased === undefined) {
+            return { status: 'no-rules' };
+        }
+        if (
             !wire.rulesBased ||
+            typeof wire.rulesBased !== 'object' ||
+            Array.isArray(wire.rulesBased) ||
             typeof wire.rulesBased.response !== 'string'
         ) {
-            return undefined;
+            return { status: 'invalid-rules' };
         }
 
-        return wire.rulesBased;
+        return { status: 'rules', rules: wire.rulesBased };
     } catch {
-        return undefined;
+        return { status: 'invalid-configuration' };
     }
 };
 
@@ -89,16 +118,24 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
     // published parser must also include PR #344's unknown-field tolerance,
     // unknown-field serialization, and lossless integer parsing through
-    // `9f794c7`, plus the final no-`BigInt` runtime decision.
+    // `82bfc2e`. Its safe-integer conversion does not require global `BigInt`.
+    // TODO(FFL-2837): Delete this parse-error compatibility behavior when the
+    // dependency contains PR #344 through `82bfc2e`. The upstream parser uses
+    // `configurationError` for an invalid envelope and `rulesError` for an
+    // invalid rules entry or response. It keeps a valid sibling branch.
     const pendingRules = readPendingRulesWire(source);
-    if (pendingRules) {
+    if (pendingRules.status === 'invalid-configuration') {
+        configuration.configurationError = INVALID_CONFIGURATION_WIRE_ERROR;
+    } else if (pendingRules.status === 'invalid-rules') {
+        configuration.rulesError = INVALID_RULES_WIRE_ENTRY_ERROR;
+    } else if (pendingRules.status === 'rules') {
         try {
             configuration.rulesBased = {
-                ...pendingRules,
-                response: JSON.parse(pendingRules.response)
+                ...pendingRules.rules,
+                response: JSON.parse(pendingRules.rules.response)
             };
         } catch {
-            return configuration;
+            configuration.rulesError = INVALID_RULES_RESPONSE_ERROR;
         }
     }
 
@@ -114,8 +151,8 @@ export const configurationToString = (
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
     // TODO(FFL-2837): Delete this legacy serialization wrapper with the pending
-    // types above after the dependency contains PR #344 through `9f794c7` and
-    // its required follow-ups. The upstream serializer encodes generated protobuf
+    // types above after the dependency contains PR #344 through `82bfc2e` and
+    // its required SHA digest follow-up. The upstream serializer encodes generated protobuf
     // rules back to base64 and preserves unknown protobuf fields.
     // This temporary UFC v1 shim serializes its legacy JSON response instead.
     if (pendingConfiguration.rulesBased) {
