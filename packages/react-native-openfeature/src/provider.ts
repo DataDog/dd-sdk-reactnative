@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { __ddEnrichEvaluationContextWithRumUser } from '@datadog/mobile-react-native';
 import type {
     EvaluationContext as OFEvaluationContext,
     ProviderMetadata
@@ -13,6 +14,16 @@ import { DatadogCoreOpenFeatureProvider } from './coreProvider';
 import { toDdContext } from './mappers';
 
 export type { DatadogOpenFeatureProviderOptions } from './coreProvider';
+
+const enrichEvaluationContextWithRumUser = (
+    context: OFEvaluationContext
+): OFEvaluationContext => {
+    // The OpenFeature package supports older compatible core SDK versions. Enrichment is available
+    // when the installed core exposes the integration helper; otherwise preserve existing behavior.
+    return typeof __ddEnrichEvaluationContextWithRumUser === 'function'
+        ? __ddEnrichEvaluationContextWithRumUser(context)
+        : context;
+};
 
 /**
  * The online Datadog OpenFeature provider. Fetches precomputed flag assignments from Datadog
@@ -26,7 +37,9 @@ export class DatadogOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
     private contextChangePromise = Promise.resolve();
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
-        const ddContext = toDdContext(context);
+        const ddContext = toDdContext(
+            enrichEvaluationContextWithRumUser(context)
+        );
         this.contextChangePromise = this.flagsClient.setEvaluationContext(
             ddContext
         );
@@ -38,7 +51,9 @@ export class DatadogOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
         _oldContext: OFEvaluationContext,
         newContext: OFEvaluationContext
     ): Promise<void> {
-        const newDdContext = toDdContext(newContext);
+        const newDdContext = toDdContext(
+            enrichEvaluationContextWithRumUser(newContext)
+        );
 
         // Promise chain in case `onContextChange` is called multiple times.
         this.contextChangePromise = this.contextChangePromise.then(() => {

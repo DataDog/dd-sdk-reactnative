@@ -67,6 +67,37 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 
 > **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure.
 
+### RUM user context
+
+When RUM integration is enabled (the default), the online provider includes the user set through
+`DdSdkReactNative.setUserInfo()` in the OpenFeature evaluation context. The RUM user ID supplies the
+targeting key, while `name`, `email`, and flat string, number, or boolean `extraInfo` properties become
+evaluation attributes. Fields set explicitly through `OpenFeature.setContext()` take precedence.
+
+Set the RUM user before registering the provider:
+
+```tsx
+await DdSdkReactNative.setUserInfo({
+    id: 'user-123',
+    email: 'user@example.com',
+    extraInfo: { company_name: 'Example, Inc.' }
+});
+
+await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
+```
+
+If the RUM user changes after provider initialization, reconcile the provider with the latest user
+while preserving explicitly configured OpenFeature properties:
+
+```tsx
+await OpenFeature.setContext(OpenFeature.getContext());
+```
+
+Nested RUM user properties are not included. Setting `rumIntegrationEnabled: false` in
+`DdFlags.enable()` disables both RUM feature flag tracking and RUM user context enrichment. The
+offline provider does not enrich its context because precomputed configurations are bound to their
+embedded context.
+
 ### Using the OpenFeature React SDK
 
 For complete details on using the OpenFeature React SDK, including flag evaluation, evaluation context management, and advanced setup options, see the OpenFeature React SDK [documentation][1].
