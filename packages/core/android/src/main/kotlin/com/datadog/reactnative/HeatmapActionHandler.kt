@@ -20,9 +20,7 @@ import com.facebook.react.bridge.ReadableMap
  */
 class HeatmapActionHandler internal constructor(
     private val heatmapTouchResolver: HeatmapTouchResolver = HeatmapTouchResolver(),
-    private val mainThreadExecutor: (() -> Unit) -> Unit = { action ->
-        Handler(Looper.getMainLooper()).post(action)
-    }
+    private val mainThreadExecutor: (() -> Unit) -> Unit = defaultMainThreadExecutor()
 ) {
 
     internal data class EligibleAction(
@@ -108,6 +106,11 @@ class HeatmapActionHandler internal constructor(
 
     @Suppress("UndocumentedPublicClass")
     companion object {
+        private fun defaultMainThreadExecutor(): ((() -> Unit) -> Unit) {
+            val handler by lazy { Handler(Looper.getMainLooper()) }
+            return { action -> handler.post(action) }
+        }
+
         /**
          * Whether heatmap data should be attached to TAP actions. Set by
          * [com.datadog.reactnative.sessionreplay.DdSessionReplayImplementation.enable].
