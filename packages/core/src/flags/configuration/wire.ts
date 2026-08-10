@@ -24,12 +24,14 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344
-// through `82bfc2e` plus the required SHA digest follow-up.
+// through `939da97` plus the required SHA digest follow-up. The post-rebase
+// `ab22ad0` and `939da97` commits update generated Node-server artifacts and
+// browser test isolation; they do not change this React Native boundary.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
 // `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
 // evaluator on the package root. The new `@datadog/flagging-core/precomputed`
 // subpath is protobuf-free, ignores rules, and is not the parser for this module.
-// PR #336 through `4d0f24e` adds browser providers and shared lifecycle error
+// PR #336 through `6d3d6a4` adds browser providers and shared lifecycle error
 // selection but does not change this core parser boundary. Do not import
 // `@datadog/openfeature-browser` in React Native.
 // Use `FlagsConfiguration.rules`. The distribution layer must put one base64
@@ -118,9 +120,9 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
     // published parser must also include PR #344's unknown-field tolerance,
     // unknown-field serialization, and lossless integer parsing through
-    // `82bfc2e`. Its safe-integer conversion does not require global `BigInt`.
+    // `939da97`. Its safe-integer conversion does not require global `BigInt`.
     // TODO(FFL-2837): Delete this parse-error compatibility behavior when the
-    // dependency contains PR #344 through `82bfc2e`. The upstream parser uses
+    // dependency contains PR #344 through `939da97`. The upstream parser uses
     // `configurationError` for an invalid envelope and `rulesError` for an
     // invalid rules entry or response. It keeps a valid sibling branch.
     const pendingRules = readPendingRulesWire(source);
@@ -151,7 +153,7 @@ export const configurationToString = (
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
     // TODO(FFL-2837): Delete this legacy serialization wrapper with the pending
-    // types above after the dependency contains PR #344 through `82bfc2e` and
+    // types above after the dependency contains PR #344 through `939da97` and
     // its required SHA digest follow-up. The upstream serializer encodes generated protobuf
     // rules back to base64 and preserves unknown protobuf fields.
     // This temporary UFC v1 shim serializes its legacy JSON response instead.
