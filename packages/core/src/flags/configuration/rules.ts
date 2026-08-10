@@ -467,8 +467,8 @@ export const prepareRulesConfiguration = (
     // flagging-core release contains upstream PR #344 through `939da97` and the
     // required SHA digest validation follow-up. That
     // implementation preserves protobuf integers as `bigint` and validates only
-    // the requested flag data that evaluation reaches. With `BigInt`, it returns a
-    // deterministic per-flag error when evaluation cannot produce a safe number.
+    // the requested flag data that evaluation reaches. It does not call global
+    // `BigInt` when it returns a deterministic per-flag error for an unsafe number.
     // Do not adapt this validator to the generated response type.
     const errorMessage = validateRulesConfigurationEnvelope(clone);
     if (errorMessage) {
