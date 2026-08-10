@@ -93,7 +93,8 @@ type LoadedConfigurationState =
 
 // TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `82bfc2e`. Read
+// `939da97`. The final post-rebase commits change generated Node-server artifacts
+// and browser test isolation only. Read
 // `configuration.rules.response` directly. The configuration is already parsed
 // from the complete portable envelope. Do not add raw-service-response handling
 // or envelope construction to `FlagsClient`. PR #344 moves parsing to
@@ -101,7 +102,7 @@ type LoadedConfigurationState =
 // wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
 // Keep `configurationError`, `rulesError`, `precomputedError`, and
 // `precomputed.flagErrors` when the released type provides them. PR #336 through
-// `4d0f24e` now selects valid matching precomputed data, then valid rules, before
+// `6d3d6a4` selects valid matching precomputed data, then valid rules, before
 // it returns an applicable parse error. Keep these separate paths for the native
 // precomputed cache and tracking behavior, but use the same capability and error
 // precedence. Replace compatible lifecycle checks with the upstream
