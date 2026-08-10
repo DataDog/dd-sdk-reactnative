@@ -200,7 +200,7 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this legacy JSON compatibility test with a
     // generated protobuf fixture after a flagging-core release contains
-    // DataDog/openfeature-js-client#344 through `82bfc2e`. Round-trip the
+    // DataDog/openfeature-js-client#344 through `939da97`. Round-trip the
     // generated fixture and confirm that serialization preserves the unknown field.
     // Add a fixture with an unsupported minimum feature level and require a
     // flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`.
@@ -230,7 +230,7 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this unsafe JSON number with an out-of-range
     // protobuf `int64` fixture after flagging-core contains PR #344 at or after
-    // `82bfc2e`. The generated parser must preserve the source value as `bigint`
+    // `939da97`. The generated parser must preserve the source value as `bigint`
     // where supported. Run the same evaluation with
     // global `BigInt` unavailable and require `PARSE_ERROR`, not `GENERAL`.
     it('returns PARSE_ERROR instead of serving an unsafe integer', () => {
