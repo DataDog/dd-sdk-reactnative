@@ -23,10 +23,12 @@ export const buildSampleWire = (): string =>
     version: 1,
     // TODO(FFL-2837): Replace this complete legacy `rulesBased` JSON branch
     // after a published flagging-core release contains
-    // DataDog/openfeature-js-client#344 through `82bfc2e` and restores
+    // DataDog/openfeature-js-client#344 through `939da97` and restores
     // 32-byte SHA digest validation. Safe integer conversion no longer calls
-    // global `BigInt`; retain tests for unsafe integers and shard values. Reuse the
-    // production-derived client
+    // global `BigInt`; retain tests for unsafe integers and shard values.
+    // Commits `ab22ad0` and `939da97` only refresh generated Node-server
+    // declarations and isolate browser provider tests. They do not change the
+    // portable wire or runtime contract. Reuse the production-derived client
     // fixture from the integration test: one base64 encoding of the canonical
     // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
     // Record dd-source#40304 commit `071c4ad` as its schema revision. Let the

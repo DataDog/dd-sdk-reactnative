@@ -103,13 +103,15 @@ const rulesResponseFor = (flagKey: string) => ({
 
 // TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `82bfc2e` and restores 32-byte SHA digest validation. Safe integer conversion
-// no longer calls global `BigInt`. The `82bfc2e` smoke test covers a static
-// boolean and a safe integer, but not unsafe integers or shard values. Use
+// `939da97` and restores 32-byte SHA digest validation. Safe integer conversion
+// no longer calls global `BigInt`. The upstream tests cover a static boolean and
+// a safe integer, but not unsafe integers or shard values. Commits `ab22ad0` and
+// `939da97` only refresh generated Node-server declarations and isolate browser
+// provider tests; they do not change this wire or runtime contract. Use
 // canonical raw protobuf bytes produced from the dd-source#34959
 // client-distribution path. Record dd-source#40304 commit `071c4ad` as the schema
 // revision and dd-source#34959 as the service producer path.
-// PR #336 through `4d0f24e` does not change this wire contract. It defines
+// PR #336 through `6d3d6a4` does not change this wire contract. It defines
 // valid-sibling and parse-error precedence and the `{ message, errorCode? }`
 // provider error event. Keep the existing React Native provider name and its
 // Ready-before-ConfigurationChanged recovery order.
