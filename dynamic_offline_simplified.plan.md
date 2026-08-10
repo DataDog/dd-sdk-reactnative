@@ -71,9 +71,14 @@ Thus, the current application bundle already contains the existing rules engine.
 ### 2.2 Expected features from upstream PR #344
 
 PR #344 is the required upstream dependency change.
-Its code head is `82bfc2e` as of 2026-08-07.
-Commits `dfa1e38` and `82bfc2e` were added after the previous review.
+Its code head is `939da97` as of 2026-08-10.
+The branch was rebased on 2026-08-09, so all earlier commit SHAs changed.
+Commits `771f85b` and `565d9bd` now contain the previous `BigInt` and parse-error changes.
 They remove the evaluator dependency on the global `BigInt` function and preserve configuration parse errors.
+Commit `ab22ad0` refreshes generated Node-server declarations and lock data after the rebase.
+It adds the existing SHA-256 and semantic-version operators to the generated Node-server declaration.
+Commit `939da97` removes browser test setup that leaked provider initialization.
+Neither commit changes the React Native parser, evaluator, wire, or lifecycle contract.
 It adds these features:
 
 - The opaque `FlagsConfigurationWire` type
@@ -158,10 +163,12 @@ Do not depend on the parser to reject every non-canonical base64 spelling.
 PR #336 is stacked on PR #344.
 It adds the browser `DatadogOfflineProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
-Its head is `4d0f24e` as of 2026-08-07.
-Its merge base is the current PR #344 head, `82bfc2e`.
+Its head is `6d3d6a4` as of 2026-08-10.
+Its merge base is the current PR #344 head, `939da97`.
 GitHub reports both PRs as mergeable.
-New commits add valid-sibling fallback, make configuration optional at construction, align parse errors, and standardize provider error events.
+PR #336 was restacked after the PR #344 rebase.
+It has no new logical feature commit after the previous review.
+Its current commits include valid-sibling fallback, optional configuration at construction, aligned parse errors, and standardized provider error events.
 The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
 The full browser root and the protobuf-free browser `/precomputed` entry point export that provider.
 The shared `DatadogCoreProvider` base is internal.
@@ -1092,8 +1099,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 PR #344 and PR #336 are not published.
 Their APIs can change.
-PR #336 is based on PR #344 head `82bfc2e`.
-Its head is `4d0f24e`.
+PR #336 is based on PR #344 head `939da97`.
+Its head is `6d3d6a4`.
 GitHub reports both PRs as mergeable.
 PR #344 still calls the follow-up `CoreProvider` in its description.
 Use the current PR #336 `DatadogOfflineProvider` name.
@@ -1374,6 +1381,9 @@ PR #336 had no new commit and required a new restack.
 The plan was updated again on 2026-08-03 after PR #336 was restacked and exposed `DatadogOfflineProvider`.
 The plan was updated on 2026-08-07 after PR #344 removed the runtime `BigInt` call and preserved configuration parse errors.
 The plan was updated again on 2026-08-07 after PR #336 added valid-sibling fallback, aligned the configuration API, and standardized provider errors.
+The plan was updated on 2026-08-10 after both upstream branches were rebased.
+The new PR #344 commits update generated Node-server artifacts and browser test isolation only.
+PR #336 has no new logical behavior.
 
 The reviews produced these main corrections:
 
