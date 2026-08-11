@@ -12,7 +12,7 @@
 
 // TODO(FFL-2837): Re-export `getPrecomputedContext` from
 // `@datadog/flagging-core/configuration` here after a flagging-core release contains
-// DataDog/openfeature-js-client#353 through `499c31b`. Also expose it from the
+// DataDog/openfeature-js-client#353 through `caae6ab`. Also expose it from the
 // public React Native SDK entry point for the OpenFeature package to consume.
 
 export { configurationFromString, configurationToString } from './wire';
