@@ -71,13 +71,14 @@ Thus, the current application bundle already contains the existing rules engine.
 ### 2.2 Expected features from upstream PR #344
 
 PR #344 is the required upstream dependency change.
-Its code head is `939da97` as of 2026-08-10.
-The branch was rebased on 2026-08-09, so all earlier commit SHAs changed.
-Commits `771f85b` and `565d9bd` now contain the previous `BigInt` and parse-error changes.
+Its code head is `03cde21` as of 2026-08-11.
+The branch was rebased again on 2026-08-11, so all earlier commit SHAs changed.
+The `03cde21` tree is identical to the previous `939da97` tree.
+Commits `4efb682` and `5ffffe0` now contain the previous `BigInt` and parse-error changes.
 They remove the evaluator dependency on the global `BigInt` function and preserve configuration parse errors.
-Commit `ab22ad0` refreshes generated Node-server declarations and lock data after the rebase.
+Commit `1db13d4` refreshes generated Node-server declarations and lock data after the rebase.
 It adds the existing SHA-256 and semantic-version operators to the generated Node-server declaration.
-Commit `939da97` removes browser test setup that leaked provider initialization.
+Commit `03cde21` removes browser test setup that leaked provider initialization.
 Neither commit changes the React Native parser, evaluator, wire, or lifecycle contract.
 It adds these features:
 
@@ -163,11 +164,12 @@ Do not depend on the parser to reject every non-canonical base64 spelling.
 PR #336 is stacked on PR #344.
 It adds the browser `DatadogOfflineProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
-Its head is `6d3d6a4` as of 2026-08-10.
-Its merge base is the current PR #344 head, `939da97`.
+Its head is `772167b` as of 2026-08-11.
+Its merge base is the current PR #344 head, `03cde21`.
 GitHub reports both PRs as mergeable.
 PR #336 was restacked after the PR #344 rebase.
 It has no new logical feature commit after the previous review.
+The `772167b` tree is identical to the previous `6d3d6a4` tree.
 Its current commits include valid-sibling fallback, optional configuration at construction, aligned parse errors, and standardized provider error events.
 The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
 The full browser root and the protobuf-free browser `/precomputed` entry point export that provider.
@@ -1099,8 +1101,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 PR #344 and PR #336 are not published.
 Their APIs can change.
-PR #336 is based on PR #344 head `939da97`.
-Its head is `6d3d6a4`.
+PR #336 is based on PR #344 head `03cde21`.
+Its head is `772167b`.
 GitHub reports both PRs as mergeable.
 PR #344 still calls the follow-up `CoreProvider` in its description.
 Use the current PR #336 `DatadogOfflineProvider` name.
@@ -1384,6 +1386,8 @@ The plan was updated again on 2026-08-07 after PR #336 added valid-sibling fallb
 The plan was updated on 2026-08-10 after both upstream branches were rebased.
 The new PR #344 commits update generated Node-server artifacts and browser test isolation only.
 PR #336 has no new logical behavior.
+The plan was updated on 2026-08-11 after both upstream branches were rebased again.
+Direct archive comparisons confirmed that both new head trees are identical to their previous head trees.
 
 The reviews produced these main corrections:
 
