@@ -1,5 +1,12 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {colors} from '../theme';
 
 interface HomeScreenProps {
@@ -23,8 +30,7 @@ const MenuCard = ({title, description, onPress, testID}: MenuCardProps) => {
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      testID={testID}
-    >
+      testID={testID}>
       <Text style={[cardStyles.title, focused && cardStyles.textFocused]}>
         {title}
       </Text>
@@ -39,10 +45,13 @@ const cardStyles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: 8,
-    padding: 24,
-    marginBottom: 16,
+    padding: 26,
+    marginRight: 20,
     borderWidth: 3,
     borderColor: colors.border,
+    width: 370,
+    height: 190,
+    justifyContent: 'flex-end',
   },
   cardFocused: {
     borderColor: colors.focus,
@@ -50,13 +59,14 @@ const cardStyles = StyleSheet.create({
   },
   title: {
     color: colors.text,
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 6,
   },
   description: {
     color: colors.textSecondary,
-    fontSize: 20,
+    fontSize: 19,
+    lineHeight: 26,
   },
   textFocused: {
     color: colors.focusText,
@@ -67,45 +77,62 @@ export const HomeScreen = ({onNavigate}: HomeScreenProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Image source={require('../assets/vega.png')} />
-        <Text style={styles.title}>Datadog SDK - Vega</Text>
-        <Text style={styles.subtitle}>
-          Select a screen to test SDK functionality
-        </Text>
+        <View style={styles.brand}>
+          <Image
+            source={require('../assets/vega.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <View>
+            <Text style={styles.title}>Datadog SDK</Text>
+            <Text style={styles.subtitle}>Vega OS test application</Text>
+          </View>
+        </View>
         <View style={styles.infoBox}>
-          <Text style={styles.infoLabel}>Platform</Text>
-          <Text style={styles.infoValue}>Amazon Vega OS (Kepler)</Text>
-          <Text style={styles.infoLabel}>SDK</Text>
-          <Text style={styles.infoValue}>
-            @datadog/mobile-react-native-vega
-          </Text>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>PLATFORM</Text>
+            <Text style={styles.infoValue}>Vega OS (Kepler)</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>PACKAGE</Text>
+            <Text style={styles.infoValue}>
+              @datadog/mobile-react-native-vega
+            </Text>
+          </View>
         </View>
       </View>
-      <View style={styles.menu}>
-        <MenuCard
-          title="Feature Actions"
-          description="Trigger each supported SDK feature one action at a time"
-          onPress={() => onNavigate('featureActions')}
-          testID="featureActionsLink"
-        />
-        <MenuCard
-          title="Feature Scenarios"
-          description="Run supported SDK scenarios for RUM, resources, actions, and operations"
-          onPress={() => onNavigate('featureScenarios')}
-          testID="featureScenariosLink"
-        />
-        <MenuCard
-          title="Network Requests"
-          description="Make HTTP requests and inspect RUM resource tracking"
-          onPress={() => onNavigate('network')}
-          testID="networkLink"
-        />
-        <MenuCard
-          title="RUM Views"
-          description="Start and stop RUM views to test view lifecycle tracking"
-          onPress={() => onNavigate('rumViews')}
-          testID="rumViewsLink"
-        />
+      <View style={styles.menuSection}>
+        <Text style={styles.sectionTitle}>SDK test areas</Text>
+        <ScrollView
+          horizontal
+          style={styles.menu}
+          contentContainerStyle={styles.menuContent}
+          showsHorizontalScrollIndicator={false}>
+          <MenuCard
+            title="Feature Actions"
+            description="Trigger each supported SDK feature one action at a time"
+            onPress={() => onNavigate('featureActions')}
+            testID="featureActionsLink"
+          />
+          <MenuCard
+            title="Feature Scenarios"
+            description="Run complete RUM, resource, action, and operation scenarios"
+            onPress={() => onNavigate('featureScenarios')}
+            testID="featureScenariosLink"
+          />
+          <MenuCard
+            title="Network Requests"
+            description="Make HTTP requests and inspect RUM resource tracking"
+            onPress={() => onNavigate('network')}
+            testID="networkLink"
+          />
+          <MenuCard
+            title="RUM Views"
+            description="Start and stop views to test RUM lifecycle tracking"
+            onPress={() => onNavigate('rumViews')}
+            testID="rumViewsLink"
+          />
+        </ScrollView>
       </View>
     </View>
   );
@@ -114,47 +141,69 @@ export const HomeScreen = ({onNavigate}: HomeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 100,
+    paddingTop: 64,
+    paddingHorizontal: 90,
+    paddingBottom: 56,
   },
   header: {
-    flex: 1,
-    alignItems: 'flex-start',
-    paddingLeft: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  brand: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 130,
+    height: 92,
+    marginRight: 28,
   },
   title: {
     color: colors.text,
-    fontSize: 60,
-    marginTop: 20,
+    fontSize: 52,
     fontWeight: 'bold',
   },
   subtitle: {
     color: colors.textSecondary,
-    fontSize: 30,
-    marginTop: 10,
+    fontSize: 24,
+    marginTop: 6,
   },
   infoBox: {
     backgroundColor: colors.surface,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 20,
-    marginTop: 20,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    minWidth: 420,
+  },
+  infoItem: {
+    marginBottom: 8,
   },
   infoLabel: {
     color: colors.accent,
-    fontSize: 20,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginTop: 5,
   },
   infoValue: {
     color: colors.text,
-    fontSize: 20,
-    marginBottom: 5,
+    fontSize: 19,
+    marginTop: 2,
+  },
+  menuSection: {
+    marginTop: 64,
+  },
+  sectionTitle: {
+    color: colors.text,
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginBottom: 22,
   },
   menu: {
-    flex: 1,
-    justifyContent: 'center',
+    flexGrow: 0,
+  },
+  menuContent: {
+    paddingRight: 70,
   },
 });

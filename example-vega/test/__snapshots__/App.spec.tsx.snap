@@ -4,7 +4,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
 <View
   style={
     Object {
-      "backgroundColor": "#F3F6FA",
+      "backgroundColor": "#101113",
       "flex": 1,
     }
   }
@@ -31,7 +31,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
         <Text
           style={
             Object {
-              "color": "#172033",
+              "color": "#F7F7F8",
               "fontSize": 50,
               "fontWeight": "bold",
               "marginBottom": 10,
@@ -70,8 +70,8 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "#FFFFFF",
-              "borderColor": "#D4DDE9",
+              "backgroundColor": "#202226",
+              "borderColor": "#363A41",
               "borderRadius": 8,
               "borderWidth": 3,
               "marginBottom": 12,
@@ -85,7 +85,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#172033",
+                  "color": "#F7F7F8",
                   "fontSize": 24,
                   "fontWeight": "bold",
                   "marginBottom": 4,
@@ -100,7 +100,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#5B687B",
+                  "color": "#B7BBC3",
                   "fontSize": 18,
                 },
                 false,
@@ -140,8 +140,8 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "#FFFFFF",
-              "borderColor": "#D4DDE9",
+              "backgroundColor": "#202226",
+              "borderColor": "#363A41",
               "borderRadius": 8,
               "borderWidth": 3,
               "marginBottom": 12,
@@ -155,7 +155,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#172033",
+                  "color": "#F7F7F8",
                   "fontSize": 24,
                   "fontWeight": "bold",
                   "marginBottom": 4,
@@ -170,7 +170,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#5B687B",
+                  "color": "#B7BBC3",
                   "fontSize": 18,
                 },
                 false,
@@ -210,8 +210,8 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "#FFFFFF",
-              "borderColor": "#D4DDE9",
+              "backgroundColor": "#202226",
+              "borderColor": "#363A41",
               "borderRadius": 8,
               "borderWidth": 3,
               "marginBottom": 12,
@@ -225,7 +225,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#172033",
+                  "color": "#F7F7F8",
                   "fontSize": 24,
                   "fontWeight": "bold",
                   "marginBottom": 4,
@@ -240,7 +240,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#5B687B",
+                  "color": "#B7BBC3",
                   "fontSize": 18,
                 },
                 false,
@@ -280,8 +280,8 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "#FFFFFF",
-              "borderColor": "#D4DDE9",
+              "backgroundColor": "#202226",
+              "borderColor": "#363A41",
               "borderRadius": 8,
               "borderWidth": 3,
               "marginBottom": 12,
@@ -295,7 +295,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#172033",
+                  "color": "#F7F7F8",
                   "fontSize": 24,
                   "fontWeight": "bold",
                   "marginBottom": 4,
@@ -310,7 +310,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Array [
                 Object {
-                  "color": "#5B687B",
+                  "color": "#B7BBC3",
                   "fontSize": 18,
                 },
                 false,
@@ -358,8 +358,8 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Object {
                 "alignItems": "center",
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#1769E0",
+                "backgroundColor": "#202226",
+                "borderColor": "#FFFFFF",
                 "borderRadius": 8,
                 "borderWidth": 3,
                 "marginBottom": 10,
@@ -378,7 +378,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
                     "fontWeight": "bold",
                   },
                   Object {
-                    "color": "#1769E0",
+                    "color": "#FFFFFF",
                   },
                   false,
                 ]
@@ -418,8 +418,8 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Object {
                 "alignItems": "center",
-                "backgroundColor": "#FFFFFF",
-                "borderColor": "#5B687B",
+                "backgroundColor": "#202226",
+                "borderColor": "#B7BBC3",
                 "borderRadius": 8,
                 "borderWidth": 3,
                 "marginBottom": 10,
@@ -438,7 +438,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
                     "fontWeight": "bold",
                   },
                   Object {
-                    "color": "#5B687B",
+                    "color": "#B7BBC3",
                   },
                   false,
                 ]
@@ -453,8 +453,8 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
     <View
       style={
         Object {
-          "backgroundColor": "#FFFFFF",
-          "borderColor": "#D4DDE9",
+          "backgroundColor": "#202226",
+          "borderColor": "#363A41",
           "borderRadius": 8,
           "borderWidth": 1,
           "flex": 3,
@@ -465,7 +465,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
       <Text
         style={
           Object {
-            "color": "#172033",
+            "color": "#F7F7F8",
             "fontSize": 30,
             "fontWeight": "bold",
             "marginBottom": 15,
@@ -485,7 +485,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           <Text
             style={
               Object {
-                "color": "#7A8799",
+                "color": "#858B96",
                 "fontSize": 22,
                 "fontStyle": "italic",
               }
@@ -504,7 +504,7 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
 <View
   style={
     Object {
-      "backgroundColor": "#F3F6FA",
+      "backgroundColor": "#101113",
       "flex": 1,
     }
   }
@@ -512,400 +512,477 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
   <View
     style={
       Object {
-        "alignItems": "center",
         "flex": 1,
-        "flexDirection": "row",
-        "paddingHorizontal": 100,
+        "paddingBottom": 56,
+        "paddingHorizontal": 90,
+        "paddingTop": 64,
       }
     }
   >
     <View
       style={
         Object {
-          "alignItems": "flex-start",
-          "flex": 1,
-          "paddingLeft": 100,
+          "alignItems": "center",
+          "flexDirection": "row",
+          "justifyContent": "space-between",
         }
       }
     >
-      <Image
-        source={
-          Object {
-            "testUri": "../../../src/assets/vega.png",
-          }
-        }
-      />
-      <Text
-        style={
-          Object {
-            "color": "#172033",
-            "fontSize": 60,
-            "fontWeight": "bold",
-            "marginTop": 20,
-          }
-        }
-      >
-        Datadog SDK - Vega
-      </Text>
-      <Text
-        style={
-          Object {
-            "color": "#5B687B",
-            "fontSize": 30,
-            "marginTop": 10,
-          }
-        }
-      >
-        Select a screen to test SDK functionality
-      </Text>
       <View
         style={
           Object {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D4DDE9",
-            "borderRadius": 8,
-            "borderWidth": 1,
-            "marginTop": 20,
-            "padding": 20,
+            "alignItems": "center",
+            "flexDirection": "row",
           }
         }
       >
-        <Text
+        <Image
+          resizeMode="contain"
+          source={
+            Object {
+              "testUri": "../../../src/assets/vega.png",
+            }
+          }
           style={
             Object {
-              "color": "#6D3CC7",
-              "fontSize": 20,
-              "fontWeight": "bold",
-              "marginTop": 5,
+              "height": 92,
+              "marginRight": 28,
+              "width": 130,
+            }
+          }
+        />
+        <View>
+          <Text
+            style={
+              Object {
+                "color": "#F7F7F8",
+                "fontSize": 52,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            Datadog SDK
+          </Text>
+          <Text
+            style={
+              Object {
+                "color": "#B7BBC3",
+                "fontSize": 24,
+                "marginTop": 6,
+              }
+            }
+          >
+            Vega OS test application
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          Object {
+            "backgroundColor": "#202226",
+            "borderColor": "#363A41",
+            "borderRadius": 8,
+            "borderWidth": 1,
+            "minWidth": 420,
+            "paddingHorizontal": 24,
+            "paddingVertical": 18,
+          }
+        }
+      >
+        <View
+          style={
+            Object {
+              "marginBottom": 8,
             }
           }
         >
-          Platform
-        </Text>
-        <Text
+          <Text
+            style={
+              Object {
+                "color": "#B27CFF",
+                "fontSize": 14,
+                "fontWeight": "bold",
+              }
+            }
+          >
+            PLATFORM
+          </Text>
+          <Text
+            style={
+              Object {
+                "color": "#F7F7F8",
+                "fontSize": 19,
+                "marginTop": 2,
+              }
+            }
+          >
+            Vega OS (Kepler)
+          </Text>
+        </View>
+        <View
           style={
             Object {
-              "color": "#172033",
-              "fontSize": 20,
-              "marginBottom": 5,
+              "marginBottom": 8,
             }
           }
         >
-          Amazon Vega OS (Kepler)
-        </Text>
-        <Text
-          style={
-            Object {
-              "color": "#6D3CC7",
-              "fontSize": 20,
-              "fontWeight": "bold",
-              "marginTop": 5,
+          <Text
+            style={
+              Object {
+                "color": "#B27CFF",
+                "fontSize": 14,
+                "fontWeight": "bold",
+              }
             }
-          }
-        >
-          SDK
-        </Text>
-        <Text
-          style={
-            Object {
-              "color": "#172033",
-              "fontSize": 20,
-              "marginBottom": 5,
+          >
+            PACKAGE
+          </Text>
+          <Text
+            style={
+              Object {
+                "color": "#F7F7F8",
+                "fontSize": 19,
+                "marginTop": 2,
+              }
             }
-          }
-        >
-          @datadog/mobile-react-native-vega
-        </Text>
+          >
+            mobile-react-native-vega
+          </Text>
+        </View>
       </View>
     </View>
     <View
       style={
         Object {
-          "flex": 1,
-          "justifyContent": "center",
+          "marginTop": 64,
         }
       }
     >
-      <View
-        accessibilityState={
-          Object {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          Object {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
+      <Text
         style={
           Object {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D4DDE9",
-            "borderRadius": 8,
-            "borderWidth": 3,
-            "marginBottom": 16,
-            "opacity": 1,
-            "padding": 24,
+            "color": "#F7F7F8",
+            "fontSize": 30,
+            "fontWeight": "bold",
+            "marginBottom": 22,
           }
         }
-        testID="featureActionsLink"
       >
-        <Text
-          style={
-            Array [
-              Object {
-                "color": "#172033",
-                "fontSize": 30,
-                "fontWeight": "bold",
-                "marginBottom": 6,
-              },
-              false,
-            ]
-          }
-        >
-          Feature Actions
-        </Text>
-        <Text
-          style={
-            Array [
-              Object {
-                "color": "#5B687B",
-                "fontSize": 20,
-              },
-              false,
-            ]
-          }
-        >
-          Trigger each supported SDK feature one action at a time
-        </Text>
-      </View>
-      <View
-        accessibilityState={
+        SDK test areas
+      </Text>
+      <RCTScrollView
+        contentContainerStyle={
           Object {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
+            "paddingRight": 70,
           }
         }
-        accessibilityValue={
-          Object {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
+        horizontal={true}
+        showsHorizontalScrollIndicator={false}
         style={
           Object {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D4DDE9",
-            "borderRadius": 8,
-            "borderWidth": 3,
-            "marginBottom": 16,
-            "opacity": 1,
-            "padding": 24,
+            "flexGrow": 0,
           }
         }
-        testID="featureScenariosLink"
       >
-        <Text
-          style={
-            Array [
+        <View>
+          <View
+            accessibilityState={
               Object {
-                "color": "#172033",
-                "fontSize": 30,
-                "fontWeight": "bold",
-                "marginBottom": 6,
-              },
-              false,
-            ]
-          }
-        >
-          Feature Scenarios
-        </Text>
-        <Text
-          style={
-            Array [
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
               Object {
-                "color": "#5B687B",
-                "fontSize": 20,
-              },
-              false,
-            ]
-          }
-        >
-          Run supported SDK scenarios for RUM, resources, actions, and operations
-        </Text>
-      </View>
-      <View
-        accessibilityState={
-          Object {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          Object {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          Object {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D4DDE9",
-            "borderRadius": 8,
-            "borderWidth": 3,
-            "marginBottom": 16,
-            "opacity": 1,
-            "padding": 24,
-          }
-        }
-        testID="networkLink"
-      >
-        <Text
-          style={
-            Array [
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
               Object {
-                "color": "#172033",
-                "fontSize": 30,
-                "fontWeight": "bold",
-                "marginBottom": 6,
-              },
-              false,
-            ]
-          }
-        >
-          Network Requests
-        </Text>
-        <Text
-          style={
-            Array [
+                "backgroundColor": "#202226",
+                "borderColor": "#363A41",
+                "borderRadius": 8,
+                "borderWidth": 3,
+                "height": 190,
+                "justifyContent": "flex-end",
+                "marginRight": 20,
+                "opacity": 1,
+                "padding": 26,
+                "width": 370,
+              }
+            }
+            testID="featureActionsLink"
+          >
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#F7F7F8",
+                    "fontSize": 28,
+                    "fontWeight": "bold",
+                    "marginBottom": 6,
+                  },
+                  false,
+                ]
+              }
+            >
+              Feature Actions
+            </Text>
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#B7BBC3",
+                    "fontSize": 19,
+                    "lineHeight": 26,
+                  },
+                  false,
+                ]
+              }
+            >
+              Trigger each supported SDK feature one action at a time
+            </Text>
+          </View>
+          <View
+            accessibilityState={
               Object {
-                "color": "#5B687B",
-                "fontSize": 20,
-              },
-              false,
-            ]
-          }
-        >
-          Make HTTP requests and inspect RUM resource tracking
-        </Text>
-      </View>
-      <View
-        accessibilityState={
-          Object {
-            "busy": undefined,
-            "checked": undefined,
-            "disabled": undefined,
-            "expanded": undefined,
-            "selected": undefined,
-          }
-        }
-        accessibilityValue={
-          Object {
-            "max": undefined,
-            "min": undefined,
-            "now": undefined,
-            "text": undefined,
-          }
-        }
-        accessible={true}
-        collapsable={false}
-        focusable={true}
-        onClick={[Function]}
-        onResponderGrant={[Function]}
-        onResponderMove={[Function]}
-        onResponderRelease={[Function]}
-        onResponderTerminate={[Function]}
-        onResponderTerminationRequest={[Function]}
-        onStartShouldSetResponder={[Function]}
-        style={
-          Object {
-            "backgroundColor": "#FFFFFF",
-            "borderColor": "#D4DDE9",
-            "borderRadius": 8,
-            "borderWidth": 3,
-            "marginBottom": 16,
-            "opacity": 1,
-            "padding": 24,
-          }
-        }
-        testID="rumViewsLink"
-      >
-        <Text
-          style={
-            Array [
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
               Object {
-                "color": "#172033",
-                "fontSize": 30,
-                "fontWeight": "bold",
-                "marginBottom": 6,
-              },
-              false,
-            ]
-          }
-        >
-          RUM Views
-        </Text>
-        <Text
-          style={
-            Array [
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
               Object {
-                "color": "#5B687B",
-                "fontSize": 20,
-              },
-              false,
-            ]
-          }
-        >
-          Start and stop RUM views to test view lifecycle tracking
-        </Text>
-      </View>
+                "backgroundColor": "#202226",
+                "borderColor": "#363A41",
+                "borderRadius": 8,
+                "borderWidth": 3,
+                "height": 190,
+                "justifyContent": "flex-end",
+                "marginRight": 20,
+                "opacity": 1,
+                "padding": 26,
+                "width": 370,
+              }
+            }
+            testID="featureScenariosLink"
+          >
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#F7F7F8",
+                    "fontSize": 28,
+                    "fontWeight": "bold",
+                    "marginBottom": 6,
+                  },
+                  false,
+                ]
+              }
+            >
+              Feature Scenarios
+            </Text>
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#B7BBC3",
+                    "fontSize": 19,
+                    "lineHeight": 26,
+                  },
+                  false,
+                ]
+              }
+            >
+              Run complete RUM, resource, action, and operation scenarios
+            </Text>
+          </View>
+          <View
+            accessibilityState={
+              Object {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              Object {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              Object {
+                "backgroundColor": "#202226",
+                "borderColor": "#363A41",
+                "borderRadius": 8,
+                "borderWidth": 3,
+                "height": 190,
+                "justifyContent": "flex-end",
+                "marginRight": 20,
+                "opacity": 1,
+                "padding": 26,
+                "width": 370,
+              }
+            }
+            testID="networkLink"
+          >
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#F7F7F8",
+                    "fontSize": 28,
+                    "fontWeight": "bold",
+                    "marginBottom": 6,
+                  },
+                  false,
+                ]
+              }
+            >
+              Network Requests
+            </Text>
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#B7BBC3",
+                    "fontSize": 19,
+                    "lineHeight": 26,
+                  },
+                  false,
+                ]
+              }
+            >
+              Make HTTP requests and inspect RUM resource tracking
+            </Text>
+          </View>
+          <View
+            accessibilityState={
+              Object {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              Object {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              Object {
+                "backgroundColor": "#202226",
+                "borderColor": "#363A41",
+                "borderRadius": 8,
+                "borderWidth": 3,
+                "height": 190,
+                "justifyContent": "flex-end",
+                "marginRight": 20,
+                "opacity": 1,
+                "padding": 26,
+                "width": 370,
+              }
+            }
+            testID="rumViewsLink"
+          >
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#F7F7F8",
+                    "fontSize": 28,
+                    "fontWeight": "bold",
+                    "marginBottom": 6,
+                  },
+                  false,
+                ]
+              }
+            >
+              RUM Views
+            </Text>
+            <Text
+              style={
+                Array [
+                  Object {
+                    "color": "#B7BBC3",
+                    "fontSize": 19,
+                    "lineHeight": 26,
+                  },
+                  false,
+                ]
+              }
+            >
+              Start and stop views to test RUM lifecycle tracking
+            </Text>
+          </View>
+        </View>
+      </RCTScrollView>
     </View>
   </View>
 </View>
