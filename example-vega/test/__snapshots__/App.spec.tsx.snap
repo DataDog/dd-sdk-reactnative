@@ -681,6 +681,134 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
             "padding": 24,
           }
         }
+        testID="featureActionsLink"
+      >
+        <Text
+          style={
+            Object {
+              "color": "white",
+              "fontSize": 30,
+              "fontWeight": "bold",
+              "marginBottom": 6,
+            }
+          }
+        >
+          Feature Actions
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "#aaaaaa",
+              "fontSize": 20,
+            }
+          }
+        >
+          Trigger each supported SDK feature one action at a time
+        </Text>
+      </View>
+      <View
+        accessibilityState={
+          Object {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          Object {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          Object {
+            "backgroundColor": "rgba(255, 255, 255, 0.08)",
+            "borderColor": "transparent",
+            "borderRadius": 10,
+            "borderWidth": 2,
+            "marginBottom": 16,
+            "opacity": 1,
+            "padding": 24,
+          }
+        }
+        testID="featureScenariosLink"
+      >
+        <Text
+          style={
+            Object {
+              "color": "white",
+              "fontSize": 30,
+              "fontWeight": "bold",
+              "marginBottom": 6,
+            }
+          }
+        >
+          Feature Scenarios
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "#aaaaaa",
+              "fontSize": 20,
+            }
+          }
+        >
+          Run supported SDK scenarios for RUM, resources, actions, and operations
+        </Text>
+      </View>
+      <View
+        accessibilityState={
+          Object {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          Object {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          Object {
+            "backgroundColor": "rgba(255, 255, 255, 0.08)",
+            "borderColor": "transparent",
+            "borderRadius": 10,
+            "borderWidth": 2,
+            "marginBottom": 16,
+            "opacity": 1,
+            "padding": 24,
+          }
+        }
         testID="networkLink"
       >
         <Text
