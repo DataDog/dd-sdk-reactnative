@@ -20,12 +20,13 @@ Keep all three pull requests in draft state.
 
 Published flagging-core version 2.0.2 does not contain the new rules wire contract.
 Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, evaluation-time validation, safe flag lookup, and React Native compatibility.
-Its code head is `939da97` as of 2026-08-10.
-The branch was rebased on 2026-08-09, so all earlier commit SHAs changed.
-Commits `771f85b` and `565d9bd` now remove the evaluator dependency on global `BigInt` and preserve configuration parse errors.
-Commit `ab22ad0` refreshes generated Node-server declarations and lock data.
-Commit `939da97` removes browser test setup that leaked provider initialization.
-These two new commits do not change the React Native contract.
+Its code head is `03cde21` as of 2026-08-11.
+The branch was rebased again on 2026-08-11, so all earlier commit SHAs changed.
+The `03cde21` tree is identical to the previous `939da97` tree.
+Commits `4efb682` and `5ffffe0` remove the evaluator dependency on global `BigInt` and preserve configuration parse errors.
+Commit `1db13d4` refreshes generated Node-server declarations and lock data.
+Commit `03cde21` removes browser test setup that leaked provider initialization.
+These commits do not change the React Native contract.
 It adds `@bufbuild/protobuf` as a runtime dependency.
 Its packed-package smoke test uses the Metro export conditions from this repository.
 It moves wire parsing and `FlagsConfigurationWire` to `@datadog/flagging-core/configuration`.
@@ -63,10 +64,11 @@ The parser now preserves `configurationError` for an invalid envelope and `rules
 
 Upstream PR #336 uses that parser in the browser `DatadogOfflineProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
-Its head is `6d3d6a4` as of 2026-08-10.
-Its merge base is the current PR #344 head, `939da97`.
+Its head is `772167b` as of 2026-08-11.
+Its merge base is the current PR #344 head, `03cde21`.
 GitHub reports both PRs as mergeable.
 PR #336 was restacked after the PR #344 rebase and has no new logical feature commit.
+The `772167b` tree is identical to the previous `6d3d6a4` tree.
 Its current commits include valid-sibling fallback, optional configuration at construction, aligned parse errors, and standardized provider error events.
 The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
 The browser root and `/precomputed` entry points both export `DatadogOfflineProvider`.
