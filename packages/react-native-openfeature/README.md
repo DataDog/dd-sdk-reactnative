@@ -69,42 +69,57 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 
 ### RUM user context
 
-When RUM integration is enabled (the default), the online provider includes the user set through
-`DdSdkReactNative.setUserInfo()` in the OpenFeature evaluation context. The RUM user ID supplies the
-targeting key, while `name`, `email`, and flat string, number, or boolean `extraInfo` properties become
-evaluation attributes. Fields set explicitly through `OpenFeature.setContext()` take precedence. An
-explicitly `undefined` field suppresses the corresponding RUM value and is omitted from the effective
-evaluation context.
+Use `enrichRumContext()` when you explicitly want to use the current RUM user as part of an
+OpenFeature evaluation context. Neither Datadog OpenFeature provider enriches context automatically.
+This keeps context changes visible through OpenFeature and avoids changing flag assignments unless
+your application opts in.
 
-Set the RUM user before registering the provider:
+The helper maps the RUM user ID to `targetingKey`. It maps `name`, `email`, and flat string, number,
+or boolean `extraInfo` properties to evaluation attributes. Values in the application context take
+precedence over RUM values, so you can use a different targeting key (for example, a device or session
+ID). An application field set to `undefined` removes the corresponding RUM value and is omitted from
+the returned context. Nested RUM user properties are not included.
+
+Keep the original application-owned context and enrich it before passing it to OpenFeature:
 
 ```tsx
+import {
+    DatadogOpenFeatureProvider,
+    enrichRumContext
+} from '@datadog/mobile-react-native-openfeature';
+
+const applicationContext = {
+    region: 'us-east-1'
+};
+
 await DdSdkReactNative.setUserInfo({
     id: 'user-123',
     email: 'user@example.com',
     extraInfo: { company_name: 'Example, Inc.' }
 });
 
+await OpenFeature.setContext(enrichRumContext(applicationContext));
 await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
 ```
 
-Calling `DdSdkReactNative.setUserInfo()` after provider initialization does not automatically update
-the OpenFeature evaluation context. After a login or account switch, update the RUM user and then
-reconcile the provider while preserving explicitly configured OpenFeature properties:
+`enrichRumContext()` reads the RUM user when it is called; it does not establish a live connection
+between RUM and OpenFeature. After a login, logout, or account switch, update the RUM user and enrich
+the original application-owned context again:
 
 ```tsx
 await DdSdkReactNative.setUserInfo(newUser);
-await OpenFeature.setContext(OpenFeature.getContext());
+await OpenFeature.setContext(enrichRumContext(applicationContext));
 ```
 
-Until reconciliation completes, the provider continues using its previous effective evaluation
-context. Reconciliation refetches assignments, and subsequent evaluations and evaluation tracking
-use the new RUM user context.
+Do not pass `OpenFeature.getContext()` back to `enrichRumContext()`. That context already contains
+values from the previous RUM user, so those values would be treated as application-owned overrides
+and could prevent the new RUM user from replacing them. Retain the original application context
+separately, as shown above.
 
-Nested RUM user properties are not included. Setting `rumIntegrationEnabled: false` in
-`DdFlags.enable()` disables both RUM feature flag tracking and RUM user context enrichment. The
-offline provider does not enrich its context because precomputed configurations are bound to their
-embedded context.
+`rumIntegrationEnabled` only controls whether feature flag evaluation events are sent to RUM. It
+does not enable or disable `enrichRumContext()`. If you use OpenFeature domains or multiple providers,
+you can apply the enriched context only to the intended domain. For the offline provider, continue to
+follow the precomputed configuration context requirements below.
 
 ### Using the OpenFeature React SDK
 

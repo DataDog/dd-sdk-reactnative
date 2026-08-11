@@ -99,9 +99,7 @@ export interface FlagsConfiguration {
     /**
      * Enables the RUM integration.
      *
-     * When enabled, flag evaluation events are sent to RUM for correlation with user sessions,
-     * and the Datadog OpenFeature provider includes flat primitive RUM user properties in its
-     * evaluation context.
+     * When enabled, flag evaluation events are sent to RUM for correlation with user sessions.
      *
      * @default true
      */

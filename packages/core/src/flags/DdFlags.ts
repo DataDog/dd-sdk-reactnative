@@ -10,7 +10,6 @@ import type { DdNativeFlagsType } from '../nativeModulesTypes';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { FlagsClient } from './FlagsClient';
-import { setRumIntegrationEnabled } from './rumIntegration';
 import type { DdFlagsType, FlagsConfiguration } from './types';
 
 const FLAGS_MODULE = 'com.datadog.reactnative.flags';
@@ -35,7 +34,6 @@ class DdFlagsWrapper implements DdFlagsType {
     enable = async (configuration: FlagsConfiguration = {}): Promise<void> => {
         await this.nativeFlags.enable({ enabled: true, ...configuration });
 
-        setRumIntegrationEnabled(configuration.rumIntegrationEnabled ?? true);
         this.isFeatureEnabled = true;
     };
 

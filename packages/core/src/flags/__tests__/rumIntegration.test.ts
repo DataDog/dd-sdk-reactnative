@@ -5,21 +5,26 @@
  */
 
 import { UserInfoSingleton } from '../../sdk/UserInfoSingleton/UserInfoSingleton';
-import {
-    enrichEvaluationContextWithRumUser,
-    setRumIntegrationEnabled
-} from '../rumIntegration';
+import { enrichEvaluationContextWithRumUser } from '../rumIntegration';
 
 describe('enrichEvaluationContextWithRumUser', () => {
     beforeEach(() => {
         UserInfoSingleton.reset();
-        setRumIntegrationEnabled(true);
     });
 
-    it('returns the original context when no RUM user is available', () => {
-        const context = { targetingKey: 'explicit-user' };
+    it('normalizes the application context when no RUM user is available', () => {
+        const context = {
+            targetingKey: 'explicit-user',
+            email: undefined
+        };
 
-        expect(enrichEvaluationContextWithRumUser(context)).toBe(context);
+        expect(enrichEvaluationContextWithRumUser(context)).toStrictEqual({
+            targetingKey: 'explicit-user'
+        });
+        expect(context).toStrictEqual({
+            targetingKey: 'explicit-user',
+            email: undefined
+        });
     });
 
     it('adds flat primitive RUM user properties and lets explicit context win', () => {
@@ -79,7 +84,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
         ).toStrictEqual({ request_attribute: 'request-value' });
     });
 
-    it('uses the latest RUM user whenever context is reconciled', () => {
+    it('uses the latest RUM user each time it is called', () => {
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user-a' });
         expect(enrichEvaluationContextWithRumUser({})).toEqual({
             targetingKey: 'rum-user-a'
@@ -95,18 +100,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
         });
     });
 
-    it('does not enrich context when RUM integration is disabled', () => {
-        UserInfoSingleton.getInstance().setUserInfo({
-            id: 'rum-user',
-            email: 'rum@example.com'
-        });
-        setRumIntegrationEnabled(false);
-        const context = { request_attribute: 'request-value' };
-
-        expect(enrichEvaluationContextWithRumUser(context)).toBe(context);
-    });
-
-    it('preserves context when RUM user properties cannot be read', () => {
+    it('uses application context when RUM user properties cannot be read', () => {
         const extraInfo = Object.defineProperty({}, 'broken', {
             enumerable: true,
             get: () => {
@@ -119,6 +113,8 @@ describe('enrichEvaluationContextWithRumUser', () => {
         });
         const context = { targetingKey: 'explicit-user' };
 
-        expect(enrichEvaluationContextWithRumUser(context)).toBe(context);
+        expect(enrichEvaluationContextWithRumUser(context)).toStrictEqual(
+            context
+        );
     });
 });

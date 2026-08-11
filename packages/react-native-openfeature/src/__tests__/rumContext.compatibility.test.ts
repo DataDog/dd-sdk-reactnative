@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DatadogOpenFeatureProvider } from '../provider';
+import { DatadogOpenFeatureProvider, enrichRumContext } from '../index';
 
 const mockFlagsClient = {
     setEvaluationContext: jest.fn(() => Promise.resolve())
@@ -15,8 +15,8 @@ jest.mock('@datadog/mobile-react-native', () => ({
     configurationFromString: jest.fn()
 }));
 
-describe('DatadogOpenFeatureProvider core compatibility', () => {
-    it('preserves context when the installed core does not expose the RUM enricher', async () => {
+describe('RUM context core compatibility', () => {
+    it('keeps the provider usable with a core version that predates enrichment', async () => {
         const provider = new DatadogOpenFeatureProvider();
 
         await provider.initialize({
@@ -28,5 +28,11 @@ describe('DatadogOpenFeatureProvider core compatibility', () => {
             targetingKey: 'explicit-user',
             attributes: { plan: 'pro' }
         });
+    });
+
+    it('reports incompatible package versions when enrichment is requested', () => {
+        expect(() => enrichRumContext({})).toThrow(
+            'requires compatible versions of @datadog/mobile-react-native and @datadog/mobile-react-native-openfeature'
+        );
     });
 });

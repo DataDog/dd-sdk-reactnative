@@ -4,7 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import * as DatadogSdk from '@datadog/mobile-react-native';
 import type {
     EvaluationContext as OFEvaluationContext,
     ProviderMetadata
@@ -14,22 +13,6 @@ import { DatadogCoreOpenFeatureProvider } from './coreProvider';
 import { toDdContext } from './mappers';
 
 export type { DatadogOpenFeatureProviderOptions } from './coreProvider';
-
-type RumContextEnricher = (context: OFEvaluationContext) => OFEvaluationContext;
-
-const rumContextEnricher = (DatadogSdk as {
-    __ddEnrichEvaluationContextWithRumUser?: RumContextEnricher;
-}).__ddEnrichEvaluationContextWithRumUser;
-
-const enrichEvaluationContextWithRumUser = (
-    context: OFEvaluationContext
-): OFEvaluationContext => {
-    // The OpenFeature package supports older compatible core SDK versions. Enrichment is available
-    // when the installed core exposes the integration helper; otherwise preserve existing behavior.
-    return typeof rumContextEnricher === 'function'
-        ? rumContextEnricher(context)
-        : context;
-};
 
 /**
  * The online Datadog OpenFeature provider. Fetches precomputed flag assignments from Datadog
@@ -43,9 +26,7 @@ export class DatadogOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
     private contextChangePromise = Promise.resolve();
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
-        const ddContext = toDdContext(
-            enrichEvaluationContextWithRumUser(context)
-        );
+        const ddContext = toDdContext(context);
         this.contextChangePromise = this.flagsClient.setEvaluationContext(
             ddContext
         );
@@ -57,9 +38,7 @@ export class DatadogOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
         _oldContext: OFEvaluationContext,
         newContext: OFEvaluationContext
     ): Promise<void> {
-        const newDdContext = toDdContext(
-            enrichEvaluationContextWithRumUser(newContext)
-        );
+        const newDdContext = toDdContext(newContext);
 
         // Promise chain in case `onContextChange` is called multiple times.
         this.contextChangePromise = this.contextChangePromise.then(() => {
