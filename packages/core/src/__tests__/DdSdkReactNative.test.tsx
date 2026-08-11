@@ -8,6 +8,7 @@ import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNative } from '../DdSdkReactNative';
+import { InternalLog } from '../InternalLog';
 import type { DdSdkNativeConfiguration } from '../config/features/CoreConfigurationNative';
 import { CoreConfiguration } from '../config/features/CoreConfiguration';
 import { LogsConfiguration } from '../config/features/LogsConfiguration';
@@ -676,8 +677,133 @@ describe('DdSdkReactNative', () => {
                         match: 'something.fr',
                         propagatorTypes: ['datadog']
                     }
-                ]
+                ],
+                headerCaptureRules: undefined
             });
+        });
+
+        it('enables header capture with the default headerCaptureRules when trackResourceHeaders is true', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                true
+            );
+            configuration.rumConfiguration.trackResourceHeaders = true;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    headerCaptureRules: 'defaults'
+                })
+            );
+        });
+
+        it('uses the custom headerCaptureRules when trackResourceHeaders is true', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                true
+            );
+            configuration.rumConfiguration.trackResourceHeaders = true;
+            configuration.rumConfiguration.headerCaptureRules = [
+                { type: 'matchHeaders', headers: ['x-request-id'] }
+            ];
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    headerCaptureRules: [
+                        { type: 'matchHeaders', headers: ['x-request-id'] }
+                    ]
+                })
+            );
+        });
+
+        it('ignores headerCaptureRules when trackResourceHeaders is false', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                true
+            );
+            configuration.rumConfiguration.trackResourceHeaders = false;
+            configuration.rumConfiguration.headerCaptureRules = [
+                { type: 'matchHeaders', headers: ['x-request-id'] }
+            ];
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    headerCaptureRules: undefined
+                })
+            );
+        });
+
+        it('logs a warning and disables header capture when trackResourceHeaders is true but trackResources is false', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                false
+            );
+            configuration.rumConfiguration.trackResourceHeaders = true;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'trackResourceHeaders is set but trackResources is false. Header capture will be disabled.',
+                SdkVerbosity.WARN
+            );
         });
 
         it('enables error tracking feature when initialize { error tracking config enabled }', async () => {

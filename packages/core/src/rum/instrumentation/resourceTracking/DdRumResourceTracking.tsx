@@ -7,12 +7,14 @@
 import BigInt from 'big-integer';
 
 import { InternalLog } from '../../../InternalLog';
+import type { HeaderCaptureRule } from '../../../config/features/RumConfiguration.type';
 import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
 import type { FirstPartyHost } from '../../types';
 
 import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
+import { compileHeaderCaptureConfig } from './headerCapture/compileHeaderConfig';
 import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
 import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
 
@@ -40,10 +42,12 @@ class RumResourceTracking {
      */
     startTracking({
         resourceTraceSampleRate,
-        firstPartyHosts
+        firstPartyHosts,
+        headerCaptureRules
     }: {
         resourceTraceSampleRate: number;
         firstPartyHosts: FirstPartyHost[];
+        headerCaptureRules?: 'defaults' | HeaderCaptureRule[] | undefined;
     }): void {
         // extra safety to avoid proxying the XHR class twice
         if (this._isTracking) {
@@ -55,11 +59,15 @@ class RumResourceTracking {
         }
 
         this._requestProxy = XHRProxy.createWithResourceReporter();
+        const headerCaptureConfig = compileHeaderCaptureConfig(
+            headerCaptureRules
+        );
         this._requestProxy.onTrackingStart({
             tracingSamplingRate: resourceTraceSampleRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
                 firstPartyHosts
-            )
+            ),
+            headerCaptureConfig
         });
 
         InternalLog.log(

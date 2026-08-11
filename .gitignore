@@ -109,3 +109,5 @@ packages/react-native-babel-plugin/svg-map.json
 
 # Session Replay assets
 packages/react-native-session-replay/assets/*
+
+.planning

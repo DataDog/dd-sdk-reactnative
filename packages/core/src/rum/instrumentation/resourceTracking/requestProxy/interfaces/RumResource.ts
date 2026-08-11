@@ -26,6 +26,8 @@ export interface RUMResource {
         responseStartTime?: number;
     };
     resourceContext?: XMLHttpRequest;
+    capturedRequestHeaders?: Record<string, string>;
+    capturedResponseHeaders?: Record<string, string>;
 }
 
 export type DdRumResourceGraphqlError = {
