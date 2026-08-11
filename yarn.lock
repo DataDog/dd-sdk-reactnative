@@ -3750,9 +3750,10 @@ __metadata:
   resolution: "@datadog/mobile-react-native-vega@workspace:packages/react-native-vega"
   dependencies:
     "@amazon-devices/keplerscript-turbomodule-api": "*"
-    "@datadog/mobile-react-native": 3.5.4-vega.0
+    "@datadog/mobile-react-native": "workspace:3.5.4-vega.0"
     react-native-builder-bob: 0.26.0
   peerDependencies:
+    "@datadog/mobile-react-native": 3.5.4-vega.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
   languageName: unknown

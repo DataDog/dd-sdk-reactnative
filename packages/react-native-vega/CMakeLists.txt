@@ -38,15 +38,14 @@ set(DD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 set(DD_CRASH_MODE "noop" CACHE STRING "" FORCE)
 
 # Default to local dd-sdk-cpp checkout for development.
-# Override with -DDatadog_SOURCE_DIR=/path/to/dd-sdk-cpp if needed.
-if(NOT DEFINED Datadog_SOURCE_DIR)
-    # Resolve relative to this repo's sibling checkout
-    get_filename_component(_DD_CPP_DEFAULT
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../../dd-sdk-cpp" ABSOLUTE)
-    if(EXISTS "${_DD_CPP_DEFAULT}/CMakeLists.txt")
-        set(Datadog_SOURCE_DIR "${_DD_CPP_DEFAULT}")
-    endif()
-endif()
+# Uncomment this block to resolve the sibling checkout automatically.
+# if(NOT DEFINED Datadog_SOURCE_DIR)
+#     get_filename_component(_DD_CPP_DEFAULT
+#         "${CMAKE_CURRENT_SOURCE_DIR}/../../../dd-sdk-cpp" ABSOLUTE)
+#     if(EXISTS "${_DD_CPP_DEFAULT}/CMakeLists.txt")
+#         set(Datadog_SOURCE_DIR "${_DD_CPP_DEFAULT}")
+#     endif()
+# endif()
 
 include(FetchContent)
 if(DEFINED Datadog_SOURCE_DIR)
