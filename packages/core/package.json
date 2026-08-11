@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native",
-    "version": "3.5.4",
+    "version": "3.5.2-vega.0",
     "description": "A client-side React Native module to interact with Datadog",
     "keywords": [
         "datadog",

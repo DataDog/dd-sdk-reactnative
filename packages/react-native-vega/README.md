@@ -5,11 +5,29 @@ This package is a proof of concept React Native bridge for Amazon Vega OS backed
 
 The native Vega module links `dd-sdk-cpp` through CMake. During development it first
 looks for a sibling checkout at `../../../dd-sdk-cpp`. If that checkout is not present,
-it fetches `https://github.com/DataDog/dd-sdk-cpp.git` from the `develop` branch.
+it fetches `https://github.com/DataDog/dd-sdk-cpp.git` at the `0.7.0` tag.
 
 Important: items listed as not implemented or not fully validated below are not known
 to be broken on Vega. They were left out because there was not enough time in this PoC
 to wire them completely and test them properly on device.
+
+## Preview Tarballs
+
+This preview depends on unreleased changes in `@datadog/mobile-react-native`,
+including the `./internal` package export used by the Vega bridge. Ship and install
+matching preview tarballs for both packages:
+
+```sh
+yarn workspace @datadog/mobile-react-native prepare
+(cd packages/core && npm --cache /tmp/dd-sdk-reactnative-npm-cache pack)
+
+yarn workspace @datadog/mobile-react-native-vega prepare
+(cd packages/react-native-vega && npm --cache /tmp/dd-sdk-reactnative-npm-cache pack)
+```
+
+In a consuming Vega app, install both generated tarballs together so the exact
+`@datadog/mobile-react-native@3.5.2-vega.0` dependency is satisfied by the preview
+core package, not by the public `3.5.2` package.
 
 ## C++ SDK Feature Coverage
 
