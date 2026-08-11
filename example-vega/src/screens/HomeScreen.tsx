@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
+import {colors} from '../theme';
 
 interface HomeScreenProps {
   onNavigate: (screen: string) => void;
@@ -17,40 +18,48 @@ const MenuCard = ({title, description, onPress, testID}: MenuCardProps) => {
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       style={[cardStyles.card, focused && cardStyles.cardFocused]}
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       testID={testID}
     >
-      <Text style={cardStyles.title}>{title}</Text>
-      <Text style={cardStyles.description}>{description}</Text>
+      <Text style={[cardStyles.title, focused && cardStyles.textFocused]}>
+        {title}
+      </Text>
+      <Text style={[cardStyles.description, focused && cardStyles.textFocused]}>
+        {description}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const cardStyles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
     padding: 24,
     marginBottom: 16,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 3,
+    borderColor: colors.border,
   },
   cardFocused: {
-    borderColor: '#ff9900',
-    backgroundColor: 'rgba(255, 153, 0, 0.12)',
+    borderColor: colors.focus,
+    backgroundColor: colors.focusSurface,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 6,
   },
   description: {
-    color: '#aaaaaa',
+    color: colors.textSecondary,
     fontSize: 20,
+  },
+  textFocused: {
+    color: colors.focusText,
   },
 });
 
@@ -115,30 +124,32 @@ const styles = StyleSheet.create({
     paddingLeft: 100,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 60,
     marginTop: 20,
     fontWeight: 'bold',
   },
   subtitle: {
-    color: '#cccccc',
+    color: colors.textSecondary,
     fontSize: 30,
     marginTop: 10,
   },
   infoBox: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 20,
     marginTop: 20,
   },
   infoLabel: {
-    color: '#ff9900',
+    color: colors.accent,
     fontSize: 20,
     fontWeight: 'bold',
     marginTop: 5,
   },
   infoValue: {
-    color: 'white',
+    color: colors.text,
     fontSize: 20,
     marginBottom: 5,
   },

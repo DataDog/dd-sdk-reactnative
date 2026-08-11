@@ -14,6 +14,7 @@ import {
   RumActionType,
   TrackingConsent,
 } from '@datadog/mobile-react-native-vega';
+import {colors} from '../theme';
 
 interface FeatureActionsScreenProps {
   onBack: () => void;
@@ -63,6 +64,7 @@ const ActionButton = ({action, disabled, onPress}: ActionButtonProps) => {
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       disabled={disabled}
       style={[
         actionButtonStyles.button,
@@ -74,32 +76,42 @@ const ActionButton = ({action, disabled, onPress}: ActionButtonProps) => {
       onBlur={() => setFocused(false)}
       testID={action.testID}
     >
-      <Text style={actionButtonStyles.label}>{action.label}</Text>
+      <Text
+        style={[
+          actionButtonStyles.label,
+          focused && actionButtonStyles.labelFocused,
+        ]}
+      >
+        {action.label}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const actionButtonStyles = StyleSheet.create({
   button: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: colors.surface,
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 3,
+    borderColor: colors.border,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 10,
   },
   buttonFocused: {
-    borderColor: '#ff9900',
-    backgroundColor: 'rgba(255, 153, 0, 0.12)',
+    borderColor: colors.focus,
+    backgroundColor: colors.focusSurface,
   },
   buttonDisabled: {
     opacity: 0.55,
   },
   label: {
-    color: 'white',
+    color: colors.text,
     fontSize: 21,
     fontWeight: 'bold',
+  },
+  labelFocused: {
+    color: colors.focusText,
   },
 });
 
@@ -122,6 +134,7 @@ const UtilityButton = ({
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       disabled={disabled}
       style={[
         utilityButtonStyles.button,
@@ -134,7 +147,15 @@ const UtilityButton = ({
       onBlur={() => setFocused(false)}
       testID={testID}
     >
-      <Text style={[utilityButtonStyles.label, {color}]}>{label}</Text>
+      <Text
+        style={[
+          utilityButtonStyles.label,
+          {color},
+          focused && utilityButtonStyles.labelFocused,
+        ]}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -144,13 +165,14 @@ const utilityButtonStyles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 3,
     alignItems: 'center',
     marginBottom: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.surface,
   },
   buttonFocused: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.focusSurface,
+    borderColor: colors.focus,
   },
   buttonDisabled: {
     opacity: 0.55,
@@ -158,6 +180,9 @@ const utilityButtonStyles = StyleSheet.create({
   label: {
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  labelFocused: {
+    color: colors.focusText,
   },
 });
 
@@ -613,21 +638,21 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
         <View style={styles.utilityActions}>
           <UtilityButton
             label={isRunning ? 'Running...' : 'Quick Smoke'}
-            color="#ff9900"
+            color={colors.focus}
             disabled={isRunning}
             testID="action-quick-smoke"
             onPress={runQuickSmoke}
           />
           <UtilityButton
             label="Clear Log"
-            color="#cccccc"
+            color={colors.textSecondary}
             disabled={isRunning}
             testID="clearActionLog"
             onPress={clearLog}
           />
           <UtilityButton
             label="Back to Home"
-            color="#aaaaaa"
+            color={colors.textMuted}
             disabled={isRunning}
             testID="backHome"
             onPress={onBack}
@@ -677,7 +702,7 @@ const styles = StyleSheet.create({
     paddingLeft: 60,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 50,
     fontWeight: 'bold',
     marginBottom: 18,
@@ -686,15 +711,17 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   groupTitle: {
-    color: '#ff9900',
+    color: colors.accent,
     fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   logPanel: {
     flex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 20,
   },
   panelHeader: {
@@ -704,12 +731,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   panelTitle: {
-    color: 'white',
+    color: colors.text,
     fontSize: 30,
     fontWeight: 'bold',
   },
   panelStatus: {
-    color: '#ffaa00',
+    color: colors.warning,
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -720,7 +747,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyText: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 22,
     fontStyle: 'italic',
   },
@@ -729,36 +756,36 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: colors.border,
   },
   logStatus: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: 'bold',
     width: 74,
     marginTop: 4,
   },
   logStatusSuccess: {
-    color: '#44bb44',
+    color: colors.success,
   },
   logStatusError: {
-    color: '#ff4444',
+    color: colors.error,
   },
   logContent: {
     flex: 1,
   },
   logTitle: {
-    color: 'white',
+    color: colors.text,
     fontSize: 22,
     fontWeight: 'bold',
   },
   logMessage: {
-    color: '#cccccc',
+    color: colors.textSecondary,
     fontSize: 18,
     marginTop: 2,
   },
   logTime: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 18,
     marginLeft: 12,
     marginTop: 2,
