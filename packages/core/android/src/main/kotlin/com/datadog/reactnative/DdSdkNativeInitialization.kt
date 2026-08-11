@@ -34,7 +34,6 @@ import com.datadog.android.trace.TraceConfiguration
 import com.datadog.android.ndk.NdkCrashReports
 import com.google.gson.Gson
 import java.util.Locale
-import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -250,7 +249,7 @@ class DdSdkNativeInitialization internal constructor(
         }
 
         configuration.rumConfiguration?.initialResourceThreshold?.let {
-            val milliseconds = it.seconds.inWholeMilliseconds
+            val milliseconds = (it * MILLISECONDS_IN_SECOND).toLong()
             configBuilder.setInitialResourceIdentifier(TimeBasedInitialResourceIdentifier(milliseconds))
         }
 
@@ -409,6 +408,8 @@ class DdSdkNativeInitialization internal constructor(
 
     @Suppress("UndocumentedPublicClass")
     companion object {
+        private const val MILLISECONDS_IN_SECOND = 1000
+
         /**
          * Initializes the Datadog React Native SDK from your MainApplication.
          *
