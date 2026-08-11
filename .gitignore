@@ -53,8 +53,16 @@ buck-out/
 # bob build files
 lib/
 dist/
-CMakeUserPresets.json
 buildinfo.json
+
+# CMake local/generated files
+CMakeUserPresets.json
+**/CMakeUserPresets.json
+**/CMakeCache.txt
+**/CMakeFiles/
+**/compile_commands.json
+**/.cmake/
+**/.cxx/
 
 # fastlane
 #

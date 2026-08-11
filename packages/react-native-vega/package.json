@@ -22,8 +22,14 @@
     "main": "lib/commonjs/index",
     "files": [
         "src/**",
-        "lib/**",
-        "kepler/**",
+        "lib/commonjs/**",
+        "lib/module/**",
+        "lib/typescript/react-native-vega/**",
+        "kepler/AutoLinkInit.cpp",
+        "kepler/turbo-modules/*.cpp",
+        "kepler/turbo-modules/*.h",
+        "kepler/turbo-modules/generated/*.cpp",
+        "kepler/turbo-modules/generated/*.h",
         "CMakeLists.txt",
         "react-native.config.js"
     ],
