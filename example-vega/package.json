@@ -20,9 +20,9 @@
   },
   "dependencies": {
     "@amazon-devices/react-native-kepler": "^2.0.0",
-    "@datadog/mobile-react-native": "*",
-    "@datadog/mobile-react-native-babel-plugin": "*",
-    "@datadog/mobile-react-native-vega": "*",
+    "@datadog/mobile-react-native": "workspace:packages/core",
+    "@datadog/mobile-react-native-babel-plugin": "workspace:packages/react-native-babel-plugin",
+    "@datadog/mobile-react-native-vega": "workspace:packages/react-native-vega",
     "react": "18.2.0",
     "react-native": "0.72.0"
   },

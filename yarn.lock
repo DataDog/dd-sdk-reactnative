@@ -12,9 +12,9 @@ __metadata:
     "@amazon-devices/kepler-cli-platform": ^0
     "@amazon-devices/kepler-module-manifest-builder": ^0
     "@amazon-devices/react-native-kepler": ^2.0.0
-    "@datadog/mobile-react-native": "*"
-    "@datadog/mobile-react-native-babel-plugin": "*"
-    "@datadog/mobile-react-native-vega": "*"
+    "@datadog/mobile-react-native": "workspace:packages/core"
+    "@datadog/mobile-react-native-babel-plugin": "workspace:packages/react-native-babel-plugin"
+    "@datadog/mobile-react-native-vega": "workspace:packages/react-native-vega"
     "@react-native-community/cli": 11.3.2
     "@react-native/eslint-config": 0.72.2
     "@react-native/metro-config": ^0.72.6
@@ -2922,7 +2922,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native-babel-plugin@*, @datadog/mobile-react-native-babel-plugin@workspace:packages/react-native-babel-plugin":
+"@datadog/mobile-react-native-babel-plugin@workspace:packages/react-native-babel-plugin":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-babel-plugin@workspace:packages/react-native-babel-plugin"
   dependencies:
@@ -3021,12 +3021,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native-vega@*, @datadog/mobile-react-native-vega@workspace:packages/react-native-vega":
+"@datadog/mobile-react-native-vega@workspace:packages/react-native-vega":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-vega@workspace:packages/react-native-vega"
   dependencies:
     "@amazon-devices/keplerscript-turbomodule-api": "*"
-    "@datadog/mobile-react-native": ^3.5.2
+    "@datadog/mobile-react-native": 3.11.0
     react-native-builder-bob: 0.26.0
   peerDependencies:
     react: ">=16.13.1"
@@ -3049,7 +3049,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native@*, @datadog/mobile-react-native@^3.11.0, @datadog/mobile-react-native@^3.5.2, @datadog/mobile-react-native@workspace:3.11.0, @datadog/mobile-react-native@workspace:packages/core":
+"@datadog/mobile-react-native@3.11.0, @datadog/mobile-react-native@^3.11.0, @datadog/mobile-react-native@workspace:3.11.0, @datadog/mobile-react-native@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
