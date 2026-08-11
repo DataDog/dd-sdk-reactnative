@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, View, Image} from 'react-native';
 import {DdRum} from '@datadog/mobile-react-native-vega';
 import {Link} from '../components/Link';
+import {colors} from '../theme';
 
 interface AboutScreenProps {
   onBack: () => void;
@@ -72,34 +73,36 @@ const styles = StyleSheet.create({
     maxWidth: 800,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 60,
     fontWeight: 'bold',
     marginTop: 20,
     marginBottom: 20,
   },
   text: {
-    color: '#cccccc',
+    color: colors.textSecondary,
     fontSize: 26,
     textAlign: 'center',
     marginBottom: 10,
     lineHeight: 36,
   },
   infoBox: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 30,
     marginTop: 30,
     width: 700,
   },
   infoLabel: {
-    color: '#ff9900',
+    color: colors.accent,
     fontSize: 22,
     fontWeight: 'bold',
     marginTop: 10,
   },
   infoValue: {
-    color: 'white',
+    color: colors.text,
     fontSize: 22,
     marginBottom: 10,
   },

@@ -1,8 +1,10 @@
 import 'react-native';
 import {fireEvent, render} from '@testing-library/react-native';
 import * as React from 'react';
+import {StyleSheet, TouchableOpacity} from 'react-native';
 
 import {App} from '../src/App';
+import {colors} from '../src/theme';
 
 describe('Template App Snapshot tests', () => {
   it('Initial App screen', () => {
@@ -31,5 +33,23 @@ describe('Template App Snapshot tests', () => {
     fireEvent.press(button);
     expect(screen.getByText('Feature Actions')).toBeTruthy();
     expect(screen.getByTestId('action-add-global-attribute')).toBeTruthy();
+  });
+
+  it('keeps focused menu text readable', () => {
+    const screen = render(<App />);
+    const button = screen.getByTestId('featureActionsLink');
+    const touchable = screen
+      .UNSAFE_getAllByType(TouchableOpacity)
+      .find((element) => element.props.testID === 'featureActionsLink');
+
+    fireEvent(button, 'focus');
+
+    expect(touchable?.props.activeOpacity).toBe(1);
+    expect(StyleSheet.flatten(button.props.style)).toMatchObject({
+      backgroundColor: colors.focusSurface,
+    });
+    expect(
+      StyleSheet.flatten(screen.getByText('Feature Actions').props.style),
+    ).toMatchObject({color: colors.focusText});
   });
 });
