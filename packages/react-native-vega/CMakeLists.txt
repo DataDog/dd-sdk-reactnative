@@ -56,7 +56,7 @@ else()
     message(STATUS "Fetching dd-sdk-cpp from GitHub")
     FetchContent_Declare(Datadog
         GIT_REPOSITORY https://github.com/DataDog/dd-sdk-cpp.git
-        GIT_TAG develop
+        GIT_TAG 0.7.0
     )
 endif()
 FetchContent_MakeAvailable(Datadog)

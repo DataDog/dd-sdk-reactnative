@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-vega",
-    "version": "3.5.2",
+    "version": "3.5.2-vega.0",
     "description": "Datadog RUM support for Amazon Vega SDK apps",
     "keywords": [
         "datadog",
@@ -43,7 +43,7 @@
         "codegen": "npm run codegen:sdk && npm run codegen:rum"
     },
     "dependencies": {
-        "@datadog/mobile-react-native": "^3.5.2"
+        "@datadog/mobile-react-native": "3.5.2-vega.0"
     },
     "peerDependencies": {
         "react": ">=16.13.1",
@@ -56,7 +56,8 @@
     "jest": {
         "preset": "react-native",
         "moduleNameMapper": {
-            "@datadog/mobile-react-native": "<rootDir>../core/src"
+            "^@datadog/mobile-react-native/internal$": "<rootDir>../core/src/internal",
+            "^@datadog/mobile-react-native$": "<rootDir>../core/src"
         },
         "modulePathIgnorePatterns": [
             "<rootDir>/lib/"
