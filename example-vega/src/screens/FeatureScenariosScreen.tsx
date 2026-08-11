@@ -14,6 +14,7 @@ import {
   RumActionType,
   TrackingConsent,
 } from '@datadog/mobile-react-native-vega';
+import {colors} from '../theme';
 
 interface FeatureScenariosScreenProps {
   onBack: () => void;
@@ -68,6 +69,7 @@ const ScenarioButton = ({
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       disabled={disabled}
       onPress={onPress}
       onFocus={() => setFocused(true)}
@@ -80,35 +82,50 @@ const ScenarioButton = ({
       testID={`scenario-${scenario.id}`}
     >
       <View style={scenarioButtonStyles.header}>
-        <Text style={scenarioButtonStyles.title}>{scenario.title}</Text>
+        <Text
+          style={[
+            scenarioButtonStyles.title,
+            focused && scenarioButtonStyles.textFocused,
+          ]}
+        >
+          {scenario.title}
+        </Text>
         <Text
           style={[
             scenarioButtonStyles.status,
             status === 'passed' && scenarioButtonStyles.statusPassed,
             status === 'failed' && scenarioButtonStyles.statusFailed,
             status === 'running' && scenarioButtonStyles.statusRunning,
+            focused && scenarioButtonStyles.textFocused,
           ]}
         >
           {status.toUpperCase()}
         </Text>
       </View>
-      <Text style={scenarioButtonStyles.detail}>{scenario.detail}</Text>
+      <Text
+        style={[
+          scenarioButtonStyles.detail,
+          focused && scenarioButtonStyles.textFocused,
+        ]}
+      >
+        {scenario.detail}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const scenarioButtonStyles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 3,
+    borderColor: colors.border,
   },
   cardFocused: {
-    borderColor: '#ff9900',
-    backgroundColor: 'rgba(255, 153, 0, 0.12)',
+    borderColor: colors.focus,
+    backgroundColor: colors.focusSurface,
   },
   cardDisabled: {
     opacity: 0.55,
@@ -120,32 +137,35 @@ const scenarioButtonStyles = StyleSheet.create({
     marginBottom: 6,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 24,
     fontWeight: 'bold',
     flex: 1,
     marginRight: 12,
   },
   detail: {
-    color: '#aaaaaa',
+    color: colors.textSecondary,
     fontSize: 18,
     lineHeight: 24,
   },
   status: {
-    color: '#777777',
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: 'bold',
     width: 72,
     textAlign: 'right',
   },
   statusPassed: {
-    color: '#44bb44',
+    color: colors.success,
   },
   statusFailed: {
-    color: '#ff4444',
+    color: colors.error,
   },
   statusRunning: {
-    color: '#ffaa00',
+    color: colors.warning,
+  },
+  textFocused: {
+    color: colors.focusText,
   },
 });
 
@@ -168,6 +188,7 @@ const ActionButton = ({
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       disabled={disabled}
       style={[
         actionButtonStyles.button,
@@ -180,7 +201,15 @@ const ActionButton = ({
       onBlur={() => setFocused(false)}
       testID={testID}
     >
-      <Text style={[actionButtonStyles.label, {color}]}>{label}</Text>
+      <Text
+        style={[
+          actionButtonStyles.label,
+          {color},
+          focused && actionButtonStyles.labelFocused,
+        ]}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -190,13 +219,14 @@ const actionButtonStyles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 3,
     alignItems: 'center',
     marginBottom: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.surface,
   },
   buttonFocused: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.focusSurface,
+    borderColor: colors.focus,
   },
   buttonDisabled: {
     opacity: 0.55,
@@ -204,6 +234,9 @@ const actionButtonStyles = StyleSheet.create({
   label: {
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  labelFocused: {
+    color: colors.focusText,
   },
 });
 
@@ -500,21 +533,21 @@ export const FeatureScenariosScreen = ({
         <View style={styles.actions}>
           <ActionButton
             label={isRunning ? 'Running...' : 'Run All Scenarios'}
-            color="#ff9900"
+            color={colors.focus}
             disabled={isRunning}
             onPress={runAllScenarios}
             testID="runAllScenarios"
           />
           <ActionButton
             label="Clear Results"
-            color="#cccccc"
+            color={colors.textSecondary}
             disabled={isRunning}
             onPress={clearResults}
             testID="clearScenarioResults"
           />
           <ActionButton
             label="Back to Home"
-            color="#aaaaaa"
+            color={colors.textMuted}
             disabled={isRunning}
             onPress={onBack}
             testID="backHome"
@@ -564,20 +597,22 @@ const styles = StyleSheet.create({
     paddingLeft: 60,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 50,
     fontWeight: 'bold',
     marginBottom: 6,
   },
   subtitle: {
-    color: '#cccccc',
+    color: colors.textSecondary,
     fontSize: 24,
     marginBottom: 18,
   },
   panel: {
     flex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 20,
   },
   panelHeader: {
@@ -587,12 +622,12 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   panelTitle: {
-    color: 'white',
+    color: colors.text,
     fontSize: 30,
     fontWeight: 'bold',
   },
   panelStatus: {
-    color: '#ffaa00',
+    color: colors.warning,
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -603,7 +638,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyText: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 22,
     fontStyle: 'italic',
   },
@@ -612,36 +647,36 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: colors.border,
   },
   logStatus: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 14,
     fontWeight: 'bold',
     width: 74,
     marginTop: 4,
   },
   logStatusSuccess: {
-    color: '#44bb44',
+    color: colors.success,
   },
   logStatusError: {
-    color: '#ff4444',
+    color: colors.error,
   },
   logContent: {
     flex: 1,
   },
   logTitle: {
-    color: 'white',
+    color: colors.text,
     fontSize: 22,
     fontWeight: 'bold',
   },
   logMessage: {
-    color: '#cccccc',
+    color: colors.textSecondary,
     fontSize: 18,
     marginTop: 2,
   },
   logTime: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 18,
     marginLeft: 12,
     marginTop: 2,

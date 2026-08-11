@@ -2,36 +2,13 @@
 
 exports[`Template App Snapshot tests App screen after navigating to Network 1`] = `
 <View
-  accessibilityIgnoresInvertColors={true}
   style={
     Object {
+      "backgroundColor": "#F3F6FA",
       "flex": 1,
     }
   }
 >
-  <Image
-    source={
-      Object {
-        "testUri": "../../../src/assets/background.png",
-      }
-    }
-    style={
-      Array [
-        Object {
-          "bottom": 0,
-          "left": 0,
-          "position": "absolute",
-          "right": 0,
-          "top": 0,
-        },
-        Object {
-          "height": undefined,
-          "width": undefined,
-        },
-        undefined,
-      ]
-    }
-  />
   <View
     style={
       Object {
@@ -54,7 +31,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
         <Text
           style={
             Object {
-              "color": "white",
+              "color": "#172033",
               "fontSize": 50,
               "fontWeight": "bold",
               "marginBottom": 10,
@@ -93,10 +70,10 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "rgba(255, 255, 255, 0.08)",
-              "borderColor": "transparent",
-              "borderRadius": 10,
-              "borderWidth": 2,
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D4DDE9",
+              "borderRadius": 8,
+              "borderWidth": 3,
               "marginBottom": 12,
               "opacity": 1,
               "padding": 16,
@@ -106,22 +83,28 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
         >
           <Text
             style={
-              Object {
-                "color": "white",
-                "fontSize": 24,
-                "fontWeight": "bold",
-                "marginBottom": 4,
-              }
+              Array [
+                Object {
+                  "color": "#172033",
+                  "fontSize": 24,
+                  "fontWeight": "bold",
+                  "marginBottom": 4,
+                },
+                false,
+              ]
             }
           >
             GET httpbin/get
           </Text>
           <Text
             style={
-              Object {
-                "color": "#888888",
-                "fontSize": 18,
-              }
+              Array [
+                Object {
+                  "color": "#5B687B",
+                  "fontSize": 18,
+                },
+                false,
+              ]
             }
           >
             https://httpbin.org/get
@@ -157,10 +140,10 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "rgba(255, 255, 255, 0.08)",
-              "borderColor": "transparent",
-              "borderRadius": 10,
-              "borderWidth": 2,
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D4DDE9",
+              "borderRadius": 8,
+              "borderWidth": 3,
               "marginBottom": 12,
               "opacity": 1,
               "padding": 16,
@@ -170,22 +153,28 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
         >
           <Text
             style={
-              Object {
-                "color": "white",
-                "fontSize": 24,
-                "fontWeight": "bold",
-                "marginBottom": 4,
-              }
+              Array [
+                Object {
+                  "color": "#172033",
+                  "fontSize": 24,
+                  "fontWeight": "bold",
+                  "marginBottom": 4,
+                },
+                false,
+              ]
             }
           >
             GET httpbin/json
           </Text>
           <Text
             style={
-              Object {
-                "color": "#888888",
-                "fontSize": 18,
-              }
+              Array [
+                Object {
+                  "color": "#5B687B",
+                  "fontSize": 18,
+                },
+                false,
+              ]
             }
           >
             https://httpbin.org/json
@@ -221,10 +210,10 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "rgba(255, 255, 255, 0.08)",
-              "borderColor": "transparent",
-              "borderRadius": 10,
-              "borderWidth": 2,
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D4DDE9",
+              "borderRadius": 8,
+              "borderWidth": 3,
               "marginBottom": 12,
               "opacity": 1,
               "padding": 16,
@@ -234,22 +223,28 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
         >
           <Text
             style={
-              Object {
-                "color": "white",
-                "fontSize": 24,
-                "fontWeight": "bold",
-                "marginBottom": 4,
-              }
+              Array [
+                Object {
+                  "color": "#172033",
+                  "fontSize": 24,
+                  "fontWeight": "bold",
+                  "marginBottom": 4,
+                },
+                false,
+              ]
             }
           >
             GET httpbin/status/200
           </Text>
           <Text
             style={
-              Object {
-                "color": "#888888",
-                "fontSize": 18,
-              }
+              Array [
+                Object {
+                  "color": "#5B687B",
+                  "fontSize": 18,
+                },
+                false,
+              ]
             }
           >
             https://httpbin.org/status/200
@@ -285,10 +280,10 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           onStartShouldSetResponder={[Function]}
           style={
             Object {
-              "backgroundColor": "rgba(255, 255, 255, 0.08)",
-              "borderColor": "transparent",
-              "borderRadius": 10,
-              "borderWidth": 2,
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D4DDE9",
+              "borderRadius": 8,
+              "borderWidth": 3,
               "marginBottom": 12,
               "opacity": 1,
               "padding": 16,
@@ -298,22 +293,28 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
         >
           <Text
             style={
-              Object {
-                "color": "white",
-                "fontSize": 24,
-                "fontWeight": "bold",
-                "marginBottom": 4,
-              }
+              Array [
+                Object {
+                  "color": "#172033",
+                  "fontSize": 24,
+                  "fontWeight": "bold",
+                  "marginBottom": 4,
+                },
+                false,
+              ]
             }
           >
             GET httpbin/status/404
           </Text>
           <Text
             style={
-              Object {
-                "color": "#888888",
-                "fontSize": 18,
-              }
+              Array [
+                Object {
+                  "color": "#5B687B",
+                  "fontSize": 18,
+                },
+                false,
+              ]
             }
           >
             https://httpbin.org/status/404
@@ -357,10 +358,10 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Object {
                 "alignItems": "center",
-                "backgroundColor": "rgba(255, 255, 255, 0.05)",
-                "borderColor": "#ff9900",
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#1769E0",
                 "borderRadius": 8,
-                "borderWidth": 1,
+                "borderWidth": 3,
                 "marginBottom": 10,
                 "opacity": 1,
                 "paddingHorizontal": 20,
@@ -377,8 +378,9 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
                     "fontWeight": "bold",
                   },
                   Object {
-                    "color": "#ff9900",
+                    "color": "#1769E0",
                   },
+                  false,
                 ]
               }
             >
@@ -416,10 +418,10 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
             style={
               Object {
                 "alignItems": "center",
-                "backgroundColor": "rgba(255, 255, 255, 0.05)",
-                "borderColor": "#aaaaaa",
+                "backgroundColor": "#FFFFFF",
+                "borderColor": "#5B687B",
                 "borderRadius": 8,
-                "borderWidth": 1,
+                "borderWidth": 3,
                 "marginBottom": 10,
                 "opacity": 1,
                 "paddingHorizontal": 20,
@@ -436,8 +438,9 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
                     "fontWeight": "bold",
                   },
                   Object {
-                    "color": "#aaaaaa",
+                    "color": "#5B687B",
                   },
+                  false,
                 ]
               }
             >
@@ -450,8 +453,10 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
     <View
       style={
         Object {
-          "backgroundColor": "rgba(0, 0, 0, 0.4)",
-          "borderRadius": 10,
+          "backgroundColor": "#FFFFFF",
+          "borderColor": "#D4DDE9",
+          "borderRadius": 8,
+          "borderWidth": 1,
           "flex": 3,
           "padding": 20,
         }
@@ -460,7 +465,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
       <Text
         style={
           Object {
-            "color": "white",
+            "color": "#172033",
             "fontSize": 30,
             "fontWeight": "bold",
             "marginBottom": 15,
@@ -480,7 +485,7 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
           <Text
             style={
               Object {
-                "color": "#888888",
+                "color": "#7A8799",
                 "fontSize": 22,
                 "fontStyle": "italic",
               }
@@ -497,36 +502,13 @@ exports[`Template App Snapshot tests App screen after navigating to Network 1`] 
 
 exports[`Template App Snapshot tests Initial App screen 1`] = `
 <View
-  accessibilityIgnoresInvertColors={true}
   style={
     Object {
+      "backgroundColor": "#F3F6FA",
       "flex": 1,
     }
   }
 >
-  <Image
-    source={
-      Object {
-        "testUri": "../../../src/assets/background.png",
-      }
-    }
-    style={
-      Array [
-        Object {
-          "bottom": 0,
-          "left": 0,
-          "position": "absolute",
-          "right": 0,
-          "top": 0,
-        },
-        Object {
-          "height": undefined,
-          "width": undefined,
-        },
-        undefined,
-      ]
-    }
-  />
   <View
     style={
       Object {
@@ -556,7 +538,7 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
       <Text
         style={
           Object {
-            "color": "white",
+            "color": "#172033",
             "fontSize": 60,
             "fontWeight": "bold",
             "marginTop": 20,
@@ -568,7 +550,7 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
       <Text
         style={
           Object {
-            "color": "#cccccc",
+            "color": "#5B687B",
             "fontSize": 30,
             "marginTop": 10,
           }
@@ -579,8 +561,10 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
       <View
         style={
           Object {
-            "backgroundColor": "rgba(0, 0, 0, 0.4)",
-            "borderRadius": 10,
+            "backgroundColor": "#FFFFFF",
+            "borderColor": "#D4DDE9",
+            "borderRadius": 8,
+            "borderWidth": 1,
             "marginTop": 20,
             "padding": 20,
           }
@@ -589,7 +573,7 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         <Text
           style={
             Object {
-              "color": "#ff9900",
+              "color": "#6D3CC7",
               "fontSize": 20,
               "fontWeight": "bold",
               "marginTop": 5,
@@ -601,7 +585,7 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         <Text
           style={
             Object {
-              "color": "white",
+              "color": "#172033",
               "fontSize": 20,
               "marginBottom": 5,
             }
@@ -612,7 +596,7 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         <Text
           style={
             Object {
-              "color": "#ff9900",
+              "color": "#6D3CC7",
               "fontSize": 20,
               "fontWeight": "bold",
               "marginTop": 5,
@@ -624,7 +608,7 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         <Text
           style={
             Object {
-              "color": "white",
+              "color": "#172033",
               "fontSize": 20,
               "marginBottom": 5,
             }
@@ -672,10 +656,10 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         onStartShouldSetResponder={[Function]}
         style={
           Object {
-            "backgroundColor": "rgba(255, 255, 255, 0.08)",
-            "borderColor": "transparent",
-            "borderRadius": 10,
-            "borderWidth": 2,
+            "backgroundColor": "#FFFFFF",
+            "borderColor": "#D4DDE9",
+            "borderRadius": 8,
+            "borderWidth": 3,
             "marginBottom": 16,
             "opacity": 1,
             "padding": 24,
@@ -685,22 +669,28 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
       >
         <Text
           style={
-            Object {
-              "color": "white",
-              "fontSize": 30,
-              "fontWeight": "bold",
-              "marginBottom": 6,
-            }
+            Array [
+              Object {
+                "color": "#172033",
+                "fontSize": 30,
+                "fontWeight": "bold",
+                "marginBottom": 6,
+              },
+              false,
+            ]
           }
         >
           Feature Actions
         </Text>
         <Text
           style={
-            Object {
-              "color": "#aaaaaa",
-              "fontSize": 20,
-            }
+            Array [
+              Object {
+                "color": "#5B687B",
+                "fontSize": 20,
+              },
+              false,
+            ]
           }
         >
           Trigger each supported SDK feature one action at a time
@@ -736,10 +726,10 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         onStartShouldSetResponder={[Function]}
         style={
           Object {
-            "backgroundColor": "rgba(255, 255, 255, 0.08)",
-            "borderColor": "transparent",
-            "borderRadius": 10,
-            "borderWidth": 2,
+            "backgroundColor": "#FFFFFF",
+            "borderColor": "#D4DDE9",
+            "borderRadius": 8,
+            "borderWidth": 3,
             "marginBottom": 16,
             "opacity": 1,
             "padding": 24,
@@ -749,22 +739,28 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
       >
         <Text
           style={
-            Object {
-              "color": "white",
-              "fontSize": 30,
-              "fontWeight": "bold",
-              "marginBottom": 6,
-            }
+            Array [
+              Object {
+                "color": "#172033",
+                "fontSize": 30,
+                "fontWeight": "bold",
+                "marginBottom": 6,
+              },
+              false,
+            ]
           }
         >
           Feature Scenarios
         </Text>
         <Text
           style={
-            Object {
-              "color": "#aaaaaa",
-              "fontSize": 20,
-            }
+            Array [
+              Object {
+                "color": "#5B687B",
+                "fontSize": 20,
+              },
+              false,
+            ]
           }
         >
           Run supported SDK scenarios for RUM, resources, actions, and operations
@@ -800,10 +796,10 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         onStartShouldSetResponder={[Function]}
         style={
           Object {
-            "backgroundColor": "rgba(255, 255, 255, 0.08)",
-            "borderColor": "transparent",
-            "borderRadius": 10,
-            "borderWidth": 2,
+            "backgroundColor": "#FFFFFF",
+            "borderColor": "#D4DDE9",
+            "borderRadius": 8,
+            "borderWidth": 3,
             "marginBottom": 16,
             "opacity": 1,
             "padding": 24,
@@ -813,22 +809,28 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
       >
         <Text
           style={
-            Object {
-              "color": "white",
-              "fontSize": 30,
-              "fontWeight": "bold",
-              "marginBottom": 6,
-            }
+            Array [
+              Object {
+                "color": "#172033",
+                "fontSize": 30,
+                "fontWeight": "bold",
+                "marginBottom": 6,
+              },
+              false,
+            ]
           }
         >
           Network Requests
         </Text>
         <Text
           style={
-            Object {
-              "color": "#aaaaaa",
-              "fontSize": 20,
-            }
+            Array [
+              Object {
+                "color": "#5B687B",
+                "fontSize": 20,
+              },
+              false,
+            ]
           }
         >
           Make HTTP requests and inspect RUM resource tracking
@@ -864,10 +866,10 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
         onStartShouldSetResponder={[Function]}
         style={
           Object {
-            "backgroundColor": "rgba(255, 255, 255, 0.08)",
-            "borderColor": "transparent",
-            "borderRadius": 10,
-            "borderWidth": 2,
+            "backgroundColor": "#FFFFFF",
+            "borderColor": "#D4DDE9",
+            "borderRadius": 8,
+            "borderWidth": 3,
             "marginBottom": 16,
             "opacity": 1,
             "padding": 24,
@@ -877,22 +879,28 @@ exports[`Template App Snapshot tests Initial App screen 1`] = `
       >
         <Text
           style={
-            Object {
-              "color": "white",
-              "fontSize": 30,
-              "fontWeight": "bold",
-              "marginBottom": 6,
-            }
+            Array [
+              Object {
+                "color": "#172033",
+                "fontSize": 30,
+                "fontWeight": "bold",
+                "marginBottom": 6,
+              },
+              false,
+            ]
           }
         >
           RUM Views
         </Text>
         <Text
           style={
-            Object {
-              "color": "#aaaaaa",
-              "fontSize": 20,
-            }
+            Array [
+              Object {
+                "color": "#5B687B",
+                "fontSize": 20,
+              },
+              false,
+            ]
           }
         >
           Start and stop RUM views to test view lifecycle tracking

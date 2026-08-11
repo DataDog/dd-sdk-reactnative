@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {DdRum} from '@datadog/mobile-react-native-vega';
+import {colors} from '../theme';
 
 interface RumViewsScreenProps {
   onBack: () => void;
@@ -50,6 +51,7 @@ const ViewCard = ({preset, isActive, onStart, onStop}: ViewCardProps) => {
       </View>
       <Text style={viewCardStyles.cardKey}>{preset.key}</Text>
       <TouchableOpacity
+        activeOpacity={1}
         style={[
           viewCardStyles.button,
           isActive ? viewCardStyles.buttonStop : viewCardStyles.buttonStart,
@@ -58,14 +60,17 @@ const ViewCard = ({preset, isActive, onStart, onStop}: ViewCardProps) => {
         onPress={isActive ? onStop : onStart}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        testID={isActive ? `stop-${preset.key}` : `start-${preset.key}`}>
+        testID={isActive ? `stop-${preset.key}` : `start-${preset.key}`}
+      >
         <Text
           style={[
             viewCardStyles.buttonText,
             isActive
               ? viewCardStyles.buttonTextStop
               : viewCardStyles.buttonTextStart,
-          ]}>
+            focused && viewCardStyles.buttonTextFocused,
+          ]}
+        >
           {isActive ? 'Stop View' : 'Start View'}
         </Text>
       </TouchableOpacity>
@@ -85,6 +90,7 @@ const ActionButton = ({label, color, onPress, testID}: ActionButtonProps) => {
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       style={[
         actionButtonStyles.button,
         {borderColor: color},
@@ -93,8 +99,17 @@ const ActionButton = ({label, color, onPress, testID}: ActionButtonProps) => {
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      testID={testID}>
-      <Text style={[actionButtonStyles.label, {color}]}>{label}</Text>
+      testID={testID}
+    >
+      <Text
+        style={[
+          actionButtonStyles.label,
+          {color},
+          focused && actionButtonStyles.labelFocused,
+        ]}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -104,32 +119,36 @@ const actionButtonStyles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 3,
     alignItems: 'center',
     marginBottom: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.surface,
   },
   buttonFocused: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.focusSurface,
+    borderColor: colors.focus,
   },
   label: {
     fontSize: 22,
     fontWeight: 'bold',
   },
+  labelFocused: {
+    color: colors.focusText,
+  },
 });
 
 const viewCardStyles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
     padding: 18,
     marginBottom: 14,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: colors.border,
   },
   cardActive: {
-    borderColor: '#44bb44',
-    backgroundColor: 'rgba(68, 187, 68, 0.1)',
+    borderColor: colors.success,
+    backgroundColor: colors.successSurface,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -143,18 +162,18 @@ const viewCardStyles = StyleSheet.create({
     marginRight: 10,
   },
   dotActive: {
-    backgroundColor: '#44bb44',
+    backgroundColor: colors.success,
   },
   dotInactive: {
-    backgroundColor: '#555555',
+    backgroundColor: colors.textMuted,
   },
   cardName: {
-    color: 'white',
+    color: colors.text,
     fontSize: 26,
     fontWeight: 'bold',
   },
   cardKey: {
-    color: '#888888',
+    color: colors.textSecondary,
     fontSize: 18,
     marginBottom: 12,
     marginLeft: 20,
@@ -163,30 +182,33 @@ const viewCardStyles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 6,
+    borderWidth: 3,
     alignItems: 'center',
   },
   buttonStart: {
-    backgroundColor: 'rgba(255, 153, 0, 0.15)',
-    borderWidth: 1,
-    borderColor: '#ff9900',
+    backgroundColor: colors.focusSoft,
+    borderColor: colors.focus,
   },
   buttonStop: {
-    backgroundColor: 'rgba(255, 68, 68, 0.15)',
-    borderWidth: 1,
-    borderColor: '#ff4444',
+    backgroundColor: colors.errorSurface,
+    borderColor: colors.error,
   },
   buttonFocused: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: colors.focus,
+    backgroundColor: colors.focusSurface,
   },
   buttonText: {
     fontSize: 20,
     fontWeight: 'bold',
   },
   buttonTextStart: {
-    color: '#ff9900',
+    color: colors.focus,
   },
   buttonTextStop: {
-    color: '#ff4444',
+    color: colors.error,
+  },
+  buttonTextFocused: {
+    color: colors.focusText,
   },
 });
 
@@ -198,8 +220,8 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
     async (key: string, name: string) => {
       if (activeView) {
         await DdRum.stopView(activeView, {});
-        setViews(prev =>
-          prev.map(v =>
+        setViews((prev) =>
+          prev.map((v) =>
             v.key === activeView
               ? {
                   ...v,
@@ -213,14 +235,14 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
 
       await DdRum.startView(key, name, {});
       setActiveView(key);
-      setViews(prev => [
+      setViews((prev) => [
         {
           key,
           name,
           startedAt: new Date().toLocaleTimeString(),
           isActive: true,
         },
-        ...prev.filter(v => v.key !== key || !v.isActive),
+        ...prev.filter((v) => v.key !== key || !v.isActive),
       ]);
     },
     [activeView],
@@ -230,8 +252,8 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
     async (key: string) => {
       if (activeView === key) {
         await DdRum.stopView(key, {});
-        setViews(prev =>
-          prev.map(v =>
+        setViews((prev) =>
+          prev.map((v) =>
             v.key === key && v.isActive
               ? {
                   ...v,
@@ -252,7 +274,7 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
       await DdRum.startView(preset.key, preset.name, {
         source: 'full-cycle-test',
       });
-      setViews(prev => [
+      setViews((prev) => [
         {
           key: preset.key,
           name: preset.name,
@@ -262,11 +284,11 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
         ...prev,
       ]);
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       await DdRum.stopView(preset.key, {});
-      setViews(prev =>
-        prev.map(v =>
+      setViews((prev) =>
+        prev.map((v) =>
           v.key === preset.key && v.isActive
             ? {
                 ...v,
@@ -284,7 +306,7 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
     <View style={styles.container}>
       <ScrollView style={styles.sidebar}>
         <Text style={styles.title}>RUM Views</Text>
-        {VIEW_PRESETS.map(preset => (
+        {VIEW_PRESETS.map((preset) => (
           <ViewCard
             key={preset.key}
             preset={preset}
@@ -297,13 +319,13 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
         <View style={styles.actions}>
           <ActionButton
             label="Run Full Cycle"
-            color="#ff9900"
+            color={colors.focus}
             onPress={runFullCycle}
             testID="runCycle"
           />
           <ActionButton
             label="Back to Home"
-            color="#aaaaaa"
+            color={colors.textSecondary}
             onPress={onBack}
             testID="backHome"
           />
@@ -354,7 +376,7 @@ const styles = StyleSheet.create({
     paddingLeft: 60,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 50,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -364,12 +386,14 @@ const styles = StyleSheet.create({
   },
   log: {
     flex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 20,
   },
   logTitle: {
-    color: 'white',
+    color: colors.text,
     fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -378,7 +402,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyText: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 22,
     fontStyle: 'italic',
   },
@@ -387,7 +411,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: colors.border,
   },
   statusDot: {
     width: 12,
@@ -397,21 +421,21 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   dotActive: {
-    backgroundColor: '#44bb44',
+    backgroundColor: colors.success,
   },
   dotStopped: {
-    backgroundColor: '#888888',
+    backgroundColor: colors.textMuted,
   },
   logContent: {
     flex: 1,
   },
   logName: {
-    color: 'white',
+    color: colors.text,
     fontSize: 24,
     fontWeight: 'bold',
   },
   logTimes: {
-    color: '#888888',
+    color: colors.textSecondary,
     fontSize: 18,
     marginTop: 2,
   },

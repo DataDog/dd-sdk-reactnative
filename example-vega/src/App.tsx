@@ -1,5 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {StyleSheet, ImageBackground} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import {
   DdSdkReactNative,
   DdRum,
@@ -14,6 +14,8 @@ import {NetworkScreen} from './screens/NetworkScreen';
 import {RumViewsScreen} from './screens/RumViewsScreen';
 import {FeatureScenariosScreen} from './screens/FeatureScenariosScreen';
 import {FeatureActionsScreen} from './screens/FeatureActionsScreen';
+import {colors} from './theme';
+
 type Screen =
   | 'home'
   | 'network'
@@ -100,18 +102,12 @@ export const App = () => {
     }
   };
 
-  return (
-    <ImageBackground
-      source={require('./assets/background.png')}
-      style={styles.background}
-    >
-      {renderScreen()}
-    </ImageBackground>
-  );
+  return <View style={styles.background}>{renderScreen()}</View>;
 };
 
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    backgroundColor: colors.background,
   },
 });

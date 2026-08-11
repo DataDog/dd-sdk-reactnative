@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import {colors} from '../theme';
 
 interface NetworkScreenProps {
   onBack: () => void;
@@ -37,13 +38,19 @@ const EndpointButton = ({name, url, onPress, testID}: EndpointButtonProps) => {
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       style={[buttonStyles.card, focused && buttonStyles.cardFocused]}
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      testID={testID}>
-      <Text style={buttonStyles.name}>{name}</Text>
-      <Text style={buttonStyles.url}>{url}</Text>
+      testID={testID}
+    >
+      <Text style={[buttonStyles.name, focused && buttonStyles.textFocused]}>
+        {name}
+      </Text>
+      <Text style={[buttonStyles.url, focused && buttonStyles.textFocused]}>
+        {url}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -60,6 +67,7 @@ const ActionButton = ({label, color, onPress, testID}: ActionButtonProps) => {
 
   return (
     <TouchableOpacity
+      activeOpacity={1}
       style={[
         buttonStyles.action,
         {borderColor: color},
@@ -68,50 +76,63 @@ const ActionButton = ({label, color, onPress, testID}: ActionButtonProps) => {
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      testID={testID}>
-      <Text style={[buttonStyles.actionLabel, {color}]}>{label}</Text>
+      testID={testID}
+    >
+      <Text
+        style={[
+          buttonStyles.actionLabel,
+          {color},
+          focused && buttonStyles.textFocused,
+        ]}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 };
 
 const buttonStyles = StyleSheet.create({
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    borderWidth: 3,
+    borderColor: colors.border,
   },
   cardFocused: {
-    borderColor: '#ff9900',
-    backgroundColor: 'rgba(255, 153, 0, 0.12)',
+    borderColor: colors.focus,
+    backgroundColor: colors.focusSurface,
   },
   name: {
-    color: 'white',
+    color: colors.text,
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   url: {
-    color: '#888888',
+    color: colors.textSecondary,
     fontSize: 18,
   },
   action: {
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: 3,
     alignItems: 'center',
     marginBottom: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: colors.surface,
   },
   actionFocused: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.focusSurface,
+    borderColor: colors.focus,
   },
   actionLabel: {
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  textFocused: {
+    color: colors.focusText,
   },
 });
 
@@ -130,7 +151,7 @@ export const NetworkScreen = ({onBack}: NetworkScreenProps) => {
         duration,
         timestamp: new Date().toLocaleTimeString(),
       };
-      setResults(prev => [result, ...prev].slice(0, 10));
+      setResults((prev) => [result, ...prev].slice(0, 10));
     } catch (error) {
       const duration = Date.now() - start;
       const result: RequestResult = {
@@ -139,7 +160,7 @@ export const NetworkScreen = ({onBack}: NetworkScreenProps) => {
         duration,
         timestamp: new Date().toLocaleTimeString(),
       };
-      setResults(prev => [result, ...prev].slice(0, 10));
+      setResults((prev) => [result, ...prev].slice(0, 10));
     }
   }, []);
 
@@ -168,13 +189,13 @@ export const NetworkScreen = ({onBack}: NetworkScreenProps) => {
         <View style={styles.actions}>
           <ActionButton
             label={loading ? 'Running...' : 'Run All Requests'}
-            color="#ff9900"
+            color={colors.focus}
             onPress={runAllRequests}
             testID="runAll"
           />
           <ActionButton
             label="Back to Home"
-            color="#aaaaaa"
+            color={colors.textSecondary}
             onPress={onBack}
             testID="backHome"
           />
@@ -198,7 +219,8 @@ export const NetworkScreen = ({onBack}: NetworkScreenProps) => {
                     typeof result.status === 'number' && result.status < 400
                       ? styles.statusOk
                       : styles.statusError,
-                  ]}>
+                  ]}
+                >
                   {result.status}
                 </Text>
                 <Text style={styles.resultUrl} numberOfLines={1}>
@@ -226,7 +248,7 @@ const styles = StyleSheet.create({
     paddingLeft: 60,
   },
   title: {
-    color: 'white',
+    color: colors.text,
     fontSize: 50,
     fontWeight: 'bold',
     marginBottom: 10,
@@ -236,12 +258,14 @@ const styles = StyleSheet.create({
   },
   results: {
     flex: 3,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: 20,
   },
   resultsTitle: {
-    color: 'white',
+    color: colors.text,
     fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 15,
@@ -250,7 +274,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyText: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 22,
     fontStyle: 'italic',
   },
@@ -259,10 +283,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+    borderBottomColor: colors.border,
   },
   resultTime: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 20,
     marginRight: 10,
   },
@@ -273,18 +297,18 @@ const styles = StyleSheet.create({
     width: 80,
   },
   statusOk: {
-    color: '#44bb44',
+    color: colors.success,
   },
   statusError: {
-    color: '#ff4444',
+    color: colors.error,
   },
   resultUrl: {
-    color: 'white',
+    color: colors.text,
     fontSize: 20,
     flex: 1,
   },
   resultDuration: {
-    color: '#ffaa00',
+    color: colors.warning,
     fontSize: 20,
     marginLeft: 10,
   },

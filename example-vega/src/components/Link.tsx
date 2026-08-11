@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {colors} from '../theme';
 
 interface LinkProps {
   linkText: string;
@@ -13,18 +14,22 @@ export const Link = ({linkText, onPress, testID}: LinkProps) => {
   return (
     <>
       <TouchableOpacity
+        activeOpacity={1}
         style={[styles.linkContainer, focused && styles.focusedContainer]}
         onPress={() => onPress()}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        testID={testID}>
+        testID={testID}
+      >
         <View style={styles.linkTextContainer}>
           {focused ? (
             <Image source={require('../assets/focusedStar.png')} />
           ) : (
             <Image source={require('../assets/star.png')} />
           )}
-          <Text style={styles.linkText}>{linkText}</Text>
+          <Text style={[styles.linkText, focused && styles.linkTextFocused]}>
+            {linkText}
+          </Text>
         </View>
       </TouchableOpacity>
     </>
@@ -34,13 +39,14 @@ export const Link = ({linkText, onPress, testID}: LinkProps) => {
 const styles = StyleSheet.create({
   linkContainer: {
     width: 420,
-    paddingBottom: 10,
-    borderBottomWidth: 5,
-    borderBottomColor: 'transparent',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 3,
+    borderColor: 'transparent',
   },
   focusedContainer: {
-    borderBottomWidth: 5,
-    borderBottomColor: '#ff9900',
+    borderColor: colors.focus,
+    backgroundColor: colors.focusSurface,
   },
   linkTextContainer: {
     display: 'flex',
@@ -50,8 +56,11 @@ const styles = StyleSheet.create({
     width: 300,
   },
   linkText: {
-    color: 'white',
+    color: colors.text,
     fontSize: 45,
     marginLeft: 30,
+  },
+  linkTextFocused: {
+    color: colors.focusText,
   },
 });
