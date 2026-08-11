@@ -12,6 +12,7 @@ import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay.SessionReplayPrivacy
 import com.datadog.android.sessionreplay.TextAndInputPrivacy
 import com.datadog.android.sessionreplay.TouchPrivacy
+import com.datadog.reactnative.HeatmapActionHandler
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.Promise
@@ -22,7 +23,9 @@ import fr.xgouchet.elmyr.annotation.DoubleForgery
 import fr.xgouchet.elmyr.annotation.StringForgery
 import fr.xgouchet.elmyr.junit5.ForgeExtension
 import java.io.IOException
+import org.assertj.core.api.Assertions.assertThat as assertJThat
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -92,6 +95,8 @@ internal class DdSessionReplayImplementationTest {
 
     @AfterEach
     fun `tear down`() {
+        // Reset global heatmaps flag to avoid leaking state between tests
+        HeatmapActionHandler.heatmapsEnabled = false
     }
 
     @Test
@@ -178,4 +183,138 @@ internal class DdSessionReplayImplementationTest {
             .hasFieldEqualTo("startRecordingImmediately", startRecordingImmediately)
             .doesNotHaveField("customEndpointUrl")
     }
+
+    // region enableHeatmaps flag
+
+    @Test
+    fun `M set HeatmapActionHandler heatmapsEnabled to true W enable() with enableHeatmaps true`(
+        @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
+        @BoolForgery startRecordingImmediately: Boolean
+    ) {
+        // Given
+        val imagePrivacy = imagePrivacyMap.keys.random()
+        val touchPrivacy = touchPrivacyMap.keys.random()
+        val textAndInputPrivacy = inputPrivacyMap.keys.random()
+
+        // When
+        testedSessionReplay.enable(
+            replaySampleRate,
+            "",
+            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
+            startRecordingImmediately,
+            enableHeatmaps = true,
+            mockPromise
+        )
+
+        // Then
+        assertJThat(HeatmapActionHandler.heatmapsEnabled).isTrue()
+    }
+
+    @Test
+    fun `M set HeatmapActionHandler heatmapsEnabled to false W enable() with enableHeatmaps false`(
+        @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
+        @BoolForgery startRecordingImmediately: Boolean
+    ) {
+        // Given — force the flag to true first to verify it gets set back to false
+        HeatmapActionHandler.heatmapsEnabled = true
+        val imagePrivacy = imagePrivacyMap.keys.random()
+        val touchPrivacy = touchPrivacyMap.keys.random()
+        val textAndInputPrivacy = inputPrivacyMap.keys.random()
+
+        // When
+        testedSessionReplay.enable(
+            replaySampleRate,
+            "",
+            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
+            startRecordingImmediately,
+            enableHeatmaps = false,
+            mockPromise
+        )
+
+        // Then
+        assertJThat(HeatmapActionHandler.heatmapsEnabled).isFalse()
+    }
+
+    @Test
+    fun `M build config with heatmapsEnabled true W enable() with enableHeatmaps true`(
+        @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
+        @BoolForgery startRecordingImmediately: Boolean
+    ) {
+        // Given
+        val imagePrivacy = imagePrivacyMap.keys.random()
+        val touchPrivacy = touchPrivacyMap.keys.random()
+        val textAndInputPrivacy = inputPrivacyMap.keys.random()
+        val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
+
+        // When
+        testedSessionReplay.enable(
+            replaySampleRate,
+            "",
+            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
+            startRecordingImmediately,
+            enableHeatmaps = true,
+            mockPromise
+        )
+
+        // Then — heatmapsEnabled is true in the built SessionReplayConfiguration
+        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture(), any())
+        assertThat(sessionReplayConfigCaptor.firstValue)
+            .hasFieldEqualTo("heatmapsEnabled", true)
+    }
+
+    @Test
+    fun `M build config with heatmapsEnabled false W enable() with enableHeatmaps false`(
+        @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
+        @BoolForgery startRecordingImmediately: Boolean
+    ) {
+        // Given
+        val imagePrivacy = imagePrivacyMap.keys.random()
+        val touchPrivacy = touchPrivacyMap.keys.random()
+        val textAndInputPrivacy = inputPrivacyMap.keys.random()
+        val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
+
+        // When
+        testedSessionReplay.enable(
+            replaySampleRate,
+            "",
+            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
+            startRecordingImmediately,
+            enableHeatmaps = false,
+            mockPromise
+        )
+
+        // Then — heatmapsEnabled is false in the built SessionReplayConfiguration
+        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture(), any())
+        assertThat(sessionReplayConfigCaptor.firstValue)
+            .hasFieldEqualTo("heatmapsEnabled", false)
+    }
+
+    @Test
+    fun `M not set HeatmapActionHandler heatmapsEnabled W enable() throws`(
+        @DoubleForgery(min = 0.0, max = 100.0) replaySampleRate: Double,
+        @BoolForgery startRecordingImmediately: Boolean
+    ) {
+        // Given — the underlying SR provider fails before the heatmaps flag would be set
+        val imagePrivacy = imagePrivacyMap.keys.random()
+        val touchPrivacy = touchPrivacyMap.keys.random()
+        val textAndInputPrivacy = inputPrivacyMap.keys.random()
+        whenever(mockSessionReplay.enable(any(), any())) doThrow IllegalStateException("boom")
+
+        // When / Then
+        assertThrows(IllegalStateException::class.java) {
+            testedSessionReplay.enable(
+                replaySampleRate,
+                "",
+                SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
+                startRecordingImmediately,
+                enableHeatmaps = true,
+                mockPromise
+            )
+        }
+
+        // Then — heatmapsEnabled was never reached, so it stays at its default
+        assertJThat(HeatmapActionHandler.heatmapsEnabled).isFalse()
+    }
+
+    // endregion
 }

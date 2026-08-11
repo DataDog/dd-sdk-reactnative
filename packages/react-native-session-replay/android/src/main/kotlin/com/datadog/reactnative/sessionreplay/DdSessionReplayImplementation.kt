@@ -11,6 +11,7 @@ import com.datadog.android.Datadog
 import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.sessionreplay.SessionReplayConfiguration
 import com.datadog.android.sessionreplay._SessionReplayInternalProxy
+import com.datadog.reactnative.HeatmapActionHandler
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactContext
@@ -32,10 +33,9 @@ class DdSessionReplayImplementation(
      * @param customEndpoint Custom server url for sending replay data.
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
      * @param enableHeatmaps Enables heatmap identifier computation.
-     * Currently unused on Android; reserved for heatmap support.
      */
     @SuppressLint("VisibleForTests")
-    @Suppress("LongParameterList", "UnusedParameter")
+    @Suppress("LongParameterList")
     fun enable(
         replaySampleRate: Double,
         customEndpoint: String,
@@ -53,6 +53,7 @@ class DdSessionReplayImplementation(
             .setImagePrivacy(privacySettings.imagePrivacyLevel)
             .setTouchPrivacy(privacySettings.touchPrivacyLevel)
             .setTextAndInputPrivacy(privacySettings.textAndInputPrivacyLevel)
+            .setHeatmapsEnabled(enableHeatmaps)
             .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils, internalCallback))
             .let {
                 _SessionReplayInternalProxy(it).setInternalCallback(internalCallback)
@@ -63,6 +64,7 @@ class DdSessionReplayImplementation(
         }
 
         sessionReplayProvider().enable(configuration.build(), sdkCore)
+        HeatmapActionHandler.heatmapsEnabled = enableHeatmaps
 
         promise.resolve(null)
     }

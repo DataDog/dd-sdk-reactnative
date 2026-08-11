@@ -22,7 +22,10 @@ import java.util.Locale
  * The entry point to use Datadog's RUM feature.
  */
 @Suppress("TooManyFunctions")
-class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrapper()) {
+class DdRumImplementation internal constructor(
+    private val datadog: DatadogWrapper = DatadogSDKWrapper(),
+    private val heatmapActionHandler: HeatmapActionHandler = HeatmapActionHandler()
+) {
     /**
      * Start tracking a RUM View.
      * @param key The view unique key identifier.
@@ -120,11 +123,10 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
      * @param type The action type (tap, scroll, swipe, click, custom).
      * @param name The action name.
      * @param touch The native touch data for tap actions, or null for other action types.
-     * Currently unused on Android; reserved for heatmap support.
      * @param context The additional context to send.
      * @param timestampMs The timestamp when the action occurred (in milliseconds). If not provided, current timestamp will be used.
      */
-    @Suppress("LongParameterList", "UnusedParameter")
+    @Suppress("LongParameterList")
     fun addAction(
         type: String,
         name: String,
@@ -136,12 +138,28 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
         val attributes = context.toHashMap().toMutableMap().apply {
             put(RumAttributes.INTERNAL_TIMESTAMP, timestampMs.toLong())
         }
+
+        val eligibleAction = heatmapActionHandler.resolveEligibility(datadog, type, name, touch)
+        if (eligibleAction == null) {
+            addActionWithoutHeatmap(type, name, attributes)
+            promise.resolve(null)
+            return
+        }
+
+        // Resolve before dispatching heatmap work (iOS parity).
+        promise.resolve(null)
+
+        heatmapActionHandler.attachHeatmapData(eligibleAction, name, attributes) {
+            addActionWithoutHeatmap(type, name, attributes)
+        }
+    }
+
+    private fun addActionWithoutHeatmap(type: String, name: String, attributes: Map<String, Any?>) {
         datadog.getRumMonitor().addAction(
             type = type.asRumActionType(),
             name = name,
             attributes = attributes
         )
-        promise.resolve(null)
     }
 
     /**
@@ -460,6 +478,7 @@ class DdRumImplementation(private val datadog: DatadogWrapper = DatadogSDKWrappe
     }
 
     // endregion
+
     @Suppress("UndocumentedPublicClass")
     companion object {
         private const val MISSING_RESOURCE_SIZE = -1L
