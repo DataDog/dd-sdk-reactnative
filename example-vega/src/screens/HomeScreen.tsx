@@ -21,7 +21,8 @@ const MenuCard = ({title, description, onPress, testID}: MenuCardProps) => {
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      testID={testID}>
+      testID={testID}
+    >
       <Text style={cardStyles.title}>{title}</Text>
       <Text style={cardStyles.description}>{description}</Text>
     </TouchableOpacity>
@@ -72,6 +73,18 @@ export const HomeScreen = ({onNavigate}: HomeScreenProps) => {
         </View>
       </View>
       <View style={styles.menu}>
+        <MenuCard
+          title="Feature Actions"
+          description="Trigger each supported SDK feature one action at a time"
+          onPress={() => onNavigate('featureActions')}
+          testID="featureActionsLink"
+        />
+        <MenuCard
+          title="Feature Scenarios"
+          description="Run supported SDK scenarios for RUM, resources, actions, and operations"
+          onPress={() => onNavigate('featureScenarios')}
+          testID="featureScenariosLink"
+        />
         <MenuCard
           title="Network Requests"
           description="Make HTTP requests and inspect RUM resource tracking"

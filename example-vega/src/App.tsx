@@ -12,12 +12,21 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 import {HomeScreen} from './screens/HomeScreen';
 import {NetworkScreen} from './screens/NetworkScreen';
 import {RumViewsScreen} from './screens/RumViewsScreen';
-type Screen = 'home' | 'network' | 'rumViews';
+import {FeatureScenariosScreen} from './screens/FeatureScenariosScreen';
+import {FeatureActionsScreen} from './screens/FeatureActionsScreen';
+type Screen =
+  | 'home'
+  | 'network'
+  | 'rumViews'
+  | 'featureScenarios'
+  | 'featureActions';
 
 const VIEW_NAMES: Record<Screen, string> = {
   home: 'Home',
   network: 'Network Requests',
   rumViews: 'RUM Views',
+  featureScenarios: 'Feature Scenarios',
+  featureActions: 'Feature Actions',
 };
 
 export const App = () => {
@@ -82,6 +91,10 @@ export const App = () => {
         return <NetworkScreen onBack={goHome} />;
       case 'rumViews':
         return <RumViewsScreen onBack={goHome} />;
+      case 'featureScenarios':
+        return <FeatureScenariosScreen onBack={goHome} />;
+      case 'featureActions':
+        return <FeatureActionsScreen onBack={goHome} />;
       default:
         return <HomeScreen onNavigate={navigate} />;
     }
