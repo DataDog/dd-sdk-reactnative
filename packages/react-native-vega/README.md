@@ -26,7 +26,7 @@ yarn workspace @datadog/mobile-react-native-vega prepare
 ```
 
 In a consuming Vega app, install both generated tarballs together so the exact
-`@datadog/mobile-react-native@3.5.2-vega.0` dependency is satisfied by the preview
+`@datadog/mobile-react-native@3.5.4-vega.0` dependency is satisfied by the preview
 core package, not by the public `3.5.2` package.
 
 ## C++ SDK Feature Coverage

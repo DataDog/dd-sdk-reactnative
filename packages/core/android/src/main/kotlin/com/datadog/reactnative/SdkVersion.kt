@@ -7,4 +7,4 @@
 package com.datadog.reactnative
 
 // This is automatically updated by the update-version.sh script
-internal const val SDK_VERSION = "3.5.2-vega.0"
+internal const val SDK_VERSION = "3.5.4-vega.0"
