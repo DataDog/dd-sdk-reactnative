@@ -71,7 +71,7 @@ Thus, the current application bundle already contains the existing rules engine.
 ### 2.2 Expected features from upstream PR #344
 
 PR #344 is the required upstream dependency change.
-Its code head is `03cde21` as of 2026-08-11.
+Its code head is `03cde21` as of 2026-08-12.
 The branch was rebased again on 2026-08-11, so all earlier commit SHAs changed.
 The `03cde21` tree is identical to the previous `939da97` tree.
 Commits `4efb682` and `5ffffe0` now contain the previous `BigInt` and parse-error changes.
@@ -164,7 +164,7 @@ Do not depend on the parser to reject every non-canonical base64 spelling.
 PR #336 is stacked on PR #344.
 It adds the browser `DatadogOfflineProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
-Its head is `772167b` as of 2026-08-11.
+Its head is `772167b` as of 2026-08-12.
 Its merge base is the current PR #344 head, `03cde21`.
 GitHub reports both PRs as mergeable.
 PR #336 was restacked after the PR #344 rebase.
@@ -1388,6 +1388,9 @@ The new PR #344 commits update generated Node-server artifacts and browser test 
 PR #336 has no new logical behavior.
 The plan was updated on 2026-08-11 after both upstream branches were rebased again.
 Direct archive comparisons confirmed that both new head trees are identical to their previous head trees.
+The upstream state was checked again on 2026-08-12.
+PR #344 remained at `03cde21`, and PR #336 remained at `772167b`.
+The commit counts, update times, descriptions, and reviewed contracts did not change.
 
 The reviews produced these main corrections:
 
