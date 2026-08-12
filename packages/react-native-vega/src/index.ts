@@ -7,6 +7,7 @@
 // Vega-specific wrappers (use Kepler native modules)
 export { DdSdkReactNativeVega as DdSdkReactNative } from './DdSdkReactNativeVega';
 export { DdRum } from './DdRumVega';
+export { DdLogs } from './DdLogsVega';
 export { DdSdk } from './DdSdkVega';
 export { DatadogProviderVega as DatadogProvider } from './DatadogProviderVega';
 export { startHttpProxy } from './HttpProxy';

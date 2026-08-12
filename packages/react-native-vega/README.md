@@ -3,9 +3,9 @@
 This package is a proof of concept React Native bridge for Amazon Vega OS backed by
 `dd-sdk-cpp`.
 
-The native Vega module links `dd-sdk-cpp` through CMake. During development it first
-looks for a sibling checkout at `../../../dd-sdk-cpp`. If that checkout is not present,
-it fetches `https://github.com/DataDog/dd-sdk-cpp.git` at the `0.7.0` tag.
+The native Vega module links `dd-sdk-cpp` through CMake. By default it fetches
+`https://github.com/DataDog/dd-sdk-cpp.git` at the `0.7.0` tag. Pass
+`-DDatadog_SOURCE_DIR=/path/to/dd-sdk-cpp` to use a local checkout during development.
 
 Important: items listed as not implemented or not fully validated below are not known
 to be broken on Vega. They were left out because there was not enough time in this PoC
@@ -21,6 +21,7 @@ matching preview tarballs for both packages:
 yarn workspace @datadog/mobile-react-native prepare
 (cd packages/core && npm --cache /tmp/dd-sdk-reactnative-npm-cache pack)
 
+(cd packages/react-native-vega && vega build -b Release)
 yarn workspace @datadog/mobile-react-native-vega prepare
 (cd packages/react-native-vega && npm --cache /tmp/dd-sdk-reactnative-npm-cache pack)
 ```
@@ -65,6 +66,7 @@ The C++ SDK exposes these main feature areas:
 | --------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | RUM feature operations      | Wired            | `startFeatureOperation`, `succeedFeatureOperation`, and `failFeatureOperation` call the C++ operation APIs. They need more device-level validation.                                                                                                                                              |
 | Automatic resource tracking | Wired through JS | React Native resource tracking is enabled from JS and reports through the Vega RUM wrapper. The C++ manual resource APIs are implemented, and C++ RUM resources can carry trace correlation attributes, but automatic interception and distributed tracing headers need broader testing on Vega. |
+| Logging                     | Wired            | Registers C++ Logging when `logsConfiguration` is present and exports Vega `DdLogs` methods for debug, info, warn, and error events, including per-event context and attached error details. Error logs use C++ RUM-context enrichment. Device-level validation is still required.                 |
 | `clearAllData` behavior     | Best effort      | Current implementation stops and restarts the core. This is not equivalent to a fully validated storage purge API.                                                                                                                                                                               |
 
 ### Not Wired Yet
@@ -73,7 +75,6 @@ The C++ SDK exposes these main feature areas:
 | -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | User info                  | Not wired             | `dd-sdk-cpp` exposes `Core::SetUserInfo()`, `AddUserExtraInfo()`, and `ClearUserInfo()`, but the Vega native methods are currently no-ops.                                      |
 | Account info               | Not wired             | `dd-sdk-cpp` exposes account APIs, but the Vega native methods are currently no-ops.                                                                                            |
-| Logging                    | Not wired             | `dd-sdk-cpp` exposes `Logging` and `Logger`, but the Vega package does not register Logging or export `DdLogs` yet.                                                             |
 | Crash Reporting            | Not wired             | `dd-sdk-cpp` exposes `CrashReporting`, but the Vega build currently uses `DD_CRASH_MODE=noop` and does not register crash reporting.                                            |
 | Failed resource completion | Not wired             | `dd-sdk-cpp` exposes `Rum::StopResourceWithError()`, but the Vega bridge currently only maps successful `stopResource` plus separate `addError`.                                |
 | Feature flag evaluations   | Not backed by C++ API | The React Native compatibility method exists, but `dd-sdk-cpp` does not expose a matching public feature flag API.                                                              |
