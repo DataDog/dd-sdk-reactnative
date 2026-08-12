@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-navigation",
-    "version": "3.5.4",
+    "version": "3.5.4-vega.0",
     "description": "A client-side React Native module to interact with Datadog",
     "keywords": [
         "datadog",
@@ -20,8 +20,11 @@
     "license": "Apache-2.0",
     "main": "lib/commonjs/index",
     "files": [
-        "src/**",
-        "lib/**"
+        "src/index.tsx",
+        "src/rum/**",
+        "lib/commonjs/**",
+        "lib/module/**",
+        "lib/typescript/react-navigation/**"
     ],
     "types": "lib/typescript/react-navigation/src/index.d.ts",
     "react-native": "src/index",
@@ -47,7 +50,7 @@
         "react-native-safe-area-context": "3.1.9"
     },
     "peerDependencies": {
-        "@datadog/mobile-react-native": "^3.0.0",
+        "@datadog/mobile-react-native": "^3.0.0 || 3.5.4-vega.0",
         "react": ">=16.13.1",
         "react-native": ">=0.63.4 <1.0"
     },

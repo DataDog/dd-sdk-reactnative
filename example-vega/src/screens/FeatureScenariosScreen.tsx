@@ -17,6 +17,7 @@ import {
 import {colors} from '../theme';
 
 interface FeatureScenariosScreenProps {
+  trackedViewKey: string;
   onBack: () => void;
 }
 
@@ -241,6 +242,7 @@ const actionButtonStyles = StyleSheet.create({
 });
 
 export const FeatureScenariosScreen = ({
+  trackedViewKey,
   onBack,
 }: FeatureScenariosScreenProps) => {
   const [logs, setLogs] = useState<ScenarioLog[]>([]);
@@ -312,7 +314,7 @@ export const FeatureScenariosScreen = ({
             scenario: 'view-lifecycle',
             completed: true,
           });
-          await DdRum.startView('featureScenarios', 'Feature Scenarios', {
+          await DdRum.startView(trackedViewKey, 'Feature Scenarios', {
             scenario: 'view-lifecycle',
             restoredAfterTest: true,
           });
@@ -463,7 +465,7 @@ export const FeatureScenariosScreen = ({
         },
       },
     ],
-    [],
+    [trackedViewKey],
   );
 
   const executeScenario = useCallback(

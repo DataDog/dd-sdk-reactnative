@@ -10,6 +10,7 @@ import {DdRum} from '@datadog/mobile-react-native-vega';
 import {colors} from '../theme';
 
 interface RumViewsScreenProps {
+  trackedViewKey: string;
   onBack: () => void;
 }
 
@@ -212,7 +213,10 @@ const viewCardStyles = StyleSheet.create({
   },
 });
 
-export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
+export const RumViewsScreen = ({
+  trackedViewKey,
+  onBack,
+}: RumViewsScreenProps) => {
   const [views, setViews] = useState<ViewEntry[]>([]);
   const [activeView, setActiveView] = useState<string | null>(null);
 
@@ -252,7 +256,7 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
     async (key: string) => {
       if (activeView === key) {
         await DdRum.stopView(key, {});
-        await DdRum.startView('rumViews', 'RUM Views', {
+        await DdRum.startView(trackedViewKey, 'RUM Views', {
           source: 'rum-views',
           restoredAfterTest: true,
         });
@@ -270,7 +274,7 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
         setActiveView(null);
       }
     },
-    [activeView],
+    [activeView, trackedViewKey],
   );
 
   const runFullCycle = useCallback(async () => {
@@ -303,12 +307,12 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
         ),
       );
     }
-    await DdRum.startView('rumViews', 'RUM Views', {
+    await DdRum.startView(trackedViewKey, 'RUM Views', {
       source: 'rum-views',
       restoredAfterTest: true,
     });
     setActiveView(null);
-  }, []);
+  }, [trackedViewKey]);
 
   return (
     <View style={styles.container}>

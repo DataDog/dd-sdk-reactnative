@@ -17,6 +17,7 @@ import {
 import {colors} from '../theme';
 
 interface FeatureActionsScreenProps {
+  trackedViewKey: string;
   onBack: () => void;
 }
 
@@ -186,7 +187,10 @@ const utilityButtonStyles = StyleSheet.create({
   },
 });
 
-export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
+export const FeatureActionsScreen = ({
+  trackedViewKey,
+  onBack,
+}: FeatureActionsScreenProps) => {
   const [logs, setLogs] = useState<ActionLog[]>([]);
   const [runningAction, setRunningAction] = useState<string | null>(null);
   const [activeViewKey, setActiveViewKey] = useState<string | null>(null);
@@ -331,7 +335,7 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
               source: 'feature-actions',
               activeViewKnown: Boolean(activeViewKey),
             });
-            await DdRum.startView('featureActions', 'Feature Actions', {
+            await DdRum.startView(trackedViewKey, 'Feature Actions', {
               source: 'feature-actions',
               restoredAfterTest: true,
             });
@@ -392,7 +396,7 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
           testID: 'action-stop-session',
           run: async () => {
             await DdRum.stopSession();
-            await DdRum.startView('featureActions', 'Feature Actions', {
+            await DdRum.startView(trackedViewKey, 'Feature Actions', {
               source: 'feature-actions',
               restoredAfterSessionStop: true,
             });
