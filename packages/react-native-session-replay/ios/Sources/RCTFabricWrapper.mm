@@ -14,37 +14,81 @@
 #endif
 
 namespace rct = facebook::react;
+typedef facebook::react::Props::Shared (*RCTFabricWrapperPropsIMP)(id, SEL);
 #endif
 
 @implementation RCTFabricWrapper
+
+#if RCT_NEW_ARCH_ENABLED
+/**
+ * `RCTParagraphComponentView` is compiled into the app (it's not a lazily-loaded plugin), so
+ * the class is resolvable as soon as this method can be called at all — it's safe to resolve
+ * it once and cache it rather than paying for an `NSClassFromString` lookup on every view
+ * checked during snapshotting.
+ */
++ (nullable Class)paragraphComponentViewClass {
+    static Class sClass;
+    static dispatch_once_t sOnceToken;
+    dispatch_once(&sOnceToken, ^{
+        sClass = NSClassFromString(@"RCTParagraphComponentView");
+    });
+    return sClass;
+}
+
+/**
+ * `-props` is declared on RCTComponentViewProtocol (not on RCTParagraphComponentView itself),
+ * so its selector is looked up dynamically too rather than relying on the protocol's header.
+ */
++ (SEL)propsSelector {
+    static SEL sSelector;
+    static dispatch_once_t sOnceToken;
+    dispatch_once(&sOnceToken, ^{
+        sSelector = NSSelectorFromString(@"props");
+    });
+    return sSelector;
+}
+
+/**
+ * `-props` returns a C++ shared_ptr, so it can't be reached through KVC — its IMP is looked up
+ * and cached once instead, since it's the same for every instance of the (fixed) class above.
+ */
++ (nullable RCTFabricWrapperPropsIMP)propsIMP {
+    static RCTFabricWrapperPropsIMP sImp;
+    static dispatch_once_t sOnceToken;
+    dispatch_once(&sOnceToken, ^{
+        Class paragraphComponentViewClass = [self paragraphComponentViewClass];
+        SEL propsSelector = [self propsSelector];
+        if (paragraphComponentViewClass != nil && [paragraphComponentViewClass instancesRespondToSelector:propsSelector]) {
+            sImp = (RCTFabricWrapperPropsIMP)[paragraphComponentViewClass instanceMethodForSelector:propsSelector];
+        }
+    });
+    return sImp;
+}
+#endif
+
 /**
  * Extracts the text properties from the given UIView when the view is of type RCTParagraphComponentView, returns nil otherwise.
  *
  * This deliberately avoids importing RCTParagraphComponentView.h / RCTComponentViewProtocol.h:
  * both live in the React-RCTFabric pod, which React Native's "prebuilt core" CocoaPods facade
  * (RN >= 0.87) ships without public headers, aside from a narrow allowlist that doesn't cover
- * either of them. The class and its `-props` accessor are resolved dynamically instead.
+ * either of them. The class and its `-props` accessor are resolved dynamically instead, and
+ * cached (see paragraphComponentViewClass / propsIMP above) since this runs on every view
+ * checked during snapshotting.
  */
 - (nullable RCTTextPropertiesWrapper*)tryToExtractTextPropertiesFromView:(UIView *)view {
     #if RCT_NEW_ARCH_ENABLED
-    Class paragraphComponentViewClass = NSClassFromString(@"RCTParagraphComponentView");
+    Class paragraphComponentViewClass = [RCTFabricWrapper paragraphComponentViewClass];
     if (paragraphComponentViewClass == nil || ![view isKindOfClass:paragraphComponentViewClass]) {
         return nil;
     }
 
-    // `-props` is declared on RCTComponentViewProtocol (not on RCTParagraphComponentView
-    // itself) and returns a C++ shared_ptr, so it can't be reached through KVC — look it up
-    // and call it directly via its IMP instead of importing the protocol's header.
-    SEL propsSelector = NSSelectorFromString(@"props");
-    if (![view respondsToSelector:propsSelector]) {
-        return nil;
-    }
-    typedef facebook::react::Props::Shared (*PropsIMP)(id, SEL);
-    PropsIMP getProps = (PropsIMP)[view methodForSelector:propsSelector];
+    RCTFabricWrapperPropsIMP getProps = [RCTFabricWrapper propsIMP];
     if (getProps == NULL) {
         return nil;
     }
-    facebook::react::Props::Shared sharedProps = getProps(view, propsSelector);
+
+    facebook::react::Props::Shared sharedProps = getProps(view, [RCTFabricWrapper propsSelector]);
     const rct::ParagraphProps* props = (rct::ParagraphProps*)sharedProps.get();
     if (props == nil) {
         return nil;
