@@ -6,6 +6,7 @@
 
 import { NativeEventEmitter } from 'react-native';
 
+import { trackInternalResource } from './InternalResourceTracking';
 import NativeDdSdk from './turbo-modules/NativeDdSdk';
 
 /**
@@ -40,12 +41,17 @@ export function startHttpProxy(): () => void {
                     headersInit[key] = value;
                 }
 
-                const response = await fetch(event.url, {
-                    method: 'POST',
-                    headers: headersInit,
-                    body: event.body
-                });
-                statusCode = response.status;
+                const stopTracking = trackInternalResource(event.url);
+                try {
+                    const response = await fetch(event.url, {
+                        method: 'POST',
+                        headers: headersInit,
+                        body: event.body
+                    });
+                    statusCode = response.status;
+                } finally {
+                    stopTracking();
+                }
             } catch (error) {
                 // Network errors are reported as status 0 so C++ treats them as retryable.
                 statusCode = 0;

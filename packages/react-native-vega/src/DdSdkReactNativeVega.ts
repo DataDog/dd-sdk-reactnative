@@ -49,6 +49,7 @@ import { InteractionManager } from 'react-native';
 
 import { DdRum as VegaDdRum } from './DdRumVega';
 import { startHttpProxy } from './HttpProxy';
+import { patchCoreRumResourceTracking } from './InternalResourceTracking';
 import NativeDdRum from './turbo-modules/NativeDdRum';
 import NativeDdSdk from './turbo-modules/NativeDdSdk';
 
@@ -545,6 +546,7 @@ export class DdSdkReactNativeVega {
         const rumSingleton = CoreDdRum as any;
         if (rumSingleton) {
             rumSingleton.nativeRum = NativeDdRum;
+            patchCoreRumResourceTracking(rumSingleton);
         }
     }
 }

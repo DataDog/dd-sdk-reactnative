@@ -312,6 +312,10 @@ export const FeatureScenariosScreen = ({
             scenario: 'view-lifecycle',
             completed: true,
           });
+          await DdRum.startView('featureScenarios', 'Feature Scenarios', {
+            scenario: 'view-lifecycle',
+            restoredAfterTest: true,
+          });
           log('View Lifecycle', `Started and stopped ${viewKey}`, 'success');
         },
       },
@@ -320,6 +324,7 @@ export const FeatureScenariosScreen = ({
         title: 'RUM Actions',
         detail: 'Long custom action and one-shot tap action',
         run: async (log) => {
+          await wait(150);
           await DdRum.startAction(
             RumActionType.CUSTOM,
             'Scenario Long Action',
@@ -333,6 +338,10 @@ export const FeatureScenariosScreen = ({
             completed: true,
           });
           await DdRum.addAction(RumActionType.TAP, 'Scenario Tap Action', {
+            scenario: 'actions',
+          });
+          await wait(150);
+          await DdRum.stopAction(RumActionType.TAP, 'Scenario Tap Action', {
             scenario: 'actions',
           });
           log('RUM Actions', 'Sent long and one-shot actions', 'success');
