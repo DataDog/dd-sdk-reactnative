@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "datadog/core.hpp"
+#include "datadog/logging.hpp"
 #include "datadog/rum.hpp"
 
 using namespace com::amazon::kepler::turbomodule;
@@ -66,6 +67,20 @@ const JSObject* getObjectFromJSObject(
         }
     }
     return nullptr;
+}
+
+bool getBoolFromJSObject(
+    const JSObject& obj,
+    const std::string& key,
+    bool defaultVal
+) {
+    auto it = obj.find(key);
+    if (it != obj.end()) {
+        if (auto* value = std::get_if<bool>(&it->second)) {
+            return *value;
+        }
+    }
+    return defaultVal;
 }
 
 }  // anonymous namespace
@@ -210,6 +225,27 @@ com::amazon::kepler::turbomodule::Promise DdSdk::initialize(
                 }
             }
 
+            const JSObject* logsConfiguration =
+                getObjectFromJSObject(configuration, "logsConfiguration");
+            if (logsConfiguration != nullptr) {
+                auto logging = datadog::Logging::Register(core);
+                if (logging) {
+                    datadog::LoggerConfig loggerConfig;
+                    loggerConfig.SetName("react-native");
+                    loggerConfig.SetEnrichWithRumContext(
+                        getBoolFromJSObject(
+                            *logsConfiguration, "bundleLogsWithRum", true));
+
+                    auto logger = logging->CreateLogger(loggerConfig);
+                    auto& state =
+                        datadog_rn_vega::DatadogGlobalState::getInstance();
+                    state.setLogging(logging);
+                    if (logger) {
+                        state.setLogger(logger);
+                    }
+                }
+            }
+
             // Now Start the Core (after features are registered)
             core->Start();
             promise->resolve(true);
@@ -223,11 +259,17 @@ com::amazon::kepler::turbomodule::Promise DdSdk::addAttribute(
 ) {
     return Promise([key, value](const std::shared_ptr<Promise>& promise) {
         std::thread([promise, key, value]() {
-            auto rum = datadog_rn_vega::DatadogGlobalState::getInstance().getRum();
+            auto& state = datadog_rn_vega::DatadogGlobalState::getInstance();
+            auto rum = state.getRum();
             if (rum) {
                 rum->AddAttribute(
                     key, datadog_rn_vega::jsWrappedValueToAttribute(value)
                 );
+            }
+            auto logging = state.getLogging();
+            if (logging) {
+                logging->AddAttribute(
+                    key, datadog_rn_vega::jsWrappedValueToAttribute(value));
             }
             promise->resolve(true);
         }).detach();
@@ -237,9 +279,14 @@ com::amazon::kepler::turbomodule::Promise DdSdk::addAttribute(
 com::amazon::kepler::turbomodule::Promise DdSdk::removeAttribute(std::string key) {
     return Promise([key](const std::shared_ptr<Promise>& promise) {
         std::thread([promise, key]() {
-            auto rum = datadog_rn_vega::DatadogGlobalState::getInstance().getRum();
+            auto& state = datadog_rn_vega::DatadogGlobalState::getInstance();
+            auto rum = state.getRum();
             if (rum) {
                 rum->RemoveAttribute(key);
+            }
+            auto logging = state.getLogging();
+            if (logging) {
+                logging->RemoveAttribute(key);
             }
             promise->resolve(true);
         }).detach();
@@ -251,13 +298,22 @@ com::amazon::kepler::turbomodule::Promise DdSdk::addAttributes(
 ) {
     return Promise([attributes](const std::shared_ptr<Promise>& promise) {
         std::thread([promise, attributes]() {
-            auto rum = datadog_rn_vega::DatadogGlobalState::getInstance().getRum();
+            auto& state = datadog_rn_vega::DatadogGlobalState::getInstance();
+            auto rum = state.getRum();
             if (rum) {
                 for (const auto& entry : attributes) {
                     rum->AddAttribute(
                         entry.first,
                         datadog_rn_vega::jsValueToAttribute(entry.second)
                     );
+                }
+            }
+            auto logging = state.getLogging();
+            if (logging) {
+                for (const auto& entry : attributes) {
+                    logging->AddAttribute(
+                        entry.first,
+                        datadog_rn_vega::jsValueToAttribute(entry.second));
                 }
             }
             promise->resolve(true);
@@ -270,10 +326,17 @@ com::amazon::kepler::turbomodule::Promise DdSdk::removeAttributes(
 ) {
     return Promise([keys](const std::shared_ptr<Promise>& promise) {
         std::thread([promise, keys]() {
-            auto rum = datadog_rn_vega::DatadogGlobalState::getInstance().getRum();
+            auto& state = datadog_rn_vega::DatadogGlobalState::getInstance();
+            auto rum = state.getRum();
             if (rum) {
                 for (const auto& key : keys) {
                     rum->RemoveAttribute(key);
+                }
+            }
+            auto logging = state.getLogging();
+            if (logging) {
+                for (const auto& key : keys) {
+                    logging->RemoveAttribute(key);
                 }
             }
             promise->resolve(true);

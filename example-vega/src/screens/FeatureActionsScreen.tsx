@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import {
+  DdLogs,
   DdRum,
   DdSdkReactNative,
   ErrorSource,
@@ -443,11 +444,9 @@ export const FeatureActionsScreen = ({
               source: 'feature-actions',
             });
             await wait(150);
-            await DdRum.stopAction(
-              RumActionType.TAP,
-              'User Triggered Tap',
-              {source: 'feature-actions'},
-            );
+            await DdRum.stopAction(RumActionType.TAP, 'User Triggered Tap', {
+              source: 'feature-actions',
+            });
             return 'Sent one-shot tap action';
           },
         },
@@ -507,6 +506,68 @@ export const FeatureActionsScreen = ({
             );
             await response.text();
             return `Fetched resource with HTTP ${response.status}`;
+          },
+        },
+      ],
+    },
+    {
+      title: 'Logs',
+      actions: [
+        {
+          label: 'Send Debug Log',
+          testID: 'action-log-debug',
+          run: async () => {
+            await DdLogs.debug('User triggered Vega debug log', {
+              source: 'feature-actions',
+              levelTested: 'debug',
+              timestamp: Date.now(),
+            });
+            return 'Sent a debug log';
+          },
+        },
+        {
+          label: 'Send Info Log',
+          testID: 'action-log-info',
+          run: async () => {
+            await DdLogs.info('User triggered Vega info log', {
+              source: 'feature-actions',
+              levelTested: 'info',
+              timestamp: Date.now(),
+            });
+            return 'Sent an info log';
+          },
+        },
+        {
+          label: 'Send Warning Log',
+          testID: 'action-log-warn',
+          run: async () => {
+            await DdLogs.warn('User triggered Vega warning log', {
+              source: 'feature-actions',
+              levelTested: 'warn',
+              timestamp: Date.now(),
+            });
+            return 'Sent a warning log';
+          },
+        },
+        {
+          label: 'Send Error Log',
+          testID: 'action-log-error',
+          run: async () => {
+            const error = new Error('User triggered Vega error log details');
+            await DdLogs.error(
+              'User triggered Vega error log',
+              'VegaSampleError',
+              error.message,
+              error.stack || 'No stack available',
+              {
+                source: 'feature-actions',
+                levelTested: 'error',
+                timestamp: Date.now(),
+              },
+              'vega-user-triggered-log-error',
+              ErrorSource.CUSTOM,
+            );
+            return 'Sent an error log with error details';
           },
         },
       ],
@@ -622,6 +683,10 @@ export const FeatureActionsScreen = ({
     appendLog('Quick Smoke', 'Started', 'info');
     try {
       await DdSdkReactNative.addAttribute('vega.smoke', true);
+      await DdLogs.info('Vega quick smoke log', {
+        source: 'feature-actions',
+        scenario: 'quick-smoke',
+      });
       await wait(150);
       await DdRum.addAction(RumActionType.TAP, 'Quick Smoke Tap', {});
       const resourceKey = makeKey('quick-smoke-resource');
@@ -635,7 +700,7 @@ export const FeatureActionsScreen = ({
       await DdRum.stopResource(resourceKey, 200, 'fetch', 128, {});
       appendLog(
         'Quick Smoke',
-        'Sent attribute, action, and resource',
+        'Sent attribute, log, action, and resource',
         'success',
       );
     } catch (error) {

@@ -55,6 +55,20 @@ jest.mock('../src/turbo-modules/NativeDdRum', () => ({
     }
 }));
 
+jest.mock('../src/turbo-modules/NativeDdLogs', () => ({
+    __esModule: true,
+    default: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debugWithError: jest.fn(),
+        infoWithError: jest.fn(),
+        warnWithError: jest.fn(),
+        errorWithError: jest.fn()
+    }
+}));
+
 import * as VegaExports from '../src/index';
 
 describe('Vega package exports', () => {
@@ -69,6 +83,12 @@ describe('Vega package exports', () => {
         expect(VegaExports.DdRum.startView).toBeDefined();
         expect(VegaExports.DdRum.stopView).toBeDefined();
         expect(VegaExports.DdRum.addError).toBeDefined();
+    });
+
+    it('exports DdLogs (Vega wrapper)', () => {
+        expect(VegaExports.DdLogs).toBeDefined();
+        expect(VegaExports.DdLogs.debug).toBeDefined();
+        expect(VegaExports.DdLogs.error).toBeDefined();
     });
 
     it('exports DatadogProvider (Vega wrapper)', () => {
@@ -95,8 +115,7 @@ describe('Vega package exports', () => {
         expect(VegaExports.startHttpProxy).toBeDefined();
     });
 
-    it('does NOT export DdLogs, DdTrace, DdFlags', () => {
-        expect((VegaExports as any).DdLogs).toBeUndefined();
+    it('does NOT export DdTrace or DdFlags', () => {
         expect((VegaExports as any).DdTrace).toBeUndefined();
         expect((VegaExports as any).DdFlags).toBeUndefined();
     });

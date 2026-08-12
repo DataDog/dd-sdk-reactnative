@@ -26,11 +26,13 @@
         "lib/module/**",
         "lib/typescript/react-native-vega/**",
         "dist/kepler/**",
+        "!dist/kepler/*-debug/**",
         "kepler/AutoLinkInit.cpp",
         "kepler/turbo-modules/*.cpp",
         "kepler/turbo-modules/*.h",
         "kepler/turbo-modules/generated/*.cpp",
         "kepler/turbo-modules/generated/*.h",
+        "scripts/prepare-package.js",
         "CMakeLists.txt",
         "react-native.config.js",
         "!build/**",
@@ -47,9 +49,11 @@
         "test": "jest",
         "lint": "eslint .",
         "prepare": "rm -rf lib && yarn bob build",
+        "prepack": "node scripts/prepare-package.js",
         "codegen:sdk": "npx @amazon-devices/keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdSdk.ts -o kepler/turbo-modules/ --namespace DdSdkTurboModule --className DdSdk",
         "codegen:rum": "npx @amazon-devices/keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdRum.ts -o kepler/turbo-modules/ --namespace DdRumTurboModule --className DdRum",
-        "codegen": "npm run codegen:sdk && npm run codegen:rum"
+        "codegen:logs": "npx @amazon-devices/keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdLogs.ts -o kepler/turbo-modules/ --namespace DdLogsTurboModule --className DdLogs",
+        "codegen": "npm run codegen:sdk && npm run codegen:rum && npm run codegen:logs"
     },
     "dependencies": {
         "@amazon-devices/keplerscript-turbomodule-api": "*"
