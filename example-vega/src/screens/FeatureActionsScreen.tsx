@@ -331,8 +331,12 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
               source: 'feature-actions',
               activeViewKnown: Boolean(activeViewKey),
             });
+            await DdRum.startView('featureActions', 'Feature Actions', {
+              source: 'feature-actions',
+              restoredAfterTest: true,
+            });
             setActiveViewKey(null);
-            return `Stopped ${key}`;
+            return `Stopped ${key} and restored Feature Actions`;
           },
         },
         {
@@ -340,6 +344,11 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
           testID: 'action-add-view-attribute',
           run: async () => {
             await DdRum.addViewAttribute('vega.view.single', 'added');
+            await DdRum.addAction(
+              RumActionType.CUSTOM,
+              'View Single Attribute Added',
+              {source: 'feature-actions'},
+            );
             return 'Added vega.view.single';
           },
         },
@@ -359,6 +368,11 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
               'vega.view.batch': true,
               'vega.view.time': Date.now(),
             });
+            await DdRum.addAction(
+              RumActionType.CUSTOM,
+              'View Multiple Attributes Added',
+              {source: 'feature-actions'},
+            );
             return 'Added batch view attributes';
           },
         },
@@ -378,7 +392,11 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
           testID: 'action-stop-session',
           run: async () => {
             await DdRum.stopSession();
-            return 'Requested RUM session stop';
+            await DdRum.startView('featureActions', 'Feature Actions', {
+              source: 'feature-actions',
+              restoredAfterSessionStop: true,
+            });
+            return 'Stopped the session and restored Feature Actions';
           },
         },
       ],
@@ -390,6 +408,7 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
           label: 'Start Action',
           testID: 'action-start-action',
           run: async () => {
+            await wait(150);
             const name = makeKey('User Triggered Action');
             await DdRum.startAction(RumActionType.CUSTOM, name, {
               source: 'feature-actions',
@@ -415,10 +434,29 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
           label: 'Add Action',
           testID: 'action-add-action',
           run: async () => {
+            await wait(150);
             await DdRum.addAction(RumActionType.TAP, 'User Triggered Tap', {
               source: 'feature-actions',
             });
+            await wait(150);
+            await DdRum.stopAction(
+              RumActionType.TAP,
+              'User Triggered Tap',
+              {source: 'feature-actions'},
+            );
             return 'Sent one-shot tap action';
+          },
+        },
+        {
+          label: 'Add Custom Action',
+          testID: 'action-add-custom-action',
+          run: async () => {
+            await DdRum.addAction(
+              RumActionType.CUSTOM,
+              'User Triggered Custom Action',
+              {source: 'feature-actions'},
+            );
+            return 'Sent one-shot custom action';
           },
         },
       ],
@@ -580,6 +618,7 @@ export const FeatureActionsScreen = ({onBack}: FeatureActionsScreenProps) => {
     appendLog('Quick Smoke', 'Started', 'info');
     try {
       await DdSdkReactNative.addAttribute('vega.smoke', true);
+      await wait(150);
       await DdRum.addAction(RumActionType.TAP, 'Quick Smoke Tap', {});
       const resourceKey = makeKey('quick-smoke-resource');
       await DdRum.startResource(

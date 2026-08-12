@@ -33,6 +33,7 @@ const VIEW_NAMES: Record<Screen, string> = {
 
 export const App = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const datadogInitializationRef = useRef<Promise<void> | null>(null);
   const currentViewRef = useRef<Screen | null>(null);
 
   useEffect(() => {
@@ -64,19 +65,39 @@ export const App = () => {
         traceConfiguration: {},
       },
     );
-    DdSdkReactNative.initialize(datadogConfig);
+    datadogInitializationRef.current = DdSdkReactNative.initialize(
+      datadogConfig,
+    );
   }, []);
 
   // Track RUM views on screen changes
   useEffect(() => {
+    const initialization = datadogInitializationRef.current;
+    if (!initialization) {
+      return;
+    }
+
+    let isCancelled = false;
     const trackView = async () => {
+      await initialization;
+      if (isCancelled) {
+        return;
+      }
+
       if (currentViewRef.current) {
         await DdRum.stopView(currentViewRef.current, {});
+        if (isCancelled) {
+          return;
+        }
       }
       await DdRum.startView(currentScreen, VIEW_NAMES[currentScreen], {});
       currentViewRef.current = currentScreen;
     };
     trackView();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [currentScreen]);
 
   const navigate = useCallback((screen: string) => {

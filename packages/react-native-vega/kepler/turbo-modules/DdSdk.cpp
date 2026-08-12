@@ -226,7 +226,7 @@ com::amazon::kepler::turbomodule::Promise DdSdk::addAttribute(
             auto rum = datadog_rn_vega::DatadogGlobalState::getInstance().getRum();
             if (rum) {
                 rum->AddAttribute(
-                    key, datadog_rn_vega::jsValueToAttribute(value)
+                    key, datadog_rn_vega::jsWrappedValueToAttribute(value)
                 );
             }
             promise->resolve(true);

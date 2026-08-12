@@ -1,3 +1,14 @@
 {
-  "extends": "../../tsconfig"
+  "extends": "../../tsconfig",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "paths": {
+      "@datadog/mobile-react-native": [
+        "./packages/core/src"
+      ],
+      "@datadog/mobile-react-native/*": [
+        "./packages/core/src/*"
+      ]
+    }
+  }
 }

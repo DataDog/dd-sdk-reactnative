@@ -58,4 +58,12 @@ datadog::Attribute jsObjectToAttribute(const JSObject& object) {
     return attr;
 }
 
+datadog::Attribute jsWrappedValueToAttribute(const JSObject& object) {
+    const auto value = object.find("value");
+    if (value == object.end()) {
+        return jsObjectToAttribute(object);
+    }
+    return jsValueToAttribute(value->second);
+}
+
 }  // namespace datadog_rn_vega
