@@ -63,8 +63,10 @@ FetchContent_MakeAvailable(Datadog)
 set(HEADERS
     kepler/turbo-modules/generated/DdSdkSpec.h
     kepler/turbo-modules/generated/DdRumSpec.h
+    kepler/turbo-modules/generated/DdLogsSpec.h
     kepler/turbo-modules/DdSdk.h
     kepler/turbo-modules/DdRum.h
+    kepler/turbo-modules/DdLogs.h
     kepler/turbo-modules/EnumParsers.h
     kepler/turbo-modules/AttributeConverter.h
     kepler/turbo-modules/DatadogGlobalState.h
@@ -74,8 +76,10 @@ set(HEADERS
 set(SOURCES
     kepler/turbo-modules/generated/DdSdkSpec.cpp
     kepler/turbo-modules/generated/DdRumSpec.cpp
+    kepler/turbo-modules/generated/DdLogsSpec.cpp
     kepler/turbo-modules/DdSdk.cpp
     kepler/turbo-modules/DdRum.cpp
+    kepler/turbo-modules/DdLogs.cpp
     kepler/turbo-modules/EnumParsers.cpp
     kepler/turbo-modules/AttributeConverter.cpp
     kepler/turbo-modules/DatadogGlobalState.cpp

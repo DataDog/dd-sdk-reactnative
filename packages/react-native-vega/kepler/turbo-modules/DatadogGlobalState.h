@@ -10,14 +10,15 @@
 #include <mutex>
 
 #include "datadog/core.hpp"
+#include "datadog/logging.hpp"
 #include "datadog/rum.hpp"
 
 namespace datadog_rn_vega {
 
 /**
- * Thread-safe singleton that holds shared pointers to the Datadog Core and RUM
- * instances. Both are initially null and must be set via initialize() before
- * use.
+ * Thread-safe singleton that holds the Datadog Core and registered feature
+ * instances. They are initially null and must be set during initialization
+ * before use.
  */
 class DatadogGlobalState {
    public:
@@ -29,7 +30,13 @@ class DatadogGlobalState {
     void setRum(std::shared_ptr<datadog::Rum> rum);
     std::shared_ptr<datadog::Rum> getRum();
 
-    /** Clears both core and rum pointers (e.g. for testing or re-initialization). */
+    void setLogging(std::shared_ptr<datadog::Logging> logging);
+    std::shared_ptr<datadog::Logging> getLogging();
+
+    void setLogger(std::shared_ptr<datadog::Logger> logger);
+    std::shared_ptr<datadog::Logger> getLogger();
+
+    /** Clears the core and all registered feature pointers. */
     void reset();
 
    private:
@@ -40,6 +47,8 @@ class DatadogGlobalState {
     std::mutex mutex_;
     std::shared_ptr<datadog::Core> core_;
     std::shared_ptr<datadog::Rum> rum_;
+    std::shared_ptr<datadog::Logging> logging_;
+    std::shared_ptr<datadog::Logger> logger_;
 };
 
 }  // namespace datadog_rn_vega

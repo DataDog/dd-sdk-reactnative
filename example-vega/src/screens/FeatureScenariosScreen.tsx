@@ -7,6 +7,7 @@ import {
   View,
 } from 'react-native';
 import {
+  DdLogs,
   DdRum,
   DdSdkReactNative,
   ErrorSource,
@@ -383,6 +384,31 @@ export const FeatureScenariosScreen = ({
             `Fetched ${response.status} response (${body.length} bytes)`,
             'success',
           );
+        },
+      },
+      {
+        id: 'logs',
+        title: 'Logs',
+        detail: 'Debug, info, warning, and error logs with custom context',
+        run: async (log) => {
+          const context = {
+            source: 'feature-scenarios',
+            scenario: 'logs',
+            timestamp: Date.now(),
+          };
+          await DdLogs.debug('Vega scenario debug log', context);
+          await DdLogs.info('Vega scenario info log', context);
+          await DdLogs.warn('Vega scenario warning log', context);
+          await DdLogs.error(
+            'Vega scenario error log',
+            'VegaScenarioError',
+            'The logging scenario requested an error log',
+            'FeatureScenariosScreen:logs',
+            context,
+            'vega-scenario-log-error',
+            ErrorSource.CUSTOM,
+          );
+          log('Logs', 'Sent debug, info, warning, and error logs', 'success');
         },
       },
       {

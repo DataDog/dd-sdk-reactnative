@@ -33,10 +33,34 @@ std::shared_ptr<datadog::Rum> DatadogGlobalState::getRum() {
     return rum_;
 }
 
+void DatadogGlobalState::setLogging(
+    std::shared_ptr<datadog::Logging> logging
+) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    logging_ = std::move(logging);
+}
+
+std::shared_ptr<datadog::Logging> DatadogGlobalState::getLogging() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return logging_;
+}
+
+void DatadogGlobalState::setLogger(std::shared_ptr<datadog::Logger> logger) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    logger_ = std::move(logger);
+}
+
+std::shared_ptr<datadog::Logger> DatadogGlobalState::getLogger() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return logger_;
+}
+
 void DatadogGlobalState::reset() {
     std::lock_guard<std::mutex> lock(mutex_);
-    core_.reset();
+    logger_.reset();
+    logging_.reset();
     rum_.reset();
+    core_.reset();
 }
 
 }  // namespace datadog_rn_vega

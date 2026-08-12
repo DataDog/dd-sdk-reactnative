@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {TVFocusGuideView} from '@amazon-devices/react-native-kepler';
 import {colors} from '../theme';
 
 interface HomeScreenProps {
@@ -18,9 +19,16 @@ interface MenuCardProps {
   description: string;
   onPress: () => void;
   testID: string;
+  hasTVPreferredFocus?: boolean;
 }
 
-const MenuCard = ({title, description, onPress, testID}: MenuCardProps) => {
+const MenuCard = ({
+  title,
+  description,
+  onPress,
+  testID,
+  hasTVPreferredFocus = false,
+}: MenuCardProps) => {
   const [focused, setFocused] = useState(false);
 
   return (
@@ -30,7 +38,9 @@ const MenuCard = ({title, description, onPress, testID}: MenuCardProps) => {
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      testID={testID}>
+      hasTVPreferredFocus={hasTVPreferredFocus}
+      testID={testID}
+    >
       <Text style={[cardStyles.title, focused && cardStyles.textFocused]}>
         {title}
       </Text>
@@ -106,32 +116,35 @@ export const HomeScreen = ({onNavigate}: HomeScreenProps) => {
         <ScrollView
           horizontal
           style={styles.menu}
-          contentContainerStyle={styles.menuContent}
-          showsHorizontalScrollIndicator={false}>
-          <MenuCard
-            title="Feature Actions"
-            description="Trigger each supported SDK feature one action at a time"
-            onPress={() => onNavigate('featureActions')}
-            testID="featureActionsLink"
-          />
-          <MenuCard
-            title="Feature Scenarios"
-            description="Run complete RUM, resource, action, and operation scenarios"
-            onPress={() => onNavigate('featureScenarios')}
-            testID="featureScenariosLink"
-          />
-          <MenuCard
-            title="Network Requests"
-            description="Make HTTP requests and inspect RUM resource tracking"
-            onPress={() => onNavigate('network')}
-            testID="networkLink"
-          />
-          <MenuCard
-            title="RUM Views"
-            description="Start and stop views to test RUM lifecycle tracking"
-            onPress={() => onNavigate('rumViews')}
-            testID="rumViewsLink"
-          />
+          showsHorizontalScrollIndicator={false}
+        >
+          <TVFocusGuideView autoFocus style={styles.menuContent}>
+            <MenuCard
+              title="Feature Actions"
+              description="Trigger each supported SDK feature one action at a time"
+              onPress={() => onNavigate('featureActions')}
+              testID="featureActionsLink"
+              hasTVPreferredFocus
+            />
+            <MenuCard
+              title="Feature Scenarios"
+              description="Run complete RUM, resource, action, and operation scenarios"
+              onPress={() => onNavigate('featureScenarios')}
+              testID="featureScenariosLink"
+            />
+            <MenuCard
+              title="Network Requests"
+              description="Make HTTP requests and inspect RUM resource tracking"
+              onPress={() => onNavigate('network')}
+              testID="networkLink"
+            />
+            <MenuCard
+              title="RUM Views"
+              description="Start and stop views to test RUM lifecycle tracking"
+              onPress={() => onNavigate('rumViews')}
+              testID="rumViewsLink"
+            />
+          </TVFocusGuideView>
         </ScrollView>
       </View>
     </View>
@@ -204,6 +217,7 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   menuContent: {
+    flexDirection: 'row',
     paddingRight: 70,
   },
 });
