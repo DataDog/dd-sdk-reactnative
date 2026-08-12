@@ -8,9 +8,10 @@
 
 #if RCT_NEW_ARCH_ENABLED
 #import "RCTVersion.h"
-#import "RCTParagraphComponentView.h"
-#import "RCTConversions.h"
 #import "ParagraphProps.h"
+#if RCT_VERSION_MINOR <= 73
+#import "RCTConversions.h"
+#endif
 
 namespace rct = facebook::react;
 #endif
@@ -18,29 +19,38 @@ namespace rct = facebook::react;
 @implementation RCTFabricWrapper
 /**
  * Extracts the text properties from the given UIView when the view is of type RCTParagraphComponentView, returns nil otherwise.
+ *
+ * This deliberately avoids importing RCTParagraphComponentView.h / RCTComponentViewProtocol.h:
+ * both live in the React-RCTFabric pod, which React Native's "prebuilt core" CocoaPods facade
+ * (RN >= 0.87) ships without public headers, aside from a narrow allowlist that doesn't cover
+ * either of them. The class and its `-props` accessor are resolved dynamically instead.
  */
 - (nullable RCTTextPropertiesWrapper*)tryToExtractTextPropertiesFromView:(UIView *)view {
     #if RCT_NEW_ARCH_ENABLED
-    if (![view isKindOfClass:[RCTParagraphComponentView class]]) {
+    Class paragraphComponentViewClass = NSClassFromString(@"RCTParagraphComponentView");
+    if (paragraphComponentViewClass == nil || ![view isKindOfClass:paragraphComponentViewClass]) {
         return nil;
     }
 
-    // Cast view to RCTParagraphComponentView
-    RCTParagraphComponentView* paragraphComponentView = (RCTParagraphComponentView *)view;
-    if (paragraphComponentView == nil) {
+    // `-props` is declared on RCTComponentViewProtocol (not on RCTParagraphComponentView
+    // itself) and returns a C++ shared_ptr, so it can't be reached through KVC — look it up
+    // and call it directly via its IMP instead of importing the protocol's header.
+    SEL propsSelector = NSSelectorFromString(@"props");
+    if (![view respondsToSelector:propsSelector]) {
         return nil;
     }
-
-    // Retrieve ParagraphProps from shared pointer
-    const rct::ParagraphProps* props = (rct::ParagraphProps*)paragraphComponentView.props.get();
+    typedef facebook::react::Props::Shared (*PropsIMP)(id, SEL);
+    PropsIMP getProps = (PropsIMP)[view methodForSelector:propsSelector];
+    facebook::react::Props::Shared sharedProps = getProps(view, propsSelector);
+    const rct::ParagraphProps* props = (rct::ParagraphProps*)sharedProps.get();
     if (props == nil) {
         return nil;
     }
 
     // Extract Attributes
     RCTTextPropertiesWrapper* textPropertiesWrapper = [[RCTTextPropertiesWrapper alloc] init];
-    textPropertiesWrapper.text = [RCTFabricWrapper getTextFromView:paragraphComponentView];
-    textPropertiesWrapper.contentRect = paragraphComponentView.bounds;
+    textPropertiesWrapper.text = [RCTFabricWrapper getTextFromView:view];
+    textPropertiesWrapper.contentRect = view.bounds;
 
     rct::TextAttributes textAttributes = props->textAttributes;
     textPropertiesWrapper.alignment = [RCTFabricWrapper getAlignmentFromAttributes:textAttributes];
@@ -54,12 +64,15 @@ namespace rct = facebook::react;
 }
 
 #if RCT_NEW_ARCH_ENABLED
-+ (NSString* _Nonnull)getTextFromView:(RCTParagraphComponentView*)view {
-    if (view == nil || view.attributedText == nil) {
++ (NSString* _Nonnull)getTextFromView:(UIView*)view {
+    // `attributedText` is a plain Objective-C property on RCTParagraphComponentView, so it's
+    // safe to read through KVC without importing that class's header (see the note above).
+    NSAttributedString* attributedText = [view valueForKey:@"attributedText"];
+    if (attributedText == nil) {
         return RCTTextPropertiesDefaultText;
     }
 
-    return view.attributedText.string;
+    return attributedText.string;
 }
 
 + (NSTextAlignment)getAlignmentFromAttributes:(rct::TextAttributes)textAttributes {
