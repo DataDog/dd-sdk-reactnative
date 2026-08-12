@@ -41,6 +41,9 @@ namespace rct = facebook::react;
     }
     typedef facebook::react::Props::Shared (*PropsIMP)(id, SEL);
     PropsIMP getProps = (PropsIMP)[view methodForSelector:propsSelector];
+    if (getProps == NULL) {
+        return nil;
+    }
     facebook::react::Props::Shared sharedProps = getProps(view, propsSelector);
     const rct::ParagraphProps* props = (rct::ParagraphProps*)sharedProps.get();
     if (props == nil) {
