@@ -252,6 +252,10 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
     async (key: string) => {
       if (activeView === key) {
         await DdRum.stopView(key, {});
+        await DdRum.startView('rumViews', 'RUM Views', {
+          source: 'rum-views',
+          restoredAfterTest: true,
+        });
         setViews((prev) =>
           prev.map((v) =>
             v.key === key && v.isActive
@@ -299,6 +303,10 @@ export const RumViewsScreen = ({onBack}: RumViewsScreenProps) => {
         ),
       );
     }
+    await DdRum.startView('rumViews', 'RUM Views', {
+      source: 'rum-views',
+      restoredAfterTest: true,
+    });
     setActiveView(null);
   }, []);
 

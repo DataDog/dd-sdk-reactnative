@@ -207,7 +207,8 @@ com::amazon::kepler::turbomodule::Promise DdRum::addViewAttribute(
         std::thread([promise, key, value]() {
             auto rum = datadog_rn_vega::DatadogGlobalState::getInstance().getRum();
             if (rum) {
-                rum->AddViewAttribute(key, datadog_rn_vega::jsObjectToAttribute(value));
+                rum->AddViewAttribute(
+                    key, datadog_rn_vega::jsWrappedValueToAttribute(value));
             }
             promise->resolve(true);
         }).detach();

@@ -30,4 +30,11 @@ datadog::Attribute jsValueToAttribute(
 datadog::Attribute jsObjectToAttribute(
     const com::amazon::kepler::turbomodule::JSObject& object);
 
+/**
+ * Converts the { value: ... } wrapper used by React Native's singular
+ * attribute APIs to the wrapped datadog::Attribute value.
+ */
+datadog::Attribute jsWrappedValueToAttribute(
+    const com::amazon::kepler::turbomodule::JSObject& object);
+
 }  // namespace datadog_rn_vega
