@@ -1,8 +1,17 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useEffect} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {
-  DdSdkReactNative,
-  DdRum,
+  NavigationContainer,
+  useNavigationContainerRef,
+} from '@amazon-devices/react-navigation__native';
+import {
+  enableFreeze,
+  enableScreens,
+} from '@amazon-devices/react-native-screens';
+import {createStackNavigator} from '@amazon-devices/react-navigation__stack';
+import {DdRumReactNavigationTracking} from '@datadog/mobile-react-navigation';
+import {
+  DatadogProvider,
   DatadogProviderConfiguration,
   PropagatorType,
   TrackingConsent,
@@ -16,115 +25,148 @@ import {FeatureScenariosScreen} from './screens/FeatureScenariosScreen';
 import {FeatureActionsScreen} from './screens/FeatureActionsScreen';
 import {colors} from './theme';
 
-type Screen =
-  | 'home'
-  | 'network'
-  | 'rumViews'
-  | 'featureScenarios'
-  | 'featureActions';
-
-const VIEW_NAMES: Record<Screen, string> = {
-  home: 'Home',
-  network: 'Network Requests',
-  rumViews: 'RUM Views',
-  featureScenarios: 'Feature Scenarios',
-  featureActions: 'Feature Actions',
+type RootStackParamList = {
+  Home: undefined;
+  Network: undefined;
+  RumViews: undefined;
+  FeatureScenarios: undefined;
+  FeatureActions: undefined;
 };
 
-export const App = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-  const datadogInitializationRef = useRef<Promise<void> | null>(null);
-  const currentViewRef = useRef<Screen | null>(null);
+type RouteName = keyof RootStackParamList;
 
-  useEffect(() => {
-    const datadogConfig = new DatadogProviderConfiguration(
-      CLIENT_TOKEN,
-      ENVIRONMENT,
-      TrackingConsent.GRANTED,
-      {
-        rumConfiguration: {
-          applicationId: APPLICATION_ID,
-          trackInteractions: true,
-          trackResources: true,
-          trackFrustrations: true,
-          trackErrors: true,
-          sessionSampleRate: 100,
-          telemetrySampleRate: 100,
-          nativeCrashReportEnabled: true,
-          firstPartyHosts: [
-            {
-              match: 'httpbin.org',
-              propagatorTypes: [
-                PropagatorType.B3MULTI,
-                PropagatorType.TRACECONTEXT,
-              ],
-            },
+const VIEW_NAMES: Record<RouteName, string> = {
+  Home: 'Home',
+  Network: 'Network Requests',
+  RumViews: 'RUM Views',
+  FeatureScenarios: 'Feature Scenarios',
+  FeatureActions: 'Feature Actions',
+};
+
+const HOME_ROUTES: Record<string, RouteName> = {
+  network: 'Network',
+  rumViews: 'RumViews',
+  featureScenarios: 'FeatureScenarios',
+  featureActions: 'FeatureActions',
+};
+
+const Stack = createStackNavigator<RootStackParamList>();
+
+enableScreens();
+enableFreeze();
+
+const datadogConfiguration = new DatadogProviderConfiguration(
+  CLIENT_TOKEN,
+  ENVIRONMENT,
+  TrackingConsent.GRANTED,
+  {
+    rumConfiguration: {
+      applicationId: APPLICATION_ID,
+      trackInteractions: true,
+      trackResources: true,
+      trackFrustrations: true,
+      trackErrors: true,
+      sessionSampleRate: 100,
+      telemetrySampleRate: 100,
+      nativeCrashReportEnabled: true,
+      firstPartyHosts: [
+        {
+          match: 'httpbin.org',
+          propagatorTypes: [
+            PropagatorType.B3MULTI,
+            PropagatorType.TRACECONTEXT,
           ],
         },
-        logsConfiguration: {},
-        traceConfiguration: {},
-      },
-    );
-    datadogInitializationRef.current = DdSdkReactNative.initialize(
-      datadogConfig,
-    );
-  }, []);
+      ],
+    },
+    logsConfiguration: {},
+    traceConfiguration: {},
+  },
+);
 
-  // Track RUM views on screen changes
+const AppNavigator = () => {
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
+
   useEffect(() => {
-    const initialization = datadogInitializationRef.current;
-    if (!initialization) {
-      return;
-    }
-
-    let isCancelled = false;
-    const trackView = async () => {
-      await initialization;
-      if (isCancelled) {
-        return;
-      }
-
-      if (currentViewRef.current) {
-        await DdRum.stopView(currentViewRef.current, {});
-        if (isCancelled) {
-          return;
-        }
-      }
-      await DdRum.startView(currentScreen, VIEW_NAMES[currentScreen], {});
-      currentViewRef.current = currentScreen;
-    };
-    trackView();
-
     return () => {
-      isCancelled = true;
+      if (navigationRef.current) {
+        DdRumReactNavigationTracking.stopTrackingViews(navigationRef.current);
+      }
     };
-  }, [currentScreen]);
+  }, [navigationRef]);
 
-  const navigate = useCallback((screen: string) => {
-    setCurrentScreen(screen as Screen);
-  }, []);
-
-  const goHome = useCallback(() => {
-    setCurrentScreen('home');
-  }, []);
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'network':
-        return <NetworkScreen onBack={goHome} />;
-      case 'rumViews':
-        return <RumViewsScreen onBack={goHome} />;
-      case 'featureScenarios':
-        return <FeatureScenariosScreen onBack={goHome} />;
-      case 'featureActions':
-        return <FeatureActionsScreen onBack={goHome} />;
-      default:
-        return <HomeScreen onNavigate={navigate} />;
-    }
-  };
-
-  return <View style={styles.background}>{renderScreen()}</View>;
+  return (
+    <View style={styles.background}>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          DdRumReactNavigationTracking.startTrackingViews(
+            navigationRef.current,
+            {
+              viewNamePredicate: (route) =>
+                VIEW_NAMES[route.name as RouteName] ?? route.name,
+            },
+          );
+        }}>
+        <Stack.Navigator
+          initialRouteName="Home"
+          screenOptions={{
+            animationEnabled: false,
+            cardStyle: styles.background,
+            headerShown: false,
+          }}>
+          <Stack.Screen name="Home">
+            {({navigation}) => (
+              <HomeScreen
+                onNavigate={(screen) => {
+                  const route = HOME_ROUTES[screen];
+                  if (route) {
+                    navigation.navigate(route);
+                  }
+                }}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="Network">
+            {({navigation}) => (
+              <NetworkScreen onBack={() => navigation.goBack()} />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="RumViews">
+            {({navigation, route}) => (
+              <RumViewsScreen
+                trackedViewKey={route.key}
+                onBack={() => navigation.goBack()}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="FeatureScenarios">
+            {({navigation, route}) => (
+              <FeatureScenariosScreen
+                trackedViewKey={route.key}
+                onBack={() => navigation.goBack()}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="FeatureActions">
+            {({navigation, route}) => (
+              <FeatureActionsScreen
+                trackedViewKey={route.key}
+                onBack={() => navigation.goBack()}
+              />
+            )}
+          </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
+  );
 };
+
+export const App = () => (
+  <DatadogProvider configuration={datadogConfiguration}>
+    <AppNavigator />
+  </DatadogProvider>
+);
 
 const styles = StyleSheet.create({
   background: {
