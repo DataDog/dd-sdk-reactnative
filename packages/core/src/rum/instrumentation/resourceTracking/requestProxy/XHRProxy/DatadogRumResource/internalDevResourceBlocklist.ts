@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { RUMResource } from '../../interfaces/RumResource';
+import type { ResourceMapper } from './ResourceReporter';
 
 /**
  * Expo sends all console.* calls to the packager. As we log all API calls
@@ -33,11 +33,11 @@ const internalDevResourceBlocklist: RegExp[] = [
 
 /**
  * Filters RN symbolicate calls and Expo logs calls that happen only in dev.
- * @param resource RUMResource
+ * @param resource Resource event passed through the resource mapper.
  */
 export const filterDevResource = (
-    resource: RUMResource
-): RUMResource | null => {
+    resource: Parameters<ResourceMapper>[0]
+): Parameters<ResourceMapper>[0] | null => {
     if (__DEV__) {
         for (const resourceRegex of internalDevResourceBlocklist) {
             if (resourceRegex.test(resource.request.url)) {

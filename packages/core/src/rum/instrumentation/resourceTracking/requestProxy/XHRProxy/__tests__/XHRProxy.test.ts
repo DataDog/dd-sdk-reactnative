@@ -78,7 +78,7 @@ beforeEach(() => {
 
     xhrProxy = new XHRProxy({
         xhrType: XMLHttpRequestMock,
-        resourceReporter: new ResourceReporter([])
+        resourceReporter: new ResourceReporter(DdRum, [])
     } as {
         xhrType: typeof XMLHttpRequest;
         resourceReporter: ResourceReporter;

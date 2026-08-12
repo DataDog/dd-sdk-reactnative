@@ -47,7 +47,10 @@ jest.mock(
     () => {
         return {
             DdRumResourceTracking: {
-                startTracking: jest.fn().mockImplementation(() => {})
+                startTracking: jest.fn().mockImplementation(() => {}),
+                updateResourceEventMapper: jest
+                    .fn()
+                    .mockImplementation(() => {})
             }
         };
     }
@@ -74,6 +77,9 @@ beforeEach(async () => {
     >).mockClear();
     (DdRumResourceTracking.startTracking as jest.MockedFunction<
         typeof DdRumResourceTracking.startTracking
+    >).mockClear();
+    (DdRumResourceTracking.updateResourceEventMapper as jest.MockedFunction<
+        typeof DdRumResourceTracking.updateResourceEventMapper
     >).mockClear();
     (DdRumErrorTracking.startTracking as jest.MockedFunction<
         typeof DdRumErrorTracking.startTracking
@@ -676,7 +682,12 @@ describe('DdSdkReactNative', () => {
                         match: 'something.fr',
                         propagatorTypes: ['datadog']
                     }
-                ]
+                ],
+                resourceEventMapper: null,
+                resourceReporters: {
+                    startResource: DdRum.startResource,
+                    stopResource: DdRum.stopResource
+                }
             });
         });
 
@@ -835,6 +846,15 @@ describe('DdSdkReactNative', () => {
             await DdRum.stopResource('key', 200, 'xhr', 22, {}, 345);
 
             // THEN
+            expect(NativeModules.DdRum.startResource).toHaveBeenCalledWith(
+                'key',
+                'GET',
+                'https://datadoghq.com',
+                {
+                    body: 'content'
+                },
+                234
+            );
             expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
                 'key',
                 200,

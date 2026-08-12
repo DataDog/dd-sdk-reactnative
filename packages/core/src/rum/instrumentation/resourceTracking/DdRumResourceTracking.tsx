@@ -9,10 +9,12 @@ import BigInt from 'big-integer';
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
+import type { ResourceEventMapper } from '../../eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from '../../types';
 
 import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
+import type { RumResourceReporters } from './requestProxy/XHRProxy/DatadogRumResource/ResourceReporter';
 import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
 import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
 
@@ -40,10 +42,14 @@ class RumResourceTracking {
      */
     startTracking({
         resourceTraceSampleRate,
-        firstPartyHosts
+        firstPartyHosts,
+        resourceReporters,
+        resourceEventMapper
     }: {
         resourceTraceSampleRate: number;
         firstPartyHosts: FirstPartyHost[];
+        resourceReporters: RumResourceReporters;
+        resourceEventMapper?: ResourceEventMapper | null;
     }): void {
         // extra safety to avoid proxying the XHR class twice
         if (this._isTracking) {
@@ -54,7 +60,10 @@ class RumResourceTracking {
             return;
         }
 
-        this._requestProxy = XHRProxy.createWithResourceReporter();
+        this._requestProxy = XHRProxy.createWithResourceReporter(
+            resourceReporters,
+            resourceEventMapper
+        );
         this._requestProxy.onTrackingStart({
             tracingSamplingRate: resourceTraceSampleRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
@@ -97,6 +106,17 @@ class RumResourceTracking {
         DistributedTracingSampling.setResourceTraceSampleRate(
             resourceTraceSampleRate
         );
+    }
+
+    updateResourceEventMapper(
+        resourceEventMapper?: ResourceEventMapper | null
+    ): void {
+        if (!this._isTracking || !this._requestProxy) {
+            return;
+        }
+        this._requestProxy.onTrackingUpdate({
+            resourceEventMapper
+        });
     }
 
     stopTracking(): void {

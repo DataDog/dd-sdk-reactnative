@@ -7,6 +7,7 @@
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types';
 import { Timer } from '../../../../../utils/Timer';
+import type { ResourceEventMapper } from '../../../../eventMappers/resourceEventMapper';
 import {
     getCachedAccountId,
     getCachedSessionId,
@@ -33,6 +34,7 @@ import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
 import type { DdRumResourceGraphqlAttributes } from '../interfaces/RumResource';
 
+import type { RumResourceReporters } from './DatadogRumResource/ResourceReporter';
 import { ResourceReporter } from './DatadogRumResource/ResourceReporter';
 import { filterDevResource } from './DatadogRumResource/internalDevResourceBlocklist';
 import { URLHostParser } from './URLHostParser';
@@ -78,10 +80,17 @@ export class XHRProxy extends RequestProxy {
         this.providers = providers;
     }
 
-    static createWithResourceReporter() {
+    static createWithResourceReporter(
+        resourceReporters: RumResourceReporters,
+        resourceEventMapper?: ResourceEventMapper | null
+    ) {
         return new XHRProxy({
             xhrType: XMLHttpRequest,
-            resourceReporter: new ResourceReporter([filterDevResource])
+            resourceReporter: new ResourceReporter(
+                resourceReporters,
+                [filterDevResource],
+                resourceEventMapper
+            )
         });
     }
 
@@ -101,11 +110,21 @@ export class XHRProxy extends RequestProxy {
         this.context = null;
     };
 
-    onTrackingUpdate = (options: { tracingSamplingRate: number }) => {
+    onTrackingUpdate = (options: {
+        tracingSamplingRate?: number;
+        resourceEventMapper?: ResourceEventMapper | null;
+    }) => {
         if (this.context === null) {
             return;
         }
-        this.context.tracingSamplingRate = options.tracingSamplingRate;
+        if (options.tracingSamplingRate !== undefined) {
+            this.context.tracingSamplingRate = options.tracingSamplingRate;
+        }
+        if ('resourceEventMapper' in options) {
+            this.providers.resourceReporter.setResourceEventMapper(
+                options.resourceEventMapper
+            );
+        }
     };
 }
 

@@ -100,13 +100,15 @@ export type DdRumType = {
      * @param url: The resource url.
      * @param context: The additional context to send.
      * @param timestampMs: The timestamp when the resource started (in milliseconds). If not provided, current timestamp will be used.
+     * @param kind: The resource's kind (xhr, fetch, document, image, css, font, …). Defaults to other.
      */
     startResource(
         key: string,
         method: string,
         url: string,
         context?: object,
-        timestampMs?: number
+        timestampMs?: number,
+        kind?: ResourceKind
     ): Promise<void>;
 
     /**

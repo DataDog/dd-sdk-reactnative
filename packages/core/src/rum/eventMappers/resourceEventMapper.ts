@@ -18,7 +18,7 @@ type RawResource = {
     resourceContext: XMLHttpRequest | undefined;
 };
 
-type ResourceEvent = RawResource & AdditionalEventDataForMapper;
+export type ResourceEvent = RawResource & AdditionalEventDataForMapper;
 
 type NativeResource = {
     key: string;
@@ -27,6 +27,7 @@ type NativeResource = {
     size: number;
     context: object;
     timestampMs: number;
+    resourceContext: XMLHttpRequest | undefined;
 };
 
 export type ResourceEventMapper = (

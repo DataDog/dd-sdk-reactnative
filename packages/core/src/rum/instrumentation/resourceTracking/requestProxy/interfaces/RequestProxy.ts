@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { ResourceEventMapper } from '../../../../eventMappers/resourceEventMapper';
 import type { PropagatorType } from '../../../../types';
 
 export interface RequestProxyOptions {
@@ -20,6 +21,7 @@ export abstract class RequestProxy {
     abstract onTrackingStart: (context: RequestProxyOptions) => void;
     abstract onTrackingStop: () => void;
     abstract onTrackingUpdate: (context: {
-        tracingSamplingRate: number;
+        tracingSamplingRate?: number;
+        resourceEventMapper?: ResourceEventMapper | null;
     }) => void;
 }

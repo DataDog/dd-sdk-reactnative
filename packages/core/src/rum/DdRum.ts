@@ -33,6 +33,7 @@ import {
     getCachedUserId,
     setCachedSessionId
 } from './helper';
+import { DdRumResourceTracking } from './instrumentation/resourceTracking/DdRumResourceTracking';
 import type { DatadogTracingContext } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingContext';
 import { DatadogTracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/DatadogTracingIdentifier';
 import { TracingIdentifier } from './instrumentation/resourceTracking/distributedTracing/TracingIdentifier';
@@ -49,6 +50,7 @@ import type {
 } from './types';
 
 const RUM_MODULE = 'com.datadog.reactnative.rum';
+const DROP_RESOURCE_ATTRIBUTE = '_dd.resource.drop_resource';
 
 const generateEmptyPromise = () => new Promise<void>(resolve => resolve());
 
@@ -85,6 +87,7 @@ class DdRumWrapper implements DdRumType {
     private resourceEventMapper = generateResourceEventMapper(undefined);
     private actionEventMapper = generateActionEventMapper(undefined);
     private timeProvider: TimeProvider = new DefaultTimeProvider();
+    private startedResourceKeys = new Set<string>();
 
     startView = (
         key: string,
@@ -251,10 +254,42 @@ class DdRumWrapper implements DdRumType {
         method: string,
         url: string,
         context: object = {},
-        timestampMs: number = this.timeProvider.now()
+        timestampMs: number = this.timeProvider.now(),
+        kind: ResourceKind = 'other',
+        resourceContext?: XMLHttpRequest
     ): Promise<void> => {
+        const resourceContextForMapper = resourceContext
+            ? { ...resourceContext, responseURL: url }
+            : ({ responseURL: url } as XMLHttpRequest);
+
+        const mappedEvent = this.resourceEventMapper.applyEventMapper({
+            key,
+            statusCode: 0,
+            kind,
+            size: -1,
+            context,
+            timestampMs,
+            resourceContext: resourceContextForMapper
+        });
+        /**
+         * The keep/drop decision is made here, where the request URL is
+         * available through `resourceContext.responseURL` for both XHR and
+         * manual resources. When the mapper drops the event (non-first-party
+         * host or missing consent) the resource is never started, so the
+         * matching `stopResource` is a native no-op. We always use the
+         * original `key` for the native call so start/stop correlate, and only
+         * sanitize the displayed URL and context.
+         */
+        if (!mappedEvent) {
+            this.startedResourceKeys.delete(key);
+            return generateEmptyPromise();
+        }
+
+        const startUrl = mappedEvent.resourceContext?.responseURL || url;
+        this.startedResourceKeys.add(key);
+
         InternalLog.log(
-            `Starting RUM Resource #${key} ${method}: ${url}`,
+            `Starting RUM Resource #${key} ${method}: ${startUrl}`,
             SdkVerbosity.DEBUG
         );
 
@@ -262,8 +297,8 @@ class DdRumWrapper implements DdRumType {
             this.nativeRum.startResource(
                 key,
                 method,
-                url,
-                encodeAttributes(context),
+                startUrl,
+                encodeAttributes(mappedEvent.context),
                 timestampMs
             )
         );
@@ -287,25 +322,23 @@ class DdRumWrapper implements DdRumType {
             timestampMs,
             resourceContext
         });
-        if (!mappedEvent) {
-            /**
-             * To drop the resource we call `stopResource` and pass the `_dd.drop_resource` attribute in the context.
-             * It will be picked up by the resource mappers we implement on the native side that will drop the resource.
-             * This ensures we don't have any "started" resource left in memory on the native side.
-             */
-            return bufferVoidNativeCall(() =>
-                this.nativeRum.stopResource(
-                    key,
-                    statusCode,
-                    kind,
-                    size,
-                    {
-                        '_dd.resource.drop_resource': true
-                    },
-                    timestampMs
-                )
-            );
+        const wasStarted = this.startedResourceKeys.delete(key);
+
+        if (!wasStarted) {
+            return generateEmptyPromise();
         }
+
+        const nativeResource = mappedEvent ?? {
+            key,
+            statusCode,
+            kind,
+            size,
+            context: {
+                [DROP_RESOURCE_ATTRIBUTE]: true
+            },
+            timestampMs,
+            resourceContext
+        };
 
         InternalLog.log(
             `Stopping RUM Resource #${key} status:${statusCode}`,
@@ -313,12 +346,12 @@ class DdRumWrapper implements DdRumType {
         );
         return bufferVoidNativeCall(() =>
             this.nativeRum.stopResource(
-                mappedEvent.key,
-                mappedEvent.statusCode,
-                mappedEvent.kind,
-                mappedEvent.size,
-                encodeAttributes(mappedEvent.context),
-                mappedEvent.timestampMs
+                nativeResource.key,
+                nativeResource.statusCode,
+                nativeResource.kind,
+                nativeResource.size,
+                encodeAttributes(nativeResource.context),
+                nativeResource.timestampMs
             )
         );
     };
@@ -507,10 +540,12 @@ class DdRumWrapper implements DdRumType {
         this.resourceEventMapper = generateResourceEventMapper(
             resourceEventMapper
         );
+        DdRumResourceTracking.updateResourceEventMapper(resourceEventMapper);
     }
 
     unregisterResourceEventMapper() {
         this.resourceEventMapper = generateResourceEventMapper(undefined);
+        DdRumResourceTracking.updateResourceEventMapper(undefined);
     }
 
     registerActionEventMapper(actionEventMapper: ActionEventMapper) {

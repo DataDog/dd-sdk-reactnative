@@ -401,6 +401,53 @@ describe('DdRum', () => {
                     expect.anything()
                 );
             });
+
+            test('passes the provided resource kind to the event mapper', async () => {
+                const resourceEventMapper: jest.MockedFunction<ResourceEventMapper> = jest.fn(
+                    resource => resource
+                );
+                DdRum.registerResourceEventMapper(resourceEventMapper);
+
+                await DdRum.startResource(
+                    'key',
+                    'GET',
+                    'https://my-api.com/',
+                    {},
+                    234,
+                    'fetch'
+                );
+
+                expect(resourceEventMapper).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        kind: 'fetch'
+                    })
+                );
+
+                DdRum.unregisterResourceEventMapper();
+            });
+
+            test('uses other as the default resource kind for event mapper', async () => {
+                const resourceEventMapper: jest.MockedFunction<ResourceEventMapper> = jest.fn(
+                    resource => resource
+                );
+                DdRum.registerResourceEventMapper(resourceEventMapper);
+
+                await DdRum.startResource(
+                    'key',
+                    'GET',
+                    'https://my-api.com/',
+                    {},
+                    234
+                );
+
+                expect(resourceEventMapper).toHaveBeenCalledWith(
+                    expect.objectContaining({
+                        kind: 'other'
+                    })
+                );
+
+                DdRum.unregisterResourceEventMapper();
+            });
         });
 
         describe('DdRum.stopResource', () => {
@@ -1673,7 +1720,7 @@ describe('DdRum', () => {
             );
         });
 
-        it('adds the drop context key to the event if the mapper returns null', async () => {
+        it('does not start or stop the resource if the mapper returns null', async () => {
             const resourceEventMapper: ResourceEventMapper = resource => {
                 return null;
             };
@@ -1696,12 +1743,40 @@ describe('DdRum', () => {
                 245
             );
 
+            expect(NativeModules.DdRum.startResource).not.toHaveBeenCalled();
+            expect(NativeModules.DdRum.stopResource).not.toHaveBeenCalled();
+        });
+
+        it('stops a started native resource when the mapper returns null at stop', async () => {
+            let shouldDropResource = false;
+            const resourceEventMapper: ResourceEventMapper = resource => {
+                if (shouldDropResource) {
+                    return null;
+                }
+                return resource;
+            };
+            DdRum.registerResourceEventMapper(resourceEventMapper);
+
+            await DdRum.startResource(
+                'key',
+                'GET',
+                'https://my-api.com/',
+                { retry: false },
+                234
+            );
+
+            shouldDropResource = true;
+            await DdRum.stopResource('key', 200, 'xhr', 302, {}, 245);
+
+            expect(NativeModules.DdRum.startResource).toHaveBeenCalled();
             expect(NativeModules.DdRum.stopResource).toHaveBeenCalledWith(
                 'key',
                 200,
                 'xhr',
                 302,
-                { '_dd.resource.drop_resource': true },
+                {
+                    '_dd.resource.drop_resource': true
+                },
                 245
             );
         });
