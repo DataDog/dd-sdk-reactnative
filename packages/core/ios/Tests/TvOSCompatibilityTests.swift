@@ -92,7 +92,7 @@ final class TvOSCompatibilityTests: XCTestCase {
         try sourceFiles(withExtension: "mm") + sourceFiles(withExtension: "m")
     }
 
-    private func sourceFiles(withExtension extension: String) throws -> [URL] {
+    private func sourceFiles(withExtension fileExtension: String) throws -> [URL] {
         let sourcesDirectory = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -106,6 +106,6 @@ final class TvOSCompatibilityTests: XCTestCase {
             return []
         }
 
-        return enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == `extension` }
+        return enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == fileExtension }
     }
 }
