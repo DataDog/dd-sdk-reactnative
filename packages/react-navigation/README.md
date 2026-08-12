@@ -18,6 +18,23 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-navigation
 ```
 
+### Vega OS
+
+For Vega OS, install the matching preview versions of the core, Vega, and React Navigation Datadog packages. Use Amazon's Vega-compatible React Navigation packages:
+
+```json
+{
+  "dependencies": {
+    "@amazon-devices/react-native-safe-area-context": "~2.0.0",
+    "@amazon-devices/react-native-screens": "~2.0.0",
+    "@amazon-devices/react-navigation__native": "~7.0.0",
+    "@amazon-devices/react-navigation__stack": "~7.0.0"
+  }
+}
+```
+
+Import `DatadogProvider` from `@datadog/mobile-react-native-vega`. The existing `DdRumReactNavigationTracking` API can then track the Amazon `NavigationContainer`; no Vega-specific navigation tracker is required. See the repository's `example-vega` app for a complete setup.
+
 ### Track view navigation
 
 To track changes in navigation as RUM Views, set the `onReady` callback of your `NavigationContainer` component as follow. You can use the optional `NavigationTrackingOptions` parameter to replace the default behaviour of the tracker regarding views, their names and their navigation parameters.
