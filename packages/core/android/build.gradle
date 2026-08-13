@@ -138,7 +138,20 @@ android {
       if (isNewArchitectureEnabled()) {
         java.srcDirs += ['src/newarch/kotlin']
       } else {
-        java.srcDirs += ['src/oldarch/kotlin']
+        // `oldarchCommon` holds everything shared by all old-architecture RN versions.
+        // Version-specific pieces (currently just heatmap tap-to-view resolution, whose
+        // `UIManager.resolveView` API was added in RN 0.66) live in their own small source set,
+        // named `oldarch<N>` for the highest old-arch minor version they cover (inclusive) —
+        // e.g. `oldarch65` for RN <= 65. The bare `oldarch` directory has no number because it
+        // always means "newer than the highest split defined" (today: RN > 65); if a future RN
+        // release breaks another old-arch API, split off the next `oldarch<N>` the same way and
+        // `oldarch` keeps that same "later than the highest split" meaning.
+        java.srcDirs += ['src/oldarchCommon/kotlin']
+        if (reactNativeMajorVersion == 0 && reactNativeMinorVersion <= 65) {
+          java.srcDirs += ['src/oldarch65/kotlin']
+        } else {
+          java.srcDirs += ['src/oldarch/kotlin']
+        }
       }
     }
     test {

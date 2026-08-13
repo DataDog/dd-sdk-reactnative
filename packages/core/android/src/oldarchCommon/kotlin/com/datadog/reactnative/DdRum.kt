@@ -13,8 +13,6 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
-import com.facebook.react.uimanager.UIManagerHelper
-import com.facebook.react.uimanager.common.UIManagerType
 
 /**
  * The entry point to use Datadog's RUM feature.
@@ -27,18 +25,17 @@ class DdRum(
 
     private val telemetry = DdTelemetry()
 
+    // `createHeatmapViewResolver` is version-gated at the source-set level: it resolves a React
+    // tag to its native View via `UIManager.resolveView`, which only exists on the
+    // old-architecture `UIManager` interface from React Native 0.66 onward. See
+    // HeatmapViewResolverFactory.kt in the `oldarch` (RN > 65) and `oldarch65` (RN <= 65, no-op)
+    // source sets.
     private val implementation = DdRumImplementation(
         datadog = datadogWrapper,
         heatmapActionHandler = HeatmapActionHandler(
-            heatmapTouchResolver = HeatmapTouchResolver(viewResolver = { reactTag ->
-                try {
-                    UIManagerHelper.getUIManager(reactApplicationContext, UIManagerType.DEFAULT)
-                        ?.resolveView(reactTag)
-                } catch (e: Exception) {
-                    telemetry.telemetryError("Failed to resolve view for heatmap tracking", e)
-                    null
-                }
-            })
+            heatmapTouchResolver = HeatmapTouchResolver(
+                viewResolver = createHeatmapViewResolver(reactApplicationContext, telemetry)
+            )
         )
     )
 
