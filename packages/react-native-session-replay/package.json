@@ -91,6 +91,11 @@
         "jsSrcsDir": "./src/specs",
         "android": {
             "javaPackageName": "com.datadog.reactnative.sessionreplay"
+        },
+        "ios": {
+            "modulesProvider": {
+                "DdSessionReplay": "DdSessionReplay"
+            }
         }
     },
     "dependencies": {

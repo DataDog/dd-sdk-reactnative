@@ -113,6 +113,15 @@
         "jsSrcsDir": "./src/specs",
         "android": {
             "javaPackageName": "com.datadog.reactnative"
+        },
+        "ios": {
+            "modulesProvider": {
+                "DdFlags": "DdFlags",
+                "DdLogs": "DdLogs",
+                "DdRum": "DdRum",
+                "DdSdk": "DdSdk",
+                "DdTrace": "DdTrace"
+            }
         }
     },
     "dependencies": {
