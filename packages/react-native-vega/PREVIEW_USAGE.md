@@ -268,9 +268,8 @@ The supplied sample application demonstrates initialization and provides control
 the supported features:
 
 -   **Feature Actions** exposes individual SDK operations.
--   **Feature Scenarios** runs grouped workflows.
 -   Navigating between screens exercises React Navigation view tracking.
--   The network screen exercises automatic resource tracking.
+-   **Network Requests** exercises automatic RUM resource tracking.
 
 Set the supplied sample's Datadog credentials before building it. Do not commit client
 tokens or application IDs to source control.
