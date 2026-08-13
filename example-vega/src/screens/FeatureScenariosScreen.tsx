@@ -292,6 +292,50 @@ export const FeatureScenariosScreen = ({
         },
       },
       {
+        id: 'user-account-context',
+        title: 'User and Account Context',
+        detail:
+          'Set, merge, emit events, and clear user and account information',
+        run: async (log) => {
+          await DdSdkReactNative.setUserInfo({
+            id: 'vega-scenario-user',
+            name: 'Vega Scenario User',
+            email: 'vega-scenario-user@example.com',
+            extraInfo: {plan: 'preview'},
+          });
+          await DdSdkReactNative.addUserExtraInfo({role: 'scenario-tester'});
+          await DdSdkReactNative.setAccountInfo({
+            id: 'vega-scenario-account',
+            name: 'Vega Scenario Account',
+            extraInfo: {tier: 'preview'},
+          });
+          await DdSdkReactNative.addAccountExtraInfo({
+            subscription: 'evaluation',
+          });
+          await DdRum.addAction(
+            RumActionType.CUSTOM,
+            'User and Account Context Applied',
+            {scenario: 'user-account-context'},
+          );
+          await DdLogs.info('Vega user and account context scenario', {
+            scenario: 'user-account-context',
+          });
+          await wait(150);
+          await DdSdkReactNative.clearUserInfo();
+          await DdSdkReactNative.clearAccountInfo();
+          await DdRum.addAction(
+            RumActionType.CUSTOM,
+            'User and Account Context Cleared',
+            {scenario: 'user-account-context'},
+          );
+          log(
+            'User and Account Context',
+            'Emitted populated context events, then cleared both contexts',
+            'success',
+          );
+        },
+      },
+      {
         id: 'view-lifecycle',
         title: 'View Lifecycle',
         detail: 'Manual start/stop plus view attributes',
