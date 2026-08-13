@@ -22,6 +22,7 @@
     "main": "lib/commonjs/index",
     "files": [
         "src/**",
+        "PREVIEW_USAGE.md",
         "lib/commonjs/**",
         "lib/module/**",
         "lib/typescript/react-native-vega/**",
