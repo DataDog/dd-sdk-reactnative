@@ -507,6 +507,9 @@ export class DdSdkReactNative {
         const trackResources =
             configuration.rumConfiguration?.trackResources ||
             RUM_DEFAULTS.trackResources;
+        const trackFetchResources =
+            configuration.rumConfiguration?.trackFetchResources ??
+            RUM_DEFAULTS.trackFetchResources;
         const trackErrors =
             configuration.rumConfiguration?.trackErrors ||
             RUM_DEFAULTS.trackErrors;
@@ -553,7 +556,8 @@ export class DdSdkReactNative {
         if (trackResources) {
             DdRumResourceTracking.startTracking({
                 resourceTraceSampleRate,
-                firstPartyHosts
+                firstPartyHosts,
+                trackFetchResources
             });
         }
 

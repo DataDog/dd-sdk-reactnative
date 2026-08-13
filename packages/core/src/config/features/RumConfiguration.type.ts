@@ -67,6 +67,14 @@ export interface RumConfigurationOptions {
     errorEventMapper?: ErrorEventMapper | null;
 
     /**
+     * Enables tracking of requests made with native Fetch implementations,
+     * such as the global Fetch installed by Expo.
+     *
+     * This option only takes effect when resource tracking is enabled.
+     */
+    trackFetchResources?: boolean;
+
+    /**
      * List of backend hosts used to enable tracing.
      */
     firstPartyHosts?: FirstPartyHost[];

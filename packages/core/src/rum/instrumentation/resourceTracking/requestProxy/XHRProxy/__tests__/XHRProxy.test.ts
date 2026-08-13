@@ -43,7 +43,7 @@ import {
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../../../graphql/graphqlHeaders';
-import { ResourceReporter } from '../DatadogRumResource/ResourceReporter';
+import { ResourceReporter } from '../../common/ResourceReporter';
 import { XHRProxy } from '../XHRProxy';
 import {
     calculateResponseSize,
