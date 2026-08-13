@@ -281,6 +281,8 @@ yarn install
 yarn build:release
 ```
 
+**Note: If `yarn build:release` fails run `yarn install` again**
+
 Run the generated package whose architecture matches the target device. For example:
 
 ```sh
