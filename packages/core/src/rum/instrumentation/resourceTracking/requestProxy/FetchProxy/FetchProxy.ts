@@ -4,6 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../../../../InternalLog';
+import { SdkVerbosity } from '../../../../../config/types';
+import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
+import { getErrorData } from '../XHRProxy/xhrUtils';
 import { callOriginalFetch } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
 import { createRequestContext } from '../common/RequestContext';
@@ -51,13 +55,14 @@ export class FetchProxy extends RequestProxy {
 
     onTrackingStart = (context: RequestProxyOptions) => {
         this.context = context;
-        this.originalFetch = this.providers.fetchGlobal.fetch;
+        const originalFetch = this.providers.fetchGlobal.fetch;
+        this.originalFetch = originalFetch;
 
         const installedFetch: typeof fetch = (input, init) => {
             return trackFetch({
                 input,
                 init,
-                originalFetch: this.originalFetch as typeof fetch,
+                originalFetch,
                 fetchThis: this.providers.fetchGlobal,
                 headersType: this.providers.headersType,
                 resourceReporter: this.providers.resourceReporter,
@@ -124,7 +129,15 @@ const trackFetch = async ({
 
         context.timer.recordTick(RESPONSE_START_LABEL);
         context.timer.stop();
-        reportFetch({ context, response, resourceReporter });
+        reportFetch({ context, response, resourceReporter }).catch(error => {
+            const errorData = getErrorData(error);
+            if (errorData) {
+                InternalLog.log(
+                    `reportFetch failed: ${errorData}`,
+                    SdkVerbosity.WARN
+                );
+            }
+        });
         return response;
     } catch (error) {
         context.timer.stop();
@@ -215,7 +228,7 @@ const applyHeader = ({
     }
 };
 
-const reportFetch = ({
+const reportFetch = async ({
     context,
     response,
     resourceReporter
@@ -223,7 +236,28 @@ const reportFetch = ({
     context: RequestContext;
     response: Response;
     resourceReporter: ResourceReporter;
-}) => {
+}): Promise<void> => {
+    // Only extract GraphQL errors if operationType is set AND error tracking is enabled
+    if (context.graphql.operationType && context.graphql.trackErrors) {
+        try {
+            const body = await response.clone().json();
+
+            const errors = body?.errors;
+            if (Array.isArray(errors) && errors.length > 0) {
+                const filtered = extractGraphQLErrors(errors);
+
+                if (filtered.length > 0) {
+                    context.graphql.errors = filtered;
+                }
+            }
+        } catch (error) {
+            const errorData = getErrorData(error);
+            if (errorData) {
+                InternalLog.log(`reportFetch: ${errorData}`, SdkVerbosity.WARN);
+            }
+        }
+    }
+
     resourceReporter.reportResource({
         key: `${context.timer.startTime}/${context.method}`,
         request: {

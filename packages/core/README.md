@@ -85,6 +85,11 @@ export default function App() {
 `fetch`. Direct imports retained from `expo/fetch` are not intercepted. XHR
 tracking remains enabled for clients such as axios.
 
+GraphQL error extraction (via `DatadogLink({ trackErrors: true })`) for
+requests made through `expo/fetch` requires Expo SDK 56 or later, as older
+versions of `expo/fetch` do not implement `Response.clone()`. On earlier
+versions, GraphQL metadata is still reported, but response errors are not.
+
 ### Track view navigation
 
 Because React Native offers a wide range of libraries to create screen navigation, by default only manual View tracking is supported. You can manually start and stop a View using the following `startView()` and `stopView` methods.

@@ -12,7 +12,10 @@ import {
     TRACKED_BY_HEADER_KEY,
     TRACKED_BY_HEADER_VALUE
 } from '../../../distributedTracing/headers';
-import { DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER } from '../../../graphql/graphqlHeaders';
+import {
+    DATADOG_GRAPH_QL_ERROR_HEADER,
+    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER
+} from '../../../graphql/graphqlHeaders';
 import type { ResourceReporter } from '../../common/ResourceReporter';
 import type { RUMResource } from '../../interfaces/RumResource';
 import { FetchProxy } from '../FetchProxy';
@@ -65,16 +68,27 @@ const getOptions = (traceSampleRate = 100) => ({
 
 const createResponse = ({
     status = 200,
-    headers = {}
+    headers = {},
+    body
 }: {
     status?: number;
     headers?: Record<string, string>;
+    body?: unknown;
 } = {}) => {
-    return ({
+    const response = ({
         status,
-        headers: new HeadersMock(headers)
+        headers: new HeadersMock(headers),
+        clone() {
+            return response;
+        },
+        json: () => Promise.resolve(body)
     } as unknown) as Response;
+
+    return response;
 };
+
+const flushPromises = () =>
+    new Promise(jest.requireActual('timers').setImmediate);
 
 const createProxy = ({
     originalFetch,
@@ -245,5 +259,135 @@ describe('FetchProxy', () => {
         proxy.onTrackingStop();
 
         expect(fetchGlobal.fetch).toBe(laterFetch);
+    });
+
+    it('keeps a Fetch wrapper retained by another library callable after tracking stops', async () => {
+        const response = createResponse();
+        const originalFetch = jest
+            .fn()
+            .mockResolvedValue(response) as jest.MockedFunction<typeof fetch>;
+        const { fetchGlobal, proxy } = createProxy({
+            originalFetch,
+            reportResource: jest.fn()
+        });
+        proxy.onTrackingStart(getOptions());
+
+        // Another library installs its own wrapper after Datadog, capturing
+        // Datadog's installed Fetch as its own "original" delegate.
+        const capturedDatadogFetch = fetchGlobal.fetch;
+        fetchGlobal.fetch = ((input, init) =>
+            capturedDatadogFetch(input, init)) as typeof fetch;
+
+        proxy.onTrackingStop();
+
+        await expect(
+            capturedDatadogFetch('https://api.example.com/users')
+        ).resolves.toBe(response);
+    });
+
+    describe('GraphQL error filtering', () => {
+        it('extracts GraphQL errors from the response body when error tracking is enabled', async () => {
+            const graphqlResponse = {
+                data: { user: null },
+                errors: [
+                    {
+                        message: 'User not found',
+                        locations: [{ line: 2, column: 3 }],
+                        path: ['user', 0, 'id'],
+                        extensions: { code: 'NOT_FOUND' }
+                    }
+                ]
+            };
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(
+                    createResponse({ body: graphqlResponse })
+                ) as jest.MockedFunction<typeof fetch>;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getOptions());
+
+            await fetchGlobal.fetch('https://api.example.com/graphql', {
+                headers: {
+                    [DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]: 'query',
+                    [DATADOG_GRAPH_QL_ERROR_HEADER]: 'true'
+                }
+            });
+            await flushPromises();
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.graphqlAttributes?.errors).toEqual([
+                {
+                    message: 'User not found',
+                    code: 'NOT_FOUND',
+                    locations: [{ line: 2, column: 3 }],
+                    path: ['user', 0, 'id']
+                }
+            ]);
+        });
+
+        it('reports without errors when the Fetch implementation does not support clone()', async () => {
+            // Some Fetch implementations (e.g. `expo/fetch` prior to Expo SDK
+            // 56) throw on `response.clone()`.
+            const response = createResponse({ body: { data: {} } });
+            response.clone = () => {
+                throw new Error('Not implemented');
+            };
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(response) as jest.MockedFunction<
+                typeof fetch
+            >;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getOptions());
+
+            await expect(
+                fetchGlobal.fetch('https://api.example.com/graphql', {
+                    headers: {
+                        [DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]: 'query',
+                        [DATADOG_GRAPH_QL_ERROR_HEADER]: 'true'
+                    }
+                })
+            ).resolves.toBe(response);
+            await flushPromises();
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.graphqlAttributes?.operationType).toBe('query');
+            expect(resource.graphqlAttributes?.errors).toBeUndefined();
+        });
+
+        it('does not read the response body when error tracking is disabled', async () => {
+            const response = createResponse({ body: { data: {} } });
+            const cloneSpy = jest.spyOn(response, 'clone');
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(response) as jest.MockedFunction<
+                typeof fetch
+            >;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getOptions());
+
+            await fetchGlobal.fetch('https://api.example.com/graphql', {
+                headers: {
+                    [DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]: 'query'
+                }
+            });
+            await flushPromises();
+
+            expect(cloneSpy).not.toHaveBeenCalled();
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.graphqlAttributes?.errors).toBeUndefined();
+        });
     });
 });
