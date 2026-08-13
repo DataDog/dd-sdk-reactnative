@@ -3,6 +3,8 @@
 This package is a proof of concept React Native bridge for Amazon Vega OS backed by
 `dd-sdk-cpp`.
 
+For customer integration instructions, see the [Vega preview usage guide](./PREVIEW_USAGE.md).
+
 The native Vega module links `dd-sdk-cpp` through CMake. By default it fetches
 `https://github.com/DataDog/dd-sdk-cpp.git` at the `0.7.0` tag. Pass
 `-DDatadog_SOURCE_DIR=/path/to/dd-sdk-cpp` to use a local checkout during development.
