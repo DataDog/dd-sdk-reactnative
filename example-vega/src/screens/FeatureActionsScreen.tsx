@@ -287,6 +287,117 @@ export const FeatureActionsScreen = ({
           },
         },
         {
+          label: 'Set User Info',
+          testID: 'action-set-user-info',
+          run: async () => {
+            await DdSdkReactNative.setUserInfo({
+              id: 'vega-test-user',
+              name: 'Vega Test User',
+              email: 'vega-test-user@example.com',
+              extraInfo: {
+                plan: 'preview',
+                platform: 'vega',
+              },
+            });
+            await DdRum.addAction(RumActionType.CUSTOM, 'User Info Set', {
+              source: 'feature-actions',
+            });
+            await DdLogs.info('Vega user info set', {
+              source: 'feature-actions',
+            });
+            return 'Set user and emitted context test events';
+          },
+        },
+        {
+          label: 'Add User Extra Info',
+          testID: 'action-add-user-extra-info',
+          run: async () => {
+            await DdSdkReactNative.addUserExtraInfo({
+              role: 'tester',
+              updatedAt: Date.now(),
+            });
+            await DdRum.addAction(
+              RumActionType.CUSTOM,
+              'User Extra Info Added',
+              {source: 'feature-actions'},
+            );
+            await DdLogs.info('Vega user extra info added', {
+              source: 'feature-actions',
+            });
+            return 'Merged user extra info and emitted test events';
+          },
+        },
+        {
+          label: 'Clear User Info',
+          testID: 'action-clear-user-info',
+          run: async () => {
+            await DdSdkReactNative.clearUserInfo();
+            await DdRum.addAction(RumActionType.CUSTOM, 'User Info Cleared', {
+              source: 'feature-actions',
+            });
+            await DdLogs.info('Vega user info cleared', {
+              source: 'feature-actions',
+            });
+            return 'Cleared user and emitted context test events';
+          },
+        },
+        {
+          label: 'Set Account Info',
+          testID: 'action-set-account-info',
+          run: async () => {
+            await DdSdkReactNative.setAccountInfo({
+              id: 'vega-test-account',
+              name: 'Vega Test Account',
+              extraInfo: {
+                tier: 'preview',
+                region: 'test',
+              },
+            });
+            await DdRum.addAction(RumActionType.CUSTOM, 'Account Info Set', {
+              source: 'feature-actions',
+            });
+            await DdLogs.info('Vega account info set', {
+              source: 'feature-actions',
+            });
+            return 'Set account and emitted context test events';
+          },
+        },
+        {
+          label: 'Add Account Extra Info',
+          testID: 'action-add-account-extra-info',
+          run: async () => {
+            await DdSdkReactNative.addAccountExtraInfo({
+              subscription: 'evaluation',
+              updatedAt: Date.now(),
+            });
+            await DdRum.addAction(
+              RumActionType.CUSTOM,
+              'Account Extra Info Added',
+              {source: 'feature-actions'},
+            );
+            await DdLogs.info('Vega account extra info added', {
+              source: 'feature-actions',
+            });
+            return 'Merged account extra info and emitted test events';
+          },
+        },
+        {
+          label: 'Clear Account Info',
+          testID: 'action-clear-account-info',
+          run: async () => {
+            await DdSdkReactNative.clearAccountInfo();
+            await DdRum.addAction(
+              RumActionType.CUSTOM,
+              'Account Info Cleared',
+              {source: 'feature-actions'},
+            );
+            await DdLogs.info('Vega account info cleared', {
+              source: 'feature-actions',
+            });
+            return 'Cleared account and emitted context test events';
+          },
+        },
+        {
           label: 'Set Consent Pending',
           testID: 'action-consent-pending',
           run: async () => {

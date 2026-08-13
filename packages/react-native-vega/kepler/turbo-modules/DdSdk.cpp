@@ -347,9 +347,21 @@ com::amazon::kepler::turbomodule::Promise DdSdk::removeAttributes(
 com::amazon::kepler::turbomodule::Promise DdSdk::setUserInfo(
     com::amazon::kepler::turbomodule::JSObject user
 ) {
-    return Promise([](const std::shared_ptr<Promise>& promise) {
-        std::thread([promise]() {
-            // No-op: user info not yet supported in dd-sdk-cpp
+    return Promise([user](const std::shared_ptr<Promise>& promise) {
+        std::thread([promise, user]() {
+            auto core =
+                datadog_rn_vega::DatadogGlobalState::getInstance().getCore();
+            if (core) {
+                const auto* extraInfo =
+                    getObjectFromJSObject(user, "extraInfo");
+                core->SetUserInfo(
+                    getStringFromJSObject(user, "id"),
+                    getStringFromJSObject(user, "name"),
+                    getStringFromJSObject(user, "email"),
+                    extraInfo
+                        ? datadog_rn_vega::jsObjectToAttribute(*extraInfo)
+                        : datadog::Attribute::Object(0));
+            }
             promise->resolve(true);
         }).detach();
     });
@@ -358,7 +370,11 @@ com::amazon::kepler::turbomodule::Promise DdSdk::setUserInfo(
 com::amazon::kepler::turbomodule::Promise DdSdk::clearUserInfo() {
     return Promise([](const std::shared_ptr<Promise>& promise) {
         std::thread([promise]() {
-            // No-op: user info not yet supported in dd-sdk-cpp
+            auto core =
+                datadog_rn_vega::DatadogGlobalState::getInstance().getCore();
+            if (core) {
+                core->ClearUserInfo();
+            }
             promise->resolve(true);
         }).detach();
     });
@@ -367,9 +383,14 @@ com::amazon::kepler::turbomodule::Promise DdSdk::clearUserInfo() {
 com::amazon::kepler::turbomodule::Promise DdSdk::addUserExtraInfo(
     com::amazon::kepler::turbomodule::JSObject extraInfo
 ) {
-    return Promise([](const std::shared_ptr<Promise>& promise) {
-        std::thread([promise]() {
-            // No-op: user info not yet supported in dd-sdk-cpp
+    return Promise([extraInfo](const std::shared_ptr<Promise>& promise) {
+        std::thread([promise, extraInfo]() {
+            auto core =
+                datadog_rn_vega::DatadogGlobalState::getInstance().getCore();
+            if (core) {
+                core->AddUserExtraInfo(
+                    datadog_rn_vega::jsObjectToAttribute(extraInfo));
+            }
             promise->resolve(true);
         }).detach();
     });
@@ -378,9 +399,20 @@ com::amazon::kepler::turbomodule::Promise DdSdk::addUserExtraInfo(
 com::amazon::kepler::turbomodule::Promise DdSdk::setAccountInfo(
     com::amazon::kepler::turbomodule::JSObject account
 ) {
-    return Promise([](const std::shared_ptr<Promise>& promise) {
-        std::thread([promise]() {
-            // No-op: account info not yet supported in dd-sdk-cpp
+    return Promise([account](const std::shared_ptr<Promise>& promise) {
+        std::thread([promise, account]() {
+            auto core =
+                datadog_rn_vega::DatadogGlobalState::getInstance().getCore();
+            if (core) {
+                const auto* extraInfo =
+                    getObjectFromJSObject(account, "extraInfo");
+                core->SetAccountInfo(
+                    getStringFromJSObject(account, "id"),
+                    getStringFromJSObject(account, "name"),
+                    extraInfo
+                        ? datadog_rn_vega::jsObjectToAttribute(*extraInfo)
+                        : datadog::Attribute::Object(0));
+            }
             promise->resolve(true);
         }).detach();
     });
@@ -389,7 +421,11 @@ com::amazon::kepler::turbomodule::Promise DdSdk::setAccountInfo(
 com::amazon::kepler::turbomodule::Promise DdSdk::clearAccountInfo() {
     return Promise([](const std::shared_ptr<Promise>& promise) {
         std::thread([promise]() {
-            // No-op: account info not yet supported in dd-sdk-cpp
+            auto core =
+                datadog_rn_vega::DatadogGlobalState::getInstance().getCore();
+            if (core) {
+                core->ClearAccountInfo();
+            }
             promise->resolve(true);
         }).detach();
     });
@@ -398,9 +434,14 @@ com::amazon::kepler::turbomodule::Promise DdSdk::clearAccountInfo() {
 com::amazon::kepler::turbomodule::Promise DdSdk::addAccountExtraInfo(
     com::amazon::kepler::turbomodule::JSObject extraInfo
 ) {
-    return Promise([](const std::shared_ptr<Promise>& promise) {
-        std::thread([promise]() {
-            // No-op: account info not yet supported in dd-sdk-cpp
+    return Promise([extraInfo](const std::shared_ptr<Promise>& promise) {
+        std::thread([promise, extraInfo]() {
+            auto core =
+                datadog_rn_vega::DatadogGlobalState::getInstance().getCore();
+            if (core) {
+                core->AddAccountExtraInfo(
+                    datadog_rn_vega::jsObjectToAttribute(extraInfo));
+            }
             promise->resolve(true);
         }).detach();
     });
