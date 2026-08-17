@@ -28,7 +28,7 @@ describe('rules configuration', () => {
                     enabled: true
                 }
             })
-        ).toEqual({
+        ).toMatchObject({
             targetingKey: 'user-1',
             country: 'US',
             enabled: true
@@ -45,6 +45,81 @@ describe('rules configuration', () => {
             ''
         );
     });
+
+    it.each(['constructor', 'toString'])(
+        'shadows an absent inherited %s context attribute',
+        attribute => {
+            const rulesContext = toRulesEvaluationContext({
+                targetingKey: 'user-1'
+            });
+
+            expect(Object.getPrototypeOf(rulesContext)).toBeNull();
+            expect(
+                Object.prototype.hasOwnProperty.call(rulesContext, attribute)
+            ).toBe(true);
+            expect(rulesContext[attribute]).toBeUndefined();
+
+            const configuration = buildRulesConfiguration();
+            const condition =
+                configuration.flags['dynamic-flag'].allocations[0].rules?.[0]
+                    .conditions[0];
+            if (!condition) {
+                throw new Error('The fixture has no condition.');
+            }
+            condition.attribute = attribute;
+            condition.value = [
+                String(({} as Record<string, unknown>)[attribute])
+            ];
+
+            expect(
+                flaggingCoreRulesEngine.evaluate({
+                    configuration,
+                    type: 'boolean',
+                    flagKey: 'dynamic-flag',
+                    defaultValue: false,
+                    context: rulesContext,
+                    logger: getNoopRulesLogger()
+                })
+            ).toMatchObject({ value: false, reason: 'DEFAULT' });
+        }
+    );
+
+    it.each(['constructor', 'toString'])(
+        'preserves an explicit own %s context attribute',
+        attribute => {
+            const attributes = Object.create(null) as Record<string, string>;
+            attributes[attribute] = 'customer-value';
+
+            const rulesContext = toRulesEvaluationContext({
+                targetingKey: 'user-1',
+                attributes
+            });
+            expect(
+                Object.prototype.hasOwnProperty.call(rulesContext, attribute)
+            ).toBe(true);
+            expect(rulesContext[attribute]).toBe('customer-value');
+            const configuration = buildRulesConfiguration();
+            const condition =
+                configuration.flags['dynamic-flag'].allocations[0].rules?.[0]
+                    .conditions[0];
+            if (!condition) {
+                throw new Error('The fixture has no condition.');
+            }
+            condition.attribute = attribute;
+            condition.value = ['customer-value'];
+
+            expect(
+                flaggingCoreRulesEngine.evaluate({
+                    configuration,
+                    type: 'boolean',
+                    flagKey: 'dynamic-flag',
+                    defaultValue: false,
+                    context: rulesContext,
+                    logger: getNoopRulesLogger()
+                })
+            ).toMatchObject({ value: true, reason: 'TARGETING_MATCH' });
+        }
+    );
 
     it('clones and freezes a valid rules configuration', () => {
         const source = buildRulesConfiguration();
@@ -200,10 +275,15 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this legacy JSON compatibility test with a
     // generated protobuf fixture after a flagging-core release contains
-    // DataDog/openfeature-js-client#344 through `03cde21`. Round-trip the
+    // DataDog/openfeature-js-client#344 through `5a5511e`. Round-trip the
     // generated fixture and confirm that serialization preserves the unknown field.
     // Add a fixture with an unsupported minimum feature level and require a
-    // flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`.
+    // flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`. Also cover unsorted
+    // string and SHA-256 membership indexes, invalid SHA digest lengths, and
+    // semantic-version components at and above the unsigned 64-bit limit.
+    // Confirm that an absent inherited `__proto__` attribute does not match and
+    // that an explicit own `__proto__` context attribute remains usable. The
+    // legacy evaluator's compiled object spread cannot preserve that key.
     it('keeps supported known data when an unknown field is present', () => {
         const source = buildRulesConfiguration();
         (source.flags['dynamic-flag'] as typeof source.flags['dynamic-flag'] & {
@@ -230,7 +310,7 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this unsafe JSON number with an out-of-range
     // protobuf `int64` fixture after flagging-core contains PR #344 at or after
-    // `03cde21`. The generated parser must preserve the source value as `bigint`
+    // `5a5511e`. The generated parser must preserve the source value as `bigint`
     // where supported. Run the same evaluation with
     // global `BigInt` unavailable and require `PARSE_ERROR`, not `GENERAL`.
     it('returns PARSE_ERROR instead of serving an unsafe integer', () => {
