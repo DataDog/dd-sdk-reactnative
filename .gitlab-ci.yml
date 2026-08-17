@@ -6,6 +6,7 @@ include:
 variables:
     GIT_DEPTH: 5
     DEVELOP_BRANCH: 'develop'
+    TART_VM_IMAGE: '486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest'
     ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
     EMULATOR_NAME: 'android_emulator'
     ANDROID_ARCH: 'arm64-v8a'
@@ -25,6 +26,8 @@ stages:
     install-jdk-17:
         - brew install openjdk@17
     install-android-sdk:
+        - export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+        - export PATH="$JAVA_HOME/bin:$PATH"
         - curl -sSL -o commandlinetools.zip https://dl.google.com/android/repository/$ANDROID_SDK_VERSION.zip
         - rm -rf ~/android_sdk
         - rm -rf ~/cmdline-tools
@@ -45,7 +48,8 @@ stages:
 # TESTS
 
 test:lint:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -55,7 +59,8 @@ test:lint:
         - yarn run lint
 
 test:js:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -66,7 +71,8 @@ test:js:
         - NODE_OPTIONS='-r dd-trace/ci/init' DD_ENV=ci DD_SERVICE=dd-sdk-reactnative yarn test
 
 test:build:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -76,14 +82,15 @@ test:build:
         - yarn prepare
 
 test:native-android:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
-        - !reference [.snippets, install-android-sdk]
         - !reference [.snippets, install-jdk-17]
+        - !reference [.snippets, install-android-sdk]
         - /opt/homebrew/opt/openjdk@17/bin/java --version
         - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/core/android/gradle.properties
         - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-session-replay/android/gradle.properties
@@ -94,7 +101,8 @@ test:native-android:
         - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
 
 test:native-ios:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -105,7 +113,8 @@ test:native-ios:
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-sr:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -116,7 +125,8 @@ test:native-ios-sr:
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
 
 test:native-ios-newarch:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:tart']
+    image: "$TART_VM_IMAGE"
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'

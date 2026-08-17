@@ -5,6 +5,7 @@ include:
 variables:
   GIT_DEPTH: 5
   NODE_VERSION: '22.5.1'
+  TART_VM_IMAGE: '486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/ci-platform-machine-images/tart-vm:dd-sdk-reactnative-sonoma-latest'
   ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
   EMULATOR_NAME: 'android_emulator'
   ANDROID_ARCH: 'arm64-v8a'
@@ -36,6 +37,8 @@ stages:
   install-jdk-17:
     - brew install openjdk@17
   install-android-sdk:
+    - export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+    - export PATH="$JAVA_HOME/bin:$PATH"
     - curl -sSL -o commandlinetools.zip https://dl.google.com/android/repository/$ANDROID_SDK_VERSION.zip
     - rm -rf ~/android_sdk
     - rm -rf ~/cmdline-tools
@@ -60,11 +63,12 @@ stages:
 
 build-and-upload:app:
   stage: build-and-upload
-  tags: ['macos:sonoma', 'specific:true']
+  tags: ['macos:tart']
+  image: "$TART_VM_IMAGE"
   script:
     - !reference [.snippets, install-node]
-    - !reference [.snippets, install-android-sdk]
     - !reference [.snippets, install-jdk-17]
+    - !reference [.snippets, install-android-sdk]
     - !reference [.snippets, check-versions]
 
     - echo $(pwd)
