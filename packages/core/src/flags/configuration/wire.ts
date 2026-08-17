@@ -24,17 +24,16 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344
-// through `03cde21` plus the required SHA digest follow-up. The `03cde21` tree
-// is identical to the previous `939da97` tree. Its final `1db13d4` and
-// `03cde21` commits update generated Node-server artifacts and browser test
-// isolation; they do not change this React Native boundary.
+// through `5a5511e`.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
-// `@datadog/flagging-core/configuration`. Keep `FlagsConfiguration` and the rules
-// evaluator on the package root. The new `@datadog/flagging-core/precomputed`
+// `@datadog/flagging-core/configuration`. Do not use the deprecated package-root
+// aliases because they parse precomputed data only and ignore rules. Keep
+// `FlagsConfiguration` and the rules evaluator on the package root. The
+// `@datadog/flagging-core/precomputed`
 // subpath is protobuf-free, ignores rules, and is not the parser for this module.
-// PR #336 through `772167b` adds browser providers and shared lifecycle error
-// selection. Its tree is identical to the previous `6d3d6a4` tree, so it does
-// not change this core parser boundary. Do not import
+// PR #336 through `dde93ea` adds browser providers and shared lifecycle error
+// selection. Its latest commit removes unrelated `extraLogging` test coverage
+// and does not change this core parser boundary. Do not import
 // `@datadog/openfeature-browser` in React Native.
 // Use `FlagsConfiguration.rules`. The distribution layer must put one base64
 // encoding of the raw dd-source#34959 protobuf response in the version 1
@@ -43,7 +42,8 @@ import type {
 // service transport or envelope construction here. PR #344 preserves decoded
 // protobuf flags and integers. Its evaluator reports invalid reached data,
 // unsupported feature levels, and unsafe integer conversion as deterministic
-// flag-scoped `PARSE_ERROR` results.
+// flag-scoped `PARSE_ERROR` results. It also validates membership ordering,
+// semantic-version bounds, and 32-byte SHA-256 digests.
 type PendingRulesConfiguration = FlagsConfiguration & {
     configurationError?: string;
     rulesError?: string;
@@ -122,9 +122,9 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
     // published parser must also include PR #344's unknown-field tolerance,
     // unknown-field serialization, and lossless integer parsing through
-    // `03cde21`. Its safe-integer conversion does not require global `BigInt`.
+    // `5a5511e`. Its safe-integer conversion does not require global `BigInt`.
     // TODO(FFL-2837): Delete this parse-error compatibility behavior when the
-    // dependency contains PR #344 through `03cde21`. The upstream parser uses
+    // dependency contains PR #344 through `5a5511e`. The upstream parser uses
     // `configurationError` for an invalid envelope and `rulesError` for an
     // invalid rules entry or response. It keeps a valid sibling branch.
     const pendingRules = readPendingRulesWire(source);
@@ -155,8 +155,8 @@ export const configurationToString = (
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
     // TODO(FFL-2837): Delete this legacy serialization wrapper with the pending
-    // types above after the dependency contains PR #344 through `03cde21` and
-    // its required SHA digest follow-up. The upstream serializer encodes generated protobuf
+    // types above after the dependency contains PR #344 through `5a5511e`.
+    // The upstream serializer encodes generated protobuf
     // rules back to base64 and preserves unknown protobuf fields.
     // This temporary UFC v1 shim serializes its legacy JSON response instead.
     if (pendingConfiguration.rulesBased) {
