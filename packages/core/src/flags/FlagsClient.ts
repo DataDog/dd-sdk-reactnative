@@ -93,30 +93,31 @@ type LoadedConfigurationState =
 
 // TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `03cde21`. Its tree is identical to the previous `939da97` tree. The final
-// commits change generated Node-server artifacts and browser test isolation only.
-// Read
-// `configuration.rules.response` directly. The configuration is already parsed
-// from the complete portable envelope. Do not add raw-service-response handling
-// or envelope construction to `FlagsClient`. PR #344 moves parsing to
-// `@datadog/flagging-core/configuration`; keep that opt-in import in the local
-// wire module and keep `FlagsClient` independent of the parser and Protobuf-ES.
+// `5a5511e`. Read `configuration.rules.response` directly. The configuration is
+// already parsed from the complete portable envelope. Do not add
+// raw-service-response handling or envelope construction to `FlagsClient`.
+// PR #344 moves parsing to
+// `@datadog/flagging-core/configuration`; do not use the deprecated package-root
+// precomputed-only aliases. Keep that opt-in import in the local wire module and
+// keep `FlagsClient` independent of the parser and Protobuf-ES.
 // Keep `configurationError`, `rulesError`, `precomputedError`, and
 // `precomputed.flagErrors` when the released type provides them. PR #336 through
-// `772167b` selects valid matching precomputed data, then valid rules, before
-// it returns an applicable parse error. Its tree is identical to the previous
-// `6d3d6a4` tree. Keep these separate paths for the native precomputed cache and
+// `dde93ea` selects valid matching precomputed data, then valid rules, before
+// it returns an applicable parse error. Its latest commit removes unrelated
+// `extraLogging` test coverage and does not change the evaluation contract.
+// Keep these separate paths for the native precomputed cache and
 // tracking behavior, but use the same capability and error precedence. Replace
 // compatible lifecycle checks with the upstream
 // `getFlagsConfigurationError` helper after publication. The released evaluator
 // must include PR #344's deterministic flag-scoped
 // `PARSE_ERROR` results, including unsupported feature levels, unknown-field
 // tolerance, lossless protobuf integer parsing, and the required SHA-256
-// digest-length validation. Its safe-integer conversion no longer calls global
-// `BigInt`; keep coverage for unsafe integers and shard values without that
-// global. `FlagsClient` must not convert a parsed `bigint`. It must preserve the
-// evaluator's `PARSE_ERROR` when a value cannot be represented safely as a
-// JavaScript number.
+// digest-length validation. It also rejects unsorted protobuf membership data
+// and unsafe semantic-version components. Its safe-integer conversion no longer
+// calls global `BigInt`; keep coverage for unsafe integers and shard values
+// without that global. `FlagsClient` must not convert a parsed `bigint`. It must
+// preserve the evaluator's `PARSE_ERROR` when a value cannot be represented
+// safely as a JavaScript number.
 type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
     configurationError?: string;
     rulesError?: string;
