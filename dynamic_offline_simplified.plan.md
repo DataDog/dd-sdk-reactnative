@@ -71,15 +71,17 @@ Thus, the current application bundle already contains the existing rules engine.
 ### 2.2 Expected features from upstream PR #344
 
 PR #344 is the required upstream dependency change.
-Its code head is `03cde21` as of 2026-08-12.
-The branch was rebased again on 2026-08-11, so all earlier commit SHAs changed.
-The `03cde21` tree is identical to the previous `939da97` tree.
-Commits `4efb682` and `5ffffe0` now contain the previous `BigInt` and parse-error changes.
-They remove the evaluator dependency on the global `BigInt` function and preserve configuration parse errors.
-Commit `1db13d4` refreshes generated Node-server declarations and lock data after the rebase.
-It adds the existing SHA-256 and semantic-version operators to the generated Node-server declaration.
-Commit `03cde21` removes browser test setup that leaked provider initialization.
-Neither commit changes the React Native parser, evaluator, wire, or lifecycle contract.
+Its code head is `5a5511e` as of 2026-08-17.
+Commit `1eaaf10` merges the latest `main` branch.
+Commits `fd2290e` through `9ee5444` run packed full and precomputed browser packages in Chromium.
+The full package test decodes protobuf data, evaluates rules, serializes rules, and evaluates SHA-256 conditions.
+It also runs without global `BigInt`, `TextEncoder`, or `TextDecoder`.
+Commit `a33287a` restores deprecated package-root parser aliases for precomputed data only.
+Commit `62c294a` protects browser precomputed lookup from inherited property names.
+Commit `aa93230` protects protobuf condition and shard attribute lookup from inherited property names.
+Commit `55737a7` aligns protobuf semantic-version limits with the legacy evaluator.
+Commit `e918683` validates the sort order that protobuf membership lookup requires.
+Commit `5a5511e` validates that each SHA-256 digest contains exactly 32 bytes.
 It adds these features:
 
 - The opaque `FlagsConfigurationWire` type
@@ -108,7 +110,13 @@ It adds these features:
 - A synchronous JavaScript SHA-256 implementation
 - An internal UTF-8 implementation
 - Own-property lookup for legacy and protobuf rules flag maps
+- Own-property lookup for protobuf condition and shard context attributes
+- Own-property lookup for browser precomputed flag maps
+- Semantic-version components limited to unsigned 64-bit values
+- Evaluation-time validation of protobuf membership sort order
+- Evaluation-time validation of 32-byte SHA-256 digests
 - A React Native Metro smoke test
+- Packed-package Chromium smoke tests
 - A check that the default flagging-core entry point does not load Protobuf-ES
 - A check that the flagging-core and browser precomputed entry points do not load Protobuf-ES
 
@@ -132,8 +140,11 @@ The generated message types are compiled into the package output.
 The published package will expose `configuration.rules.response`.
 Do not use the old planned name `rulesBased`.
 
-The parser and `FlagsConfigurationWire` type are no longer package-root exports.
+The full parser and `FlagsConfigurationWire` type are not package-root exports.
 Import them from `@datadog/flagging-core/configuration`.
+The package root keeps deprecated `configurationFromString` and `configurationToString` aliases for precomputed data only.
+Those aliases ignore rules and do not load Protobuf-ES.
+Do not use those aliases for this work.
 Keep `evaluateRulesBasedConfiguration` and `FlagsConfiguration` imports on the package root.
 Browser customers use the package root for the full parser and provider.
 Precomputed-only browser customers can use `@datadog/openfeature-browser/precomputed` to exclude Protobuf-ES.
@@ -164,12 +175,12 @@ Do not depend on the parser to reject every non-canonical base64 spelling.
 PR #336 is stacked on PR #344.
 It adds the browser `DatadogOfflineProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` returns a rules object that the evaluator can use.
-Its head is `772167b` as of 2026-08-12.
-Its merge base is the current PR #344 head, `03cde21`.
+Its head is `dde93ea` as of 2026-08-17.
+Its merge base is the current PR #344 head, `5a5511e`.
 GitHub reports both PRs as mergeable.
-PR #336 was restacked after the PR #344 rebase.
-It has no new logical feature commit after the previous review.
-The `772167b` tree is identical to the previous `6d3d6a4` tree.
+PR #336 was restacked on the new PR #344 head.
+Commit `dde93ea` removes unrelated `extraLogging` coverage from a core test.
+It does not change provider, evaluator, wire, lifecycle, or mobile tracking behavior.
 Its current commits include valid-sibling fallback, optional configuration at construction, aligned parse errors, and standardized provider error events.
 The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
 The full browser root and the protobuf-free browser `/precomputed` entry point export that provider.
@@ -415,7 +426,9 @@ The opt-in `@datadog/flagging-core/configuration` subpath exports:
 - `configurationFromString`
 - `configurationToString`
 
-The package root does not export the parser.
+The package root keeps deprecated parser aliases for precomputed data only.
+Those aliases ignore rules and do not load Protobuf-ES.
+The package root does not export the full parser or `FlagsConfigurationWire`.
 Its default entry point does not load Protobuf-ES.
 The `@datadog/flagging-core/precomputed` subpath exports the same wire function names for precomputed data only.
 It ignores rules and does not load Protobuf-ES.
@@ -537,15 +550,18 @@ An empty string is a real key.
 Return `TARGETING_KEY_MISSING` only when a shard requires a missing key.
 Relax the internal context type and error union.
 
-### G9 — Prototype-unsafe flag lookup
+### G9 — Prototype-unsafe flag and context lookup
 
 **Status:** Implemented in PR #344. Publication is pending.
 
 PR #344 adds a shared own-property helper.
 The legacy rules evaluator and the protobuf evaluator use it.
 PR #336 uses it for the combined evaluator precomputed path.
+PR #344 also uses it for browser precomputed flag lookup and protobuf context attribute lookup.
 
 Reserved names such as `toString`, `__proto__`, and `constructor` now return `FLAG_NOT_FOUND` when they are not real flag keys.
+An inherited context attribute with one of these names does not satisfy a condition or select a shard.
+An explicit own context attribute with one of these names remains usable.
 The React Native precomputed cache also uses a `Map`.
 
 Pin the released dependency that contains this fix.
@@ -583,7 +599,7 @@ Measure evaluation time in release builds.
 
 ### G12 — Portable salted-hash protocol
 
-**Status:** Mostly defined in PR #344.
+**Status:** Defined in PR #344. Policy and limit decisions remain.
 
 PR #344 defines these items:
 
@@ -596,10 +612,9 @@ PR #344 defines these items:
 - False for null or missing attributes
 - `NOT_ONE_OF_SHA256` behavior
 
-The latest protobuf evaluator does not validate the digest length.
-A malformed digest becomes a non-match.
-For `NOT_ONE_OF_SHA256`, that non-match can make the condition match.
-Add 32-byte digest validation upstream before publication.
+Commit `5a5511e` validates that each digest contains exactly 32 bytes.
+A malformed digest returns flag-scoped `PARSE_ERROR` with a deterministic message.
+This validation also prevents a malformed digest from making `NOT_ONE_OF_SHA256` match.
 It does not define a salt length or reject an empty salt.
 It does not apply configuration-size, condition-count, or value-count limits.
 It does not publish canonical cross-SDK protocol vectors.
@@ -620,7 +635,7 @@ Publish cross-SDK vectors.
 - [ ] Publish flagging-core with rules wire parsing.
 - [ ] Publish the parsed `rules` field.
 - [ ] Publish the SHA operators and synchronous SHA-256 implementation.
-- [ ] Restore 32-byte SHA digest validation in the upstream protobuf evaluator.
+- [x] Validate 32-byte SHA digests in the upstream protobuf evaluator.
 - [ ] Confirm the remaining salt and size-limit rules.
 - [ ] Confirm the current mobile exposure contract.
 - [ ] Pin the flagging-core release that contains the own-property lookup fix.
@@ -1024,7 +1039,9 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Require `PARSE_ERROR`, not `GENERAL`, for invalid integer data without global `BigInt`.
 - [ ] Confirm that supported known data remains usable when the protobuf contains unknown fields.
 - [ ] Confirm that rules serialization preserves unknown protobuf fields.
-- [ ] Test inherited property names.
+- [ ] Confirm that absent inherited context attributes do not match conditions.
+- [ ] Confirm that absent inherited context attributes do not select shards.
+- [ ] Confirm that explicit own context attributes named `constructor` and `__proto__` remain usable.
 - [ ] Test mutation of the source object after load.
 - [ ] Run a hostile regex in an isolated process.
 - [ ] Stop the hostile-regex process at its time limit.
@@ -1036,6 +1053,11 @@ Add a native API only if the confirmed mobile contract requires more fields.
 - [ ] Confirm that an unsupported flag does not cause `FLAG_NOT_FOUND` or a silent `DEFAULT`.
 - [ ] Test a newer cached configuration with an older evaluator.
 - [ ] Reject malformed SHA digests.
+- [ ] Reject unsorted protobuf string membership indexes.
+- [ ] Reject unsorted protobuf SHA-256 digest indexes.
+- [ ] Accept semantic-version components at the unsigned 64-bit maximum.
+- [ ] Return `PARSE_ERROR` for a configured semantic-version component above the unsigned 64-bit maximum.
+- [ ] Treat a context semantic-version component above the unsigned 64-bit maximum as a non-match.
 - [ ] Apply the selected empty-salt policy.
 - [ ] Reject oversized SHA conditions.
 
@@ -1101,8 +1123,8 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 PR #344 and PR #336 are not published.
 Their APIs can change.
-PR #336 is based on PR #344 head `03cde21`.
-Its head is `772167b`.
+PR #336 is based on PR #344 head `5a5511e`.
+Its head is `dde93ea`.
 GitHub reports both PRs as mergeable.
 PR #344 still calls the follow-up `CoreProvider` in its description.
 Use the current PR #336 `DatadogOfflineProvider` name.
@@ -1391,6 +1413,8 @@ Direct archive comparisons confirmed that both new head trees are identical to t
 The upstream state was checked again on 2026-08-12.
 PR #344 remained at `03cde21`, and PR #336 remained at `772167b`.
 The commit counts, update times, descriptions, and reviewed contracts did not change.
+The plan was updated on 2026-08-17 after PR #344 added packed-package Chromium tests, deprecated precomputed-only root aliases, safe context and precomputed lookups, semantic-version bounds, membership ordering checks, and 32-byte SHA-256 digest validation.
+PR #336 was restacked at `dde93ea` and removed only unrelated `extraLogging` test coverage.
 
 The reviews produced these main corrections:
 
@@ -1402,6 +1426,7 @@ The reviews produced these main corrections:
 - PR #336 exposes `DatadogOfflineProvider` and keeps `DatadogCoreProvider` internal.
 - The browser offline-provider lifecycle matches the React Native lifecycle.
 - Configuration parsing moved to `@datadog/flagging-core/configuration`.
+- Deprecated package-root parser aliases support precomputed data only and must not parse rules.
 - The full browser package root now exports configuration parsing.
 - The browser and flagging-core precomputed entry points exclude Protobuf-ES.
 - The default flagging-core entry point does not load Protobuf-ES.
@@ -1426,6 +1451,7 @@ The reviews produced these main corrections:
 - Regular-expression safety still requires a decision.
 - A missing targeting key differs from an empty string in the evaluator.
 - PR #344 fixes prototype-name lookup in both rules evaluators.
+- PR #344 also fixes inherited context-attribute lookup and browser precomputed lookup.
 - PR #336 uses the same safe lookup for its precomputed evaluator.
 - The public parsed configuration type is not fully opaque.
 - OpenFeature types currently resolve through hoisting.
@@ -1440,6 +1466,10 @@ The reviews produced these main corrections:
 - PR #336 now selects a valid sibling before it returns a branch parse error.
 - PR #344 no longer requires the global `BigInt` function for safe integer conversion.
 - The upstream no-`BigInt` smoke test covers a safe integer but not unsafe integers or shard values.
+- PR #344 limits semantic-version components to unsigned 64-bit values.
+- PR #344 rejects unsorted protobuf membership data during evaluation.
+- PR #344 rejects SHA-256 digests that are not 32 bytes.
+- PR #344 runs packed full and precomputed browser packages in Chromium.
 - The salted-hash protocol needs canonical cross-SDK test vectors.
 - Salted SHA-256 does not make low-entropy values confidential.
 - Platform opt-in does not apply to customer-supplied wires.
