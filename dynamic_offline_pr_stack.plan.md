@@ -20,13 +20,15 @@ Keep all three pull requests in draft state.
 
 Published flagging-core version 2.0.2 does not contain the new rules wire contract.
 Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, evaluation-time validation, safe flag lookup, and React Native compatibility.
-Its code head is `03cde21` as of 2026-08-12.
-The branch was rebased again on 2026-08-11, so all earlier commit SHAs changed.
-The `03cde21` tree is identical to the previous `939da97` tree.
-Commits `4efb682` and `5ffffe0` remove the evaluator dependency on global `BigInt` and preserve configuration parse errors.
-Commit `1db13d4` refreshes generated Node-server declarations and lock data.
-Commit `03cde21` removes browser test setup that leaked provider initialization.
-These commits do not change the React Native contract.
+Its code head is `5a5511e` as of 2026-08-17.
+Commit `1eaaf10` merges the latest `main` branch.
+Commits `fd2290e` through `9ee5444` add packed-package Chromium tests.
+Commit `a33287a` restores deprecated package-root parser aliases for precomputed data only.
+Commit `62c294a` protects browser precomputed lookup from inherited property names.
+Commit `aa93230` protects protobuf condition and shard attribute lookup from inherited property names.
+Commit `55737a7` aligns protobuf semantic-version limits with the legacy evaluator.
+Commit `e918683` validates protobuf membership sort order.
+Commit `5a5511e` validates 32-byte SHA-256 digests.
 It adds `@bufbuild/protobuf` as a runtime dependency.
 Its packed-package smoke test uses the Metro export conditions from this repository.
 It moves wire parsing and `FlagsConfigurationWire` to `@datadog/flagging-core/configuration`.
@@ -36,6 +38,8 @@ The browser package adds `@datadog/openfeature-browser/precomputed` as the proto
 The old planned `@datadog/openfeature-browser/configuration` entry point no longer exists.
 The default flagging-core entry point keeps the evaluator and shared types.
 It does not load Protobuf-ES.
+It keeps deprecated precomputed-only parser aliases that ignore rules.
+Do not use those aliases for rules parsing.
 The configuration subpath uses the Protobuf-ES base64 decoder.
 The precomputed subpath ignores rules and does not load Protobuf-ES.
 It does not promise strict rejection of non-canonical base64 padding.
@@ -55,8 +59,9 @@ This cache does not solve ReDoS.
 It uses the canonical schema from merged ddoghq/dd-source PR #40304 at `071c4ad`.
 That schema requires an informative flag-scoped error for an unsupported feature level.
 The evaluator already returns a deterministic `PARSE_ERROR` for that case.
-The latest protobuf evaluator no longer validates that SHA-256 digests are 32 bytes.
-An upstream fix is required before the dependency is pinned.
+The protobuf evaluator returns deterministic flag-scoped `PARSE_ERROR` for a SHA-256 digest that is not 32 bytes.
+It validates the sort order required by protobuf string and SHA-256 membership lookup.
+It limits semantic-version major, minor, and patch components to unsigned 64-bit values.
 The React Native smoke test runs without global `BigInt` and evaluates a static boolean and a safe integer.
 The protobuf evaluator no longer calls global `BigInt(...)` for integer and shard safety checks.
 React Native must still test unsafe integers and safe and unsafe shard values without global `BigInt`.
@@ -64,12 +69,12 @@ The parser now preserves `configurationError` for an invalid envelope and `rules
 
 Upstream PR #336 uses that parser in the browser `DatadogOfflineProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
-Its head is `772167b` as of 2026-08-12.
-Its merge base is the current PR #344 head, `03cde21`.
+Its head is `dde93ea` as of 2026-08-17.
+Its merge base is the current PR #344 head, `5a5511e`.
 GitHub reports both PRs as mergeable.
-The 2026-08-12 review found no new commits, description changes, or contract changes in either PR.
-PR #336 was restacked after the PR #344 rebase and has no new logical feature commit.
-The `772167b` tree is identical to the previous `6d3d6a4` tree.
+PR #336 was restacked on the new PR #344 head.
+Commit `dde93ea` removes unrelated `extraLogging` coverage from a core test.
+It does not change the browser or React Native integration contract.
 Its current commits include valid-sibling fallback, optional configuration at construction, aligned parse errors, and standardized provider error events.
 The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
 The browser root and `/precomputed` entry points both export `DatadogOfflineProvider`.
@@ -146,6 +151,10 @@ Add the internal boundary for the rules engine.
 - Add contract tests for backward-only composite condition references.
 - Add a contract test for lazy regular-expression compilation.
 - Add a contract test that malformed SHA-256 digests return `PARSE_ERROR`.
+- Add contract tests that unsorted protobuf string and SHA-256 membership data return `PARSE_ERROR`.
+- Add semantic-version contract tests at and above the unsigned 64-bit component limit.
+- Add contract tests that absent inherited context attributes do not match conditions or select shards.
+- Confirm that explicit own context attributes named `constructor` and `__proto__` remain usable.
 - Add a contract test that unknown protobuf fields do not reject supported known data.
 - Add a contract test that preserves an out-of-range protobuf integer during parsing.
 - Add a contract test that returns `PARSE_ERROR` instead of an imprecise number during evaluation.
