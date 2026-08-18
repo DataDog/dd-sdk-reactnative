@@ -6,6 +6,7 @@ include:
 variables:
     GIT_DEPTH: 5
     DEVELOP_BRANCH: 'develop'
+    XCODE_VERSION: '26.5'
     ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
     EMULATOR_NAME: 'android_emulator'
     ANDROID_ARCH: 'arm64-v8a'
@@ -22,6 +23,9 @@ stages:
     - notify
 
 .snippets:
+    select-xcode:
+        - sudo xcodes select "$XCODE_VERSION"
+        - xcodebuild -version
     install-jdk-17:
         - brew install openjdk@17
     install-android-sdk:
@@ -100,9 +104,10 @@ test:native-ios:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
+        - !reference [.snippets, select-xcode]
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=18.5,name=iPhone 16 Pro Max" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=26.5,name=iPhone 17 Pro" | xcbeautify
 
 test:native-ios-sr:
     tags: ['macos:sequoia-arm64', 'specific:true']
@@ -111,9 +116,10 @@ test:native-ios-sr:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
+        - !reference [.snippets, select-xcode]
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=18.5,name=iPhone 16 Pro Max" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=26.5,name=iPhone 17 Pro" | xcbeautify
 
 test:native-ios-newarch:
     tags: ['macos:sequoia-arm64', 'specific:true']
@@ -122,9 +128,10 @@ test:native-ios-newarch:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
+        - !reference [.snippets, select-xcode]
         - yarn
         - (cd example-new-architecture/ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=18.5,name=iPhone 16 Pro Max" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=26.5,name=iPhone 17 Pro" | xcbeautify
 
 benchmark:
     stage: benchmark
