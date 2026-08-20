@@ -4,10 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-// Published flagging-core 2.0.2 exports wire conversion from its package root. PR #344 moves
-// that conversion to the opt-in `@datadog/flagging-core/configuration` entry point so the default
-// entry point does not load Protobuf-ES. In both versions, the input is the complete portable JSON
-// envelope. It is not the raw protobuf or legacy JSON response from the UFC service.
+// Published flagging-core 2.0.2 exports wire conversion from its package root. PR #344 keeps
+// precomputed-only conversion on the protobuf-free package root and exposes complete conversion
+// from `@datadog/flagging-core/rules-based`. In both versions, the input is the complete portable
+// JSON envelope. It is not the raw protobuf or legacy JSON response from the UFC service.
 // Published `configurationFromString` is lenient: it returns an empty configuration
 // (`{}`) for malformed input or an unsupported wire version rather than throwing.
 // PR #344 preserves that failure as `configurationError` instead.
@@ -24,16 +24,14 @@ import type {
 
 // TODO(FFL-2837): Delete the pending `rulesBased` types, reader, and wrappers
 // after a flagging-core release contains DataDog/openfeature-js-client#344
-// through `5a5511e`.
+// through `78a0c14`.
 // Import and re-export the wire functions and `FlagsConfigurationWire` type from
-// `@datadog/flagging-core/configuration`. Do not use the deprecated package-root
-// aliases because they parse precomputed data only and ignore rules. Keep
+// `@datadog/flagging-core/rules-based`. Do not use the package-root parser for
+// rules because it parses precomputed data only and ignores rules. Keep
 // `FlagsConfiguration` and the rules evaluator on the package root. The
-// `@datadog/flagging-core/precomputed`
-// subpath is protobuf-free, ignores rules, and is not the parser for this module.
-// PR #336 through `dde93ea` adds browser providers and shared lifecycle error
-// selection. Its latest commit removes unrelated `extraLogging` test coverage
-// and does not change this core parser boundary. Do not import
+// package-root parser is protobuf-free and is not the parser for this module.
+// PR #336 through `9fd61c4` adds browser providers and shared lifecycle error
+// selection. It uses the same `/rules-based` parser boundary. Do not import
 // `@datadog/openfeature-browser` in React Native.
 // Use `FlagsConfiguration.rules`. The distribution layer must put one base64
 // encoding of the raw dd-source#34959 protobuf response in the version 1
@@ -122,9 +120,9 @@ export const configurationFromString = (source: string): FlagsConfiguration => {
     // validator that PR #344 removed in favor of the Protobuf-ES decoder. The
     // published parser must also include PR #344's unknown-field tolerance,
     // unknown-field serialization, and lossless integer parsing through
-    // `5a5511e`. Its safe-integer conversion does not require global `BigInt`.
+    // `78a0c14`. Its safe-integer conversion does not require global `BigInt`.
     // TODO(FFL-2837): Delete this parse-error compatibility behavior when the
-    // dependency contains PR #344 through `5a5511e`. The upstream parser uses
+    // dependency contains PR #344 through `78a0c14`. The upstream parser uses
     // `configurationError` for an invalid envelope and `rulesError` for an
     // invalid rules entry or response. It keeps a valid sibling branch.
     const pendingRules = readPendingRulesWire(source);
@@ -155,7 +153,7 @@ export const configurationToString = (
     const pendingConfiguration = configuration as PendingRulesConfiguration;
 
     // TODO(FFL-2837): Delete this legacy serialization wrapper with the pending
-    // types above after the dependency contains PR #344 through `5a5511e`.
+    // types above after the dependency contains PR #344 through `78a0c14`.
     // The upstream serializer encodes generated protobuf
     // rules back to base64 and preserves unknown protobuf fields.
     // This temporary UFC v1 shim serializes its legacy JSON response instead.

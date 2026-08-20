@@ -11,8 +11,9 @@ import type {
 } from '@openfeature/web-sdk';
 
 // TODO(FFL-2837): Delete this local helper and its clone-semantics tests after a
-// flagging-core release contains DataDog/openfeature-js-client#353 through
-// `caae6ab` and `@datadog/mobile-react-native` re-exports the upstream helper.
+// flagging-core release contains DataDog/openfeature-js-client#344 through
+// `78a0c14`, including merged PR #353, and `@datadog/mobile-react-native`
+// re-exports the upstream package-root helper.
 // Import and re-export `getPrecomputedContext` from the React Native SDK instead.
 // Raise the React Native SDK peer and development dependency minimums to the first
 // release that exports it. Replace these semantic tests with one package-root
