@@ -1,48 +1,93 @@
 // The flag key shared with the online example, so the UI is comparable across providers.
 export const OFFLINE_FLAG_KEY = 'rn-sdk-test-boolean-flag';
 
-export type OfflineWireContext = {targetingKey?: string} & Record<
-  string,
-  string | number | boolean
->;
-
-// The evaluation context the bundled configuration is precomputed for. Because the wire
-// carries its own context, the app does not need to call `OpenFeature.setContext` for the
-// offline flow.
-export const DEFAULT_OFFLINE_CONTEXT: OfflineWireContext = {
-  targetingKey: 'example-offline-user',
+export const DYNAMIC_OFFLINE_CONTEXTS = {
+  included: {
+    targetingKey: 'example-offline-user-a',
+    country: 'US',
+  },
+  excluded: {
+    targetingKey: 'example-offline-user-b',
+    country: 'CA',
+  },
 };
 
 /**
- * Build a bundled `ConfigurationWire` v1 string for the offline example.
+ * Build a complete bundled portable rules `ConfigurationWire` string.
  *
- * Mirrors the shape the Datadog Flags CDN returns, but is bundled with the app so the demo
- * is fully offline — it never hits the network. Flip `variationValue` to `false` to confirm
- * the flag's fallback renders.
+ * The example is fully offline. It evaluates the same rules for each new
+ * OpenFeature context. It does not fetch a UFC response or build a wire at runtime.
  */
-export const buildSampleWire = (
-  context: OfflineWireContext = DEFAULT_OFFLINE_CONTEXT,
-  variationValue = true,
-): string =>
+export const buildSampleWire = (): string =>
   JSON.stringify({
     version: 1,
-    precomputed: {
-      context,
+    // TODO(FFL-2837): Replace this complete legacy `rulesBased` JSON branch
+    // after a published flagging-core release contains
+    // DataDog/openfeature-js-client#344 through `78a0c14`. That head validates
+    // 32-byte SHA digests, UTF-8-compatible membership ordering, semantic-version
+    // bounds, strict condition coercion, and own context attributes. It memoizes
+    // condition results per evaluation. Its packed Chromium tests cover protobuf
+    // decode, rules serialization, SHA evaluation, and execution without global
+    // `BigInt`, `TextEncoder`, or `TextDecoder`. Retain React Native tests for
+    // unsafe integers, shard values, and inherited context attributes.
+    // Reuse the production-derived client
+    // fixture from the integration test: one base64 encoding of the canonical
+    // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
+    // Record dd-source#40304 commit `071c4ad` as its schema revision. Let the
+    // upstream `@datadog/flagging-core/rules-based` subpath decode it. The
+    // package-root parser is protobuf-free, parses precomputed data only, and
+    // ignores rules. Do not use the removed `/configuration` or `/precomputed`
+    // subpaths, raw protobuf, the legacy service JSON response, or a local strict
+    // base64 validator here.
+    // The final fixture must preserve protobuf integers as `bigint`, return
+    // `PARSE_ERROR` for unsafe number conversion, tolerate unknown fields,
+    // preserve them through `configurationToString`, return flag-scoped
+    // `PARSE_ERROR` for an unsupported feature level, malformed SHA digest,
+    // or unsorted membership data, and work without the global `BigInt`
+    // function.
+    rulesBased: {
       response: JSON.stringify({
-        data: {
-          attributes: {
-            obfuscated: false,
-            flags: {
-              [OFFLINE_FLAG_KEY]: {
-                variationType: 'boolean',
-                variationValue,
-                variationKey: String(variationValue),
-                allocationKey: 'offline-example-alloc',
-                reason: 'STATIC',
-                doLog: true,
-                extraLogging: {},
-              },
+        createdAt: '2026-07-23T12:00:00.000Z',
+        format: 'SERVER',
+        environment: {name: 'example'},
+        flags: {
+          [OFFLINE_FLAG_KEY]: {
+            key: OFFLINE_FLAG_KEY,
+            enabled: true,
+            variationType: 'BOOLEAN',
+            variations: {
+              enabled: {key: 'enabled', value: true},
             },
+            allocations: [
+              {
+                key: 'offline-example-alloc',
+                rules: [
+                  {
+                    conditions: [
+                      {
+                        operator: 'ONE_OF',
+                        attribute: 'country',
+                        value: ['US'],
+                      },
+                    ],
+                  },
+                ],
+                splits: [
+                  {
+                    variationKey: 'enabled',
+                    serialId: 1,
+                    shards: [
+                      {
+                        salt: 'offline-example-salt',
+                        ranges: [{start: 0, end: 100}],
+                        totalShards: 100,
+                      },
+                    ],
+                  },
+                ],
+                doLog: true,
+              },
+            ],
           },
         },
       }),

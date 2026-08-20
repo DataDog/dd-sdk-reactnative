@@ -55,6 +55,103 @@ const wireFor = (context?: EvaluationContext): string =>
         }
     });
 
+const rulesResponseFor = (flagKey: string) => ({
+    createdAt: '2026-07-23T12:00:00.000Z',
+    format: 'SERVER',
+    environment: { name: 'test' },
+    flags: {
+        [flagKey]: {
+            key: flagKey,
+            enabled: true,
+            variationType: 'BOOLEAN',
+            variations: {
+                enabled: { key: 'enabled', value: true }
+            },
+            allocations: [
+                {
+                    key: 'rules-allocation',
+                    rules: [
+                        {
+                            conditions: [
+                                {
+                                    operator: 'ONE_OF',
+                                    attribute: 'country',
+                                    value: ['US']
+                                }
+                            ]
+                        }
+                    ],
+                    splits: [
+                        {
+                            variationKey: 'enabled',
+                            serialId: 7,
+                            shards: [
+                                {
+                                    salt: 'test-salt',
+                                    ranges: [{ start: 0, end: 100 }],
+                                    totalShards: 100
+                                }
+                            ]
+                        }
+                    ],
+                    doLog: false
+                }
+            ]
+        }
+    }
+});
+
+// TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
+// flagging-core release contains DataDog/openfeature-js-client#344 through
+// `78a0c14`. It validates 32-byte SHA digests, UTF-8-compatible membership
+// ordering, semantic-version bounds, strict condition coercion, and own condition
+// and shard context attributes. It memoizes condition results per evaluation.
+// Its packed Chromium tests cover protobuf decode, rules serialization, SHA
+// evaluation, and execution without global `BigInt`, `TextEncoder`, or
+// `TextDecoder`. They do not cover unsafe integers, shard values, Hermes, or JSC.
+// Use
+// canonical raw protobuf bytes produced from the dd-source#34959
+// client-distribution path. Record dd-source#40304 commit `071c4ad` as the schema
+// revision and dd-source#34959 as the service producer path.
+// PR #336 through `9fd61c4` uses the same wire contract. It defines valid-sibling
+// and parse-error precedence, defers offline validation and events until
+// initialization supplies the effective context, and uses the
+// `{ message, errorCode? }` provider error event. Keep the existing React Native
+// provider name and its Ready-before-ConfigurationChanged recovery order.
+// Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
+// verify that decoding returns the original bytes, and record the source revision.
+// Use the upstream `@datadog/flagging-core/rules-based` parser. Do not copy the
+// strict base64 validator removed by PR #344. The package-root parser is
+// protobuf-free, parses precomputed data only, and ignores rules. The old
+// `/configuration` and `/precomputed` subpaths were removed. Reuse the
+// portable-wire fixture for examples, Metro, Hermes, and JSC checks. Confirm that
+// the default flagging-core entry point excludes Protobuf-ES and
+// measure whether the React Native root includes it.
+// The fixture must prove that unknown fields preserve supported known data and
+// that an out-of-range `int64` stays a `bigint` before evaluation returns
+// `PARSE_ERROR`. Round-trip it through `configurationToString` and prove that
+// unknown fields survive serialization. Run safe and unsafe integer variations,
+// shard counts, and shard ranges without global `BigInt`; invalid data must return
+// `PARSE_ERROR`, not `GENERAL`. Add fixtures for malformed SHA digests, unsorted
+// string and SHA-256 membership indexes, semantic-version components at and above
+// the unsigned 64-bit maximum, supported primitive and strict numeric coercion,
+// non-ASCII membership order, per-evaluation condition memoization, and absent
+// inherited condition and shard attributes. Confirm that explicit own
+// reserved-name attributes remain usable.
+// Run the same fixture in the supported Hermes and JSC versions. Also require
+// flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`, for an unsupported minimum
+// feature level.
+const rulesWireFor = (
+    flagKey: string,
+    response = rulesResponseFor(flagKey)
+): string =>
+    JSON.stringify({
+        version: 1,
+        rulesBased: {
+            response: JSON.stringify(response)
+        }
+    });
+
 // A unique OpenFeature domain + Datadog clientName per test keeps providers isolated (separate
 // domains otherwise share the same underlying FlagsClient).
 let seq = 0;
@@ -82,6 +179,7 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         await OpenFeature.clearProviders();
         // Reset the global context so a context set by one test does not leak into the next.
         await OpenFeature.clearContext();
+        jest.clearAllMocks();
     });
 
     it('uses the helper context to start READY with a precomputed configuration', async () => {
@@ -109,6 +207,105 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
             jest.requireMock('../../../core/src/specs/NativeDdFlags').default
                 .setEvaluationContext
         ).not.toHaveBeenCalled();
+    });
+
+    it('evaluates rules for each new context without a fetch', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(
+            configurationFromString(rulesWireFor('dynamic-feature'))
+        );
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        const client = OpenFeature.getClient(domain);
+        await OpenFeature.setContext(domain, {
+            targetingKey: 'user-1',
+            country: 'US'
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('dynamic-feature', false)).toBe(true);
+
+        await OpenFeature.setContext(domain, {
+            targetingKey: 'user-2',
+            country: 'CA'
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('dynamic-feature', false)).toBe(false);
+
+        const nativeFlags = jest.requireMock(
+            '../../../core/src/specs/NativeDdFlags'
+        ).default;
+        expect(nativeFlags.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('reports PARSE_ERROR for a supplied unusable configuration', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString('not json'));
+
+        await expect(
+            OpenFeature.setProviderAndWait(domain, provider)
+        ).rejects.toMatchObject({ code: ErrorCode.PARSE_ERROR });
+
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+        expect(client.getBooleanDetails('new-feature', false)).toMatchObject({
+            value: false,
+            errorCode: ErrorCode.PARSE_ERROR,
+            errorMessage: 'Invalid flags configuration wire format'
+        });
+    });
+
+    it('does not synthesize an empty targeting key when a shard requires one', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(
+            configurationFromString(rulesWireFor('dynamic-feature'))
+        );
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        await OpenFeature.setContext(domain, { country: 'US' });
+
+        const details = OpenFeature.getClient(domain).getBooleanDetails(
+            'dynamic-feature',
+            false
+        );
+        expect(details.value).toBe(false);
+        expect(details.errorCode).toBe(ErrorCode.TARGETING_KEY_MISSING);
+    });
+
+    it('preserves an unsafe-integer PARSE_ERROR and does not track it', async () => {
+        const { domain, clientName } = freshNames();
+        const response = rulesResponseFor('invalid-feature');
+        const flag = (response.flags['invalid-feature'] as unknown) as {
+            variationType: string;
+            variations: { enabled: { value: unknown } };
+        };
+        flag.variationType = 'INTEGER';
+        flag.variations.enabled.value = Number.MAX_SAFE_INTEGER + 1;
+
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(
+            configurationFromString(rulesWireFor('invalid-feature', response))
+        );
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        const details = OpenFeature.getClient(domain).getNumberDetails(
+            'invalid-feature',
+            0
+        );
+        expect(details).toMatchObject({
+            value: 0,
+            reason: 'ERROR',
+            errorCode: ErrorCode.PARSE_ERROR,
+            errorMessage:
+                'Integer variation value cannot be represented safely as a JavaScript number'
+        });
+
+        const nativeFlags = jest.requireMock(
+            '../../../core/src/specs/NativeDdFlags'
+        ).default;
+        expect(nativeFlags.trackEvaluation).not.toHaveBeenCalled();
     });
 
     it('starts in ERROR when a context-specific configuration has no OpenFeature context', async () => {

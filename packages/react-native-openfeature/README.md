@@ -29,15 +29,18 @@ yarn add @datadog/mobile-react-native @datadog/mobile-react-native-openfeature @
 Use the following example code snippet to initialize the Datadog SDK, enable the Feature Flags feature, and set up the OpenFeature provider.
 
 ```tsx
-import { CoreConfiguration, DatadogProvider, DdFlags } from '@datadog/mobile-react-native';
+import {
+    CoreConfiguration,
+    DatadogProvider,
+    DdFlags
+} from '@datadog/mobile-react-native';
 import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 (async () => {
     // Follow the core Datadog SDK initialization guide.
-    const config = new CoreConfiguration(
-        // ...
-    );
+    const config = new CoreConfiguration();
+    // ...
     await DdSdkReactNative.initialize(config);
 
     // Enable Datadog Flags feature after the core SDK has been initialized.
@@ -60,7 +63,7 @@ import { OpenFeature } from '@openfeature/react-sdk';
     }}
 >
     {/* ... */}
-</DatadogProvider>
+</DatadogProvider>;
 ```
 
 After completing this setup, your app is ready for flag evaluation with OpenFeature.
@@ -114,11 +117,9 @@ export default AppWithProviders;
 
 ### Offline initialization
 
-If you fetch a flag configuration yourself (for example a precomputed-assignments payload
-cached on disk, delivered via your own service, or bundled with the app), use
-`DatadogOfflineOpenFeatureProvider` instead of `DatadogOpenFeatureProvider`. It evaluates flags
-and reports exposures exactly like the online provider, but **never fetches configuration from
-the network** — you supply it with `setConfiguration`.
+Use `DatadogOfflineOpenFeatureProvider` when your application supplies the flag configuration.
+The provider does not fetch a configuration.
+It evaluates flags and reports evaluations through the normal Datadog path.
 
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
@@ -154,6 +155,41 @@ const isNewFeatureEnabled = client.getBooleanValue(
 );
 ```
 
+`wire` must be the complete version `1` portable JSON envelope.
+For rules, `rules.response` contains one base64 encoding of the raw UFC protobuf bytes.
+Use standard base64.
+The SDK delegates decoding to flagging-core and does not add a second stricter base64 validator.
+Do not pass raw protobuf bytes to `configurationFromString`.
+Do not put the UFC service JSON response in `rules.response`.
+The provider does not fetch the UFC endpoint or build the portable envelope.
+The customer or configuration distribution layer must supply that envelope.
+
+Flagging-core keeps an invalid or unsupported rules flag in the parsed configuration.
+An evaluation of that flag returns `PARSE_ERROR` and the validation message.
+The SDK does not track that error result.
+Other valid rules flags remain usable.
+Unknown protobuf fields do not reject supported known data.
+Protobuf integer values stay as `bigint` in the parsed rules object.
+Safe integers evaluate as OpenFeature numbers.
+An integer outside the JavaScript safe range returns `PARSE_ERROR`.
+The SDK does not return a rounded or imprecise value.
+
+`configurationToString` serializes precomputed and rules configurations.
+It preserves unknown protobuf fields in the rules response.
+Keep the original wire until the published flagging-core dependency provides this contract.
+
+Load the configuration before you set the provider.
+Before provider initialization, `setConfiguration` stores the configuration without emitting
+lifecycle events. Initialization validates it against the effective OpenFeature context.
+The provider starts in `ERROR` with `PROVIDER_NOT_READY` when no configuration was supplied.
+A supplied but unusable configuration reports `PARSE_ERROR`.
+A valid matching precomputed branch or valid rules branch remains usable when its sibling branch is invalid.
+A later valid configuration can recover the provider.
+
+Do not call the non-waiting `OpenFeature.setProvider` and then call `setConfiguration`.
+The pending initialization can finish after the configuration load.
+Use the order in the example.
+
 A context-specific precomputed configuration is a **single-subject snapshot**. The effective
 OpenFeature context must match the context that was used to compute the snapshot. Use
 `getPrecomputedContext(configuration)` to get a detached copy through a supported API. Do not inspect
@@ -170,31 +206,79 @@ different from a missing targeting key. A context-agnostic precomputed configura
 embedded context. `getPrecomputedContext` returns `undefined` for that configuration, and it can be
 used with any effective context.
 
-Recommended setup for a hybrid app that also uses other OpenFeature providers, hooks, or domains:
+#### Rules-based offline configuration
 
-- **Bind the offline provider to a dedicated OpenFeature domain.** Set the helper context on that
-  domain before provider registration. A domain with no context of its own inherits the global
-  context.
-- **Use a unique Datadog `clientName`** (`new DatadogOfflineOpenFeatureProvider({ clientName })`):
-  separate OpenFeature domains otherwise share the same underlying `DdFlags.getClient('default')`, and
-  an online provider on that shared client would discard the offline configuration.
+A rules configuration can evaluate more than one context.
+Call `OpenFeature.setContext` when the subject changes.
+The provider evaluates the new context locally.
+It does not make a native configuration request.
 
-`OpenFeature.clearContext(domain)` removes the domain context and uses the global context. If the
-global context is empty or does not match a context-specific snapshot, the provider enters `ERROR`.
-Call `OpenFeature.setContext(domain, matchingContext)` to recover. A global `clearContext()` supplies
-`{}` to the provider; it does not restore the context in the configuration.
+```tsx
+const client = OpenFeature.getClient(domain);
 
-> **Note (startup order):** Load the configuration with `setConfiguration` _before_
-> `setProviderAndWait`, as shown above. If you register the provider before any successful
-> `setConfiguration`, it initializes to the `ERROR` state (there is nothing it can evaluate); loading a
-> valid configuration afterwards recovers it to `READY`. **Do not use the non-awaiting
-> `OpenFeature.setProvider(provider)` immediately followed by `setConfiguration`** — that ordering
-> races (the pending initialization can **settle (reject)** after the recovery and overwrite the
-> status back to `ERROR`). Configure first, or `await OpenFeature.setProviderAndWait(...)`.
+await OpenFeature.setContext(domain, {
+    targetingKey: 'user-a',
+    country: 'US'
+});
+const valueForUserA = client.getBooleanValue('new-feature', false);
 
-This provider relies on the OpenFeature static-context lifecycle — the SDK owns the
-`PROVIDER_RECONCILING`/`PROVIDER_CONTEXT_CHANGED` events on a context change — and requires
-`@openfeature/web-sdk` `^1.8.0` (the version it is developed and verified against).
+await OpenFeature.setContext(domain, {
+    targetingKey: 'user-b',
+    country: 'CA'
+});
+const valueForUserB = client.getBooleanValue('new-feature', false);
+```
+
+#### Precomputed offline configuration
+
+A precomputed configuration is one snapshot for one context.
+The effective OpenFeature context must match the embedded context.
+Use `getPrecomputedContext` to obtain a supported copy and set it explicitly.
+
+Do not set a different context for a precomputed-only configuration.
+The provider cannot fetch a new snapshot.
+It enters `ERROR` and returns coded defaults with `INVALID_CONTEXT`.
+
+An empty string is a real targeting key.
+It is not the same as an absent context.
+Use `clearContext` to remove a domain context.
+Remember that a cleared domain can inherit a non-empty global context.
+
+#### Configuration with both branches
+
+A configuration can contain precomputed data and rules data.
+The provider uses this order for each resolution:
+
+1. Use precomputed data when its context matches.
+2. Otherwise, use valid rules data.
+3. Otherwise, return the applicable configuration error.
+
+#### Domains and client names
+
+Use a dedicated OpenFeature domain for an offline provider.
+Set the helper context on that domain before provider registration.
+An OpenFeature domain with no context of its own inherits the global context.
+
+Use a unique Datadog `clientName` for each online or offline provider.
+Providers with the same client name share one `FlagsClient`.
+An online request on that client removes the offline configuration.
+
+Set an explicit domain context when the domain must not inherit global context changes.
+`OpenFeature.clearContext(domain)` removes the domain context and restores global inheritance.
+If the inherited global context cannot use the configuration, the provider enters `ERROR`.
+A global `clearContext()` supplies `{}`; it does not restore the embedded context.
+
+#### Rules configuration security
+
+Treat a client rules configuration as public data.
+Do not put secrets in flag names, variant values, attributes, regular expressions, salts, or metadata.
+Salted hashes do not make low-entropy values confidential.
+An attacker can test likely values offline.
+Only load a rules configuration from a trusted source.
+The rules evaluator uses JavaScript regular expressions without an execution limit.
+A hostile expression can block the JavaScript thread.
+
+This provider requires `@openfeature/web-sdk` `^1.8.0`.
 
 [1]: https://openfeature.dev/docs/reference/sdks/client/web/react/
 [2]: https://docs.datadoghq.com/getting_started/feature_flags/
