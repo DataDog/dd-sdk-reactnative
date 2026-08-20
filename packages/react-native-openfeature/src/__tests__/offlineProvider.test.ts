@@ -194,13 +194,36 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         ).toHaveBeenCalledWith({ targetingKey: '', attributes: {} });
     });
 
-    it('delegates setConfiguration to the client and emits CONFIGURATION_CHANGED', () => {
+    it('stores configuration silently before initialization', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
         provider.setConfiguration({} as never);
 
         expect(mockFlagsClient.setConfiguration).toHaveBeenCalled();
+        expect(
+            mockFlagsClient.setEvaluationContextWithoutFetching
+        ).not.toHaveBeenCalled();
+        expect(emitSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not emit a pre-initialization configuration error', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        const emitSpy = jest.spyOn(provider.events, 'emit');
+        mockFlagsClient.setConfiguration.mockReturnValueOnce(parseError);
+
+        provider.setConfiguration({} as never);
+
+        expect(emitSpy).not.toHaveBeenCalled();
+    });
+
+    it('emits CONFIGURATION_CHANGED for a valid post-initialization replacement', async () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        await provider.initialize({});
+        const emitSpy = jest.spyOn(provider.events, 'emit');
+
+        provider.setConfiguration({} as never);
+
         // A healthy (re)loaded config is a configuration change, not a status transition.
         expect(emitSpy).toHaveBeenCalledWith(
             ProviderEvents.ConfigurationChanged
@@ -208,8 +231,9 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         expect(emitSpy).not.toHaveBeenCalledWith(ProviderEvents.Ready);
     });
 
-    it('emits PROVIDER_ERROR with a top-level parse error code on an invalid configuration', () => {
+    it('emits PROVIDER_ERROR with a top-level parse error code on an invalid configuration', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
+        await provider.initialize({});
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
         mockFlagsClient.setConfiguration.mockReturnValueOnce(parseError);
@@ -224,8 +248,9 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         );
     });
 
-    it('preserves a general code for an unexpected configuration error', () => {
+    it('preserves a general code for an unexpected configuration error', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
+        await provider.initialize({});
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
         mockFlagsClient.setConfiguration.mockReturnValueOnce(generalError);
@@ -238,8 +263,9 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         });
     });
 
-    it('recovers on a later valid configuration, emitting READY then CONFIGURATION_CHANGED', () => {
+    it('recovers on a later valid configuration, emitting READY then CONFIGURATION_CHANGED', async () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
+        await provider.initialize({});
         const emitSpy = jest.spyOn(provider.events, 'emit');
 
         mockFlagsClient.setConfiguration.mockReturnValueOnce(mismatch);

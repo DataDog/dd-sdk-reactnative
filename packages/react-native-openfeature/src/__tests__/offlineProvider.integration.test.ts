@@ -103,8 +103,9 @@ const rulesResponseFor = (flagKey: string) => ({
 
 // TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
 // flagging-core release contains DataDog/openfeature-js-client#344 through
-// `5a5511e`. It validates 32-byte SHA digests, membership ordering,
-// semantic-version bounds, and own condition and shard context attributes.
+// `78a0c14`. It validates 32-byte SHA digests, UTF-8-compatible membership
+// ordering, semantic-version bounds, strict condition coercion, and own condition
+// and shard context attributes. It memoizes condition results per evaluation.
 // Its packed Chromium tests cover protobuf decode, rules serialization, SHA
 // evaluation, and execution without global `BigInt`, `TextEncoder`, or
 // `TextDecoder`. They do not cover unsafe integers, shard values, Hermes, or JSC.
@@ -112,19 +113,19 @@ const rulesResponseFor = (flagKey: string) => ({
 // canonical raw protobuf bytes produced from the dd-source#34959
 // client-distribution path. Record dd-source#40304 commit `071c4ad` as the schema
 // revision and dd-source#34959 as the service producer path.
-// PR #336 through `dde93ea` does not change this wire contract. Its latest commit
-// removes unrelated `extraLogging` test coverage. The PR defines
-// valid-sibling and parse-error precedence and the `{ message, errorCode? }`
-// provider error event. Keep the existing React Native provider name and its
-// Ready-before-ConfigurationChanged recovery order.
+// PR #336 through `9fd61c4` uses the same wire contract. It defines valid-sibling
+// and parse-error precedence, defers offline validation and events until
+// initialization supplies the effective context, and uses the
+// `{ message, errorCode? }` provider error event. Keep the existing React Native
+// provider name and its Ready-before-ConfigurationChanged recovery order.
 // Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
 // verify that decoding returns the original bytes, and record the source revision.
-// Use the upstream `@datadog/flagging-core/configuration` parser. Do not copy the
-// strict base64 validator removed by PR #344. Do not use the new
-// `@datadog/flagging-core/precomputed` subpath or deprecated package-root
-// precomputed-only parser aliases for this rules wire. Reuse the
+// Use the upstream `@datadog/flagging-core/rules-based` parser. Do not copy the
+// strict base64 validator removed by PR #344. The package-root parser is
+// protobuf-free, parses precomputed data only, and ignores rules. The old
+// `/configuration` and `/precomputed` subpaths were removed. Reuse the
 // portable-wire fixture for examples, Metro, Hermes, and JSC checks. Confirm that
-// the default flagging-core and precomputed entry points exclude Protobuf-ES and
+// the default flagging-core entry point excludes Protobuf-ES and
 // measure whether the React Native root includes it.
 // The fixture must prove that unknown fields preserve supported known data and
 // that an out-of-range `int64` stays a `bigint` before evaluation returns
@@ -133,8 +134,10 @@ const rulesResponseFor = (flagKey: string) => ({
 // shard counts, and shard ranges without global `BigInt`; invalid data must return
 // `PARSE_ERROR`, not `GENERAL`. Add fixtures for malformed SHA digests, unsorted
 // string and SHA-256 membership indexes, semantic-version components at and above
-// the unsigned 64-bit maximum, and absent inherited condition and shard
-// attributes. Confirm that explicit own reserved-name attributes remain usable.
+// the unsigned 64-bit maximum, supported primitive and strict numeric coercion,
+// non-ASCII membership order, per-evaluation condition memoization, and absent
+// inherited condition and shard attributes. Confirm that explicit own
+// reserved-name attributes remain usable.
 // Run the same fixture in the supported Hermes and JSC versions. Also require
 // flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`, for an unsupported minimum
 // feature level.

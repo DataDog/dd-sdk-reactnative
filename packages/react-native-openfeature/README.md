@@ -179,6 +179,8 @@ It preserves unknown protobuf fields in the rules response.
 Keep the original wire until the published flagging-core dependency provides this contract.
 
 Load the configuration before you set the provider.
+Before provider initialization, `setConfiguration` stores the configuration without emitting
+lifecycle events. Initialization validates it against the effective OpenFeature context.
 The provider starts in `ERROR` with `PROVIDER_NOT_READY` when no configuration was supplied.
 A supplied but unusable configuration reports `PARSE_ERROR`.
 A valid matching precomputed branch or valid rules branch remains usable when its sibling branch is invalid.
