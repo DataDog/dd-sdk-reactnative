@@ -14,7 +14,7 @@ import type { EvaluationContext, JsonValue, PrimitiveValue } from '../types';
 
 // TODO(FFL-2837): Replace this legacy UFC v1 alias with
 // `NonNullable<FlagsConfiguration['rules']>['response']` after a flagging-core
-// release contains DataDog/openfeature-js-client#344 through `5a5511e`.
+// release contains DataDog/openfeature-js-client#344 through `78a0c14`.
 // Keep the `FlagsConfiguration` type
 // import on the flagging-core package root. PR #344 preserves protobuf integers
 // as `bigint`, does not call global `BigInt` during safe conversion, and reports
@@ -121,7 +121,7 @@ export const toRulesEvaluationContext = (
     }
 
     // TODO(FFL-2837): Delete the inherited-name shadows after a flagging-core
-    // release contains DataDog/openfeature-js-client#344 through `aa93230` and
+    // release contains DataDog/openfeature-js-client#344 through `78a0c14` and
     // this adapter uses its generated protobuf evaluator. That evaluator uses
     // own-property lookup for condition and shard context attributes.
     const rulesContext = Object.create(null) as RulesEvaluationContext;
@@ -140,11 +140,13 @@ const hasOwn = (value: object, key: PropertyKey): boolean =>
     Object.prototype.hasOwnProperty.call(value, key);
 
 // TODO(FFL-2837): Delete this compatibility error store after a flagging-core
-// release contains DataDog/openfeature-js-client#344 through `5a5511e`.
+// release contains DataDog/openfeature-js-client#344 through `78a0c14`.
 // The generated protobuf evaluator validates the requested flag and the data
 // that evaluation reaches. It does not build this error map during parsing.
 // It returns deterministic `PARSE_ERROR` results, including for an integer that
-// is not a safe JavaScript number.
+// is not a safe JavaScript number. Its protobuf conditions also use stricter
+// primitive coercion than this temporary legacy JSON evaluator; do not copy that
+// operator logic into this compatibility layer.
 const errorsByConfiguration = new WeakMap<
     RulesConfigurationResponse,
     ReadonlyMap<string, string>
@@ -219,8 +221,9 @@ const validateCondition = (value: unknown): string | undefined => {
             try {
                 // TODO(FFL-2837): Define a bounded regular expression policy before
                 // dynamic offline rules leave draft state. Upstream PR #344 through
-                // `5a5511e` compiles protobuf regular expressions lazily and caches
-                // them by configuration and index, but it does not limit patterns.
+                // `78a0c14` compiles protobuf regular expressions lazily and caches
+                // them by configuration and index. It also memoizes a condition result
+                // during one flag evaluation, but it does not limit patterns.
                 RegExp(value.value); // dd-iac-scan ignore-line
             } catch {
                 return 'A regular expression condition is not valid.';
@@ -474,7 +477,7 @@ export const prepareRulesConfiguration = (
     const clone = cloneValue(value);
 
     // TODO(FFL-2837): Delete this legacy JSON clone and validator after a
-    // flagging-core release contains upstream PR #344 through `5a5511e`. That
+    // flagging-core release contains upstream PR #344 through `78a0c14`. That
     // implementation preserves protobuf integers as `bigint` and validates only
     // the requested flag data that evaluation reaches. It does not call global
     // `BigInt` when it returns a deterministic per-flag error for an unsafe number.
@@ -529,7 +532,7 @@ const normalizeVariationType = (
 
 // TODO(FFL-2837): Delete this legacy UFC v1 metadata fallback after the
 // flagging-core dependency contains DataDog/openfeature-js-client#344 through
-// `5a5511e`. The protobuf evaluator maps only safely represented integer
+// `78a0c14`. The protobuf evaluator maps only safely represented integer
 // variations, and all numeric variations, to the OpenFeature type `number`.
 const recoverVariationType = (
     configuration: RulesConfigurationResponse,
@@ -556,7 +559,7 @@ export const flaggingCoreRulesEngine: RulesEngine = {
 
         // TODO(FFL-2837): Delete this local compatibility guard after the
         // flagging-core dependency contains DataDog/openfeature-js-client#344
-        // through `5a5511e`. Keep the reserved-name contract tests.
+        // through `78a0c14`. Keep the reserved-name contract tests.
         if (!hasOwn(flags, request.flagKey)) {
             return {
                 value: request.defaultValue,
@@ -567,7 +570,7 @@ export const flaggingCoreRulesEngine: RulesEngine = {
         }
 
         // TODO(FFL-2837): Delete this compatibility check with the local error
-        // store after the published PR #344 evaluator through `5a5511e` validates
+        // store after the published PR #344 evaluator through `78a0c14` validates
         // reached flag data and reports deterministic flag-scoped errors, including
         // unsupported feature levels and unsafe integer conversions with and
         // without global `BigInt` when supported.

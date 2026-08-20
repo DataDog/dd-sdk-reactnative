@@ -275,12 +275,17 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this legacy JSON compatibility test with a
     // generated protobuf fixture after a flagging-core release contains
-    // DataDog/openfeature-js-client#344 through `5a5511e`. Round-trip the
+    // DataDog/openfeature-js-client#344 through `78a0c14`. Round-trip the
     // generated fixture and confirm that serialization preserves the unknown field.
     // Add a fixture with an unsupported minimum feature level and require a
     // flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`. Also cover unsorted
     // string and SHA-256 membership indexes, invalid SHA digest lengths, and
     // semantic-version components at and above the unsigned 64-bit limit.
+    // Cover supported primitive coercion, strict finite numeric strings,
+    // rejected arrays, objects, empty strings, hexadecimal strings and infinity,
+    // and string-only semantic-version operands. Add non-ASCII membership cases
+    // that distinguish UTF-8 code-point order from JavaScript UTF-16 order, and
+    // prove that one shared condition is evaluated once per flag resolution.
     // Confirm that an absent inherited `__proto__` attribute does not match and
     // that an explicit own `__proto__` context attribute remains usable. The
     // legacy evaluator's compiled object spread cannot preserve that key.
@@ -310,7 +315,7 @@ describe('rules configuration', () => {
 
     // TODO(FFL-2837): Replace this unsafe JSON number with an out-of-range
     // protobuf `int64` fixture after flagging-core contains PR #344 at or after
-    // `5a5511e`. The generated parser must preserve the source value as `bigint`
+    // `78a0c14`. The generated parser must preserve the source value as `bigint`
     // where supported. Run the same evaluation with
     // global `BigInt` unavailable and require `PARSE_ERROR`, not `GENERAL`.
     it('returns PARSE_ERROR instead of serving an unsafe integer', () => {
