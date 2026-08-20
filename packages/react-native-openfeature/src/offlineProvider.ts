@@ -97,6 +97,11 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
 
     protected readonly useResolutionContext = true;
 
+    // OpenFeature supplies the effective context during initialization. Until then,
+    // setConfiguration must only store the configuration: there is no real context
+    // against which the provider can validate it or emit lifecycle events.
+    private context: OFEvaluationContext | undefined;
+
     // Whether the provider is currently in an error state, so a successful `setConfiguration` must
     // emit `PROVIDER_READY` to recover (a bare `CONFIGURATION_CHANGED` would not clear `ERROR`).
     // It may be set before the provider is registered, so it does not necessarily mirror
@@ -104,6 +109,7 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     private configurationInError = false;
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
+        this.context = context;
         const result = this.applyContext(context);
 
         // OpenFeature derives the initial status from whether `initialize` settles: resolve =>
@@ -119,6 +125,7 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         _oldContext: OFEvaluationContext,
         newContext: OFEvaluationContext
     ): void {
+        this.context = newContext;
         // Synchronous on purpose. Reconciliation is synchronous, and a synchronous throw makes the
         // Web SDK transition straight to ERROR (skipping the transient RECONCILING state) with no
         // async window in which an interleaved `setConfiguration` could clobber the final status.
@@ -139,6 +146,13 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
      */
     setConfiguration(configuration: ParsedFlagsConfiguration): void {
         const result = this.flagsClient.setConfiguration(configuration);
+
+        // Match the browser offline provider: configuration can be supplied before
+        // registration, but validation and lifecycle events wait for initialize(),
+        // when OpenFeature provides the effective context.
+        if (this.context === undefined) {
+            return;
+        }
 
         if (result.status === 'ready') {
             if (this.configurationInError) {

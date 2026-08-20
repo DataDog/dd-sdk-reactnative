@@ -29,9 +29,7 @@ export type FlagsSource = 'online' | 'offline';
  */
 export const setFlagsProvider = async (source: FlagsSource): Promise<void> => {
     if (source === 'offline') {
-        const configuration = configurationFromString(
-            buildSampleWire(offlineContext)
-        );
+        const configuration = configurationFromString(buildSampleWire());
         const context = getPrecomputedContext(configuration);
 
         if (context !== undefined) {

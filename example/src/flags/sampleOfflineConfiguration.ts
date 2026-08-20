@@ -23,19 +23,21 @@ export const buildSampleWire = (): string =>
         version: 1,
         // TODO(FFL-2837): Replace this complete legacy `rulesBased` JSON branch
         // after a published flagging-core release contains
-        // DataDog/openfeature-js-client#344 through `5a5511e`. That head validates
-        // 32-byte SHA digests, membership ordering, semantic-version bounds, and
-        // own context attributes. Its packed Chromium tests cover protobuf decode,
-        // rules serialization, SHA evaluation, and execution without global
+        // DataDog/openfeature-js-client#344 through `78a0c14`. That head validates
+        // 32-byte SHA digests, UTF-8-compatible membership ordering, semantic-version
+        // bounds, strict condition coercion, and own context attributes. It memoizes
+        // condition results per evaluation. Its packed Chromium tests cover protobuf
+        // decode, rules serialization, SHA evaluation, and execution without global
         // `BigInt`, `TextEncoder`, or `TextDecoder`. Retain React Native tests for
         // unsafe integers, shard values, and inherited context attributes.
         // Reuse the production-derived client
         // fixture from the integration test: one base64 encoding of the canonical
         // dd-source#34959 protobuf bytes in a version 1 `rules.response` envelope.
         // Record dd-source#40304 commit `071c4ad` as its schema revision. Let the
-        // upstream configuration subpath decode it. Do not use the protobuf-free
-        // precomputed subpath, the deprecated precomputed-only package-root parser
-        // aliases, raw protobuf, the legacy service JSON response, or a local strict
+        // upstream `@datadog/flagging-core/rules-based` subpath decode it. The
+        // package-root parser is protobuf-free, parses precomputed data only, and
+        // ignores rules. Do not use the removed `/configuration` or `/precomputed`
+        // subpaths, raw protobuf, the legacy service JSON response, or a local strict
         // base64 validator here.
         // The final fixture must preserve protobuf integers as `bigint`, return
         // `PARSE_ERROR` for unsafe number conversion, tolerate unknown fields,
