@@ -6,6 +6,7 @@
 
 import { configurationFromString } from '@datadog/mobile-react-native';
 
+import { getPrecomputedContext } from './configuration';
 import { DatadogOfflineOpenFeatureProvider } from './offlineProvider';
 import { DatadogOpenFeatureProvider } from './provider';
 import type { DatadogOpenFeatureProviderOptions } from './provider';
@@ -13,6 +14,7 @@ import type { DatadogOpenFeatureProviderOptions } from './provider';
 export {
     DatadogOpenFeatureProvider,
     DatadogOfflineOpenFeatureProvider,
-    configurationFromString
+    configurationFromString,
+    getPrecomputedContext
 };
 export type { DatadogOpenFeatureProviderOptions };

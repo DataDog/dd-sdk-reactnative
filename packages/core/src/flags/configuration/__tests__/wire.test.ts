@@ -7,6 +7,8 @@
 import type { ParsedFlagsConfiguration } from '../types';
 import { configurationFromString, configurationToString } from '../wire';
 
+import { buildRulesConfiguration } from './__utils__/rulesTestUtils';
+
 const buildResponse = () => ({
     data: {
         id: '2',
@@ -77,17 +79,39 @@ describe('configurationFromString', () => {
         ).toBe(true);
     });
 
-    it('returns an empty config for an unsupported version', () => {
+    it('preserves a configuration error for an unsupported version', () => {
         const wire = JSON.stringify({
             version: 2,
             precomputed: { response: JSON.stringify(buildResponse()) }
         });
 
-        expect(configurationFromString(wire)).toEqual({});
+        expect(configurationFromString(wire)).toEqual({
+            configurationError: 'Invalid flags configuration wire format'
+        });
     });
 
-    it('returns an empty config for invalid JSON', () => {
-        expect(configurationFromString('not json')).toEqual({});
+    it('preserves a configuration error for invalid JSON', () => {
+        expect(configurationFromString('not json')).toEqual({
+            configurationError: 'Invalid flags configuration wire format'
+        });
+    });
+
+    it('does not treat a raw protobuf response as a portable wire', () => {
+        // A service or distribution layer must put one base64 encoding of
+        // these bytes in a version 1 `rules.response` JSON envelope.
+        const rawProtobufAsBase64 = 'CgR0ZXN0';
+
+        expect(configurationFromString(rawProtobufAsBase64)).toEqual({
+            configurationError: 'Invalid flags configuration wire format'
+        });
+    });
+
+    it('does not treat the legacy UFC JSON response as a portable wire', () => {
+        const legacyServiceResponse = JSON.stringify(buildRulesConfiguration());
+
+        expect(configurationFromString(legacyServiceResponse)).toEqual({
+            configurationError: 'Invalid flags configuration wire format'
+        });
     });
 
     it('returns an empty config when the inner response is invalid JSON', () => {
@@ -122,6 +146,103 @@ describe('configurationToString round-trip', () => {
 
         expect(configurationToString(empty)).toBe(
             JSON.stringify({ version: 1 })
+        );
+    });
+});
+
+describe('temporary rules configuration wire compatibility', () => {
+    it('parses a legacy rules configuration', () => {
+        const rulesBased = {
+            response: buildRulesConfiguration(),
+            fetchedAt: 123,
+            etag: 'rules-etag'
+        };
+        const wire = JSON.stringify({
+            version: 1,
+            rulesBased: {
+                ...rulesBased,
+                response: JSON.stringify(rulesBased.response)
+            }
+        });
+
+        const parsed = configurationFromString(wire) as {
+            rulesBased?: typeof rulesBased;
+        };
+
+        expect(parsed.rulesBased).toEqual(rulesBased);
+    });
+
+    it('round-trips a legacy rules configuration', () => {
+        const response = buildRulesConfiguration() as ReturnType<
+            typeof buildRulesConfiguration
+        > & {
+            futureField?: { value: number };
+        };
+        response.futureField = { value: 7 };
+        const original = {
+            rulesBased: {
+                response,
+                fetchedAt: 123,
+                etag: 'rules-etag'
+            }
+        };
+
+        const restored = configurationFromString(
+            configurationToString(
+                (original as unknown) as ParsedFlagsConfiguration
+            )
+        ) as {
+            rulesBased?: typeof original.rulesBased;
+        };
+
+        expect(restored.rulesBased).toEqual(original.rulesBased);
+    });
+
+    it('keeps both branches in a mixed configuration', () => {
+        const mixedWire = buildWire({
+            rulesBased: {
+                response: JSON.stringify(buildRulesConfiguration())
+            }
+        });
+
+        const parsed = configurationFromString(mixedWire) as {
+            precomputed?: unknown;
+            rulesBased?: unknown;
+        };
+
+        expect(parsed.precomputed).toBeDefined();
+        expect(parsed.rulesBased).toBeDefined();
+    });
+
+    it('keeps a valid precomputed branch when rules JSON is malformed', () => {
+        const parsed = configurationFromString(
+            buildWire({
+                rulesBased: { response: '{' }
+            })
+        ) as {
+            precomputed?: unknown;
+            rulesBased?: unknown;
+            rulesError?: string;
+        };
+
+        expect(parsed.precomputed).toBeDefined();
+        expect(parsed.rulesBased).toBeUndefined();
+        expect(parsed.rulesError).toBe(
+            'Rules configuration response could not be decoded'
+        );
+    });
+
+    it('preserves an invalid rules entry error', () => {
+        const parsed = configurationFromString(
+            buildWire({ rulesBased: { response: 42 } })
+        ) as {
+            precomputed?: unknown;
+            rulesError?: string;
+        };
+
+        expect(parsed.precomputed).toBeDefined();
+        expect(parsed.rulesError).toBe(
+            'Invalid rules configuration wire entry'
         );
     });
 });

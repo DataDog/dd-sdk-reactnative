@@ -10,6 +10,12 @@
 // the decoder and other helpers stay internal to this boundary. Keeping the surface contained
 // here makes a future "port -> depend on a shared core" swap easier.
 
+// TODO(FFL-2837): Re-export `getPrecomputedContext` from
+// `@datadog/flagging-core` here after a flagging-core release contains
+// DataDog/openfeature-js-client#344 through `78a0c14`, including merged PR #353.
+// Also expose it from the
+// public React Native SDK entry point for the OpenFeature package to consume.
+
 export { configurationFromString, configurationToString } from './wire';
 export {
     decodePrecomputedFlags,

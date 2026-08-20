@@ -22,7 +22,7 @@ import type {
 } from '@openfeature/web-sdk';
 
 import { DatadogCoreOpenFeatureProvider } from './coreProvider';
-import { isEmptyContext, toDdContext } from './mappers';
+import { toDdContextPreservingTargetingKey } from './mappers';
 
 // The outcome of a `FlagsClient` reconcile. Derived from the client so the provider maps it to
 // OpenFeature transitions; not part of the package's public API.
@@ -49,28 +49,33 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * It behaves like the online `DatadogOpenFeatureProvider` — same flag evaluation and
  * exposure/RUM tracking — **except it never fetches configuration from the network**.
  * Instead of fetching on `initialize`/`onContextChange`, it evaluates against a configuration
- * supplied via {@link DatadogOfflineOpenFeatureProvider.setConfiguration}. A precomputed
- * configuration carries the evaluation context it was computed for, so you should **not** call
- * `OpenFeature.setContext` for the offline precomputed flow — see the class remarks.
+ * supplied via {@link DatadogOfflineOpenFeatureProvider.setConfiguration}.
  *
  * A runtime context that does not match the configuration's embedded context (compared after
  * normalization) cannot be served (offline never fetches), so it puts the provider into the
  * OpenFeature `ERROR` state and evaluations fall back to your coded defaults (`INVALID_CONTEXT`).
- * An empty *effective* context re-adopts the embedded context and recovers — but note that
- * `clearContext(domain)` falls back to the global context, which may itself be non-empty and
- * mismatching (and would keep the provider in `ERROR`). Load the configuration before setting the
- * provider so it is ready with real flag values from the start:
+ * An empty context is a real context. It does not select the embedded context. Use
+ * `getPrecomputedContext` to get a supported copy of the embedded context, and set it on
+ * OpenFeature before provider registration. Load the configuration before setting the provider so
+ * it is ready with real flag values from the start:
  *
  * @example
  * ```ts
  * import { OpenFeature } from '@openfeature/web-sdk';
  * import {
  *     DatadogOfflineOpenFeatureProvider,
- *     configurationFromString
+ *     configurationFromString,
+ *     getPrecomputedContext
  * } from '@datadog/mobile-react-native-openfeature';
  *
+ * const configuration = configurationFromString(wire);
+ * const context = getPrecomputedContext(configuration);
+ * if (context !== undefined) {
+ *     await OpenFeature.setContext(context);
+ * }
+ *
  * const provider = new DatadogOfflineOpenFeatureProvider();
- * provider.setConfiguration(configurationFromString(wire)); // no network
+ * provider.setConfiguration(configuration); // no network
  * await OpenFeature.setProviderAndWait(provider);
  *
  * const client = OpenFeature.getClient();
@@ -145,15 +150,11 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     }
 
     private applyContext(context: OFEvaluationContext): ConfigurationResult {
-        // An empty context means "no external override": clear it so a loaded precomputed
-        // configuration is served against its embedded context. Order-independent — the synthetic
-        // `initialize({})`, `setContext({})`, and `clearContext()` all re-adopt the embedded
-        // context rather than being treated as a mismatch.
-        const result = isEmptyContext(context)
-            ? this.flagsClient.resetEvaluationContextWithoutFetching()
-            : this.flagsClient.setEvaluationContextWithoutFetching(
-                  toDdContext(context)
-              );
+        // OpenFeature gives the provider only the effective context. It uses `{}` for an unset or
+        // cleared global context, so the provider must treat `{}` as the real effective context.
+        const result = this.flagsClient.setEvaluationContextWithoutFetching(
+            toDdContextPreservingTargetingKey(context)
+        );
 
         this.configurationInError = result.status === 'error';
 
