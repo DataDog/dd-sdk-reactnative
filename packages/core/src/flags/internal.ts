@@ -9,7 +9,7 @@ import { SdkVerbosity } from '../config/types/SdkVerbosity';
 
 import type { EvaluationContext, PrimitiveValue } from './types';
 
-export interface FlagCacheEntry {
+export interface TrackableAssignment {
     key: string;
     value: unknown;
     allocationKey: string;
@@ -20,6 +20,8 @@ export interface FlagCacheEntry {
     doLog: boolean;
     extraLogging: Record<string, unknown>;
 }
+
+export type FlagCacheEntry = TrackableAssignment;
 
 export const processEvaluationContext = (
     context: EvaluationContext
