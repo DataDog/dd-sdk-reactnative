@@ -29,6 +29,7 @@ import com.datadog.android.rum.metric.networksettled.TimeBasedInitialResourceIde
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
 import com.datadog.android.rum.timeseries.TimeseriesConfiguration as NativeTimeseriesConfiguration
+import com.datadog.android.rum.timeseries.TimeseriesType as NativeTimeseriesType
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.Trace
@@ -269,15 +270,21 @@ class DdSdkNativeInitialization internal constructor(
         configBuilder: RumConfiguration.Builder,
         timeseries: TimeseriesConfiguration
     ) {
-        if (!timeseries.enabled) {
-            return
+        val nativeConfigBuilder = NativeTimeseriesConfiguration.Builder()
+        val collectTypes = timeseries.collectTypes?.mapNotNull { it.asTimeseriesType() }
+        if (collectTypes != null) {
+            nativeConfigBuilder.collectOnly(*collectTypes.toTypedArray())
         }
 
-        val nativeConfigBuilder = NativeTimeseriesConfiguration.Builder()
-        timeseries.bufferSize?.let { nativeConfigBuilder.setBufferSize(it.toInt()) }
-        timeseries.intervalMs?.let { nativeConfigBuilder.setIntervalMs(it.toLong()) }
-
         configBuilder.setTimeseriesConfiguration(nativeConfigBuilder.build())
+    }
+
+    private fun String.asTimeseriesType(): NativeTimeseriesType? {
+        return when (lowercase(Locale.US)) {
+            "cpu" -> NativeTimeseriesType.CPU
+            "memory" -> NativeTimeseriesType.MEMORY
+            else -> null
+        }
     }
 
     private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {

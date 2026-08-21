@@ -267,26 +267,23 @@
                             "description": "Target a custom server for RUM.",
                             "type": "string"
                         },
-                        "timeseries": {
-                            "description": "Experimental: configuration for memory and CPU timeseries collection. Requires a native SDK build with timeseries support.",
+                        "unstable_timeseries": {
+                            "description": "Experimental: configuration for memory and CPU timeseries collection. Requires a native SDK build with timeseries support. Presence of this object enables timeseries collection.",
                             "type": "object",
                             "properties": {
-                                "enabled": {
-                                    "description": "Enables collection of memory and CPU timeseries events.",
-                                    "type": "boolean"
-                                },
-                                "bufferSize": {
-                                    "description": "The number of samples collected before a timeseries batch is flushed. iOS and Android only.",
-                                    "type": "integer"
-                                },
-                                "intervalMs": {
-                                    "description": "The sampling interval in milliseconds. Android only.",
-                                    "type": "integer"
+                                "collectTypes": {
+                                    "description": "The types of timeseries data to collect. Defaults to collecting all supported types when omitted.",
+                                    "type": "array",
+                                    "items": {
+                                        "description": "Type of timeseries data to collect.",
+                                        "type": "string",
+                                        "enum": [
+                                            "cpu",
+                                            "memory"
+                                        ]
+                                    }
                                 }
-                            },
-                            "required": [
-                                "enabled"
-                            ]
+                            }
                         }
                     },
                     "required": [

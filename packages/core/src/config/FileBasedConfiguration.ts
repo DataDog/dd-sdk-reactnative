@@ -209,7 +209,8 @@ export const getJSONConfiguration = (
                     configuration.rumConfiguration.telemetrySampleRate,
                 nativeInteractionTracking:
                     configuration.rumConfiguration.nativeInteractionTracking,
-                timeseries: configuration.rumConfiguration.timeseries
+                unstable_timeseries:
+                    configuration.rumConfiguration.unstable_timeseries
             }
         }),
         ...(configuration.traceConfiguration !== undefined && {

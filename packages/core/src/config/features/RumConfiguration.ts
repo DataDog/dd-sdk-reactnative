@@ -32,7 +32,6 @@ const DEFAULTS = {
     resourceTraceSampleRate: 100.0,
     sessionSampleRate: 100.0,
     telemetrySampleRate: 20.0,
-    timeseries: undefined,
     trackBackgroundEvents: false,
     trackErrors: false,
     trackFetchResources: false,
@@ -42,6 +41,7 @@ const DEFAULTS = {
     trackNonFatalAnrs: undefined,
     trackResources: false,
     trackWatchdogTerminations: false,
+    unstable_timeseries: undefined,
     useAccessibilityLabel: true,
     vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE
 };
@@ -103,9 +103,6 @@ export class RumConfiguration implements RumConfigurationType {
     // Telemetry Sample Rate
     public telemetrySampleRate: number = DEFAULTS.telemetrySampleRate;
 
-    // Experimental Timeseries Configuration
-    public timeseries?: TimeseriesConfiguration = DEFAULTS.timeseries;
-
     // Track Background Events Enabled
     public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
 
@@ -124,6 +121,10 @@ export class RumConfiguration implements RumConfigurationType {
     // Track Watchdog Terminations enabled
     public trackWatchdogTerminations: boolean =
         DEFAULTS.trackWatchdogTerminations;
+
+    // Experimental Timeseries Configuration
+    public unstable_timeseries?: TimeseriesConfiguration =
+        DEFAULTS.unstable_timeseries;
 
     // Use Accessibility Label enabled for interaction tracking
     public useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel;

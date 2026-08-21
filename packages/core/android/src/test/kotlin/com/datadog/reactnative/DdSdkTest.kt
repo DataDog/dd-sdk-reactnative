@@ -30,6 +30,7 @@ import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.metric.networksettled.TimeBasedInitialResourceIdentifier
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
+import com.datadog.android.rum.timeseries.TimeseriesType
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.Trace
@@ -2374,7 +2375,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val rumConfiguration = configuration.rumConfiguration?.copy(
-            timeseries = TimeseriesConfiguration(enabled = true, bufferSize = 15.0)
+            timeseries = TimeseriesConfiguration(collectTypes = listOf("cpu"))
         )
         val bridgeConfiguration = configuration.copy(
             rumConfiguration = rumConfiguration
@@ -2410,7 +2411,7 @@ internal class DdSdkTest {
             assertThat(rumConfigCaptor.firstValue)
                 .hasField("featureConfiguration") {
                     it.hasField("timeseriesConfiguration") { ts ->
-                        ts.hasFieldEqualTo("bufferSize", 15)
+                        ts.hasFieldEqualTo("enabledTypes", setOf(TimeseriesType.CPU))
                     }
                 }
         } finally {

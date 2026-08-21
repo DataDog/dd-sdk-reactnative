@@ -66,6 +66,7 @@ data class DdSdkConfiguration(
  * @param telemetrySampleRate The sample rate (between 0 and 100) of telemetry events.
  * @param customEndpoint Custom RUM intake endpoint used to override the default Datadog intake.
  * @param timeseries Experimental: configuration for memory and CPU timeseries collection.
+ *   A non-null value enables timeseries collection.
  */
 data class RumConfiguration(
     val applicationId: String,
@@ -91,14 +92,11 @@ data class RumConfiguration(
  * Experimental: configuration for memory and CPU timeseries collection.
  * Requires a native SDK build with timeseries support.
  *
- * @param enabled Enables collection of memory and CPU timeseries events.
- * @param bufferSize The number of samples collected before a timeseries batch is flushed.
- * @param intervalMs The sampling interval in milliseconds.
+ * @param collectTypes The types of timeseries data to collect ("cpu", "memory").
+ *   Defaults to collecting all supported types when omitted.
  */
 data class TimeseriesConfiguration(
-    val enabled: Boolean,
-    val bufferSize: Double? = null,
-    val intervalMs: Double? = null
+    val collectTypes: List<String>? = null
 )
 
 /**
@@ -174,13 +172,11 @@ internal data class JSONRumConfiguration(
     val trackMemoryWarnings: Boolean? = null,
     val telemetrySampleRate: Double? = null,
     val customEndpoint: String? = null,
-    val timeseries: JSONTimeseriesConfiguration? = null
+    val unstable_timeseries: JSONTimeseriesConfiguration? = null
 )
 
 internal data class JSONTimeseriesConfiguration(
-    val enabled: Boolean? = null,
-    val bufferSize: Double? = null,
-    val intervalMs: Double? = null
+    val collectTypes: List<String>? = null
 )
 
 internal data class JSONLogsConfiguration(

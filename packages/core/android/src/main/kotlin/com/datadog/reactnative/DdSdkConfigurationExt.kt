@@ -46,7 +46,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
             initialResourceThreshold = rm.getDoubleOrNull("initialResourceThreshold"),
             telemetrySampleRate = rm.getDoubleOrNull("telemetrySampleRate"),
             customEndpoint = rm.getString("customEndpoint"),
-            timeseries = rm.getMap("timeseries")?.asTimeseriesConfiguration()
+            timeseries = rm.getMap("unstable_timeseries")?.asTimeseriesConfiguration()
         )
     }
 
@@ -89,9 +89,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
 
 internal fun ReadableMap.asTimeseriesConfiguration(): TimeseriesConfiguration {
     return TimeseriesConfiguration(
-        enabled = getBooleanOrNull("enabled") ?: false,
-        bufferSize = getDoubleOrNull("bufferSize"),
-        intervalMs = getDoubleOrNull("intervalMs")
+        collectTypes = getArray("collectTypes")?.toArrayList()?.filterIsInstance<String>()
     )
 }
 
@@ -197,7 +195,7 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
             telemetrySampleRate = rum.telemetrySampleRate?.toDouble()
                 ?: DefaultConfiguration.telemetrySampleRate,
             customEndpoint = rum.customEndpoint,
-            timeseries = rum.timeseries?.asTimeseriesConfiguration()
+            timeseries = rum.unstable_timeseries?.asTimeseriesConfiguration()
         )
     }
 
@@ -241,9 +239,7 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
 
 internal fun JSONTimeseriesConfiguration.asTimeseriesConfiguration(): TimeseriesConfiguration {
     return TimeseriesConfiguration(
-        enabled = this.enabled ?: false,
-        bufferSize = this.bufferSize,
-        intervalMs = this.intervalMs
+        collectTypes = this.collectTypes
     )
 }
 
@@ -351,10 +347,12 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         rum.customEndpoint?.let { rumMap.putString("customEndpoint", it) }
         rum.timeseries?.let { timeseries ->
             val timeseriesMap = WritableNativeMap()
-            timeseriesMap.putBoolean("enabled", timeseries.enabled)
-            timeseries.bufferSize?.let { timeseriesMap.putDouble("bufferSize", it) }
-            timeseries.intervalMs?.let { timeseriesMap.putDouble("intervalMs", it) }
-            rumMap.putMap("timeseries", timeseriesMap)
+            timeseries.collectTypes?.let { types ->
+                val typesArray = WritableNativeArray()
+                types.forEach { typesArray.pushString(it) }
+                timeseriesMap.putArray("collectTypes", typesArray)
+            }
+            rumMap.putMap("unstable_timeseries", timeseriesMap)
         }
 
         map.putMap("rumConfiguration", rumMap)
