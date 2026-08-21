@@ -125,12 +125,6 @@ export interface RumConfigurationOptions {
     sessionSampleRate?: number;
 
     /**
-     * Experimental: configuration for memory and CPU timeseries collection.
-     * Requires a native SDK build with timeseries support.
-     */
-    timeseries?: TimeseriesConfiguration;
-
-    /**
      * Enables tracking of background RUM events.
      */
     trackBackgroundEvents?: boolean;
@@ -169,6 +163,12 @@ export interface RumConfigurationOptions {
      * Preferred frequency for collecting mobile vitals.
      */
     vitalsUpdateFrequency?: VitalsUpdateFrequency;
+
+    /**
+     * Experimental: configuration for memory and CPU timeseries collection.
+     * Requires a native SDK build with timeseries support.
+     */
+    unstable_timeseries?: TimeseriesConfiguration;
 }
 
 /**

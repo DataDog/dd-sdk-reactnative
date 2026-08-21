@@ -56,7 +56,7 @@ export interface JsonConfiguration extends CoreConfigurationOptions {
         trackWatchdogTerminations?: boolean;
         vitalsUpdateFrequency?: VitalsUpdateFrequency;
         telemetrySampleRate?: number;
-        timeseries?: TimeseriesConfiguration;
+        unstable_timeseries?: TimeseriesConfiguration;
     };
     traceConfiguration?: {
         customEndpoint?: string;

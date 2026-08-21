@@ -34,9 +34,10 @@
             "trackMemoryWarnings": false,
             "trackWatchdogTerminations": true,
             "vitalsUpdateFrequency": "NEVER",
-            "timeseries": {
-                "enabled": true,
-                "bufferSize": 15
+            "unstable_timeseries": {
+                "collectTypes": [
+                    "cpu"
+                ]
             }
         },
         "traceConfiguration": {

@@ -68,7 +68,7 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         rumMap["initialResourceThreshold"] = rum?.initialResourceThreshold ?: 0.1
         rumMap["telemetrySampleRate"] = rum?.telemetrySampleRate ?: 20.0
         rum?.customEndpoint?.let { rumMap["customEndpoint"] = it }
-        rum?.timeseries?.let { rumMap["timeseries"] = it.toReadableMap() }
+        rum?.timeseries?.let { rumMap["unstable_timeseries"] = it.toReadableMap() }
         map["rumConfiguration"] = rumMap.toReadableMap()
     }
 
@@ -97,9 +97,7 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
 
 internal fun TimeseriesConfiguration.toReadableMap(): ReadableMap {
     val map = mutableMapOf<String, Any?>()
-    map["enabled"] = enabled
-    bufferSize?.let { map["bufferSize"] = it }
-    intervalMs?.let { map["intervalMs"] = it }
+    collectTypes?.let { map["collectTypes"] = it.toReadableArray() }
     return map.toReadableMap()
 }
 

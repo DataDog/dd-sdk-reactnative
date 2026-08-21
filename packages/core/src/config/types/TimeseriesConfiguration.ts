@@ -5,24 +5,18 @@
  */
 
 /**
+ * Experimental: the type of timeseries data to collect.
+ */
+export type TimeseriesType = 'cpu' | 'memory';
+
+/**
  * Experimental: configuration for memory and CPU timeseries collection.
  * Requires a native SDK build with timeseries support.
  */
 export interface TimeseriesConfiguration {
     /**
-     * Enables collection of memory and CPU timeseries events.
+     * The types of timeseries data to collect.
+     * Defaults to collecting all supported types when omitted.
      */
-    enabled: boolean;
-
-    /**
-     * The number of samples collected before a timeseries batch is flushed.
-     * iOS and Android only.
-     */
-    bufferSize?: number;
-
-    /**
-     * The sampling interval in milliseconds.
-     * Android only.
-     */
-    intervalMs?: number;
+    collectTypes?: TimeseriesType[];
 }

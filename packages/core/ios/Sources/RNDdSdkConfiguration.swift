@@ -71,9 +71,9 @@ extension NSDictionary {
             let telemetrySampleRate = rumDict["telemetrySampleRate"] as? Double
             let customEndpoint = rumDict["customEndpoint"] as? String
 
-            let timeseriesDict = rumDict["timeseries"] as? NSDictionary
-            let enableTimeseries = timeseriesDict?["enabled"] as? Bool
-            let timeseriesBatchSize = timeseriesDict?["bufferSize"] as? Double
+            let timeseriesDict = rumDict["unstable_timeseries"] as? NSDictionary
+            let enableTimeseries = timeseriesDict != nil
+            let timeseriesCollectTypes = timeseriesDict?["collectTypes"] as? [String]
 
             rumConfiguration = RumConfiguration(
                 applicationId: applicationId,
@@ -103,9 +103,8 @@ extension NSDictionary {
                 telemetrySampleRate: telemetrySampleRate
                     ?? DefaultConfiguration.telemetrySampleRate,
                 customEndpoint: customEndpoint,
-                enableTimeseries: enableTimeseries ?? DefaultConfiguration.enableTimeseries,
-                timeseriesBatchSize: timeseriesBatchSize
-                    ?? DefaultConfiguration.timeseriesBatchSize
+                enableTimeseries: enableTimeseries,
+                timeseriesCollectTypes: timeseriesCollectTypes
             )
         } else {
             rumConfiguration = nil
@@ -291,8 +290,6 @@ internal struct DefaultConfiguration {
     static let bundleLogsWithTraces = true
     static let trackWatchdogTerminations = false
     static let trackMemoryWarnings = true
-    static let enableTimeseries = false
-    static let timeseriesBatchSize = 120.0
 }
 
 extension Dictionary where Key == String, Value == AnyObject {
@@ -366,14 +363,9 @@ extension Dictionary where Key == String, Value == AnyObject {
             let firstPartyHosts =
                 firstPartyHostsArray?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
 
-            let timeseriesDict = rum["timeseries"] as? [String: Any?]
-            let enableTimeseries = timeseriesDict?["enabled"] as? Bool
-            let timeseriesBatchSizeRaw = timeseriesDict?["bufferSize"]
-            let timeseriesBatchSize: Double? = {
-                if let v = timeseriesBatchSizeRaw as? Double { return v }
-                if let v = timeseriesBatchSizeRaw as? Int { return Double(v) }
-                return nil
-            }()
+            let timeseriesDict = rum["unstable_timeseries"] as? [String: Any?]
+            let enableTimeseries = timeseriesDict != nil
+            let timeseriesCollectTypes = timeseriesDict?["collectTypes"] as? [String]
 
             rumConfiguration = RumConfiguration(
                 applicationId: applicationId,
@@ -406,9 +398,8 @@ extension Dictionary where Key == String, Value == AnyObject {
                 telemetrySampleRate: (rum["telemetrySampleRate"] as? Double)
                     ?? DefaultConfiguration.telemetrySampleRate,
                 customEndpoint: rum["customEndpoint"] as? String,
-                enableTimeseries: enableTimeseries ?? DefaultConfiguration.enableTimeseries,
-                timeseriesBatchSize: timeseriesBatchSize
-                    ?? DefaultConfiguration.timeseriesBatchSize
+                enableTimeseries: enableTimeseries,
+                timeseriesCollectTypes: timeseriesCollectTypes
             )
         } else {
             rumConfiguration = nil

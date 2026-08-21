@@ -144,8 +144,9 @@ internal class DdSdkNativeInitializationTest {
             "[B3MULTI, TRACECONTEXT]"
         )
         assertThat(configuration.rumConfiguration?.initialResourceThreshold).isEqualTo(0.5)
-        assertThat(configuration.rumConfiguration?.timeseries?.enabled).isEqualTo(true)
-        assertThat(configuration.rumConfiguration?.timeseries?.bufferSize).isEqualTo(15.0)
+        assertThat(configuration.rumConfiguration?.timeseries?.collectTypes).isEqualTo(
+            listOf("cpu")
+        )
     }
 
     @Test

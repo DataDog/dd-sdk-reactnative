@@ -67,7 +67,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.rumConfiguration?.firstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(configuration?.rumConfiguration?.initialResourceThreshold, 0.5)
         XCTAssertEqual(configuration?.rumConfiguration?.enableTimeseries, true)
-        XCTAssertEqual(configuration?.rumConfiguration?.timeseriesBatchSize, 15.0)
+        XCTAssertEqual(configuration?.rumConfiguration?.timeseriesCollectTypes, ["cpu"])
     }
 
     func testReturnsConfigurationWithMinimalData() {
@@ -107,7 +107,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.rumConfiguration?.firstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(configuration?.rumConfiguration?.initialResourceThreshold, nil)
         XCTAssertEqual(configuration?.rumConfiguration?.enableTimeseries, false)
-        XCTAssertEqual(configuration?.rumConfiguration?.timeseriesBatchSize, 120.0)
+        XCTAssertNil(configuration?.rumConfiguration?.timeseriesCollectTypes)
     }
 
     func testPrintsMessageWithIncorrectFile() {

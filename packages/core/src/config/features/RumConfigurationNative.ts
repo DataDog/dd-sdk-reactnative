@@ -25,5 +25,5 @@ export type RumNativeConfiguration = {
     readonly telemetrySampleRate: number;
     readonly customEndpoint: string;
     readonly firstPartyHosts: { match: string; propagatorTypes: string[] }[];
-    readonly timeseries: TimeseriesConfiguration | undefined;
+    readonly unstable_timeseries: TimeseriesConfiguration | undefined;
 };

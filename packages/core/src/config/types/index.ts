@@ -8,7 +8,10 @@ export { BatchProcessingLevel } from './BatchProcessingLevel';
 export { BatchSize } from './BatchSize';
 export { ProxyConfiguration, ProxyType } from './ProxyConfiguration';
 export { SdkVerbosity } from './SdkVerbosity';
-export type { TimeseriesConfiguration } from './TimeseriesConfiguration';
+export type {
+    TimeseriesConfiguration,
+    TimeseriesType
+} from './TimeseriesConfiguration';
 export { TrackingConsent } from './TrackingConsent';
 export { UploadFrequency } from './UploadFrequency';
 export { VitalsUpdateFrequency } from './VitalsUpdateFrequency';
