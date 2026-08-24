@@ -2042,7 +2042,7 @@ __metadata:
     fast-glob: ^3.3.3
     jest: ^29.7.0
     react-native-builder-bob: 0.26.0
-    svgo: ^4.0.2
+    svgo: ^4.0.1
     tsc-alias: ^1.8.16
     typescript: 5.9.3
     uuid: ^8.3.2
@@ -3780,13 +3780,6 @@ __metadata:
   version: 1.0.2
   resolution: "@protobufjs/float@npm:1.0.2"
   checksum: 5781e1241270b8bd1591d324ca9e3a3128d2f768077a446187a049e36505e91bc4156ed5ac3159c3ce3d2ba3743dbc757b051b2d723eea9cd367bfd54ab29b2f
-  languageName: node
-  linkType: hard
-
-"@protobufjs/inquire@npm:^1.1.2":
-  version: 1.1.2
-  resolution: "@protobufjs/inquire@npm:1.1.2"
-  checksum: 6515cd6d884e16aa1f78df479f43860a492cf79450e0e8a35838da2a59d5fc08bd63f9a5daf752e7c4b0999f7ac6cdc44419a36f916af40cbf5831e8a8856949
   languageName: node
   linkType: hard
 
@@ -6122,6 +6115,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"agent-base@npm:6":
+  version: 6.0.2
+  resolution: "agent-base@npm:6.0.2"
+  dependencies:
+    debug: 4
+  checksum: f52b6872cc96fd5f622071b71ef200e01c7c4c454ee68bc9accca90c98cfb39f2810e3e9aa330435835eedc8c23f4f8a15267f67c6e245d2b33757575bdac49d
+  languageName: node
+  linkType: hard
+
 "agent-base@npm:^7.0.2, agent-base@npm:^7.1.0, agent-base@npm:^7.1.2":
   version: 7.1.4
   resolution: "agent-base@npm:7.1.4"
@@ -6530,14 +6532,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.16.0":
-  version: 1.16.0
-  resolution: "axios@npm:1.16.0"
+"axios@npm:^1.19.0":
+  version: 1.19.0
+  resolution: "axios@npm:1.19.0"
   dependencies:
     follow-redirects: ^1.16.0
-    form-data: ^4.0.5
+    form-data: ^4.0.6
+    https-proxy-agent: ^5.0.1
     proxy-from-env: ^2.1.0
-  checksum: 93e810968167fea59750d28f458e6860973a573c14bd60fe57ee07b5241f4c16991b149ae9ce65d79765081e3004743c9e158c438edba75af6f4612197e6834b
+  checksum: 37ef6b3049548a384dff61ef4705011458b51bcd9fd2492b844c3a5f9210cc584c7fa855aaa86a807c4c02f0df17828eba209f461aded8748539e4d87c2fa080
   languageName: node
   linkType: hard
 
@@ -9535,21 +9538,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm:3.1.2":
-  version: 3.1.2
-  resolution: "fast-uri@npm:3.1.2"
-  checksum: 73a6e1b04e6fcf7a09ed93316e72d643ef177d26969973784690708612141f2c2f74657120bab75bf5bbc26bfd535a32c90a8c3bc50aca50584cf01f98815afe
+"fast-uri@npm:^3.1.5":
+  version: 3.1.5
+  resolution: "fast-uri@npm:3.1.5"
+  checksum: 8a95af13e0730ac5c3abeb7f3939dee9fa95f2652e0ebac7a072b5597f836200084340c9bc2030f392318cdb49ec04e3fd6f558fa24c58d6d373557b9c01d7fb
   languageName: node
   linkType: hard
 
-"fast-xml-parser@npm:4.5.5":
-  version: 4.5.5
-  resolution: "fast-xml-parser@npm:4.5.5"
+"fast-xml-parser@npm:^4.5.7":
+  version: 4.5.7
+  resolution: "fast-xml-parser@npm:4.5.7"
   dependencies:
     strnum: ^1.0.5
   bin:
     fxparser: src/cli/cli.js
-  checksum: bfbe4986fd7e00cd577039cb200cc6d34102f3baf839ba98cad4cc4ff777264d9d0630bc128e78c1a9f0de3ec72a278a479fe1cf4345719e23ea86b49a0192fc
+  checksum: 5d79fa19eb0f6e6f5e0cb660e91ccf695146b0333124fc4bd7d95a6ce0a07cee602532c1cdfc606fafbda6100d822df9247381a42f4b7156b5df17d1395e1fb7
   languageName: node
   linkType: hard
 
@@ -10582,6 +10585,16 @@ __metadata:
     agent-base: ^7.1.0
     debug: ^4.3.4
   checksum: 670858c8f8f3146db5889e1fa117630910101db601fff7d5a8aa637da0abedf68c899f03d3451cac2f83bcc4c3d2dabf339b3aa00ff8080571cceb02c3ce02f3
+  languageName: node
+  linkType: hard
+
+"https-proxy-agent@npm:^5.0.1":
+  version: 5.0.1
+  resolution: "https-proxy-agent@npm:5.0.1"
+  dependencies:
+    agent-base: 6
+    debug: 4
+  checksum: 571fccdf38184f05943e12d37d6ce38197becdd69e58d03f43637f7fa1269cf303a7d228aa27e5b27bbd3af8f09fd938e1c91dcfefff2df7ba77c20ed8dfc765
   languageName: node
   linkType: hard
 
@@ -15252,9 +15265,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"protobufjs@npm:7.6.3":
-  version: 7.6.3
-  resolution: "protobufjs@npm:7.6.3"
+"protobufjs@npm:^7.6.5":
+  version: 7.6.5
+  resolution: "protobufjs@npm:7.6.5"
   dependencies:
     "@protobufjs/aspromise": ^1.1.2
     "@protobufjs/base64": ^1.1.2
@@ -15262,13 +15275,12 @@ __metadata:
     "@protobufjs/eventemitter": ^1.1.1
     "@protobufjs/fetch": ^1.1.1
     "@protobufjs/float": ^1.0.2
-    "@protobufjs/inquire": ^1.1.2
     "@protobufjs/path": ^1.1.2
     "@protobufjs/pool": ^1.1.0
     "@protobufjs/utf8": ^1.1.1
     "@types/node": ">=13.7.0"
     long: ^5.3.2
-  checksum: cc5fe46567bf78a78d6fdae05daf443e375df577388dbfe024073b75e0f354764be8d3c5886f4d013ed55ee05a8360b92223815a986e8d1f10ba6f7fc9d190a0
+  checksum: 6d3f18324942f8cabf003b68b81a445e8089a3f89cfae227feedbe4bfe8aea8629f6332cbe6176842cbe645704e4a25d4773b55c3b63d923034b3e6b4eacbb78
   languageName: node
   linkType: hard
 
@@ -16790,10 +16802,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shell-quote@npm:1.8.4":
-  version: 1.8.4
-  resolution: "shell-quote@npm:1.8.4"
-  checksum: 082dc836baa8ade01144ee3068af487ea45ba570ea6ab13a5eddc11ab16a976b8857b51ef2caf7dc9a1e173ff0aea685b8f78b4f6f5a0a1ef24c7b17c51350e2
+"shell-quote@npm:^1.10.0":
+  version: 1.10.0
+  resolution: "shell-quote@npm:1.10.0"
+  checksum: d4bc0757ae0e493d0f6e3327c93be7d5af1d39e9969eb4332ed4e40bb2c3f9112ec31e979d713d302605f7e3431d9f5f061719e0e177077ffd9c03c0b9cc5f73
   languageName: node
   linkType: hard
 
@@ -17511,9 +17523,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svgo@npm:^4.0.2":
-  version: 4.0.2
-  resolution: "svgo@npm:4.0.2"
+"svgo@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "svgo@npm:4.0.1"
   dependencies:
     commander: ^11.1.0
     css-select: ^5.1.0
@@ -17524,7 +17536,7 @@ __metadata:
     sax: ^1.5.0
   bin:
     svgo: ./bin/svgo.js
-  checksum: d227ec4aa2dd466c32ba97c1be99649e89174062befbbe7c8852271241254ca10062f10864cacf36c3c273a494e5d8dc07d330034e72a15ebbc9189039e9ddc4
+  checksum: 9f3d1d44f7ca1fbb75ecf8bd01d4f0263e4175f84a1bc13459bc2b951c3a138a78d8bc80968c90c7e6aabae0c7ce0588c07ad8672257bdd4fb20048b3ba24c7d
   languageName: node
   linkType: hard
 
@@ -17555,16 +17567,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:7.5.16":
-  version: 7.5.16
-  resolution: "tar@npm:7.5.16"
+"tar@npm:^7.5.22":
+  version: 7.5.22
+  resolution: "tar@npm:7.5.22"
   dependencies:
     "@isaacs/fs-minipass": ^4.0.0
     chownr: ^3.0.0
     minipass: ^7.1.2
     minizlib: ^3.1.0
     yallist: ^5.0.0
-  checksum: 9b7f886f5ce8681a7430f80b9b377bfa498e6feb957b9afe6507db08e59d309f8546b7f76a0c2e47bdb54da4602575a5c7519e287fe94de8302e635032fc94f1
+  checksum: e1434f40954410d191ab6d89017bfd40c24869cfd319d19dd74f84db13cbea15370a22bc9b8ecd699d05c2777ec6297f35dac318ed4829b6e776a7cb4f1f7c68
   languageName: node
   linkType: hard
 
@@ -17698,10 +17710,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tmp@npm:0.2.6":
-  version: 0.2.6
-  resolution: "tmp@npm:0.2.6"
-  checksum: 9e6255b922ab8c6e70b3271e246a14a2f0ad844e951642b34a28bb533d37fbc74f043c7112bceb72be96eded4644a3f3dc67d1934e8593f6a0cb050ffc13e64a
+"tmp@npm:>=0.2.7":
+  version: 0.2.7
+  resolution: "tmp@npm:0.2.7"
+  checksum: 45dec2fc288ad368eeff7268cb6d5d33452c6d35f4f7d9b1b5e023409a141dab57a3c08b5f505daf3af6d69667a5f544fc1a5b6a27c6f9396a5a1b4002912f1c
   languageName: node
   linkType: hard
 
