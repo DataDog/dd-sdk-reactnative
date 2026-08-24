@@ -8060,7 +8060,7 @@ __metadata:
     "@react-navigation/native": ^6.1.18
     "@react-navigation/stack": ^6.2.1
     "@rnx-kit/metro-resolver-symlinks": ^0.1.36
-    axios: 1.15.1
+    axios: 1.19.0
     babel-plugin-module-resolver: ^4.0.0
     patch-package: ^8.0.1
     postinstall-postinstall: ^2.1.0
