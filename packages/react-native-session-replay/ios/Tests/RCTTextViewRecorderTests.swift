@@ -15,7 +15,7 @@ let BACKGROUND_RECT = CGRect(x: 50, y: 50, width: 100, height: 100)
 // Simulates view with padding vertical of 10 and horizontal of 20.
 let INNER_TEXT_RECT = CGRect(x: 20, y: 10, width: 60, height: 80) // position inside the background view
 
-internal class NoOpTelemetry: Telemetry {
+internal final class NoOpTelemetry: Telemetry {
     func send(telemetry: DatadogInternal.TelemetryMessage) {}
 }
 
@@ -28,8 +28,7 @@ internal class RCTTextViewRecorderTests: XCTestCase {
         layerBorderWidth: CGFloat(1.0),
         layerCornerRadius: CGFloat(1.0),
         alpha: CGFloat(1.0),
-        isHidden: false,
-        intrinsicContentSize: CGSize(width: 100.0, height: 100.0)
+        isHidden: false
     )
 
     let mockAllowContext = SessionReplayViewTreeRecordingContext(
@@ -47,6 +46,7 @@ internal class RCTTextViewRecorderTests: XCTestCase {
         coordinateSpace: UIView(),
         ids: .init(),
         webViewCache: .init(),
+        embeddedContentViewCache: .weakToStrongObjects(),
         heatmapCache: .init(),
         clip: .zero
     )
@@ -103,7 +103,12 @@ internal class RCTTextViewRecorderTests: XCTestCase {
         let result = viewRecorder.semantics(of: viewMock, with: mockAttributes, in: mockAllowContext)
 
         let element = try XCTUnwrap(result as? SessionReplayInvisibleElement)
-        XCTAssertEqual(element, SessionReplayInvisibleElement.constant)
+        if case .ignore = element.subtreeStrategy {
+            // Expected strategy for an invisible element.
+        } else {
+            XCTFail("Expected the invisible element to ignore its subtree")
+        }
+        XCTAssertTrue(element.nodes.isEmpty)
     }
 
     func testReturnsBuilderWithCorrectInformation() throws {
@@ -117,9 +122,15 @@ internal class RCTTextViewRecorderTests: XCTestCase {
         let result = viewRecorder.semantics(of: viewMock, with: mockAttributes, in: mockAllowContext)
 
         let element = try XCTUnwrap(result as? SessionReplaySpecificElement)
-        XCTAssertEqual(element.subtreeStrategy, .ignore)
+        if case .ignore = element.subtreeStrategy {
+            // Expected strategy for an RCT text element.
+        } else {
+            XCTFail("Expected the RCT text element to ignore its subtree")
+        }
         XCTAssertEqual(element.nodes.count, 1)
-        let wireframe = try XCTUnwrap(element.nodes[0].wireframesBuilder.buildWireframes(with: .init())[0].getAsTextWireframe())
+        let wireframesBuilder = SessionReplayWireframesBuilder()
+        let wireframes = element.nodes[0].wireframesBuilder.buildWireframes(with: wireframesBuilder)
+        let wireframe = try XCTUnwrap(wireframes.first?.getAsTextWireframe())
         XCTAssertEqual(wireframe.text, "This is the test text.")
 
         // Wireframe represents the background box.
@@ -147,9 +158,15 @@ internal class RCTTextViewRecorderTests: XCTestCase {
         let result = viewRecorder.semantics(of: viewMock, with: mockAttributes, in: mockAllowContext)
 
         let element = try XCTUnwrap(result as? SessionReplaySpecificElement)
-        XCTAssertEqual(element.subtreeStrategy, .ignore)
+        if case .ignore = element.subtreeStrategy {
+            // Expected strategy for an RCT text element.
+        } else {
+            XCTFail("Expected the RCT text element to ignore its subtree")
+        }
         XCTAssertEqual(element.nodes.count, 1)
-        let wireframe = try XCTUnwrap(element.nodes[0].wireframesBuilder.buildWireframes(with: .init())[0].getAsTextWireframe())
+        let wireframesBuilder = SessionReplayWireframesBuilder()
+        let wireframes = element.nodes[0].wireframesBuilder.buildWireframes(with: wireframesBuilder)
+        let wireframe = try XCTUnwrap(wireframes.first?.getAsTextWireframe())
         XCTAssertEqual(wireframe.text, "This is the nested test text.")
     }
     
@@ -170,6 +187,7 @@ internal class RCTTextViewRecorderTests: XCTestCase {
             coordinateSpace: UIView(),
             ids: .init(),
             webViewCache: .init(),
+            embeddedContentViewCache: .weakToStrongObjects(),
             heatmapCache: .init(),
             clip: .zero
         )
@@ -183,9 +201,15 @@ internal class RCTTextViewRecorderTests: XCTestCase {
         let result = viewRecorder.semantics(of: viewMock, with: mockAttributes, in: mockMaskContext)
 
         let element = try XCTUnwrap(result as? SessionReplaySpecificElement)
-        XCTAssertEqual(element.subtreeStrategy, .ignore)
+        if case .ignore = element.subtreeStrategy {
+            // Expected strategy for an RCT text element.
+        } else {
+            XCTFail("Expected the RCT text element to ignore its subtree")
+        }
         XCTAssertEqual(element.nodes.count, 1)
-        let wireframe = try XCTUnwrap(element.nodes[0].wireframesBuilder.buildWireframes(with: .init())[0].getAsTextWireframe())
+        let wireframesBuilder = SessionReplayWireframesBuilder()
+        let wireframes = element.nodes[0].wireframesBuilder.buildWireframes(with: wireframesBuilder)
+        let wireframe = try XCTUnwrap(wireframes.first?.getAsTextWireframe())
         XCTAssertEqual(wireframe.text, "xxxx xx xxx xxxx xxxxx")
     }
 }
@@ -215,13 +239,6 @@ private class MockUIManager: RCTUIManager {
 private class MockFabricWrapper: RCTFabricWrapper {
     override func tryToExtractTextProperties(from view: UIView) -> RCTTextPropertiesWrapper? {
         return nil
-    }
-}
-
-extension SessionReplayInvisibleElement: Equatable {
-    public static func ==(lhs: SessionReplayInvisibleElement, rhs: SessionReplayInvisibleElement) -> Bool {
-        // If two elements are indeed InvisibleElement they're InvisibleElement.constant
-        return true
     }
 }
 
