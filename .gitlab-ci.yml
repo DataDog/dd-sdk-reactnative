@@ -6,6 +6,8 @@ include:
 variables:
     GIT_DEPTH: 5
     DEVELOP_BRANCH: 'develop'
+    DEVELOPER_DIR: '/Applications/Xcode-16.4.0.app/Contents/Developer'
+    IOS_SIMULATOR_DESTINATION: 'platform=iOS Simulator,OS=18.5,name=iPhone 16 Pro Max'
     ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
     EMULATOR_NAME: 'android_emulator'
     ANDROID_ARCH: 'arm64-v8a'
@@ -45,7 +47,7 @@ stages:
 # TESTS
 
 test:lint:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:sequoia-arm64', 'specific:true']
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -55,7 +57,7 @@ test:lint:
         - yarn run lint
 
 test:js:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:sequoia-arm64', 'specific:true']
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -66,7 +68,7 @@ test:js:
         - NODE_OPTIONS='-r dd-trace/ci/init' DD_ENV=ci DD_SERVICE=dd-sdk-reactnative yarn test
 
 test:build:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:sequoia-arm64', 'specific:true']
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -76,7 +78,7 @@ test:build:
         - yarn prepare
 
 test:native-android:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:sequoia-arm64', 'specific:true']
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -94,7 +96,7 @@ test:native-android:
         - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
 
 test:native-ios:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:sequoia-arm64', 'specific:true']
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -102,10 +104,10 @@ test:native-ios:
     script:
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
 
 test:native-ios-sr:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:sequoia-arm64', 'specific:true']
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -113,10 +115,10 @@ test:native-ios-sr:
     script:
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
 
 test:native-ios-newarch:
-    tags: ['macos:sonoma', 'specific:true']
+    tags: ['macos:sequoia-arm64', 'specific:true']
     stage: test
     rules:
         - if: '$BUILD_BENCHMARK != "true"'
@@ -124,7 +126,7 @@ test:native-ios-newarch:
     script:
         - yarn
         - (cd example-new-architecture/ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "platform=iOS Simulator,OS=17.4,name=iPhone 15 Pro Max" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
 
 benchmark:
     stage: benchmark

@@ -60,7 +60,7 @@ stages:
 
 build-and-upload:app:
   stage: build-and-upload
-  tags: ['macos:sonoma', 'specific:true']
+  tags: ['macos:sequoia-arm64', 'specific:true']
   script:
     - !reference [.snippets, install-node]
     - !reference [.snippets, install-android-sdk]
