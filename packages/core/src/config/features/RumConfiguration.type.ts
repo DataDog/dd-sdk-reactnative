@@ -7,7 +7,7 @@ import type { ActionEventMapper } from '../../rum/eventMappers/actionEventMapper
 import type { ErrorEventMapper } from '../../rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../../rum/eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from '../../rum/types';
-import type { VitalsUpdateFrequency } from '../types';
+import type { TimeseriesConfiguration, VitalsUpdateFrequency } from '../types';
 
 /**
  * Required RUM configuration values.
@@ -163,6 +163,12 @@ export interface RumConfigurationOptions {
      * Preferred frequency for collecting mobile vitals.
      */
     vitalsUpdateFrequency?: VitalsUpdateFrequency;
+
+    /**
+     * Experimental: configuration for memory and CPU timeseries collection.
+     * Requires a native SDK build with timeseries support.
+     */
+    unstable_timeseries?: TimeseriesConfiguration;
 }
 
 /**

@@ -266,6 +266,24 @@
                         "customEndpoint": {
                             "description": "Target a custom server for RUM.",
                             "type": "string"
+                        },
+                        "unstable_timeseries": {
+                            "description": "Experimental: configuration for memory and CPU timeseries collection. Requires a native SDK build with timeseries support. Presence of this object enables timeseries collection.",
+                            "type": "object",
+                            "properties": {
+                                "collectTypes": {
+                                    "description": "The types of timeseries data to collect. Defaults to collecting all supported types when omitted.",
+                                    "type": "array",
+                                    "items": {
+                                        "description": "Type of timeseries data to collect.",
+                                        "type": "string",
+                                        "enum": [
+                                            "cpu",
+                                            "memory"
+                                        ]
+                                    }
+                                }
+                            }
                         }
                     },
                     "required": [

@@ -19,6 +19,7 @@ import com.datadog.android.event.EventMapper
 import com.datadog.android.log.Logs
 import com.datadog.android.log.LogsConfiguration
 import com.datadog.android.privacy.TrackingConsent
+import com.datadog.android.rum.ExperimentalRumApi
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumConfiguration
 import com.datadog.android._InternalProxy
@@ -27,6 +28,8 @@ import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.android.rum.metric.networksettled.TimeBasedInitialResourceIdentifier
 import com.datadog.android.rum.model.ActionEvent
 import com.datadog.android.rum.model.ResourceEvent
+import com.datadog.android.rum.timeseries.TimeseriesConfiguration as NativeTimeseriesConfiguration
+import com.datadog.android.rum.timeseries.TimeseriesType as NativeTimeseriesType
 import com.datadog.android.rum.tracking.ActivityViewTrackingStrategy
 import com.datadog.android.telemetry.model.TelemetryConfigurationEvent
 import com.datadog.android.trace.Trace
@@ -253,9 +256,35 @@ class DdSdkNativeInitialization internal constructor(
             configBuilder.setInitialResourceIdentifier(TimeBasedInitialResourceIdentifier(milliseconds))
         }
 
+        configuration.rumConfiguration?.timeseries?.let { timeseries ->
+            setTimeseriesConfiguration(configBuilder, timeseries)
+        }
+
         configBuilder.setSessionListener(DdSdkSessionStartedListener.getInstance())
 
         return configBuilder.build()
+    }
+
+    @OptIn(ExperimentalRumApi::class)
+    private fun setTimeseriesConfiguration(
+        configBuilder: RumConfiguration.Builder,
+        timeseries: TimeseriesConfiguration
+    ) {
+        val nativeConfigBuilder = NativeTimeseriesConfiguration.Builder()
+        val collectTypes = timeseries.collectTypes?.mapNotNull { it.asTimeseriesType() }
+        if (collectTypes != null) {
+            nativeConfigBuilder.collectOnly(*collectTypes.toTypedArray())
+        }
+
+        configBuilder.setTimeseriesConfiguration(nativeConfigBuilder.build())
+    }
+
+    private fun String.asTimeseriesType(): NativeTimeseriesType? {
+        return when (lowercase(Locale.US)) {
+            "cpu" -> NativeTimeseriesType.CPU
+            "memory" -> NativeTimeseriesType.MEMORY
+            else -> null
+        }
     }
 
     private fun buildLogsConfiguration(configuration: DdSdkConfiguration): LogsConfiguration {

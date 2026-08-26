@@ -66,6 +66,8 @@ class DdSdkNativeInitializationTests: XCTestCase {
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = ["example.com": [.b3multi, .tracecontext]]
         XCTAssertEqual(configuration?.rumConfiguration?.firstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(configuration?.rumConfiguration?.initialResourceThreshold, 0.5)
+        XCTAssertEqual(configuration?.rumConfiguration?.enableTimeseries, true)
+        XCTAssertEqual(configuration?.rumConfiguration?.timeseriesCollectTypes, ["cpu"])
     }
 
     func testReturnsConfigurationWithMinimalData() {
@@ -104,6 +106,8 @@ class DdSdkNativeInitializationTests: XCTestCase {
         let expectedFirstPartyHosts: [String: Set<TracingHeaderType>]? = [:]
         XCTAssertEqual(configuration?.rumConfiguration?.firstPartyHosts, expectedFirstPartyHosts)
         XCTAssertEqual(configuration?.rumConfiguration?.initialResourceThreshold, nil)
+        XCTAssertEqual(configuration?.rumConfiguration?.enableTimeseries, false)
+        XCTAssertNil(configuration?.rumConfiguration?.timeseriesCollectTypes)
     }
 
     func testPrintsMessageWithIncorrectFile() {
