@@ -167,11 +167,11 @@ internal class DdTraceTests: XCTestCase {
     }
 }
 
-private class MockTracer: OTTracer {
+private final class MockTracer: OTTracer, @unchecked Sendable {
     var activeSpan: OTSpan?
 
     private(set) var startedSpans = [MockSpan]()
-    func startSpan(operationName: String, references: [OTReference]?, tags: [String: Encodable]?, startTime: Date?) -> OTSpan {
+    func startSpan(operationName: String, references: [OTReference]?, tags: [String: Encodable & Sendable]?, startTime: Date?) -> OTSpan {
         let mockSpan = MockSpan(name: operationName, parent: nil, tags: tags, startTime: startTime)
         startedSpans.append(mockSpan)
         return mockSpan
@@ -187,21 +187,21 @@ private class MockTracer: OTTracer {
     // swiftlint:enable unavailable_function
 }
 
-private class MockSpan: OTSpan {
+private final class MockSpan: OTSpan, @unchecked Sendable {
     static let unfinished: Date = .distantFuture
 
     let name: String
     let parent: OTSpanContext?
-    private(set) var tags: [String: Encodable]
+    private(set) var tags: [String: Encodable & Sendable]
     let startTime: Date?
-    init(name: String, parent: OTSpanContext?, tags: [String: Encodable]?, startTime: Date?) {
+    init(name: String, parent: OTSpanContext?, tags: [String: Encodable & Sendable]?, startTime: Date?) {
         self.name = name
         self.parent = parent
         self.tags = tags ?? [:]
         self.startTime = startTime
     }
 
-    func setTag(key: String, value: Encodable) {
+    func setTag(key: String, value: Encodable & Sendable) {
         tags[key] = value
     }
 
@@ -225,7 +225,7 @@ private class MockSpan: OTSpan {
     func setOperationName(_ operationName: String) {
         fatalError("Should not be called")
     }
-    func log(fields: [String: Encodable], timestamp: Date) {
+    func log(fields: [String: Encodable & Sendable], timestamp: Date) {
         fatalError("Should not be called")
     }
     func setBaggageItem(key: String, value: String) {
