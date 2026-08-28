@@ -41,6 +41,8 @@ describe('DdFlags', () => {
         await DdFlags.enable({
             customExposureEndpoint: 'https://example.com',
             customFlagsEndpoint: 'https://example.com',
+            assignmentRequestTimeoutMs: 2500,
+            assignmentRequestRetryCount: 3,
             trackExposures: false,
             rumIntegrationEnabled: false
         });
@@ -49,10 +51,51 @@ describe('DdFlags', () => {
             enabled: true,
             customExposureEndpoint: 'https://example.com',
             customFlagsEndpoint: 'https://example.com',
+            assignmentRequestTimeoutMs: 2500,
+            assignmentRequestRetryCount: 3,
             trackExposures: false,
             rumIntegrationEnabled: false
         });
     });
+
+    it('should forward zero values that disable assignment request limits', async () => {
+        await DdFlags.enable({
+            assignmentRequestTimeoutMs: 0,
+            assignmentRequestRetryCount: 0
+        });
+
+        expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
+            enabled: true,
+            assignmentRequestTimeoutMs: 0,
+            assignmentRequestRetryCount: 0
+        });
+    });
+
+    it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+        'should reject invalid assignmentRequestTimeoutMs value %s',
+        async assignmentRequestTimeoutMs => {
+            await expect(
+                DdFlags.enable({ assignmentRequestTimeoutMs })
+            ).rejects.toThrow(
+                '`assignmentRequestTimeoutMs` must be a non-negative integer.'
+            );
+
+            expect(NativeModules.DdFlags.enable).not.toHaveBeenCalled();
+        }
+    );
+
+    it.each([-1, 11, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+        'should reject invalid assignmentRequestRetryCount value %s',
+        async assignmentRequestRetryCount => {
+            await expect(
+                DdFlags.enable({ assignmentRequestRetryCount })
+            ).rejects.toThrow(
+                '`assignmentRequestRetryCount` must be an integer between 0 and 10.'
+            );
+
+            expect(NativeModules.DdFlags.enable).not.toHaveBeenCalled();
+        }
+    );
 
     it('should print an error when trying to retrieve a client before DdFlags.enable() has been called', async () => {
         DdFlags.getClient();

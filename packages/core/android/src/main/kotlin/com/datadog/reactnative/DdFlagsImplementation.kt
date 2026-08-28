@@ -166,6 +166,12 @@ private fun buildFlagsConfiguration(configuration: Map<String, Any?>): FlagsConf
             (configuration["customExposureEndpoint"] as? String)?.let {
                 useCustomExposureEndpoint("$it/api/v2/exposures")
             }
+            (configuration["assignmentRequestTimeoutMs"] as? Number)?.let {
+                assignmentRequestTimeout(it.toLong())
+            }
+            (configuration["assignmentRequestRetryCount"] as? Number)?.let {
+                assignmentRequestRetryCount(it.toInt())
+            }
         }.build()
 }
 

@@ -316,7 +316,9 @@ class DdFlagsTests: XCTestCase {
             "trackExposures": false,
             "rumIntegrationEnabled": false,
             "customFlagsEndpoint": "https://flags.example.com",
-            "customExposureEndpoint": "https://exposure.example.com"
+            "customExposureEndpoint": "https://exposure.example.com",
+            "assignmentRequestTimeoutMs": 2_500,
+            "assignmentRequestRetryCount": 3
         ]
 
         let config = configDict.asFlagsConfiguration()
@@ -326,6 +328,8 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(config?.rumIntegrationEnabled, false)
         XCTAssertEqual(config?.customFlagsEndpoint?.absoluteString, "https://flags.example.com/precompute-assignments")
         XCTAssertEqual(config?.customExposureEndpoint?.absoluteString, "https://exposure.example.com/api/v2/exposures")
+        XCTAssertEqual(config?.assignmentRequestTimeout, 2.5)
+        XCTAssertEqual(config?.assignmentRequestRetryCount, 3)
     }
 
     func testConfigurationParsingDefaults() {
@@ -337,6 +341,8 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(config?.rumIntegrationEnabled, true)
         XCTAssertNil(config?.customFlagsEndpoint)
         XCTAssertNil(config?.customExposureEndpoint)
+        XCTAssertEqual(config?.assignmentRequestTimeout, 1)
+        XCTAssertEqual(config?.assignmentRequestRetryCount, 1)
     }
 
     func testConfigurationParsingDisabled() {

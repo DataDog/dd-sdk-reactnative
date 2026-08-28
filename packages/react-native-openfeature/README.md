@@ -41,7 +41,10 @@ import { OpenFeature } from '@openfeature/react-sdk';
     await DdSdkReactNative.initialize(config);
 
     // Enable Datadog Flags feature after the core SDK has been initialized.
-    await DdFlags.enable();
+    await DdFlags.enable({
+        assignmentRequestTimeoutMs: 1_000,
+        assignmentRequestRetryCount: 1
+    });
 
     // Set the Datadog provider with OpenFeature.
     const provider = new DatadogOpenFeatureProvider();
@@ -53,7 +56,10 @@ import { OpenFeature } from '@openfeature/react-sdk';
 <DatadogProvider
     configuration={coreConfiguration}
     onInitialized={async () => {
-        await DdFlags.enable();
+        await DdFlags.enable({
+            assignmentRequestTimeoutMs: 1_000,
+            assignmentRequestRetryCount: 1
+        });
 
         const provider = new DatadogOpenFeatureProvider();
         OpenFeature.setProvider(provider);
@@ -64,6 +70,11 @@ import { OpenFeature } from '@openfeature/react-sdk';
 ```
 
 After completing this setup, your app is ready for flag evaluation with OpenFeature.
+
+`assignmentRequestTimeoutMs` applies to each flag-assignment request, including downloading the
+response body. `assignmentRequestRetryCount` is the number of retries after the initial request.
+The native SDKs default to a one-second timeout and one retry when these options are omitted. Use
+`0` to disable either limit. These settings do not affect exposure, evaluation, or RUM telemetry.
 
 > **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure.
 
