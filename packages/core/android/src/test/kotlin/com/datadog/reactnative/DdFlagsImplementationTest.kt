@@ -90,7 +90,7 @@ internal class DdFlagsImplementationTest {
             mapOf(
                 "enabled" to true,
                 "assignmentRequestTimeoutMs" to 2_500,
-                "assignmentRequestRetryCount" to 3,
+                "assignmentRequestRetryCount" to 3
             ).toReadableMap()
         val flagsMock = Mockito.mockStatic(Flags::class.java)
 
