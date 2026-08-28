@@ -10,6 +10,7 @@ import com.datadog.android.Datadog
 import com.datadog.android.api.SdkCore
 import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsConfiguration
+import com.datadog.tools.unit.getFieldValue
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
 import org.assertj.core.api.Assertions.assertThat
@@ -71,10 +72,14 @@ internal class DdFlagsImplementationTest {
             // Then
             val configurationCaptor = argumentCaptor<FlagsConfiguration>()
             flagsMock.verify { Flags.enable(configurationCaptor.capture(), same(initializedCore)) }
-            assertThat(configurationCaptor.firstValue.readField<Long>("assignmentRequestTimeoutMs"))
-                .isEqualTo(0L)
-            assertThat(configurationCaptor.firstValue.readField<Int>("assignmentRequestRetryCount"))
-                .isEqualTo(1)
+            assertThat(
+                configurationCaptor.firstValue
+                    .getFieldValue<Long, FlagsConfiguration>("assignmentRequestTimeoutMs")
+            ).isEqualTo(0L)
+            assertThat(
+                configurationCaptor.firstValue
+                    .getFieldValue<Int, FlagsConfiguration>("assignmentRequestRetryCount")
+            ).isEqualTo(1)
             verify(mockPromise).resolve(null)
         } finally {
             flagsMock.close()
@@ -104,20 +109,18 @@ internal class DdFlagsImplementationTest {
             // Then
             val configurationCaptor = argumentCaptor<FlagsConfiguration>()
             flagsMock.verify { Flags.enable(configurationCaptor.capture(), same(sdkCore)) }
-            assertThat(configurationCaptor.firstValue.readField<Long>("assignmentRequestTimeoutMs"))
-                .isEqualTo(2_500L)
-            assertThat(configurationCaptor.firstValue.readField<Int>("assignmentRequestRetryCount"))
-                .isEqualTo(3)
+            assertThat(
+                configurationCaptor.firstValue
+                    .getFieldValue<Long, FlagsConfiguration>("assignmentRequestTimeoutMs")
+            ).isEqualTo(2_500L)
+            assertThat(
+                configurationCaptor.firstValue
+                    .getFieldValue<Int, FlagsConfiguration>("assignmentRequestRetryCount")
+            ).isEqualTo(3)
             verify(mockPromise).resolve(null)
         } finally {
             flagsMock.close()
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun <T> Any.readField(name: String): T =
-        javaClass.getDeclaredField(name).run {
-            isAccessible = true
-            get(this@readField) as T
-        }
 }
