@@ -341,7 +341,7 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(config?.rumIntegrationEnabled, true)
         XCTAssertNil(config?.customFlagsEndpoint)
         XCTAssertNil(config?.customExposureEndpoint)
-        XCTAssertEqual(config?.assignmentRequestTimeout, 1)
+        XCTAssertEqual(config?.assignmentRequestTimeout, 0)
         XCTAssertEqual(config?.assignmentRequestRetryCount, 1)
     }
 

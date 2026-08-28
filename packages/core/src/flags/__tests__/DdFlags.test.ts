@@ -58,6 +58,15 @@ describe('DdFlags', () => {
         });
     });
 
+    it('should preserve an omitted assignment request timeout', async () => {
+        await DdFlags.enable({ assignmentRequestRetryCount: 2 });
+
+        expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
+            enabled: true,
+            assignmentRequestRetryCount: 2
+        });
+    });
+
     it('should forward zero values that disable assignment request limits', async () => {
         await DdFlags.enable({
             assignmentRequestTimeoutMs: 0,

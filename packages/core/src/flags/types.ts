@@ -82,13 +82,13 @@ export interface FlagsConfiguration {
     /**
      * Timeout for each request that retrieves precomputed flag assignments, in milliseconds.
      *
-     * The timeout includes downloading the complete response body. Set to `0` to disable the
-     * timeout. This setting does not apply to loading cached assignments or sending exposure,
-     * evaluation, or RUM data.
+     * The timeout includes downloading the complete response body. When omitted or set to `0`,
+     * no timeout is applied by Datadog. This setting does not apply to loading cached assignments
+     * or sending exposure, evaluation, or RUM data.
      *
      * The value must be a non-negative integer.
      *
-     * @default 1000
+     * @default undefined
      */
     assignmentRequestTimeoutMs?: number;
     /**

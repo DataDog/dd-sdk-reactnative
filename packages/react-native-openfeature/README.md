@@ -73,8 +73,9 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 
 `assignmentRequestTimeoutMs` applies to each flag-assignment request, including downloading the
 response body. `assignmentRequestRetryCount` is the number of retries after the initial request.
-The native SDKs default to a one-second timeout and one retry when these options are omitted. Use
-`0` to disable either limit. These settings do not affect exposure, evaluation, or RUM telemetry.
+The assignment request timeout is disabled when omitted, while the native SDKs default to one
+retry. Use `0` to explicitly disable either limit. These settings do not affect exposure,
+evaluation, or RUM telemetry.
 
 > **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure.
 

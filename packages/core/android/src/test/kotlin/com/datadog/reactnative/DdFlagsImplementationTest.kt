@@ -72,7 +72,7 @@ internal class DdFlagsImplementationTest {
             val configurationCaptor = argumentCaptor<FlagsConfiguration>()
             flagsMock.verify { Flags.enable(configurationCaptor.capture(), same(initializedCore)) }
             assertThat(configurationCaptor.firstValue.readField<Long>("assignmentRequestTimeoutMs"))
-                .isEqualTo(1_000L)
+                .isEqualTo(0L)
             assertThat(configurationCaptor.firstValue.readField<Int>("assignmentRequestRetryCount"))
                 .isEqualTo(1)
             verify(mockPromise).resolve(null)
