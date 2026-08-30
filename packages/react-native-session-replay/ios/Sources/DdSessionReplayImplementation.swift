@@ -56,7 +56,7 @@ public class DdSessionReplayImplementation: NSObject {
     ) -> Void {
         var customEndpointURL: URL? = nil
         if (customEndpoint != "") {
-            customEndpointURL = URL(string: "\(customEndpoint)/api/v2/replay" as String)
+            customEndpointURL = URL(string: "\(customEndpoint)" as String)
         }
         
         var sessionReplayConfiguration = SessionReplay.Configuration(
