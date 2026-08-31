@@ -26,6 +26,17 @@ import { HeartIcon, ShieldIcon } from './assets/icons';
 // Aliased via the 'module-resolver' babel plugin (see benchmarks/babel.config.js) —
 // tests that buildSvgMap resolves aliased local SVG imports (RUM-12185).
 import AliasedStarSvg from '@assets/star.svg';
+// H2/H3/H4 alias into @react-native/debugger-frontend -- a real npm
+// dependency (not a workspace symlink), so the Babel plugin's node_modules
+// exclusion applies to it, meaning localSvgMap/pathAliasResolver is the
+// only thing that can make these show up wrapped in Session Replay (see
+// babel.config.js for why this matters).
+// H2: alias resolves straight to a file -- specifier has no '.svg' extension.
+import CheckmarkLogo from '@heart-logo';
+// H3: alias substitute is an absolute filesystem path.
+import AbsoluteAliasedLock from '@absoluteAssets/lock.svg';
+// H4: alias configured in metro.config.js's resolver.extraNodeModules.
+import MetroAliasedGear from 'metroAssets/gear-filled.svg';
 
 // Module-level const used in Case D1 to test findIdentifierInScope
 const BADGE_SIZE = 72;
@@ -354,6 +365,24 @@ function AliasedStarImport() {
     return <AliasedStarSvg width={64} height={64} />;
 }
 
+/** H2: Alias substitute maps straight to a file, so the specifier itself
+ *  ('@heart-logo') carries no '.svg' extension at all. */
+function AliasedExtensionlessImport() {
+    return <CheckmarkLogo width={40} height={40} />;
+}
+
+/** H3: Alias substitute is an absolute filesystem path rather than one
+ *  relative to the importing file. */
+function AbsoluteAliasImport() {
+    return <AbsoluteAliasedLock width={40} height={40} />;
+}
+
+/** H4: Alias configured in metro.config.js's resolver.extraNodeModules,
+ *  rather than via babel-plugin-module-resolver or tsconfig.json. */
+function MetroExtraNodeModulesImport() {
+    return <MetroAliasedGear width={40} height={40} />;
+}
+
 // ─────────────────────────────────────────────────────────────
 // GROUP I — Unsupported nested elements
 // AnimatedPath isn't a recognized SVG tag, so it's now spliced out of the tree
@@ -446,7 +475,7 @@ export default function SvgTestCases() {
                 Group E: known limitation — absent from replay entirely (see comment).{'\n'}
                 Group F: appears after buildSvgMap fixes.{'\n'}
                 Group G: privacy overrides — verify masking behavior in replay.{'\n'}
-                Group H: aliased import — same star as F1, resolved via '@assets' alias.{'\n'}
+                Group H: aliased imports — resolved via module-resolver, absolute-path, and metro.config.js aliases.{'\n'}
                 Group I: I1 shows circle only (checkmark removed), I2 shows circle + checkmark.
             </RNText>
 
@@ -538,8 +567,17 @@ export default function SvgTestCases() {
             </Section>
 
             <Section title="H — Aliased import (RUM-12185)">
-                <Case label="H1 aliased import" sublabel="@assets/star.svg">
+                <Case label="H1 module-resolver alias" sublabel="@assets/star.svg">
                     <AliasedStarImport />
+                </Case>
+                <Case label="H2 extensionless alias" sublabel="@heart-logo → checkmark.svg (node_modules)">
+                    <AliasedExtensionlessImport />
+                </Case>
+                <Case label="H3 absolute-path alias" sublabel="@absoluteAssets/lock.svg (node_modules)">
+                    <AbsoluteAliasImport />
+                </Case>
+                <Case label="H4 metro.config.js alias" sublabel="metroAssets/gear-filled.svg (node_modules)">
+                    <MetroExtraNodeModulesImport />
                 </Case>
             </Section>
 
