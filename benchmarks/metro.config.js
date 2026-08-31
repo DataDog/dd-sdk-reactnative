@@ -47,10 +47,28 @@ const config = {
                     )
             )
         ),
-        extraNodeModules: modules.reduce((acc, name) => {
-            acc[name] = path.join(__dirname, 'node_modules', name);
-            return acc;
-        }, {})
+        extraNodeModules: {
+            ...modules.reduce((acc, name) => {
+                acc[name] = path.join(__dirname, 'node_modules', name);
+                return acc;
+            }, {}),
+            // H4: alias configured directly in metro.config.js (rather than
+            // babel-plugin-module-resolver/tsconfig.json), exercising
+            // buildSvgMap's resolver.extraNodeModules alias path. Unscoped
+            // (no leading '@') so it matches for any subpath depth -- Metro's
+            // own parsing only splits a scoped key at a *second* slash, so
+            // e.g. '@metroAssets/star.svg' wouldn't match a key of just
+            // '@metroAssets' (see pathAliasResolver.ts).
+            //
+            // Points into @react-native/debugger-frontend (a real npm
+            // dependency, not a workspace symlink) for the same reason as
+            // the babel-plugin-module-resolver aliases above -- see
+            // babel.config.js.
+            metroAssets: path.join(
+                __dirname,
+                'node_modules/@react-native/debugger-frontend/dist/third-party/front_end/Images'
+            )
+        }
     },
 };
 

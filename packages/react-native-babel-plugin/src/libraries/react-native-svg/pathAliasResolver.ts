@@ -5,6 +5,7 @@
  */
 
 import * as babelCore from '@babel/core';
+import fs from 'fs';
 import pathN from 'path';
 import { createMatchPath, loadConfig } from 'tsconfig-paths';
 import type { MatchPath } from 'tsconfig-paths';
@@ -38,9 +39,45 @@ function isRelativePath(value: string): boolean {
 }
 
 /**
+ * Splits a bare import specifier into the "package name" Metro's own
+ * resolver (`metro-resolver`'s `parseBareSpecifier`) would use to look it up
+ * in `resolver.extraNodeModules`, and the remaining subpath. Scoped-looking
+ * specifiers (starting with `@`) only split after their *second* path
+ * segment -- `@scope/pkg/sub` maps package name `@scope/pkg`, but `@scope/sub`
+ * (only one slash) has no further segment to split on, so the whole
+ * specifier is the package name, exactly mirroring Metro's own behavior.
+ */
+function parseExtraNodeModulesSpecifier(
+    specifier: string
+): {
+    packageName: string;
+    subpath: string;
+} {
+    const firstSlash = specifier.indexOf('/');
+    if (specifier[0] === '@' && firstSlash !== -1) {
+        const secondSlash = specifier.indexOf('/', firstSlash + 1);
+        if (secondSlash === -1) {
+            return { packageName: specifier, subpath: '' };
+        }
+        return {
+            packageName: specifier.slice(0, secondSlash),
+            subpath: specifier.slice(secondSlash)
+        };
+    }
+    if (firstSlash === -1) {
+        return { packageName: specifier, subpath: '' };
+    }
+    return {
+        packageName: specifier.slice(0, firstSlash),
+        subpath: specifier.slice(firstSlash)
+    };
+}
+
+/**
  * Resolves non-relative import specifiers (e.g. `@components/Logo`) against a
- * project's `babel-plugin-module-resolver` config and/or its
- * `tsconfig.json`/`jsconfig.json` `paths` mapping, so aliased local SVG
+ * project's `babel-plugin-module-resolver` config, its
+ * `tsconfig.json`/`jsconfig.json` `paths` mapping, and/or its
+ * `metro.config.js` `resolver.extraNodeModules` map, so aliased local SVG
  * imports can be found on disk the same way they resolve at runtime.
  *
  * Callers should still fall back to plain relative resolution when this
@@ -56,6 +93,8 @@ export class PathAliasResolver {
 
     private tsMatchPath: MatchPath | null | undefined;
 
+    private metroExtraNodeModules: Record<string, string> | null | undefined;
+
     private resultCache = new Map<string, string | null>();
 
     constructor(rootDir: string) {
@@ -68,6 +107,7 @@ export class PathAliasResolver {
     reset(): void {
         this.moduleResolverBindings.clear();
         this.tsMatchPath = undefined;
+        this.metroExtraNodeModules = undefined;
         this.resultCache.clear();
     }
 
@@ -84,7 +124,8 @@ export class PathAliasResolver {
 
         const resolved =
             this.resolveWithModuleResolver(importSource, currentFile) ??
-            this.resolveWithTsconfigPaths(importSource);
+            this.resolveWithTsconfigPaths(importSource) ??
+            this.resolveWithMetroExtraNodeModules(importSource);
         this.resultCache.set(cacheKey, resolved);
         return resolved;
     }
@@ -108,7 +149,18 @@ export class PathAliasResolver {
                 currentFile,
                 binding.options
             );
-            if (!resolved || !isRelativePath(resolved)) {
+            if (!resolved) {
+                return null;
+            }
+
+            // An `alias` entry can map to an absolute path directly (e.g.
+            // `alias: { '@app': path.resolve(__dirname, 'src') }`), not just a
+            // path relative to the importing file -- return it as-is.
+            if (pathN.isAbsolute(resolved)) {
+                return resolved;
+            }
+
+            if (!isRelativePath(resolved)) {
                 return null;
             }
 
@@ -129,6 +181,66 @@ export class PathAliasResolver {
         }
 
         return matchPath(importSource) ?? null;
+    }
+
+    private resolveWithMetroExtraNodeModules(
+        importSource: string
+    ): string | null {
+        const extraNodeModules = this.getMetroExtraNodeModules();
+        if (!extraNodeModules) {
+            return null;
+        }
+
+        const { packageName, subpath } = parseExtraNodeModulesSpecifier(
+            importSource
+        );
+        const target = extraNodeModules[packageName];
+        if (!target) {
+            return null;
+        }
+
+        return subpath ? pathN.join(target, subpath) : target;
+    }
+
+    private getMetroExtraNodeModules(): Record<string, string> | null {
+        if (this.metroExtraNodeModules !== undefined) {
+            return this.metroExtraNodeModules;
+        }
+
+        try {
+            const configPath = ['metro.config.js', 'metro.config.cjs']
+                .map(name => pathN.join(this.rootDir, name))
+                .find(candidate => fs.existsSync(candidate));
+
+            if (!configPath) {
+                this.metroExtraNodeModules = null;
+                return null;
+            }
+
+            // Unlike loadPartialConfig()/loadConfig() below (which read their
+            // config files fresh from disk each call), require() caches by
+            // resolved filename -- drop any cached entry first so an edit to
+            // metro.config.js made since this was last required is picked up
+            // after reset(), instead of silently reusing a stale module.
+            delete require.cache[require.resolve(configPath)];
+            // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require, import/no-dynamic-require
+            const config = require(configPath) as {
+                resolver?: { extraNodeModules?: unknown };
+            };
+            const extraNodeModules = config?.resolver?.extraNodeModules;
+            this.metroExtraNodeModules =
+                extraNodeModules && typeof extraNodeModules === 'object'
+                    ? (extraNodeModules as Record<string, string>)
+                    : null;
+        } catch (err) {
+            console.warn(
+                '[PathAliasResolver]: Failed to load metro.config.js, aliased SVG imports may not resolve',
+                err
+            );
+            this.metroExtraNodeModules = null;
+        }
+
+        return this.metroExtraNodeModules;
     }
 
     private getTsMatchPath(): MatchPath | null {
