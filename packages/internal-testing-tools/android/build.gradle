@@ -188,7 +188,7 @@ dependencies {
   }
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation project(path: ':datadog_mobile-react-native')
-  implementation "com.datadoghq:dd-sdk-android-core:3.12.1"
+  implementation "com.datadoghq:dd-sdk-android-core:3.13.1"
   implementation "com.google.code.gson:gson:2.11.0"
 
   testImplementation "org.junit.platform:junit-platform-launcher:1.6.2"
