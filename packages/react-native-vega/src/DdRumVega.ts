@@ -4,7 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { ErrorSource, FeatureOperationFailure } from '@datadog/mobile-react-native';
+import { DdAttributes, debugId } from '@datadog/mobile-react-native/internal';
+import type {
+    ErrorSource,
+    FeatureOperationFailure
+} from '@datadog/mobile-react-native';
 
 import NativeDdRum from './turbo-modules/NativeDdRum';
 
@@ -105,11 +109,19 @@ class DdRumVega {
         timestampMs: number = Date.now(),
         fingerprint: string = ''
     ): Promise<void> => {
+        const updatedContext: Record<string, unknown> = {
+            ...context,
+            [DdAttributes.errorSourceType]: 'react-native'
+        };
+        if (debugId) {
+            updatedContext[DdAttributes.debugId] = debugId;
+        }
+
         return NativeDdRum.addError(
             message,
             source,
             stacktrace,
-            context,
+            updatedContext,
             timestampMs,
             fingerprint
         );

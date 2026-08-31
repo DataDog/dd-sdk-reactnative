@@ -87,6 +87,8 @@ const configuration = new DatadogProviderConfiguration(
             applicationId: APPLICATION_ID,
             trackInteractions: true,
             trackResources: true,
+            trackErrors: true,
+            nativeCrashReportEnabled: true,
             sessionSampleRate: 100
         },
         logsConfiguration: {
@@ -110,6 +112,24 @@ The legacy `DdSdkReactNative.initialize(configuration)` path and the provider's
 two-phase `DatadogProvider.initialize(...)` path are also available. The provider is
 recommended because it enables JS auto-instrumentation before rendering its children.
 
+### Configure JavaScript Source Maps
+
+Wrap the app's merged Metro configuration with the core Datadog Metro helper. It adds
+the same Debug ID to the application bundle and source map so JavaScript error stacks
+can be matched to the correct source map:
+
+```js
+const {
+    withDatadogMetroConfig
+} = require('@datadog/mobile-react-native/metro');
+
+module.exports = withDatadogMetroConfig(mergedConfig);
+```
+
+For a Vega Release build, the application bundle and source map are generated at
+`build/lib/rn-bundles/Release/index.bundle` and
+`build/debugging/Release/srcmap/index.bundle.map`.
+
 ### Configuration Coverage
 
 The shared React Native configuration accepts more options than the current Vega
@@ -118,14 +138,14 @@ native bridge applies:
 | Configuration      | Current Vega behavior                                                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
 | Core               | Applies client token, environment, service, site, tracking consent, batch size, upload frequency, and batch processing level.   |
-| RUM registration   | Applies application ID and session sample rate.                                                                                 |
+| RUM registration   | Applies application ID, session sample rate, and native crash reporting.                                                        |
 | JS instrumentation | Applies interaction tracking, accessibility-label naming, resource tracking, resource trace sample rate, and first-party hosts. |
 | Logs               | The presence of `logsConfiguration` enables Logging, and `bundleLogsWithRum` controls RUM-context enrichment.                   |
 | Trace              | `traceConfiguration` is accepted by the shared type but currently has no native effect.                                         |
 
 Application version metadata, proxy configuration, custom intake endpoints,
-`bundleLogsWithTraces`, native crash reporting, and most native performance options
-are not currently applied by the Vega C++ bridge.
+`bundleLogsWithTraces`, and most native performance options are not currently applied
+by the Vega C++ bridge.
 
 ### Send Logs
 
@@ -256,6 +276,7 @@ The C++ SDK exposes these main feature areas:
 | RUM actions               | Implemented                     | `startAction`, `stopAction`, and `addAction` map to the C++ RUM action APIs.                                                                                             |
 | RUM resources             | Implemented                     | `startResource` and successful `stopResource` map to `Rum::StartResource()` and `Rum::StopResource()`.                                                                   |
 | RUM errors                | Implemented                     | `addError` maps to `Rum::AddError()`.                                                                                                                                    |
+| Automatic JS errors       | Implemented through JS          | When `trackErrors` is enabled, the React Native global error and `console.error` handlers report errors through the Vega-backed RUM module and attach the Metro Debug ID when available. |
 | RUM view attributes       | Implemented                     | `addViewAttribute`, `removeViewAttribute`, `addViewAttributes`, and `removeViewAttributes` map to C++ view attributes.                                                   |
 | RUM session stop          | Implemented                     | `stopSession` maps to `Rum::StopSession()`.                                                                                                                              |
 | Automatic interactions    | Implemented through JS          | The Datadog Babel plugin reports supported user interactions through the Vega RUM wrapper when `trackInteractions` is enabled.                                           |
@@ -270,13 +291,13 @@ The C++ SDK exposes these main feature areas:
 | Logging                     | Wired            | Registers C++ Logging when `logsConfiguration` is present and exports Vega `DdLogs` methods for debug, info, warn, and error events, including per-event context and attached error details. `bundleLogsWithRum` enriches logs with RUM context. Device-level validation is still required. |
 | User info                   | Wired            | `setUserInfo`, `addUserExtraInfo`, and `clearUserInfo` map to the corresponding C++ Core APIs. Replacement, merging, and propagation into RUM and Log events need device-level validation.                                                                                                  |
 | Account info                | Wired            | `setAccountInfo`, `addAccountExtraInfo`, and `clearAccountInfo` map to the corresponding C++ Core APIs. Replacement, merging, and propagation into RUM and Log events need device-level validation.                                                                                         |
+| Native crash reporting      | Wired            | `nativeCrashReportEnabled` registers the C++ in-process crash handler. It captures the crashing thread and processes the persisted report as a RUM error on the next application launch. End-to-end behavior still needs physical-device validation.                                        |
 | `clearAllData` behavior     | Best effort      | Current implementation stops and restarts the core. This is not equivalent to a fully validated storage purge API.                                                                                                                                                                          |
 
 ### Not Wired Yet
 
 | Feature area               | Vega support          | Notes                                                                                                                                                                           |
 | -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Crash Reporting            | Not wired             | `dd-sdk-cpp` exposes `CrashReporting`, but the Vega build currently uses `DD_CRASH_MODE=noop` and does not register crash reporting.                                            |
 | Failed resource completion | Not wired             | `dd-sdk-cpp` exposes `Rum::StopResourceWithError()`, but the Vega bridge currently only maps successful `stopResource` plus separate `addError`.                                |
 | Feature flag evaluations   | Not backed by C++ API | The React Native compatibility method exists, but `dd-sdk-cpp` does not expose a matching public feature flag API.                                                              |
 | RUM custom timing          | Not backed by C++ API | The React Native compatibility method exists, but `dd-sdk-cpp` does not expose a matching public `addTiming` API.                                                               |
@@ -305,9 +326,7 @@ The Vega package intentionally keeps its customer-facing API close to
     `DdRum.addFeatureFlagEvaluation` currently resolve without producing data.
 -   `DdRum.getCurrentSessionId()` currently resolves to `undefined`.
 -   Vega does not currently apply RUM or Log event mappers, custom endpoints, custom
-    attribute encoders, native crash reporting, or most native performance options.
--   Automatic JS error tracking is not currently wired. Customers can report handled
-    errors with `DdRum.addError`.
+    attribute encoders, or most native performance options.
 -   Explicit timestamps accepted by the compatibility API are not currently forwarded
     to `dd-sdk-cpp`; native event time is used.
 -   The optional fingerprint accepted by `DdRum.addError` is not currently forwarded to

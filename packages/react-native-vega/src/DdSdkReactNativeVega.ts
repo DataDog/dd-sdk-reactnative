@@ -16,7 +16,8 @@ import {
     BufferSingleton,
     GlobalState,
     UserInfoSingleton,
-    DdRumResourceTracking
+    DdRumResourceTracking,
+    DdRumErrorTracking
 } from '@datadog/mobile-react-native/internal';
 import type {
     Attributes,
@@ -498,6 +499,7 @@ export class DdSdkReactNativeVega {
         const rumConfig = (configuration as any)?.rumConfiguration;
         const trackInteractions = rumConfig?.trackInteractions ?? true;
         const trackResources = rumConfig?.trackResources ?? true;
+        const trackErrors = rumConfig?.trackErrors ?? true;
 
         // Patch core's DdRum singleton to route native calls through Vega's
         // Kepler module. Core's singleton is created with nativeRum = null on
@@ -527,6 +529,10 @@ export class DdSdkReactNativeVega {
                 resourceTraceSampleRate,
                 firstPartyHosts
             });
+        }
+
+        if (trackErrors) {
+            DdRumErrorTracking.startTracking(CoreDdRum);
         }
 
         DdSdkReactNativeVega.wasAutoInstrumented = true;

@@ -7,6 +7,7 @@
 import { NativeModules } from 'react-native';
 
 import type { DdNativeRumType } from '../../../nativeModulesTypes';
+import { DdRum as DdRumReporter } from '../../../rum/DdRum';
 import { DdRumErrorTracking } from '../../../rum/instrumentation/DdRumErrorTracking';
 import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 
@@ -48,7 +49,7 @@ afterEach(() => {
 
 it('M intercept and send a RUM event W onGlobalError() {no message}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         stack: ['doSomething() at ./path/to/file.js:67:3']
@@ -82,7 +83,7 @@ it('M intercept and send a RUM event W onGlobalError() {no message}', async () =
 
 it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         message: 'Something bad happened'
@@ -116,7 +117,7 @@ it('M intercept and send a RUM event W onGlobalError() {empty stack trace}', asy
 
 it('M intercept and send a RUM event W onGlobalError() {Error object}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = new Error('Something bad happened');
 
@@ -155,7 +156,7 @@ it('M intercept and send a RUM event W onGlobalError() {CustomError object}', as
         name = 'CustomError';
     }
 
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = new CustomError('Something bad happened');
 
@@ -190,7 +191,7 @@ it('M intercept and send a RUM event W onGlobalError() {CustomError object}', as
 
 it('M intercept and send a RUM event W onGlobalError() {with source file info}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         sourceURL: './path/to/file.js',
@@ -230,7 +231,7 @@ it('M intercept and send a RUM event W onGlobalError() {with source file info}',
 
 it('M intercept and send a RUM event W onGlobalError() {with component stack}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         componentStack: [
@@ -273,7 +274,7 @@ it('M intercept and send a RUM event W onGlobalError() {with component stack}', 
 
 it('M intercept and send a RUM event W onGlobalError() {with stack and component stack}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         stack: [
@@ -324,7 +325,7 @@ it('M intercept and send a RUM event W onGlobalError() {with stack and component
 
 it('M intercept and send a RUM event W onGlobalError() {with stack}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         stack: [
@@ -367,7 +368,7 @@ it('M intercept and send a RUM event W onGlobalError() {with stack}', async () =
 
 it('M intercept and send a RUM event W onGlobalError() {with stacktrace}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         stacktrace: [
@@ -416,7 +417,7 @@ it('M not report error in console handler W onGlobalError() {with console report
         baseErrorHandler(error, isFatal);
     });
     ErrorUtils.setGlobalHandler(consoleReportingErrorHandler);
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = {
         componentStack: [
@@ -461,7 +462,7 @@ it('M not report error in console handler W onGlobalError() {with console report
 
 it('M intercept and send a RUM event W onConsole() {Error with source file info}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const message = 'Oops I did it again!';
     const error = {
         sourceURL: './path/to/file.js',
@@ -491,7 +492,7 @@ it('M intercept and send a RUM event W onConsole() {Error with source file info}
 
 it('M intercept and send a RUM event W onConsole() {Error with component stack}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const message = 'Oops I did it again!';
     const error = {
         componentStack: [
@@ -523,7 +524,7 @@ it('M intercept and send a RUM event W onConsole() {Error with component stack}'
 
 it('M intercept and send a RUM event W onConsole() {message only}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const message = 'Something bad happened';
 
     // WHEN
@@ -547,7 +548,7 @@ it('M intercept and send a RUM event W onConsole() {message only}', async () => 
 
 it('M intercept and send a RUM event W onConsole() {Error with source file and name}', async () => {
     // GIVEN
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const message = 'Oops I did it again!';
     const error = {
         sourceURL: './path/to/file.js',
@@ -588,7 +589,7 @@ describe.each([
 ])('console calls with different message types', message => {
     it(`M intercept and send a RUM event W onConsole() { message has ${typeof message} type }`, async () => {
         // GIVEN
-        DdRumErrorTracking.startTracking();
+        DdRumErrorTracking.startTracking(DdRumReporter);
 
         // WHEN
         DdRumErrorTracking.onConsoleError(message);
@@ -620,7 +621,7 @@ describe.each([
 it('M intercept and send a RUM event W on error() {called from RNErrorHandler}', async () => {
     // GIVEN
     const errorHandlerMock = new RNErrorHandlerMock();
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const is_fatal = Math.random() < 0.5;
     const error = new Error('Something bad happened');
 
@@ -656,7 +657,7 @@ it('M intercept and send a RUM event W on error() {called from RNErrorHandler}',
 it('M intercept and send a RUM event W onConsole() {called from RNErrorHandler}', async () => {
     // GIVEN
     const errorHandlerMock = new RNErrorHandlerMock();
-    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.startTracking(DdRumReporter);
     const message = 'Oops I did it again!';
 
     // WHEN

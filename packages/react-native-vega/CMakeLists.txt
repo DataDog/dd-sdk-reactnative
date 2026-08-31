@@ -29,13 +29,13 @@ endif()
 # Build dd-sdk-cpp without a built-in HTTP client (Vega sysroot lacks libcurl): with
 # DD_HTTP_CLIENT=none the SDK is built as a static library with the IHttpClient symbols
 # referenced but undefined, and we link our own JS-proxy implementation
-# (http_js_proxy_client.cpp) into the DatadogVega turbo module below. Also disable the
-# crash handler.
+# (http_js_proxy_client.cpp) into the DatadogVega turbo module below. Use the in-process
+# crash handler so native crashes can be reported on the next application launch.
 set(DD_UUID_USE_DEFAULT OFF CACHE BOOL "" FORCE)
 set(DD_UUID_SRC "${CMAKE_CURRENT_SOURCE_DIR}/kepler/turbo-modules/uuid_urandom.cpp" CACHE STRING "" FORCE)
 set(DD_HTTP_CLIENT "none" CACHE STRING "" FORCE)
 set(DD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-set(DD_CRASH_MODE "noop" CACHE STRING "" FORCE)
+set(DD_CRASH_MODE "inprocess" CACHE STRING "" FORCE)
 
 # Default to local dd-sdk-cpp checkout for development.
 # Uncomment this block to resolve the sibling checkout automatically.
