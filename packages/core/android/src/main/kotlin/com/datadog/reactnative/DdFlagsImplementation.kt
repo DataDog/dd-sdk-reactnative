@@ -222,6 +222,8 @@ private fun convertUnparsedFlagToMap(
         "reason" to flag.reason,
         "doLog" to flag.doLog,
         "extraLogging" to flag.extraLogging.toMap(),
+        // Serialized as a String because the React Native bridge converts Long values to Double
+        "serialId" to flag.serialId?.toString()
     )
 }
 
@@ -237,4 +239,7 @@ private fun convertMapToUnparsedFlag(map: Map<String, Any>): UnparsedFlag =
             (map["extraLogging"] as? Map<String, Any>)?.toJSONObject()
                 ?: JSONObject()
         override val reason: String = map["reason"] as? String ?: ""
+        override val serialId: Long? =
+            (map["serialId"] as? String)?.toLongOrNull()
+                ?: (map["serialId"] as? Number)?.toLong()
     }
