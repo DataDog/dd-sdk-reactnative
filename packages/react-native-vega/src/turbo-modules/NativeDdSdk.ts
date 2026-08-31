@@ -34,6 +34,8 @@ export interface DdSdk extends KeplerTurboModule {
     consumeWebviewEvent(message: string): Promise<void>;
     clearAllData(): Promise<void>;
     httpResponse(requestId: string, statusCode: number): Promise<void>;
+    /** Test-only API that immediately terminates the native process. */
+    crashForTesting(): Promise<void>;
 }
 
 const module = TurboModuleRegistry.get<DdSdk>('DdSdk');

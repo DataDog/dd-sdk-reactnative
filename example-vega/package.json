@@ -24,9 +24,9 @@
     "@amazon-devices/react-native-screens": "~2.0.0",
     "@amazon-devices/react-navigation__native": "~7.0.0",
     "@amazon-devices/react-navigation__stack": "~7.0.0",
-    "@datadog/mobile-react-native": "file:./rn-core-vega.tgz",
+    "@datadog/mobile-react-native": "file:./rn-core-vega-preview-20260831-crash.tgz",
     "@datadog/mobile-react-native-babel-plugin": "file:./rn-babel-vega.tgz",
-    "@datadog/mobile-react-native-vega": "file:./rn-vega.tgz",
+    "@datadog/mobile-react-native-vega": "file:./rn-vega-preview-20260831-crash.tgz",
     "@datadog/mobile-react-navigation": "workspace:packages/react-navigation",
     "react": "18.2.0",
     "react-native": "0.72.0"

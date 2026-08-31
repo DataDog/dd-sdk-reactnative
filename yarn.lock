@@ -16,9 +16,9 @@ __metadata:
     "@amazon-devices/react-native-screens": ~2.0.0
     "@amazon-devices/react-navigation__native": ~7.0.0
     "@amazon-devices/react-navigation__stack": ~7.0.0
-    "@datadog/mobile-react-native": "file:./rn-core-vega.tgz"
+    "@datadog/mobile-react-native": "file:./rn-core-vega-preview-20260831-crash.tgz"
     "@datadog/mobile-react-native-babel-plugin": "file:./rn-babel-vega.tgz"
-    "@datadog/mobile-react-native-vega": "file:./rn-vega.tgz"
+    "@datadog/mobile-react-native-vega": "file:./rn-vega-preview-20260831-crash.tgz"
     "@datadog/mobile-react-navigation": "workspace:packages/react-navigation"
     "@react-native-community/cli": 11.3.2
     "@react-native/eslint-config": 0.72.2
@@ -3869,15 +3869,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native-vega@file:./rn-vega.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega":
+"@datadog/mobile-react-native-vega@file:./rn-vega-preview-20260831-crash.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega":
   version: 3.5.4-vega.0
-  resolution: "@datadog/mobile-react-native-vega@file:./rn-vega.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega"
+  resolution: "@datadog/mobile-react-native-vega@file:./rn-vega-preview-20260831-crash.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega"
   dependencies:
-    "@datadog/mobile-react-native": 3.5.4-vega.0
+    "@amazon-devices/keplerscript-turbomodule-api": "*"
   peerDependencies:
+    "@datadog/mobile-react-native": 3.5.4-vega.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
-  checksum: 25bc8782a7495e5c2f33bbff1a27cf70013ee00be72319e16c7c2fba7f9cf5df88d6f9502b4b3d1a7e609ed9249da2030bf23ddc1a8efe2bbee6e17a68b45a84
+  checksum: 511110d0a3045aa896e2c53c337d56dae89b3bcf2d1e0695755c34343c5017eb1a81ddd5ff6607bdcb60789963f00533781b04738a5e31df9f9d11491c6085d1
   languageName: node
   linkType: hard
 
@@ -3910,7 +3911,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@datadog/mobile-react-native@3.5.4-vega.0, @datadog/mobile-react-native@workspace:3.5.4-vega.0, @datadog/mobile-react-native@workspace:packages/core":
+"@datadog/mobile-react-native@file:./rn-core-vega-preview-20260831-crash.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega":
+  version: 3.5.4-vega.0
+  resolution: "@datadog/mobile-react-native@file:./rn-core-vega-preview-20260831-crash.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega"
+  dependencies:
+    "@datadog/flagging-core": ~2.0.1
+    big-integer: ^1.6.52
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.4 <1.0"
+  checksum: 8802c4b277a0d339002e740839b0bc3bca055cdde5fc8da5e8a5387b7a81dc6b3892084382cdfbf918132224ead546459ff4285926e76991495047317408db98
+  languageName: node
+  linkType: hard
+
+"@datadog/mobile-react-native@workspace:3.5.4-vega.0, @datadog/mobile-react-native@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native@workspace:packages/core"
   dependencies:
@@ -3923,19 +3937,6 @@ __metadata:
     react-native: ">=0.63.4 <1.0"
   languageName: unknown
   linkType: soft
-
-"@datadog/mobile-react-native@file:./rn-core-vega.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega":
-  version: 3.5.4-vega.0
-  resolution: "@datadog/mobile-react-native@file:./rn-core-vega.tgz::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega"
-  dependencies:
-    "@datadog/flagging-core": ~2.0.1
-    big-integer: ^1.6.52
-  peerDependencies:
-    react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
-  checksum: a8839c47ca10f96ec5bb41554a499578e4a9d42225ed433afe02dcab684952b6c965e472b34b50c39eebd865ca7748fa42ec28d254932726dc9e63e2aad66f44
-  languageName: node
-  linkType: hard
 
 "@datadog/mobile-react-navigation@workspace:packages/react-navigation":
   version: 0.0.0-use.local

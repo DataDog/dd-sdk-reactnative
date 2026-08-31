@@ -23,6 +23,13 @@ std::shared_ptr<datadog::Core> DatadogGlobalState::getCore() {
     return core_;
 }
 
+void DatadogGlobalState::setCrashReporting(
+    std::shared_ptr<datadog::CrashReporting> crashReporting
+) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    crashReporting_ = std::move(crashReporting);
+}
+
 void DatadogGlobalState::setRum(std::shared_ptr<datadog::Rum> rum) {
     std::lock_guard<std::mutex> lock(mutex_);
     rum_ = std::move(rum);
@@ -60,6 +67,7 @@ void DatadogGlobalState::reset() {
     logger_.reset();
     logging_.reset();
     rum_.reset();
+    crashReporting_.reset();
     core_.reset();
 }
 

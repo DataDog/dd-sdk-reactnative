@@ -38,6 +38,7 @@ public:
   com::amazon::kepler::turbomodule::Promise consumeWebviewEvent(std::string message) override;
   com::amazon::kepler::turbomodule::Promise clearAllData() override;
   com::amazon::kepler::turbomodule::Promise httpResponse(std::string requestId, double statusCode) override;
+  com::amazon::kepler::turbomodule::Promise crashForTesting() override;
 };
 
 } // namespace DdSdkTurboModule

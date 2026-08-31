@@ -11,9 +11,7 @@
  * native-free at import (must not call TurboModuleRegistry / NativeModules at
  * module load).
  */
-export {
-    addDefaultValuesToAutoInstrumentationConfiguration
-} from './config/async/AutoInstrumentationConfiguration';
+export { addDefaultValuesToAutoInstrumentationConfiguration } from './config/async/AutoInstrumentationConfiguration';
 export { buildConfigurationFromPartialConfiguration } from './config/async/asyncInitializationHelper';
 export { DdSdkNativeConfiguration } from './config/features/CoreConfigurationNative';
 export { RUM_DEFAULTS } from './config/features/RumConfiguration';
@@ -26,6 +24,9 @@ export { GlobalState } from './sdk/GlobalState/GlobalState';
 export { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 export { DatadogProviderState } from './sdk/DatadogProvider/DatadogProviderState';
 export { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+export { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
+export { DdAttributes } from './DdAttributes';
+export { debugId } from './metro/debugIdResolver';
 
 export type { Attributes } from './sdk/AttributesSingleton/types';
 export type { LogsNativeConfiguration } from './config/features/LogsConfigurationNative';
