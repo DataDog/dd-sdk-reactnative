@@ -15,11 +15,14 @@ describe('./internal entry', () => {
             'GlobalState',
             'BufferSingleton',
             'DatadogProviderState',
-            'DdRumResourceTracking'
+            'DdRumResourceTracking',
+            'DdRumErrorTracking',
+            'DdAttributes'
         ];
         for (const name of expected) {
             expect(internal[name]).toBeDefined();
         }
+        expect(internal).toHaveProperty('debugId');
     });
 
     // Import safety of this entry point is covered in wrapperImportSafety.test.ts.

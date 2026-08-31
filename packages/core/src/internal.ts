@@ -24,6 +24,9 @@ export { GlobalState } from './sdk/GlobalState/GlobalState';
 export { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
 export { DatadogProviderState } from './sdk/DatadogProvider/DatadogProviderState';
 export { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+export { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
+export { DdAttributes } from './DdAttributes';
+export { debugId } from './metro/debugIdResolver';
 
 export type { Attributes } from './sdk/AttributesSingleton/types';
 export type { LogsNativeConfiguration } from './config/features/LogsConfigurationNative';

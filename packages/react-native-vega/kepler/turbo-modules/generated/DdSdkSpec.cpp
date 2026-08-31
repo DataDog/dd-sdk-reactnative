@@ -36,6 +36,7 @@ void DdSdkSpec::aggregateMethods(MethodAggregator<KeplerTurboModule>& methodAggr
   methodAggregator.addMethod("consumeWebviewEvent", &DdSdkSpec::consumeWebviewEvent);
   methodAggregator.addMethod("clearAllData", &DdSdkSpec::clearAllData);
   methodAggregator.addMethod("httpResponse", &DdSdkSpec::httpResponse);
+  methodAggregator.addMethod("crashForTesting", &DdSdkSpec::crashForTesting);
 }
 
 } // namespace DdSdkTurboModule

@@ -562,7 +562,7 @@ export class DdSdkReactNative {
         }
 
         if (trackErrors) {
-            DdRumErrorTracking.startTracking();
+            DdRumErrorTracking.startTracking(DdRum);
         }
 
         if (logEventMapper) {

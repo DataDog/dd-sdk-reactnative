@@ -1,6 +1,20 @@
 const mockEmptyPromise = jest.fn(() => Promise.resolve());
 
 jest.mock(
+  'react-native-gesture-handler',
+  () => {
+    const {View} = require('react-native');
+
+    return {
+      GestureHandlerRootView: View,
+      PanGestureHandler: View,
+      State: {},
+    };
+  },
+  {virtual: true},
+);
+
+jest.mock(
   '../../packages/react-native-vega/src/turbo-modules/NativeDdSdk',
   () => ({
     __esModule: true,
@@ -23,6 +37,7 @@ jest.mock(
       consumeWebviewEvent: mockEmptyPromise,
       clearAllData: mockEmptyPromise,
       httpResponse: mockEmptyPromise,
+      crashForTesting: mockEmptyPromise,
     },
   }),
 );
@@ -72,6 +87,16 @@ jest.mock(
       get isTracking() {
         return false;
       },
+    },
+  }),
+);
+
+jest.mock(
+  '../../packages/core/src/rum/instrumentation/DdRumErrorTracking',
+  () => ({
+    __esModule: true,
+    DdRumErrorTracking: {
+      startTracking: jest.fn(),
     },
   }),
 );

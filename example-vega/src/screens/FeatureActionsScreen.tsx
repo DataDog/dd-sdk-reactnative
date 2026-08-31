@@ -9,6 +9,7 @@ import {
 import {
   DdLogs,
   DdRum,
+  DdSdk,
   DdSdkReactNative,
   ErrorSource,
   FeatureOperationFailure,
@@ -686,6 +687,35 @@ export const FeatureActionsScreen = ({
     {
       title: 'RUM Errors',
       actions: [
+        {
+          label: 'Automatic JS Error',
+          testID: 'action-automatic-js-error',
+          run: async () => {
+            // eslint-disable-next-line no-console
+            console.error(
+              new Error('User triggered automatic Vega JavaScript error'),
+            );
+            return 'Sent automatically tracked JavaScript error';
+          },
+        },
+        {
+          label: 'Crash JavaScript',
+          testID: 'action-crash-javascript',
+          run: async () => {
+            setTimeout(() => {
+              throw new Error('User triggered Vega JavaScript crash');
+            }, 0);
+            return 'Triggering an uncaught JavaScript exception';
+          },
+        },
+        {
+          label: 'Crash Native C++',
+          testID: 'action-crash-native-cpp',
+          run: async () => {
+            await DdSdk.crashForTesting();
+            return 'Native crash requested';
+          },
+        },
         {
           label: 'Add Error',
           testID: 'action-add-error',

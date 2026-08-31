@@ -69,6 +69,8 @@ const configuration = new DatadogProviderConfiguration(
             applicationId: '<RUM_APPLICATION_ID>',
             trackInteractions: true,
             trackResources: true,
+            trackErrors: true,
+            nativeCrashReportEnabled: true,
             sessionSampleRate: 100
         },
         logsConfiguration: {
@@ -88,6 +90,23 @@ Only include `logsConfiguration` when the application needs to send logs. Its pr
 enables native Logging. `bundleLogsWithRum` defaults to `true`, which adds the active RUM
 context to log events.
 
+## Configure JavaScript Source Maps
+
+Wrap the app's merged Metro configuration so the application bundle and source map
+receive the same Debug ID:
+
+```js
+const {
+    withDatadogMetroConfig
+} = require('@datadog/mobile-react-native/metro');
+
+module.exports = withDatadogMetroConfig(mergedConfig);
+```
+
+Vega Release builds write the relevant artifacts to
+`build/lib/rn-bundles/Release/index.bundle` and
+`build/debugging/Release/srcmap/index.bundle.map`.
+
 Do not add `traceConfiguration` for this preview. Standalone tracing is not currently
 available on Vega.
 
@@ -99,13 +118,16 @@ The preview supports the following customer-facing workflows:
 -   RUM actions, including automatic interactions, custom actions, and long-running
     actions.
 -   Automatic and manual resource tracking.
--   RUM errors reported with `DdRum.addError`.
+-   Automatic JavaScript error tracking when `trackErrors` is enabled, plus handled
+    errors reported with `DdRum.addError`.
 -   RUM feature operations.
 -   Global and view-specific attributes.
 -   User and account information.
 -   Tracking consent updates and session stopping.
 -   Debug, info, warning, and error logs with custom context and attached error details.
 -   RUM context enrichment for logs.
+-   Native crash reporting through the C++ in-process crash handler. Crash reports are
+    processed and uploaded as RUM errors on the next application launch.
 
 ## Send Logs
 
@@ -239,9 +261,6 @@ The following React Native SDK features are not currently available in this prev
 
 -   Standalone spans through `DdTrace`.
 -   Feature flags through `DdFlags`.
--   Native crash reporting.
--   Automatic JavaScript error tracking. Handled errors can be reported with
-    `DdRum.addError`.
 -   RUM and Log event mappers, custom intake endpoints, and custom attribute encoders.
 -   RUM custom timings and view loading time.
 -   Feature flag evaluation events.
@@ -257,6 +276,9 @@ There are also some compatibility differences to be aware of:
     as a complete purge of persisted, unsent data.
 -   Advanced configuration fields accepted by the shared React Native types may not yet
     have an effect on Vega.
+-   Native crash reporting is wired and builds for all supported Vega architectures,
+    but end-to-end crash capture and next-launch upload still require broader
+    physical-device validation.
 
 Features listed as unavailable or not fully validated are not necessarily known to be
 incompatible with Vega. They were excluded from this preview because there was not

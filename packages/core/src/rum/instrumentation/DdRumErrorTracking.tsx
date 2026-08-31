@@ -18,7 +18,15 @@ import {
 } from '../../sdk/AttributesEncoding/errorUtils';
 import { ErrorSource } from '../../types';
 import { executeWithDelay } from '../../utils/jsUtils';
-import { DdRum } from '../DdRum';
+
+type RumErrorReporter = {
+    addError: (
+        message: string,
+        source: ErrorSource,
+        stacktrace: string,
+        context?: object
+    ) => Promise<void>;
+};
 
 /**
  * Provides RUM auto-instrumentation feature to track errors as RUM events.
@@ -27,6 +35,8 @@ export class DdRumErrorTracking {
     private static isTracking = false;
 
     private static isInDefaultErrorHandler = false;
+
+    private static rum?: RumErrorReporter;
 
     // eslint-disable-next-line
     private static defaultErrorHandler: ErrorHandlerCallback = (_error: any, _isFatal?: boolean) => { }
@@ -37,7 +47,9 @@ export class DdRumErrorTracking {
     /**
      * Starts tracking errors and sends a RUM Error event every time an error is detected.
      */
-    static startTracking(): void {
+    static startTracking(rum: RumErrorReporter): void {
+        DdRumErrorTracking.rum = rum;
+
         // extra safety to avoid wrapping the Error handler twice
         if (DdRumErrorTracking.isTracking) {
             InternalLog.log(
@@ -140,6 +152,15 @@ export class DdRumErrorTracking {
         stacktrace: string,
         context: object = {}
     ): Promise<void> => {
-        return DdRum.addError(message, source, stacktrace, context);
+        if (!DdRumErrorTracking.rum) {
+            return Promise.resolve();
+        }
+
+        return DdRumErrorTracking.rum.addError(
+            message,
+            source,
+            stacktrace,
+            context
+        );
     };
 }

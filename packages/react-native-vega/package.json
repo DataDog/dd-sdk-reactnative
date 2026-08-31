@@ -28,6 +28,7 @@
         "lib/typescript/react-native-vega/**",
         "dist/kepler/**",
         "!dist/kepler/*-debug/**",
+        "!dist/kepler/**/*.so.debug",
         "kepler/AutoLinkInit.cpp",
         "kepler/turbo-modules/*.cpp",
         "kepler/turbo-modules/*.h",

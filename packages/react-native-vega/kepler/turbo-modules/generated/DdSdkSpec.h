@@ -50,6 +50,7 @@ public:
   virtual com::amazon::kepler::turbomodule::Promise consumeWebviewEvent(std::string message) = 0;
   virtual com::amazon::kepler::turbomodule::Promise clearAllData() = 0;
   virtual com::amazon::kepler::turbomodule::Promise httpResponse(std::string requestId, double statusCode) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise crashForTesting() = 0;
 };
 
 } // namespace DdSdkTurboModule

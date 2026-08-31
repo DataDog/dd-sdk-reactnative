@@ -8,6 +8,7 @@
 
 #include "DdSdk.h"
 
+#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -15,6 +16,7 @@
 #include <vector>
 
 #include "datadog/core.hpp"
+#include "datadog/crash_reporting.hpp"
 #include "datadog/logging.hpp"
 #include "datadog/rum.hpp"
 
@@ -211,6 +213,9 @@ com::amazon::kepler::turbomodule::Promise DdSdk::initialize(
                     getStringFromJSObject(*rumConfiguration, "applicationId");
                 const double sessionSampleRate =
                     getDoubleFromJSObject(*rumConfiguration, "sessionSampleRate", 100.0);
+                const bool nativeCrashReportEnabled = getBoolFromJSObject(
+                    *rumConfiguration, "nativeCrashReportEnabled", false
+                );
 
                 if (!applicationId.empty()) {
                     datadog::RumConfig rumConfig(applicationId);
@@ -221,6 +226,14 @@ com::amazon::kepler::turbomodule::Promise DdSdk::initialize(
                     auto rum = datadog::Rum::Register(core, rumConfig);
                     if (rum) {
                         datadog_rn_vega::DatadogGlobalState::getInstance().setRum(rum);
+                    }
+                }
+
+                if (!applicationId.empty() && nativeCrashReportEnabled) {
+                    auto crashReporting = datadog::CrashReporting::Register(core);
+                    if (crashReporting) {
+                        datadog_rn_vega::DatadogGlobalState::getInstance()
+                            .setCrashReporting(crashReporting);
                     }
                 }
             }
@@ -534,6 +547,10 @@ com::amazon::kepler::turbomodule::Promise DdSdk::httpResponse(
             promise->resolve(true);
         }).detach();
     });
+}
+
+com::amazon::kepler::turbomodule::Promise DdSdk::crashForTesting() {
+    std::abort();
 }
 
 }  // namespace DdSdkTurboModule
