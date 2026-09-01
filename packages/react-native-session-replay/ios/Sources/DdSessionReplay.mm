@@ -24,6 +24,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
                  withTextAndInputPrivacyLevel:(NSString*)textAndInputPrivacyLevel
                  withStartRecordingImmediately:(BOOL)startRecordingImmediately
                  withEnableHeatmaps:(BOOL)enableHeatmaps
+                 withEnableCompositionTreeRecording:(BOOL)enableCompositionTreeRecording
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -34,6 +35,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
           textAndInputPrivacyLevel:textAndInputPrivacyLevel
           startRecordingImmediately:startRecordingImmediately
           enableHeatmaps:enableHeatmaps
+          enableCompositionTreeRecording:enableCompositionTreeRecording
           resolve:resolve
           reject:reject];
 }
@@ -76,6 +78,7 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
         textAndInputPrivacyLevel:(NSString *)textAndInputPrivacyLevel
         startRecordingImmediately:(BOOL)startRecordingImmediately
         enableHeatmaps:(BOOL)enableHeatmaps
+        enableCompositionTreeRecording:(BOOL)enableCompositionTreeRecording
         resolve:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject {
     [self.ddSessionReplayImplementation enableWithReplaySampleRate:replaySampleRate
@@ -85,6 +88,7 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
                                           textAndInputPrivacyLevel:textAndInputPrivacyLevel
                                          startRecordingImmediately:startRecordingImmediately
                                                     enableHeatmaps:enableHeatmaps
+                                    enableCompositionTreeRecording:enableCompositionTreeRecording
                                                            resolve:resolve
                                                             reject:reject];
 }

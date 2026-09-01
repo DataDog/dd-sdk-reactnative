@@ -71,6 +71,7 @@ internal class DdSessionReplayTests: XCTestCase {
             textAndInputPrivacyLevel: NSString(string: textAndInputPrivacyLevel),
             startRecordingImmediately: true,
             enableHeatmaps: false,
+            enableCompositionTreeRecording: false,
             resolve: mockResolve,
             reject: mockReject)
 
@@ -81,7 +82,8 @@ internal class DdSessionReplayTests: XCTestCase {
             touchPrivacyLevel: touchPrivacy,
             textAndInputPrivacyLevel: textAndInputPrivacy,
             startRecordingImmediately: true,
-            enableHeatmaps: false
+            enableHeatmaps: false,
+            enableCompositionTreeRecording: false
         ))
     }
 
@@ -102,6 +104,7 @@ internal class DdSessionReplayTests: XCTestCase {
             textAndInputPrivacyLevel: "BAD_VALUE",
             startRecordingImmediately: true,
             enableHeatmaps: false,
+            enableCompositionTreeRecording: false,
             resolve: mockResolve,
             reject: mockReject)
 
@@ -112,7 +115,8 @@ internal class DdSessionReplayTests: XCTestCase {
             touchPrivacyLevel: .hide,
             textAndInputPrivacyLevel: .maskAll,
             startRecordingImmediately: true,
-            enableHeatmaps: false
+            enableHeatmaps: false,
+            enableCompositionTreeRecording: false
         ))
     }
 
@@ -145,6 +149,7 @@ internal class DdSessionReplayTests: XCTestCase {
             textAndInputPrivacyLevel: NSString(string: textAndInputPrivacyLevel),
             startRecordingImmediately: true,
             enableHeatmaps: false,
+            enableCompositionTreeRecording: false,
             resolve: mockResolve,
             reject: mockReject)
 
@@ -155,8 +160,97 @@ internal class DdSessionReplayTests: XCTestCase {
             touchPrivacyLevel: touchPrivacy,
             textAndInputPrivacyLevel: textAndInputPrivacy,
             startRecordingImmediately: true,
-            enableHeatmaps: false
+            enableHeatmaps: false,
+            enableCompositionTreeRecording: false
         ))
+    }
+
+    @available(iOS 13.0, *)
+    func testEnablesCompositionTreeRecordingFeatureFlag() {
+        let sessionReplayMock = MockSessionReplay()
+
+        DdSessionReplayImplementation(
+            sessionReplayProvider: { sessionReplayMock },
+            uiManager: MockUIManager(),
+            fabricWrapper: MockFabricWrapper()
+        ).enable(
+            replaySampleRate: 100,
+            customEndpoint: "",
+            imagePrivacyLevel: "MASK_ALL",
+            touchPrivacyLevel: "HIDE",
+            textAndInputPrivacyLevel: "MASK_ALL",
+            startRecordingImmediately: true,
+            enableHeatmaps: false,
+            enableCompositionTreeRecording: true,
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        XCTAssertEqual(sessionReplayMock.calledMethods.first, .enable(
+            replaySampleRate: 100,
+            customEndpoint: nil,
+            imagePrivacyLevel: .maskAll,
+            touchPrivacyLevel: .hide,
+            textAndInputPrivacyLevel: .maskAll,
+            startRecordingImmediately: true,
+            enableHeatmaps: false,
+            enableCompositionTreeRecording: true
+        ))
+    }
+
+    func testRequestsAdditionalNodeRecordersForDefaultRecording() {
+        var didRequestAdditionalNodeRecorders = false
+
+        DdSessionReplayImplementation(
+            sessionReplayProvider: { MockSessionReplay() },
+            uiManager: MockUIManager(),
+            fabricWrapper: MockFabricWrapper(),
+            additionalNodeRecordersProvider: {
+                didRequestAdditionalNodeRecorders = true
+                return []
+            }
+        ).enable(
+            replaySampleRate: 100,
+            customEndpoint: "",
+            imagePrivacyLevel: "MASK_ALL",
+            touchPrivacyLevel: "HIDE",
+            textAndInputPrivacyLevel: "MASK_ALL",
+            startRecordingImmediately: true,
+            enableHeatmaps: false,
+            enableCompositionTreeRecording: false,
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        XCTAssertTrue(didRequestAdditionalNodeRecorders)
+    }
+
+    @available(iOS 13.0, *)
+    func testDoesNotRequestAdditionalNodeRecordersForCompositionTreeRecording() {
+        var didRequestAdditionalNodeRecorders = false
+
+        DdSessionReplayImplementation(
+            sessionReplayProvider: { MockSessionReplay() },
+            uiManager: MockUIManager(),
+            fabricWrapper: MockFabricWrapper(),
+            additionalNodeRecordersProvider: {
+                didRequestAdditionalNodeRecorders = true
+                return []
+            }
+        ).enable(
+            replaySampleRate: 100,
+            customEndpoint: "",
+            imagePrivacyLevel: "MASK_ALL",
+            touchPrivacyLevel: "HIDE",
+            textAndInputPrivacyLevel: "MASK_ALL",
+            startRecordingImmediately: true,
+            enableHeatmaps: false,
+            enableCompositionTreeRecording: true,
+            resolve: mockResolve,
+            reject: mockReject
+        )
+
+        XCTAssertFalse(didRequestAdditionalNodeRecorders)
     }
 }
 
@@ -169,7 +263,8 @@ private class MockSessionReplay: SessionReplayProtocol {
             touchPrivacyLevel: TouchPrivacyLevel,
             textAndInputPrivacyLevel: TextAndInputPrivacyLevel,
             startRecordingImmediately: Bool,
-            enableHeatmaps: Bool
+            enableHeatmaps: Bool,
+            enableCompositionTreeRecording: Bool
         )
         case startRecording
         case stopRecording
@@ -186,7 +281,13 @@ private class MockSessionReplay: SessionReplayProtocol {
                 touchPrivacyLevel: configuration.touchPrivacyLevel,
                 textAndInputPrivacyLevel: configuration.textAndInputPrivacyLevel,
                 startRecordingImmediately: configuration.startRecordingImmediately,
-                enableHeatmaps: configuration.featureFlags[.heatmaps] ?? false
+                enableHeatmaps: configuration.featureFlags[.heatmaps] ?? false,
+                enableCompositionTreeRecording: {
+                    if #available(iOS 13.0, tvOS 13.0, *) {
+                        return configuration.featureFlags[.compositionTreeRecording] ?? false
+                    }
+                    return false
+                }()
             )
         )
     }

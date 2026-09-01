@@ -33,15 +33,17 @@ class DdSessionReplayImplementation(
      * @param customEndpoint Custom server url for sending replay data.
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
      * @param enableHeatmaps Enables heatmap identifier computation.
+     * @param enableCompositionTreeRecording Enables the Composition Tree recording pipeline.
      */
     @SuppressLint("VisibleForTests")
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "UnusedParameter", "UNUSED_PARAMETER")
     fun enable(
         replaySampleRate: Double,
         customEndpoint: String,
         privacySettings: SessionReplayPrivacySettings,
         startRecordingImmediately: Boolean,
         enableHeatmaps: Boolean,
+        enableCompositionTreeRecording: Boolean,
         promise: Promise
     ) {
         val sdkCore = Datadog.getInstance() as FeatureSdkCore
