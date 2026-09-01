@@ -152,13 +152,22 @@ extension NSDictionary {
             customExposureEndpointURL = URL(string: "\(customExposureEndpoint)/api/v2/exposures" as String)
         }
 
-        return Flags.Configuration(
+        var configuration = Flags.Configuration(
             gracefulModeEnabled: gracefulModeEnabled,
             customFlagsEndpoint: customFlagsEndpointURL,
             customExposureEndpoint: customExposureEndpointURL,
             trackExposures: trackExposures ?? true,
             rumIntegrationEnabled: rumIntegrationEnabled ?? true
         )
+
+        if let assignmentRequestTimeoutMs = object(forKey: "assignmentRequestTimeoutMs") as? NSNumber {
+            configuration.assignmentRequestTimeout = assignmentRequestTimeoutMs.doubleValue / 1_000
+        }
+        if let assignmentRequestRetryCount = object(forKey: "assignmentRequestRetryCount") as? NSNumber {
+            configuration.assignmentRequestRetryCount = assignmentRequestRetryCount.intValue
+        }
+
+        return configuration
     }
 }
 
