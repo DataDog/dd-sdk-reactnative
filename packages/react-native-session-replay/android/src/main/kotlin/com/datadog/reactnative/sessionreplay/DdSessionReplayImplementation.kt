@@ -35,7 +35,7 @@ class DdSessionReplayImplementation(
      * @param enableCompositionTreeRecording Enables the Composition Tree recording pipeline.
      */
     @SuppressLint("VisibleForTests")
-    @Suppress("LongParameterList", "UnusedParameter", "UNUSED_PARAMETER")
+    @Suppress("LongParameterList", "UNUSED_PARAMETER")
     fun enable(
         replaySampleRate: Double,
         customEndpoint: String,
