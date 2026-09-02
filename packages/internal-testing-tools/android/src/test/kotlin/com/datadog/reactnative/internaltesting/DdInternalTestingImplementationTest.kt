@@ -132,10 +132,11 @@ internal class MockFeatureScope(private val feature: Feature) : FeatureScope {
     ) {
     }
 
-    override fun getWriteContextSync(
-        withFeatureContexts: Set<String>
-    ): Pair<DatadogContext, EventWriteScope>? {
-        return TODO("Provide the return value")
+    override fun withWriteContextSync(
+        withFeatureContexts: Set<String>,
+        callback: (datadogContext: DatadogContext, write: EventWriteScope) -> Unit
+    ): Boolean {
+        return false
     }
 }
 
