@@ -63,6 +63,9 @@ class MockRumMonitor : RumMonitor {
     @ExperimentalRumApi
     override fun addViewLoadingTime(overwrite: Boolean) {}
 
+    @ExperimentalRumApi
+    override fun reportAppFullyDisplayed() {}
+
     override fun getCurrentSessionId(callback: (String?) -> Unit) {}
 
     override fun addViewAttributes(attributes: Map<String, Any?>) {}
@@ -172,7 +175,4 @@ class MockRumMonitor : RumMonitor {
         failureReason: OperationFailureReason,
         attributes: Map<String, Any?>
     ) {}
-
-    @ExperimentalRumApi
-    override fun reportAppFullyDisplayed() {}
 }

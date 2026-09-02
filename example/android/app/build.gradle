@@ -109,10 +109,13 @@ dependencies {
     }
 
     constraints {
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.4.10") {
+        // Pinned to the project's own Kotlin version: these shims pull the real
+        // kotlin-stdlib up with them, and a stdlib newer than kotlinVersion above fails
+        // compilation with "incompatible version of Kotlin".
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.ext.kotlinVersion") {
             because("kotlin-stdlib-jdk7 is now a part of kotlin-stdlib")
         }
-        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.10") {
+        implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.ext.kotlinVersion") {
             because("kotlin-stdlib-jdk8 is now a part of kotlin-stdlib")
         }
     }

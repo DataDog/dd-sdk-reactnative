@@ -8,7 +8,7 @@ import TraceScreen from './screens/TraceScreen';
 import style from './screens/styles';
 import { navigationRef } from './NavigationRoot';
 import { DdRumReactNavigationTracking, NavigationTrackingOptions, ParamsTrackingPredicate, ViewNamePredicate, ViewTrackingPredicate } from '@datadog/mobile-react-navigation';
-import { DatadogProvider, TrackingConsent, DdFlags, DdLogs, DdSdkReactNative } from '@datadog/mobile-react-native'
+import { DdSdkReactNative, DatadogProvider, TrackingConsent, DdLogs, DdRum, DdFlags } from '@datadog/mobile-react-native'
 import { OpenFeatureProvider } from '@openfeature/react-sdk';
 import {
   ImagePrivacyLevel,
@@ -96,6 +96,10 @@ const handleDatadogInitialization = async () => {
   // ConfigurationWire, no network); the "Flags source" switch on the Home screen flips to
   // the online provider (CDN) at runtime.
   await setFlagsProvider('offline');
+
+  setTimeout(async () => {
+      await DdRum.reportAppFullyDisplayed();
+  }, 5000);
 }
 
 export default function App() {

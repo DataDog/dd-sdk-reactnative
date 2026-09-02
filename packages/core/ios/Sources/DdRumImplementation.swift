@@ -263,6 +263,12 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
+    public func reportAppFullyDisplayed(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+        nativeRUM.reportAppFullyDisplayed()
+        resolve(nil)
+    }
+
+    @objc
     public func stopSession(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         nativeRUM.stopSession()
         resolve(nil)
