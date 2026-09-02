@@ -20,17 +20,41 @@ internal struct SVGData: Codable {
 public class DdSessionReplayImplementation: NSObject {
     private lazy var sessionReplay: SessionReplayProtocol = sessionReplayProvider()
     private let sessionReplayProvider: () -> SessionReplayProtocol
-    private let uiManager: RCTUIManager
-    private let fabricWrapper: RCTFabricWrapper
+    private let additionalNodeRecordersProvider: () -> [SessionReplayNodeRecorder]
     
     internal init(
         sessionReplayProvider: @escaping () -> SessionReplayProtocol,
         uiManager: RCTUIManager,
-        fabricWrapper: RCTFabricWrapper
+        fabricWrapper: RCTFabricWrapper,
+        additionalNodeRecordersProvider: (() -> [SessionReplayNodeRecorder])? = nil
     ) {
         self.sessionReplayProvider = sessionReplayProvider
-        self.uiManager = uiManager
-        self.fabricWrapper = fabricWrapper
+        self.additionalNodeRecordersProvider = additionalNodeRecordersProvider ?? {
+            var svgMap: [String: SVGData] = [:]
+
+            if let bundle = Bundle.ddSessionReplayResources,
+               let url = bundle.url(forResource: "assets", withExtension: "json") {
+                do {
+                    let data = try Data(contentsOf: url)
+                    let decoder = JSONDecoder()
+                    svgMap = try decoder.decode([String: SVGData].self, from: data)
+                } catch {
+                    consolePrint("Failed to load or decode assets.json: \(error)", .debug)
+                }
+            }
+
+            return [
+                SvgViewRecorder(
+                    uiManager: uiManager,
+                    fabricWrapper: fabricWrapper,
+                    svgMap: svgMap
+                ),
+                RCTTextViewRecorder(
+                    uiManager: uiManager,
+                    fabricWrapper: fabricWrapper
+                )
+            ]
+        }
     }
     
     @objc
@@ -51,6 +75,7 @@ public class DdSessionReplayImplementation: NSObject {
         textAndInputPrivacyLevel: NSString,
         startRecordingImmediately: Bool,
         enableHeatmaps: Bool,
+        enableCompositionTreeRecording: Bool,
         resolve:RCTPromiseResolveBlock,
         reject:RCTPromiseRejectBlock
     ) -> Void {
@@ -72,30 +97,11 @@ public class DdSessionReplayImplementation: NSObject {
             sessionReplayConfiguration.featureFlags[.heatmaps] = true
         }
 
-        var svgMap: [String: SVGData] = [:]
-        
-        if let bundle = Bundle.ddSessionReplayResources,
-           let url = bundle.url(forResource: "assets", withExtension: "json") {
-            do {
-                let data = try Data(contentsOf: url)
-                let decoder = JSONDecoder()
-                svgMap = try decoder.decode([String: SVGData].self, from: data)
-            } catch {
-                consolePrint("Failed to load or decode assets.json: \(error)", .debug)
-            }
+        if #available(iOS 13.0, tvOS 13.0, *), enableCompositionTreeRecording {
+            sessionReplayConfiguration.featureFlags[.compositionTreeRecording] = true
+        } else {
+            sessionReplayConfiguration.setAdditionalNodeRecorders(additionalNodeRecordersProvider())
         }
-        
-        sessionReplayConfiguration.setAdditionalNodeRecorders([
-            SvgViewRecorder(
-                uiManager: uiManager,
-                fabricWrapper: fabricWrapper,
-                svgMap: svgMap
-            ),
-            RCTTextViewRecorder(
-                uiManager: uiManager,
-                fabricWrapper: fabricWrapper
-            )
-        ])
                 
         sessionReplay.enable(with: sessionReplayConfiguration, in: CoreRegistry.default)
 

@@ -37,6 +37,7 @@ describe('SessionReplay', () => {
                 'HIDE',
                 'MASK_ALL',
                 true,
+                false,
                 false
             );
         });
@@ -54,7 +55,25 @@ describe('SessionReplay', () => {
                 'HIDE',
                 'MASK_ALL',
                 true,
+                false,
                 false
+            );
+        });
+
+        it('forwards composition tree recording configuration to native', () => {
+            SessionReplay.enable({
+                enableCompositionTreeRecording: true
+            });
+
+            expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
+                100,
+                '',
+                'MASK_ALL',
+                'HIDE',
+                'MASK_ALL',
+                true,
+                false,
+                true
             );
         });
 
@@ -83,6 +102,7 @@ describe('SessionReplay', () => {
                     touch,
                     textAndInput,
                     true,
+                    false,
                     false
                 );
             }
@@ -101,6 +121,7 @@ describe('SessionReplay', () => {
                 'HIDE',
                 'MASK_ALL',
                 true,
+                false,
                 false
             );
         });
