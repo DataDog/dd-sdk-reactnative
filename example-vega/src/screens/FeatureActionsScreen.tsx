@@ -16,6 +16,7 @@ import {
   RumActionType,
   TrackingConsent,
 } from '@datadog/mobile-react-native-vega';
+import {VegaSampleCrash} from '@example-vega/native-crash-module';
 import {colors} from '../theme';
 
 interface FeatureActionsScreenProps {
@@ -709,11 +710,19 @@ export const FeatureActionsScreen = ({
           },
         },
         {
-          label: 'Crash Native C++',
+          label: 'Crash SDK Native C++',
           testID: 'action-crash-native-cpp',
           run: async () => {
             await DdSdk.crashForTesting();
-            return 'Native crash requested';
+            return 'SDK native crash requested';
+          },
+        },
+        {
+          label: 'Crash App TurboModule',
+          testID: 'action-crash-app-turbomodule',
+          run: async () => {
+            await VegaSampleCrash.crashForTesting();
+            return 'App TurboModule crash requested';
           },
         },
         {

@@ -5,6 +5,7 @@
  */
 
 import type { ErrorSource } from '@datadog/mobile-react-native';
+import { DdAttributes, debugId } from '@datadog/mobile-react-native/internal';
 
 import NativeDdLogs from './turbo-modules/NativeDdLogs';
 
@@ -52,10 +53,13 @@ class DdLogsVega {
 
         const context: Record<string, unknown> = {
             ...(args[4] ?? {}),
-            '_dd.error.source_type': 'react-native'
+            [DdAttributes.errorSourceType]: 'react-native'
         };
         if (args[5]) {
-            context['_dd.error.fingerprint'] = args[5];
+            context[DdAttributes.errorFingerprint] = args[5];
+        }
+        if (debugId) {
+            context[DdAttributes.debugId] = debugId;
         }
 
         return NativeDdLogs[`${level}WithError`](

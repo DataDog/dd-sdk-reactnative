@@ -20,6 +20,7 @@ __metadata:
     "@datadog/mobile-react-native-babel-plugin": "file:./rn-babel-vega.tgz"
     "@datadog/mobile-react-native-vega": "file:./rn-vega-preview-20260831-crash.tgz"
     "@datadog/mobile-react-navigation": "workspace:packages/react-navigation"
+    "@example-vega/native-crash-module": "link:./native-modules/vega-sample-crash"
     "@react-native-community/cli": 11.3.2
     "@react-native/eslint-config": 0.72.2
     "@react-native/metro-config": ^0.72.6
@@ -4132,6 +4133,12 @@ __metadata:
   checksum: 2afb77454c06e8316793d2e8e79a0154854d35e6782a1217da274ca60b5044d2c69d6091155234ed0551a1e408f86f09dd4ece02752c59568fa403e60611e880
   languageName: node
   linkType: hard
+
+"@example-vega/native-crash-module@link:./native-modules/vega-sample-crash::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega":
+  version: 0.0.0-use.local
+  resolution: "@example-vega/native-crash-module@link:./native-modules/vega-sample-crash::locator=%40amazon-devices%2Fexamplevega%40workspace%3Aexample-vega"
+  languageName: node
+  linkType: soft
 
 "@graphql-typed-document-node/core@npm:^3.1.1":
   version: 3.2.0

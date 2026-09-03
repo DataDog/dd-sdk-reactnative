@@ -16,7 +16,6 @@ import {
   PropagatorType,
   TrackingConsent,
 } from '@datadog/mobile-react-native-vega';
-
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 import {HomeScreen} from './screens/HomeScreen';
 import {NetworkScreen} from './screens/NetworkScreen';
