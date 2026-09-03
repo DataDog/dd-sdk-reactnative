@@ -8,7 +8,6 @@
 
 #include "DdSdk.h"
 
-#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -550,7 +549,7 @@ com::amazon::kepler::turbomodule::Promise DdSdk::httpResponse(
 }
 
 com::amazon::kepler::turbomodule::Promise DdSdk::crashForTesting() {
-    std::abort();
+    __builtin_trap();
 }
 
 }  // namespace DdSdkTurboModule

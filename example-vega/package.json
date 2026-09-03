@@ -6,14 +6,16 @@
     "dist"
   ],
   "scripts": {
-    "clean": "rm -rf node_modules buildinfo.json dist build",
+    "clean": "rm -rf node_modules buildinfo.json dist build native-modules/vega-sample-crash/build native-modules/vega-sample-crash/dist",
     "start": "react-native start",
     "test": "jest --colors ",
     "test:snapshot": "jest --colors --updateSnapshot",
     "lint": "eslint src test --ext .ts,.tsx",
     "lint:fix": "eslint src test --ext .ts,.tsx --fix",
-    "build:release": "react-native build-vega --build-type Release",
-    "build:debug": "react-native build-vega --build-type Debug",
+    "build:native-crash:release": "cd native-modules/vega-sample-crash && vega build -b Release",
+    "build:native-crash:debug": "cd native-modules/vega-sample-crash && vega build -b Debug",
+    "build:release": "yarn build:native-crash:release && react-native build-vega --build-type Release",
+    "build:debug": "yarn build:native-crash:debug && react-native build-vega --build-type Debug",
     "build:app": "npm-run-all build:release",
     "build": "npm-run-all build:release",
     "release": "npm-run-all lint test build:app"
@@ -28,6 +30,7 @@
     "@datadog/mobile-react-native-babel-plugin": "file:./rn-babel-vega.tgz",
     "@datadog/mobile-react-native-vega": "file:./rn-vega-preview-20260831-crash.tgz",
     "@datadog/mobile-react-navigation": "workspace:packages/react-navigation",
+    "@example-vega/native-crash-module": "link:./native-modules/vega-sample-crash",
     "react": "18.2.0",
     "react-native": "0.72.0"
   },

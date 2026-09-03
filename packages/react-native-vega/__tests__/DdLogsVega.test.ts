@@ -18,6 +18,15 @@ jest.mock('../src/turbo-modules/NativeDdLogs', () => ({
     }
 }));
 
+jest.mock('@datadog/mobile-react-native/internal', () => ({
+    DdAttributes: {
+        errorSourceType: '_dd.error.source_type',
+        errorFingerprint: '_dd.error.fingerprint',
+        debugId: '_dd.debug_id'
+    },
+    debugId: 'vega-test-debug-id'
+}));
+
 import { DdLogs } from '../src/DdLogsVega';
 import NativeDdLogs from '../src/turbo-modules/NativeDdLogs';
 
@@ -55,7 +64,8 @@ describe('DdLogsVega', () => {
             {
                 source: 'test',
                 '_dd.error.source_type': 'react-native',
-                '_dd.error.fingerprint': 'vega-log-fingerprint'
+                '_dd.error.fingerprint': 'vega-log-fingerprint',
+                '_dd.debug_id': 'vega-test-debug-id'
             }
         );
     });
