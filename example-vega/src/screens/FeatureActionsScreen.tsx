@@ -9,7 +9,6 @@ import {
 import {
   DdLogs,
   DdRum,
-  DdSdk,
   DdSdkReactNative,
   ErrorSource,
   FeatureOperationFailure,
@@ -707,14 +706,6 @@ export const FeatureActionsScreen = ({
               throw new Error('User triggered Vega JavaScript crash');
             }, 0);
             return 'Triggering an uncaught JavaScript exception';
-          },
-        },
-        {
-          label: 'Crash SDK Native C++',
-          testID: 'action-crash-native-cpp',
-          run: async () => {
-            await DdSdk.crashForTesting();
-            return 'SDK native crash requested';
           },
         },
         {
