@@ -13,7 +13,7 @@ PODS:
     - DatadogInternal (= 3.16.0)
   - DatadogRUM (3.16.0):
     - DatadogInternal (= 3.16.0)
-  - DatadogSDKReactNative (3.6.0):
+  - DatadogSDKReactNative (3.7.0):
     - DatadogCore (= 3.16.0)
     - DatadogCrashReporting (= 3.16.0)
     - DatadogFlags (= 3.16.0)
@@ -41,7 +41,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNative/Tests (3.6.0):
+  - DatadogSDKReactNative/Tests (3.7.0):
     - DatadogCore (= 3.16.0)
     - DatadogCrashReporting (= 3.16.0)
     - DatadogFlags (= 3.16.0)
@@ -1872,7 +1872,7 @@ SPEC CHECKSUMS:
   DatadogInternal: e5a4652ee266986e29c6b8491aff7f78dc3b731d
   DatadogLogs: 52792add5827042f619771a23656e2bfb6b0f4e7
   DatadogRUM: b78d608e013f39c5679ed31ad97dad323c6113e8
-  DatadogSDKReactNative: a9854102f0f79d8d8046d331995816ebf457ca3f
+  DatadogSDKReactNative: e7581931856f445b013e115098b586596147eeeb
   DatadogTrace: 5ef84e254e2e1d337bc52e0cdf16396ca102aeb1
   DatadogWebViewTracking: e0470157f55a83680a549d79ba2985e0d17465db
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
@@ -1883,7 +1883,7 @@ SPEC CHECKSUMS:
   hermes-engine: 9e868dc7be781364296d6ee2f56d0c1a9ef0bb11
   KSCrash: 8c4464fd5da7de520f2ce4a00fdf63f169a80f18
   OpenTelemetry-Swift-Api: 3be9043f6288eb4ac3cbe7548b5bd45fb4ed5849
-  RCT-Folly: 7b4f73a92ad9571b9dbdb05bb30fad927fa971e1
+  RCT-Folly: ea9d9256ba7f9322ef911169a9f696e5857b9e17
   RCTDeprecation: ebe712bb05077934b16c6bf25228bdec34b64f83
   RCTRequired: ca91e5dd26b64f577b528044c962baf171c6b716
   RCTTypeSafety: e7678bd60850ca5a41df9b8dc7154638cb66871f
