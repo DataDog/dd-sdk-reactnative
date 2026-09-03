@@ -1,4 +1,15 @@
 const mockEmptyPromise = jest.fn(() => Promise.resolve());
+const mockNativeCrash = jest.fn(() => new Promise(() => {}));
+
+jest.mock(
+  '@example-vega/native-crash-module',
+  () => ({
+    VegaSampleCrash: {
+      crashForTesting: mockNativeCrash,
+    },
+  }),
+  {virtual: true},
+);
 
 jest.mock(
   'react-native-gesture-handler',
