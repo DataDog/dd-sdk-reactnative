@@ -36,56 +36,56 @@ public class DdLogsImplementation: NSObject {
     }
 
     @objc
-    public func debug(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func debug(message: String, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.debug(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc
-    public func info(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func info(message: String, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.info(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc
-    public func warn(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func warn(message: String, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.warn(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc
-    public func error(message: String, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func error(message: String, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger.error(message, error: nil, attributes: attributes)
         resolve(nil)
     }
 
     @objc
-    public func debugWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func debugWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .debug, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
     }
 
     @objc
-    public func infoWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func infoWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .info, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
     }
 
     @objc
-    public func warnWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func warnWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .warn, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)
     }
 
     @objc
-    public func errorWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func errorWithError(message: String, errorKind: String?, errorMessage: String?, stacktrace: String?, context: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let attributes = castAttributesToSwift(context).mergeWithGlobalAttributes()
         logger._internal.log(level: .error, message: message, errorKind: errorKind, errorMessage: errorMessage, stackTrace: stacktrace, attributes: attributes)
         resolve(nil)

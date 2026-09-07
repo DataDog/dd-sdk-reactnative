@@ -31,7 +31,7 @@ public class DdTraceImplementation: NSObject {
     @objc
     public func startSpan(
         operation: String, context: NSDictionary, timestampMs: Double,
-        resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }
@@ -57,7 +57,7 @@ public class DdTraceImplementation: NSObject {
     @objc
     public func finishSpan(
         spanId: NSString, context: NSDictionary, timestampMs: Double,
-        resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         objc_sync_enter(self)
         defer { objc_sync_exit(self) }

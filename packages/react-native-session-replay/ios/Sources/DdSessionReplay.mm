@@ -3,12 +3,14 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+
 // Import this first to prevent require cycles
 #if __has_include("DatadogSDKReactNativeSessionReplay-Swift.h")
 #import <DatadogSDKReactNativeSessionReplay-Swift.h>
 #else
 #import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
 #endif
+
 #import "DdSessionReplay.h"
 
 
