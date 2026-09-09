@@ -19,6 +19,7 @@ export interface FlagCacheEntry {
     reason: string;
     doLog: boolean;
     extraLogging: Record<string, unknown>;
+    serialId?: string;
 }
 
 export const processEvaluationContext = (
