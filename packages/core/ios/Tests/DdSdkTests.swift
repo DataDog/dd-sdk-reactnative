@@ -1609,6 +1609,24 @@ class DdSdkTests: XCTestCase {
         XCTAssertNotNil(mappedEvent)
     }
 
+    func testDropsErrorMarkedAsDropped() throws {
+        let configuration: DdSdkConfiguration = .mockAny()
+
+        let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        )
+
+        let errorEventMapper = try XCTUnwrap(ddConfig.errorEventMapper)
+
+        let mockDroppedErrorEvent = RUMErrorEvent.mockRandomDropped()
+        let mappedDroppedEvent = errorEventMapper(mockDroppedErrorEvent)
+        XCTAssertNil(mappedDroppedEvent)
+
+        let mockErrorEvent = RUMErrorEvent.mockRandom()
+        let mappedEvent = errorEventMapper(mockErrorEvent)
+        XCTAssertNotNil(mappedEvent)
+    }
+
     func testReactNativeThreadMonitorsRunOnBridge() throws {
         let bridge = DispatchQueueMock()
         let mockJSRefreshRateMonitor = MockJSRefreshRateMonitor()

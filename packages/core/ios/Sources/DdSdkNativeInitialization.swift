@@ -231,6 +231,14 @@ public class DdSdkNativeInitialization: NSObject {
                 }
                 return actionEvent
             },
+            errorEventMapper: { errorEvent in
+                if errorEvent.context?.contextInfo[InternalConfigurationAttributes.dropResource]
+                    != nil
+                {
+                    return nil
+                }
+                return errorEvent
+            },
             onSessionStart: DdSdkSessionStartedListener.instance.rumSessionListener,
             customEndpoint: customRUMEndpointURL,
             trackMemoryWarnings: rumConfig.trackMemoryWarnings

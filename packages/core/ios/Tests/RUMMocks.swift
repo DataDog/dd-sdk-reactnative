@@ -514,6 +514,94 @@ extension RUMActionEvent: RandomMockable {
     }
 }
 
+extension RUMErrorEvent: RandomMockable {
+    static func mockRandomDropped() -> RUMErrorEvent {
+        return RUMErrorEvent(
+            dd: .init(
+                browserSdkVersion: nil,
+                configuration: nil,
+                session: .init(plan: .plan1, sessionPrecondition: nil)
+            ),
+            application: .init(id: .mockRandom()),
+            buildId: nil,
+            buildVersion: nil,
+            ciTest: nil,
+            connectivity: .mockRandom(),
+            container: nil,
+            context: .init(contextInfo: ["_dd.resource.drop_resource": true] ),
+            date: .mockRandom(),
+            device: .mockRandom(),
+            display: nil,
+            error: .init(
+                isCrash: false,
+                message: .mockRandom(),
+                source: .network,
+                stack: .mockRandom()
+            ),
+            os: .mockRandom(),
+            service: .mockRandom(),
+            session: .init(
+                hasReplay: nil,
+                id: .mockRandom(),
+                type: .user
+            ),
+            source: .ios,
+            synthetics: nil,
+            usr: .mockRandom(),
+            version: .mockRandom(),
+            view: .init(
+                id: .mockRandom(),
+                inForeground: .random(),
+                referrer: .mockRandom(),
+                url: .mockRandom()
+            )
+        )
+    }
+
+    static func mockRandom() -> RUMErrorEvent {
+        return RUMErrorEvent(
+            dd: .init(
+                browserSdkVersion: nil,
+                configuration: nil,
+                session: .init(plan: .plan1, sessionPrecondition: nil)
+            ),
+            application: .init(id: .mockRandom()),
+            buildId: nil,
+            buildVersion: nil,
+            ciTest: nil,
+            connectivity: .mockRandom(),
+            container: nil,
+            context: nil,
+            date: .mockRandom(),
+            device: .mockRandom(),
+            display: nil,
+            error: .init(
+                isCrash: false,
+                message: .mockRandom(),
+                source: .network,
+                stack: .mockRandom()
+            ),
+            os: .mockRandom(),
+            service: .mockRandom(),
+            session: .init(
+                hasReplay: nil,
+                id: .mockRandom(),
+                type: .user
+            ),
+            source: .ios,
+            synthetics: nil,
+            usr: .mockRandom(),
+            version: .mockRandom(),
+            view: .init(
+                id: .mockRandom(),
+                inForeground: .random(),
+                referrer: .mockRandom(),
+                url: .mockRandom()
+            )
+        )
+    }
+}
+
 // MARK: - URLRequest Mocks
 
 extension URLRequest {
