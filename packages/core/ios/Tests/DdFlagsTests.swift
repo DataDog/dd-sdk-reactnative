@@ -368,6 +368,40 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(dict["variationType"] as? String, "")
         XCTAssertEqual(dict["variationValue"] as? String, "")
         XCTAssertNotNil(dict["extraLogging"] as? [String: Any])
+        // An assignment with no serial ID omits the key rather than sending NSNull.
+        XCTAssertNil(dict["serialId"])
+    }
+
+    func testFlagAssignmentToDictionaryCarriesSerialID() {
+        let assignment = FlagAssignment(
+            allocationKey: "alloc",
+            variationKey: "var",
+            variation: .boolean(true),
+            reason: "reason",
+            doLog: true,
+            serialID: 340132
+        )
+
+        let dict = assignment.asDictionary(flagKey: "flag1")
+
+        // Sent as a String because the React Native bridge converts integers to Double.
+        XCTAssertEqual(dict["serialId"] as? String, "340132")
+    }
+
+    func testFlagAssignmentToDictionaryCarriesSerialIDZero() {
+        // Serial IDs are zero-based per org, so 0 is a real value, not an absent one.
+        let assignment = FlagAssignment(
+            allocationKey: "alloc",
+            variationKey: "var",
+            variation: .boolean(true),
+            reason: "reason",
+            doLog: true,
+            serialID: 0
+        )
+
+        let dict = assignment.asDictionary(flagKey: "flag1")
+
+        XCTAssertEqual(dict["serialId"] as? String, "0")
     }
 
     func testDictionaryToFlagAssignment() {
@@ -389,6 +423,71 @@ class DdFlagsTests: XCTestCase {
         } else {
             XCTFail("Expected string variation")
         }
+        XCTAssertNil(assignment?.serialID)
+    }
+
+    func testDictionaryToFlagAssignmentReadsSerialID() {
+        let dict: NSDictionary = [
+            "allocationKey": "alloc",
+            "variationKey": "var",
+            "reason": "reason",
+            "doLog": true,
+            "value": "string_value",
+            "serialId": "340132"
+        ]
+
+        XCTAssertEqual(dict.asFlagAssignment()?.serialID, 340132)
+    }
+
+    func testDictionaryToFlagAssignmentReadsSerialIDZero() {
+        let dict: NSDictionary = [
+            "allocationKey": "alloc",
+            "variationKey": "var",
+            "reason": "reason",
+            "doLog": true,
+            "value": "string_value",
+            "serialId": "0"
+        ]
+
+        XCTAssertEqual(dict.asFlagAssignment()?.serialID, 0)
+    }
+
+    func testDictionaryToFlagAssignmentIgnoresMalformedSerialID() {
+        // A malformed serial ID binds to the serial ID. It must not reject the assignment,
+        // because that would drop the exposure event for the whole flag.
+        let malformedValues: [Any] = ["not-a-number", "", true, 340132]
+
+        for malformed in malformedValues {
+            let dict: NSDictionary = [
+                "allocationKey": "alloc",
+                "variationKey": "var",
+                "reason": "reason",
+                "doLog": true,
+                "value": "string_value",
+                "serialId": malformed
+            ]
+
+            let assignment = dict.asFlagAssignment()
+
+            XCTAssertNotNil(assignment, "Expected an assignment for serialId \(malformed)")
+            XCTAssertNil(assignment?.serialID, "Expected no serial ID for \(malformed)")
+        }
+    }
+
+    func testFlagAssignmentSerialIDSurvivesARoundTrip() {
+        let assignment = FlagAssignment(
+            allocationKey: "alloc",
+            variationKey: "var",
+            variation: .string("string_value"),
+            reason: "reason",
+            doLog: true,
+            serialID: 0
+        )
+
+        let roundTripped = (assignment.asDictionary(flagKey: "flag1") as NSDictionary)
+            .asFlagAssignment()
+
+        XCTAssertEqual(roundTripped?.serialID, 0)
     }
 }
 
