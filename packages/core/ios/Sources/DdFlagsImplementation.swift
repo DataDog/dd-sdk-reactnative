@@ -175,7 +175,7 @@ extension FlagAssignment {
         case .unknown: NSNull()
         }
 
-        return [
+        var dictionary: [String: Any] = [
             "key": flagKey,
             "value": value,
             "allocationKey": allocationKey,
@@ -187,8 +187,17 @@ extension FlagAssignment {
             "variationValue": "",
             "extraLogging": [:],
         ]
+
+        if let serialID {
+            // A decimal string preserves integer precision across the React Native bridge.
+            dictionary[serialIDKey] = String(serialID)
+        }
+
+        return dictionary
     }
 }
+
+private let serialIDKey = "serialId"
 
 extension NSDictionary {
     func asFlagAssignment() -> FlagAssignment? {
@@ -216,7 +225,8 @@ extension NSDictionary {
             variationKey: variationKey,
             variation: variation,
             reason: reason,
-            doLog: doLog
+            doLog: doLog,
+            serialID: (object(forKey: serialIDKey) as? String).flatMap(Int.init)
         )
     }
 }

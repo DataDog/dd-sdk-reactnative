@@ -389,6 +389,37 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(dict["variationType"] as? String, "")
         XCTAssertEqual(dict["variationValue"] as? String, "")
         XCTAssertNotNil(dict["extraLogging"] as? [String: Any])
+        XCTAssertNil(dict["serialId"])
+    }
+
+    func testFlagAssignmentToDictionaryCarriesSerialID() {
+        let assignment = FlagAssignment(
+            allocationKey: "alloc",
+            variationKey: "var",
+            variation: .boolean(true),
+            reason: "reason",
+            doLog: true,
+            serialID: 340132
+        )
+
+        let dict = assignment.asDictionary(flagKey: "flag1")
+
+        XCTAssertEqual(dict["serialId"] as? String, "340132")
+    }
+
+    func testFlagAssignmentToDictionaryCarriesSerialIDZero() {
+        let assignment = FlagAssignment(
+            allocationKey: "alloc",
+            variationKey: "var",
+            variation: .boolean(true),
+            reason: "reason",
+            doLog: true,
+            serialID: 0
+        )
+
+        let dict = assignment.asDictionary(flagKey: "flag1")
+
+        XCTAssertEqual(dict["serialId"] as? String, "0")
     }
 
     func testDictionaryToFlagAssignment() {
@@ -410,6 +441,69 @@ class DdFlagsTests: XCTestCase {
         } else {
             XCTFail("Expected string variation")
         }
+        XCTAssertNil(assignment?.serialID)
+    }
+
+    func testDictionaryToFlagAssignmentReadsSerialID() {
+        let dict: NSDictionary = [
+            "allocationKey": "alloc",
+            "variationKey": "var",
+            "reason": "reason",
+            "doLog": true,
+            "value": "string_value",
+            "serialId": "340132"
+        ]
+
+        XCTAssertEqual(dict.asFlagAssignment()?.serialID, 340132)
+    }
+
+    func testDictionaryToFlagAssignmentReadsSerialIDZero() {
+        let dict: NSDictionary = [
+            "allocationKey": "alloc",
+            "variationKey": "var",
+            "reason": "reason",
+            "doLog": true,
+            "value": "string_value",
+            "serialId": "0"
+        ]
+
+        XCTAssertEqual(dict.asFlagAssignment()?.serialID, 0)
+    }
+
+    func testDictionaryToFlagAssignmentIgnoresMalformedSerialID() {
+        let malformedValues: [Any] = ["not-a-number", "", true, 340132]
+
+        for malformed in malformedValues {
+            let dict: NSDictionary = [
+                "allocationKey": "alloc",
+                "variationKey": "var",
+                "reason": "reason",
+                "doLog": true,
+                "value": "string_value",
+                "serialId": malformed
+            ]
+
+            let assignment = dict.asFlagAssignment()
+
+            XCTAssertNotNil(assignment, "Expected an assignment for serialId \(malformed)")
+            XCTAssertNil(assignment?.serialID, "Expected no serial ID for \(malformed)")
+        }
+    }
+
+    func testFlagAssignmentSerialIDSurvivesARoundTrip() {
+        let assignment = FlagAssignment(
+            allocationKey: "alloc",
+            variationKey: "var",
+            variation: .string("string_value"),
+            reason: "reason",
+            doLog: true,
+            serialID: 9_007_199_254_740_993
+        )
+
+        let roundTripped = (assignment.asDictionary(flagKey: "flag1") as NSDictionary)
+            .asFlagAssignment()
+
+        XCTAssertEqual(roundTripped?.serialID, 9_007_199_254_740_993)
     }
 }
 
