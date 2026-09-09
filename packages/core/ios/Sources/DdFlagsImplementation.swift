@@ -26,7 +26,7 @@ public class DdFlagsImplementation: NSObject {
     }
 
     @objc
-    public func enable(_ configuration: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func enable(_ configuration: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
         // Client providers become stale upon subsequent enable calls (which can happen e.g. in case of a React Native hot reload).
         clientProviders.removeAll()
 
@@ -53,9 +53,8 @@ public class DdFlagsImplementation: NSObject {
         return client
     }
 
-    // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
-    public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping ((Any?) -> Void), reject: @escaping ((String?, String?, NSError?) -> Void)) {
+    public func setEvaluationContext(_ clientName: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
         let client = getClient(name: clientName)
         guard let clientInternal = client as? FlagsClientInternal else {
             reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized. Make sure the Datadog SDK has been initialized and Flags.enable() has been called.", nil)
@@ -102,7 +101,7 @@ public class DdFlagsImplementation: NSObject {
     }
 
     @objc
-    public func trackEvaluation(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func trackEvaluation(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
         guard let client = getClient(name: clientName) as? FlagsClientInternal else {
             reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized. Make sure the Datadog SDK has been initialized and Flags.enable() has been called.", nil)
             return

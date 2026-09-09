@@ -62,11 +62,10 @@ public class DdSdkImplementation: NSObject {
         super.init()
     }
 
-    // Using @escaping RCTPromiseResolveBlock type will result in an issue when compiling the Swift header file.
     @objc
     public func initialize(
-        configuration: NSDictionary, resolve: @escaping ((Any?) -> Void),
-        reject: RCTPromiseRejectBlock
+        configuration: NSDictionary, resolve: @escaping RCTPromiseResolve,
+        reject: @escaping RCTPromiseReject
     ) {
         let sdkConfiguration = configuration.asDdSdkConfiguration()
         let nativeInitialization = DdSdkNativeInitialization()
@@ -94,8 +93,8 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func addAttribute(
-        key: AttributeKey, value: NSDictionary, resolve: RCTPromiseResolveBlock,
-        reject: RCTPromiseRejectBlock
+        key: AttributeKey, value: NSDictionary, resolve: @escaping RCTPromiseResolve,
+        reject: @escaping RCTPromiseReject
     ) {
         if let attributeValue = value.object(forKey: "value") {
             let castedValue = castValueToSwift(attributeValue)
@@ -108,7 +107,7 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func removeAttribute(
-        key: AttributeKey, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        key: AttributeKey, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         RUMMonitorProvider()?.removeAttribute(forKey: key)
         GlobalState.removeAttribute(key: key)
@@ -118,7 +117,7 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func addAttributes(
-        attributes: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         let castedAttributes = castAttributesToSwift(attributes)
         for (key, value) in castedAttributes {
@@ -131,7 +130,7 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func removeAttributes(
-        keys: [AttributeKey], resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        keys: [AttributeKey], resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         RUMMonitorProvider()?.removeAttributes(forKeys: keys)
         for (key) in keys {
@@ -143,7 +142,7 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func setUserInfo(
-        userInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        userInfo: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         let castedUserInfo = castAttributesToSwift(userInfo)
         let id = castedUserInfo["id"] as? String
@@ -166,7 +165,7 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func addUserExtraInfo(
-        extraInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        extraInfo: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         let castedExtraInfo = castAttributesToSwift(extraInfo)
 
@@ -175,14 +174,14 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func clearUserInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func clearUserInfo(resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
         Datadog.clearUserInfo()
         resolve(nil)
     }
 
     @objc
     public func setAccountInfo(
-        accountInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        accountInfo: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         let castedAccountInfo = castAttributesToSwift(accountInfo)
         let id = castedAccountInfo["id"] as? String
@@ -204,7 +203,7 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func addAccountExtraInfo(
-        extraInfo: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        extraInfo: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         let castedExtraInfo = castAttributesToSwift(extraInfo)
 
@@ -213,14 +212,14 @@ public class DdSdkImplementation: NSObject {
     }
 
     @objc
-    public func clearAccountInfo(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func clearAccountInfo(resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
         Datadog.clearAccountInfo()
         resolve(nil)
     }
 
     @objc
     public func setTrackingConsent(
-        trackingConsent: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        trackingConsent: NSString, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         Datadog.set(trackingConsent: (trackingConsent as NSString?).asTrackingConsent())
         resolve(nil)
@@ -229,7 +228,7 @@ public class DdSdkImplementation: NSObject {
     @objc
     public func sendTelemetryLog(
         message: NSString, attributes: NSDictionary, config: NSDictionary,
-        resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         let castedAttributes = castAttributesToSwift(attributes)
         let castedConfig = castAttributesToSwift(config)
@@ -241,7 +240,7 @@ public class DdSdkImplementation: NSObject {
     @objc
 
     public func telemetryDebug(
-        message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+        message: NSString, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
     ) {
         DdTelemetry.telemetryDebug(
             id: "datadog_react_native:\(message)", message: message as String)
@@ -250,8 +249,8 @@ public class DdSdkImplementation: NSObject {
 
     @objc
     public func telemetryError(
-        message: NSString, stack: NSString, kind: NSString, resolve: RCTPromiseResolveBlock,
-        reject: RCTPromiseRejectBlock
+        message: NSString, stack: NSString, kind: NSString, resolve: @escaping RCTPromiseResolve,
+        reject: @escaping RCTPromiseReject
     ) {
         DdTelemetry.telemetryError(
             id: "datadog_react_native:\(String(describing: kind)):\(message)",
@@ -262,7 +261,7 @@ public class DdSdkImplementation: NSObject {
     #if os(iOS)
         @objc
         public func consumeWebviewEvent(
-            message: NSString, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock
+            message: NSString, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject
         ) {
             do {
                 try DatadogSDKWrapper.shared.sendWebviewMessage(body: message)
@@ -280,7 +279,7 @@ public class DdSdkImplementation: NSObject {
     #endif
 
     @objc
-    public func clearAllData(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+    public func clearAllData(resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
         Datadog.clearAllData()
         resolve(nil)
     }
