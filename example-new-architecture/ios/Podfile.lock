@@ -11,6 +11,8 @@ PODS:
   - DatadogInternal (3.16.1)
   - DatadogLogs (3.16.1):
     - DatadogInternal (= 3.16.1)
+  - DatadogProfiling (3.16.1):
+    - DatadogInternal (= 3.16.1)
   - DatadogRUM (3.16.1):
     - DatadogInternal (= 3.16.1)
   - DatadogSDKReactNative (3.11.0):
@@ -49,6 +51,29 @@ PODS:
     - DatadogRUM (= 3.16.1)
     - DatadogTrace (= 3.16.1)
     - DatadogWebViewTracking (= 3.16.1)
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.10.14.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - DatadogSDKReactNativeProfiling (3.11.0):
+    - DatadogProfiling (= 3.16.1)
+    - DatadogSDKReactNative
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1651,6 +1676,7 @@ DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - "DatadogSDKReactNativeProfiling (from `../node_modules/@datadog/mobile-react-native-profiling`)"
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - fast_float (from `../node_modules/react-native/third-party-podspecs/fast_float.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1724,6 +1750,7 @@ SPEC REPOS:
     - DatadogFlags
     - DatadogInternal
     - DatadogLogs
+    - DatadogProfiling
     - DatadogRUM
     - DatadogTrace
     - DatadogWebViewTracking
@@ -1736,6 +1763,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DatadogSDKReactNative:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
+  DatadogSDKReactNativeProfiling:
+    :path: "../node_modules/@datadog/mobile-react-native-profiling"
   DoubleConversion:
     :podspec: "../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec"
   fast_float:
@@ -1871,8 +1900,10 @@ SPEC CHECKSUMS:
   DatadogFlags: 65cb325168aed2f7beb24ebef716227c6c2a8d1a
   DatadogInternal: 152be7f0a389684161fa642e55509163c99757d5
   DatadogLogs: 0c145bb072308903df8a7edd9c1125f4b479fa5f
+  DatadogProfiling: 03a1ac3f8fbeee901aceb5f176c2ce1918e6c826
   DatadogRUM: dcffd64699184ef38f63d42bd331cc1eba967661
   DatadogSDKReactNative: 5279edc70099a2ab35585bdc99995cd08b0a8d33
+  DatadogSDKReactNativeProfiling: 93c93a534ddcd62b015bf15df187ad003522bc6a
   DatadogTrace: f16ae4f5aa847aa3ed194c50f6145fac70e54962
   DatadogWebViewTracking: 2ba64c950bb40bf9dfab42d122c426788b5de2f0
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
