@@ -11,6 +11,7 @@ core_package_json="packages/core/package.json"
 podspec_files=(
     "packages/core/DatadogSDKReactNative.podspec"
     "packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec"
+    "packages/react-native-profiling/DatadogSDKReactNativeProfiling.podspec"
     "packages/react-native-webview/DatadogSDKReactNativeWebView.podspec"
 )
 
@@ -18,6 +19,7 @@ podspec_files=(
 build_gradle_files=(
     "packages/core/android/build.gradle"
     "packages/react-native-session-replay/android/build.gradle"
+    "packages/react-native-profiling/android/build.gradle"
     "packages/react-native-webview/android/build.gradle"
 )
 

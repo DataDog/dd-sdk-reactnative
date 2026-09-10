@@ -13,6 +13,7 @@ new_version="$2"
 build_gradle_files=(
   "packages/core/android/build.gradle"
   "packages/react-native-session-replay/android/build.gradle"
+  "packages/react-native-profiling/android/build.gradle"
   "packages/react-native-webview/android/build.gradle"
   "packages/internal-testing-tools/android/build.gradle"
   "benchmarks/android/app/build.gradle"
@@ -21,6 +22,7 @@ build_gradle_files=(
 podspec_files=(
   "packages/core/DatadogSDKReactNative.podspec"
   "packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec"
+  "packages/react-native-profiling/DatadogSDKReactNativeProfiling.podspec"
   "packages/react-native-webview/DatadogSDKReactNativeWebView.podspec"
 )
 

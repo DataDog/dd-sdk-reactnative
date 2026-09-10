@@ -16,6 +16,7 @@ import {
   TextAndInputPrivacyLevel,
   TouchPrivacyLevel,
 } from '@datadog/mobile-react-native-session-replay';
+import { DdProfiling } from '@datadog/mobile-react-native-profiling';
 
 import { Route } from "@react-navigation/native";
 import { NestedNavigator } from './screens/NestedNavigator/NestedNavigator';
@@ -87,6 +88,11 @@ const handleDatadogInitialization = async () => {
     imagePrivacyLevel: ImagePrivacyLevel.MASK_NONE,
     touchPrivacyLevel: TouchPrivacyLevel.SHOW,
     enableHeatmaps: true,
+  });
+
+  await DdProfiling.enable({
+    applicationLaunchSampleRate: 100,
+    continuousSampleRate: 100,
   });
 
   // Enable Datadog Flags feature.

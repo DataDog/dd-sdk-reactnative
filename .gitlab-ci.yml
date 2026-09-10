@@ -90,10 +90,12 @@ test:native-android:
         - /opt/homebrew/opt/openjdk@17/bin/java --version
         - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/core/android/gradle.properties
         - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-session-replay/android/gradle.properties
+        - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/react-native-profiling/android/gradle.properties
         - echo "org.gradle.java.home=/opt/homebrew/opt/openjdk@17" >> packages/internal-testing-tools/android/gradle.properties
         - yarn
         - (cd packages/core/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24)
         - (cd packages/react-native-session-replay/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogSDKReactNativeSessionReplay_minSdkVersion=24)
+        - (cd packages/react-native-profiling/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogSDKReactNativeProfiling_minSdkVersion=24)
         - (cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)
 
 test:native-ios:
@@ -117,6 +119,17 @@ test:native-ios-sr:
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
+
+test:native-ios-profiling:
+    tags: ['macos:sequoia-arm64', 'specific:true']
+    stage: test
+    rules:
+        - if: '$BUILD_BENCHMARK != "true"'
+    timeout: 1h
+    script:
+        - yarn
+        - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeProfiling test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
 
 test:native-ios-newarch:
     tags: ['macos:sequoia-arm64', 'specific:true']

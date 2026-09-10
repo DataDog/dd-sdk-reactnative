@@ -11,6 +11,8 @@ PODS:
   - DatadogInternal (3.16.0)
   - DatadogLogs (3.16.0):
     - DatadogInternal (= 3.16.0)
+  - DatadogProfiling (3.16.0):
+    - DatadogInternal (= 3.16.0)
   - DatadogRUM (3.16.0):
     - DatadogInternal (= 3.16.0)
   - DatadogSDKReactNative (3.8.0):
@@ -30,6 +32,14 @@ PODS:
     - DatadogRUM (= 3.16.0)
     - DatadogTrace (= 3.16.0)
     - DatadogWebViewTracking (= 3.16.0)
+    - React-Core
+  - DatadogSDKReactNativeProfiling (3.8.0):
+    - DatadogProfiling (= 3.16.0)
+    - DatadogSDKReactNative
+    - React-Core
+  - DatadogSDKReactNativeProfiling/Tests (3.8.0):
+    - DatadogProfiling (= 3.16.0)
+    - DatadogSDKReactNative
     - React-Core
   - DatadogSDKReactNativeSessionReplay (3.8.0):
     - DatadogSDKReactNative
@@ -1720,6 +1730,8 @@ DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DatadogSDKReactNative (from `../../packages/core/DatadogSDKReactNative.podspec`)
   - DatadogSDKReactNative/Tests (from `../../packages/core/DatadogSDKReactNative.podspec`)
+  - DatadogSDKReactNativeProfiling (from `../../packages/react-native-profiling/DatadogSDKReactNativeProfiling.podspec`)
+  - DatadogSDKReactNativeProfiling/Tests (from `../../packages/react-native-profiling/DatadogSDKReactNativeProfiling.podspec`)
   - DatadogSDKReactNativeSessionReplay (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
   - DatadogSDKReactNativeSessionReplay/Tests (from `../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec`)
   - DatadogSDKReactNativeWebView (from `../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec`)
@@ -1804,6 +1816,7 @@ SPEC REPOS:
     - DatadogFlags
     - DatadogInternal
     - DatadogLogs
+    - DatadogProfiling
     - DatadogRUM
     - DatadogSessionReplay
     - DatadogTrace
@@ -1818,6 +1831,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DatadogSDKReactNative:
     :path: "../../packages/core/DatadogSDKReactNative.podspec"
+  DatadogSDKReactNativeProfiling:
+    :path: "../../packages/react-native-profiling/DatadogSDKReactNativeProfiling.podspec"
   DatadogSDKReactNativeSessionReplay:
     :path: "../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec"
   DatadogSDKReactNativeWebView:
@@ -1971,8 +1986,10 @@ SPEC CHECKSUMS:
   DatadogFlags: 033cf48e769c271843e77068c015519880011866
   DatadogInternal: e5a4652ee266986e29c6b8491aff7f78dc3b731d
   DatadogLogs: 52792add5827042f619771a23656e2bfb6b0f4e7
+  DatadogProfiling: 60f18d5cca882178bf89ec4e6d0e539d18062e9d
   DatadogRUM: b78d608e013f39c5679ed31ad97dad323c6113e8
   DatadogSDKReactNative: d65150a6f37b4ca8f4d98909898a9c4632a7cbd6
+  DatadogSDKReactNativeProfiling: f50a774397123c846fecfecb3216d8f2d4105d14
   DatadogSDKReactNativeSessionReplay: 53f8448c51ea23aeb47fe3d67e7c383b91d06acf
   DatadogSDKReactNativeWebView: 25586892c073fe6f95928dc556e6b623abe513f8
   DatadogSessionReplay: 932b2077b1a5367de1450479d72093621b9fd618
@@ -2053,6 +2070,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 
-PODFILE CHECKSUM: a2729cbf6c0a559932ef8f49d27110873b77ff7d
+PODFILE CHECKSUM: 47138531a1c82b754b0b3598ba2f51c2f0c36642
 
 COCOAPODS: 1.16.2
