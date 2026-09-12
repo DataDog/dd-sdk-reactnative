@@ -23,6 +23,7 @@ import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
 import com.datadog.reactnative.sessionreplay.utils.text.TextViewUtils.Companion.MONOSPACE_FAMILY_NAME
 import com.datadog.reactnative.tools.unit.forge.ForgeConfigurator
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.views.text.ReactTextView
 import com.facebook.react.views.text.internal.span.CustomStyleSpan
 import com.facebook.react.views.view.ReactViewBackgroundDrawable
 import fr.xgouchet.elmyr.Forge
@@ -42,7 +43,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
-import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
@@ -59,6 +59,9 @@ internal class TextViewUtilsTest {
 
     @Mock
     lateinit var mockTextView: TextView
+
+    @Mock
+    lateinit var mockReactTextView: ReactTextView
 
     @Mock
     lateinit var mockReactViewBackgroundDrawable: ReactViewBackgroundDrawable
@@ -116,12 +119,11 @@ internal class TextViewUtilsTest {
         val realFabricUtils =
             FabricTextViewUtils(
                 mockReactContext,
-                mockLogger,
                 mockDrawableUtils
             )
 
         testedUtils = spy(realUtils)
-        fabricTestedUtils = spy(realFabricUtils)
+        fabricTestedUtils = realFabricUtils
     }
 
     @Test
@@ -455,14 +457,20 @@ internal class TextViewUtilsTest {
         whenever(mockForegroundColorSpan.foregroundColor).thenReturn(-1)
 
         val spannable = mock(Spannable::class.java)
-        doReturn(spannable).whenever(fabricTestedUtils).getFieldFromView(any(), any())
+        whenever(mockReactTextView.spanned).thenReturn(spannable)
+        whenever(mockReactTextView.background).thenReturn(null)
+        whenever(mockReactTextView.textSize).thenReturn(16f)
 
         whenever(spannable.getSpans(anyInt(), anyInt(), eq(ForegroundColorSpan::class.java)))
             .thenReturn(
                 arrayOf(mockForegroundColorSpan)
             )
 
-        val result = fabricTestedUtils.addReactNativeProperties(fakeWireframe, mockTextView, 0f)
+        val result = fabricTestedUtils.addReactNativeProperties(
+            fakeWireframe,
+            mockReactTextView,
+            0f
+        )
         assertThat(result.textStyle.color).isEqualTo("#ffffffff")
     }
 
