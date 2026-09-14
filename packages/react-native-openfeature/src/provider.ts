@@ -41,9 +41,11 @@ export class DatadogOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
         const newDdContext = toDdContext(newContext);
 
         // Promise chain in case `onContextChange` is called multiple times.
-        this.contextChangePromise = this.contextChangePromise.then(() => {
-            return this.flagsClient.setEvaluationContext(newDdContext);
-        });
+        this.contextChangePromise = this.contextChangePromise
+            .catch(() => undefined)
+            .then(() => {
+                return this.flagsClient.setEvaluationContext(newDdContext);
+            });
 
         // Wait for the current context change to complete.
         await this.contextChangePromise;
