@@ -2042,10 +2042,10 @@ __metadata:
     fast-glob: ^3.3.3
     jest: ^29.7.0
     react-native-builder-bob: 0.26.0
-    svgo: ^4.1.0
+    svgo: ^4.0.2
     tsc-alias: ^1.8.16
     typescript: 5.9.3
-    uuid: ^11.1.1
+    uuid: ^8.3.2
   peerDependencies:
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
@@ -7883,19 +7883,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"css-select@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "css-select@npm:6.0.0"
-  dependencies:
-    boolbase: ^1.0.0
-    css-what: ^7.0.0
-    domhandler: ^5.0.3
-    domutils: ^3.2.2
-    nth-check: ^2.1.1
-  checksum: e9fdbc01796e405a2f1b752dfbecb2eefab345af62149a493d5cfcd444c9712a9f154294185f27b6292b914da373c22df9e3faeab45165e9cacf89e8877cdbb7
-  languageName: node
-  linkType: hard
-
 "css-tree@npm:^1.1.3":
   version: 1.1.3
   resolution: "css-tree@npm:1.1.3"
@@ -7940,13 +7927,6 @@ __metadata:
   version: 6.2.2
   resolution: "css-what@npm:6.2.2"
   checksum: 4d1f07b348a638e1f8b4c72804a1e93881f35e0f541256aec5ac0497c5855df7db7ab02da030de950d4813044f6d029a14ca657e0f92c3987e4b604246235b2b
-  languageName: node
-  linkType: hard
-
-"css-what@npm:^7.0.0":
-  version: 7.0.0
-  resolution: "css-what@npm:7.0.0"
-  checksum: 993dcd4e95f5fb1e85df0caf23ae17e22bd626764a9213c9ee3f29bdb056eae5dd3a61f4193dda42958f1f8eb61c810606843107f79e0a29fcc0ee05bc48db5f
   languageName: node
   linkType: hard
 
@@ -8510,7 +8490,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"domutils@npm:^3.0.1, domutils@npm:^3.2.2":
+"domutils@npm:^3.0.1":
   version: 3.2.2
   resolution: "domutils@npm:3.2.2"
   dependencies:
@@ -14130,7 +14110,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nth-check@npm:^2.0.1, nth-check@npm:^2.1.1":
+"nth-check@npm:^2.0.1":
   version: 2.1.1
   resolution: "nth-check@npm:2.1.1"
   dependencies:
@@ -16605,13 +16585,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sax@npm:1.6.1":
-  version: 1.6.1
-  resolution: "sax@npm:1.6.1"
-  checksum: be78ded08c77db1644a8d32c93266615f51b925c8b6b6f3f689aed10eae57f307f8fbd7bcbf502041903edcfec17ea7d07c7bb4960e076faa92fc6773b621f2a
-  languageName: node
-  linkType: hard
-
 "sax@npm:^1.5.0":
   version: 1.6.0
   resolution: "sax@npm:1.6.0"
@@ -17588,9 +17561,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"svgo@npm:3.3.5":
-  version: 3.3.5
-  resolution: "svgo@npm:3.3.5"
+"svgo@npm:^3.0.2":
+  version: 3.3.3
+  resolution: "svgo@npm:3.3.3"
   dependencies:
     commander: ^7.2.0
     css-select: ^5.1.0
@@ -17600,25 +17573,25 @@ __metadata:
     picocolors: ^1.0.0
     sax: ^1.5.0
   bin:
-    svgo: bin/svgo
-  checksum: ea18071747812aed65439e1e3bdfcfd527f8c51c459c94f6aeb539653bb3f6ea4f2a75451427d2fde2fb1da578b704df8406b7de30382cca878594ec1d45be84
+    svgo: ./bin/svgo
+  checksum: ad9c27f19f1f8a6e45bae1b280eb68028da5449359c4daf2c539fc099ab6c76852335d96300a030af4e6866e500159fe80f43a732b8a2905ffa1bd4339da520c
   languageName: node
   linkType: hard
 
-"svgo@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "svgo@npm:4.1.0"
+"svgo@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "svgo@npm:4.0.2"
   dependencies:
     commander: ^11.1.0
-    css-select: ^6.0.0
+    css-select: ^5.1.0
     css-tree: ^3.0.1
-    css-what: ^7.0.0
+    css-what: ^6.1.0
     csso: ^5.0.5
     picocolors: ^1.1.1
-    sax: 1.6.1
+    sax: ^1.5.0
   bin:
-    svgo: bin/svgo.js
-  checksum: 74fc7ae4d06cf7961e785eebbc17ea60afd4d698d8c6eaffbfeb1e076d0aa1c74dfa32a2ef197c240032d2d97578e569b9c954bb7e31bc36d1299aef3f270331
+    svgo: ./bin/svgo.js
+  checksum: d227ec4aa2dd466c32ba97c1be99649e89174062befbbe7c8852271241254ca10062f10864cacf36c3c273a494e5d8dc07d330034e72a15ebbc9189039e9ddc4
   languageName: node
   linkType: hard
 
@@ -18336,21 +18309,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^11.1.1":
-  version: 11.1.1
-  resolution: "uuid@npm:11.1.1"
-  bin:
-    uuid: dist/esm/bin/uuid
-  checksum: 1c1ea6ffc9fd02a343d77151734af65644ebf5bac733b59bdab85859cf793cf03ac8d60909fa19dcd2272e154b20734c464b667afd8bdac02b4da5e206079469
-  languageName: node
-  linkType: hard
-
 "uuid@npm:^7.0.3":
   version: 7.0.3
   resolution: "uuid@npm:7.0.3"
   bin:
     uuid: dist/bin/uuid
   checksum: f5b7b5cc28accac68d5c083fd51cca64896639ebd4cca88c6cfb363801aaa83aa439c86dfc8446ea250a7a98d17afd2ad9e88d9d4958c79a412eccb93bae29de
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^8.3.2":
+  version: 8.3.2
+  resolution: "uuid@npm:8.3.2"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 5575a8a75c13120e2f10e6ddc801b2c7ed7d8f3c8ac22c7ed0c7b2ba6383ec0abda88c905085d630e251719e0777045ae3236f04c812184b7c765f63a70e58df
   languageName: node
   linkType: hard
 
