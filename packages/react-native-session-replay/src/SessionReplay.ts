@@ -103,6 +103,15 @@ export interface SessionReplayConfiguration {
      * Default: `false`.
      */
     enableHeatmaps?: boolean;
+
+    /**
+     * Enables the experimental Composition Tree recording pipeline.
+     * This pipeline captures rendered content instead of using semantic view
+     * recorders, so React Native text and SVG recorders do not apply.
+     * Currently supported on iOS 13+. This option has no effect on Android.
+     * Default: `false`.
+     */
+    enableCompositionTreeRecording?: boolean;
 }
 
 type InternalBaseSessionReplayConfiguration = {
@@ -110,6 +119,7 @@ type InternalBaseSessionReplayConfiguration = {
     customEndpoint: string;
     startRecordingImmediately: boolean;
     enableHeatmaps: boolean;
+    enableCompositionTreeRecording: boolean;
 };
 
 type InternalPrivacySessionReplayConfiguration = {
@@ -128,7 +138,8 @@ const DEFAULTS: InternalSessionReplayConfiguration = {
     touchPrivacyLevel: TouchPrivacyLevel.HIDE,
     textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_ALL,
     startRecordingImmediately: true,
-    enableHeatmaps: false
+    enableHeatmaps: false,
+    enableCompositionTreeRecording: false
 };
 
 export class SessionReplayWrapper {
@@ -146,7 +157,8 @@ export class SessionReplayWrapper {
             replaySampleRate,
             customEndpoint,
             startRecordingImmediately,
-            enableHeatmaps
+            enableHeatmaps,
+            enableCompositionTreeRecording
         } = configuration;
 
         const baseConfig: InternalBaseSessionReplayConfiguration = {
@@ -165,7 +177,11 @@ export class SessionReplayWrapper {
             enableHeatmaps:
                 enableHeatmaps !== undefined
                     ? enableHeatmaps
-                    : DEFAULTS.enableHeatmaps
+                    : DEFAULTS.enableHeatmaps,
+            enableCompositionTreeRecording:
+                enableCompositionTreeRecording !== undefined
+                    ? enableCompositionTreeRecording
+                    : DEFAULTS.enableCompositionTreeRecording
         };
 
         const privacyConfig: InternalPrivacySessionReplayConfiguration = {
@@ -193,7 +209,8 @@ export class SessionReplayWrapper {
             touchPrivacyLevel,
             textAndInputPrivacyLevel,
             startRecordingImmediately,
-            enableHeatmaps
+            enableHeatmaps,
+            enableCompositionTreeRecording
         } = this.buildConfiguration(configuration);
 
         return this.nativeSessionReplay.enable(
@@ -203,7 +220,8 @@ export class SessionReplayWrapper {
             touchPrivacyLevel,
             textAndInputPrivacyLevel,
             startRecordingImmediately,
-            enableHeatmaps
+            enableHeatmaps,
+            enableCompositionTreeRecording
         );
     };
 

@@ -1,6 +1,6 @@
 {
     "name": "@datadog/react-native-internal-testing-tools",
-    "version": "3.5.4",
+    "version": "3.7.0",
     "description": "Internal tools for testing the Datadog React Native SDK.",
     "keywords": [
         "datadog",
@@ -91,6 +91,11 @@
         "jsSrcsDir": "./src/specs",
         "android": {
             "javaPackageName": "com.datadog.reactnative.internaltesting"
+        },
+        "ios": {
+            "modulesProvider": {
+                "DdInternalTesting": "DdInternalTesting"
+            }
         }
     },
     "dependencies": {

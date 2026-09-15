@@ -24,6 +24,8 @@ export interface Spec extends TurboModule {
      * @param startRecordingImmediately: Whether the recording should start automatically when the feature is enabled.
      * When `true`, the recording starts automatically; when `false` it doesn't,
      * and the recording will need to be started manually. Default: `true`.
+     * @param enableHeatmaps: Whether heatmap identifier computation is enabled.
+     * @param enableCompositionTreeRecording: Whether the experimental Composition Tree recording pipeline is enabled.
      */
     enable(
         replaySampleRate: number,
@@ -32,7 +34,8 @@ export interface Spec extends TurboModule {
         touchPrivacyLevel: string,
         textAndInputPrivacyLevel: string,
         startRecordingImmediately: boolean,
-        enableHeatmaps: boolean
+        enableHeatmaps: boolean,
+        enableCompositionTreeRecording: boolean
     ): Promise<void>;
 
     /**

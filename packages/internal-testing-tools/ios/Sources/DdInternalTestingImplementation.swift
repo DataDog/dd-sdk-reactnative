@@ -5,7 +5,6 @@
  */
 
 import Foundation
-import React
 import DatadogCore
 import DatadogSDKReactNative
 import DatadogInternal
@@ -13,7 +12,7 @@ import DatadogInternal
 @objc
 public class DdInternalTestingImplementation: NSObject {
     @objc
-    public func clearData(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func clearData(resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let coreProxy = CoreRegistry.default as! DatadogCoreProxy
         coreProxy.waitAndDeleteEvents(ofFeature: "rum")
         coreProxy.waitAndDeleteEvents(ofFeature: "logging")
@@ -24,7 +23,7 @@ public class DdInternalTestingImplementation: NSObject {
     }
 
     @objc
-    public func getAllEvents(feature: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func getAllEvents(feature: String, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         do {
             let coreProxy = CoreRegistry.default as! DatadogCoreProxy
             let events = coreProxy.waitAndReturnEventsData(ofFeature: feature)
@@ -32,13 +31,13 @@ public class DdInternalTestingImplementation: NSObject {
             resolve(String(data: data, encoding: String.Encoding.utf8) ?? "")
         } catch {
             consolePrint("\(error)", .error)
-            reject(nil, "Cannot serialize events, check XCode console for more information", nil)
+            reject("JSON_SERIALIZATION_ERROR", "Cannot serialize events, check XCode console for more information", nil)
         }
         return
     }
     
     @objc
-    public func enable(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func enable(resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         DatadogSDKWrapper.shared.addOnSdkInitializedListener(listener: {core in
             let proxiedCore = DatadogCoreProxy(core: core)
             CoreRegistry.unregisterDefault()

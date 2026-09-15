@@ -131,31 +131,31 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public func startView(key: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startView(key: String, name: String, context: NSDictionary, timestampMs: Double, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.startView(key: key, name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func stopView(key: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopView(key: String, context: NSDictionary, timestampMs: Double, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.stopView(key: key, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func startAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.startAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func stopAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopAction(type: String, name: String, context: NSDictionary, timestampMs: Double, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.stopAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func addAction(type: String, name: String, touch: NSDictionary?, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addAction(type: String, name: String, touch: NSDictionary?, context: NSDictionary, timestampMs: Double, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         if
             let touch,
             let reactTag = touch["reactTag"] as? NSNumber,
@@ -180,13 +180,13 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func startResource(key: String, method: String, url: String, context: NSDictionary, timestampMs: Double, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.startResource(resourceKey: key, httpMethod: RUMMethod(from: method), urlString: url, attributes: attributes(from: context, with: timestampMs))
         resolve(nil)
     }
 
     @objc
-    public func stopResource(key: String, statusCode: Int64, kind: String, size: Double, context: NSDictionary, timestampMs: Double, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopResource(key: String, statusCode: Int64, kind: String, size: Double, context: NSDictionary, timestampMs: Double, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let mutableContext = NSMutableDictionary(dictionary: context)
         if let resourceTimings = mutableContext.object(forKey: Self.resourceTimingsKey) as? [String: Any] {
             mutableContext.removeObject(forKey: Self.resourceTimingsKey)
@@ -205,7 +205,7 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, fingerprint: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addError(message: String, source: String, stacktrace: String, context: NSDictionary, timestampMs: Double, fingerprint: String, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
     
         func addErrorWithContext(errorContext: NSDictionary) -> Void {
             nativeRUM.addError(message: message, type: nil, stack: stacktrace, source: RUMErrorSource(from: source), attributes: attributes(from: errorContext, with: timestampMs), file: nil, line: nil)
@@ -223,13 +223,13 @@ public class DdRumImplementation: NSObject {
     }
 
     @objc
-    public func addTiming(name: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addTiming(name: String, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.addTiming(name: name)
         resolve(nil)
     }
     
     @objc
-    public func addViewAttribute(key: AttributeKey, value: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addViewAttribute(key: AttributeKey, value: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         if let attributeValue = value.object(forKey: "value") {
             let castedAttribute = castValueToSwift(attributeValue)
             nativeRUM.addViewAttribute(forKey: key, value: castedAttribute)
@@ -238,38 +238,38 @@ public class DdRumImplementation: NSObject {
     }
     
     @objc
-    public func removeViewAttribute(key: AttributeKey, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func removeViewAttribute(key: AttributeKey, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.removeViewAttribute(forKey: key)
         resolve(nil)
     }
     
     @objc
-    public func addViewAttributes(attributes: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addViewAttributes(attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let castedAttributes = castAttributesToSwift(attributes)
         nativeRUM.addViewAttributes(castedAttributes)
         resolve(nil)
     }
     
     @objc
-    public func removeViewAttributes(keys: [AttributeKey], resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func removeViewAttributes(keys: [AttributeKey], resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.removeViewAttributes(forKeys: keys)
         resolve(nil)
     }
     
     @objc
-    public func addViewLoadingTime(overwrite: Bool, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addViewLoadingTime(overwrite: Bool, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.addViewLoadingTime(overwrite: overwrite)
         resolve(nil)
     }
 
     @objc
-    public func stopSession(resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func stopSession(resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.stopSession()
         resolve(nil)
     }
 
     @objc
-    public func addFeatureFlagEvaluation(name: String, value: NSDictionary, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    public func addFeatureFlagEvaluation(name: String, value: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         let valueAsEncodable = castAttributesToSwift(value)
         if let value = valueAsEncodable["value"] {
             nativeRUM.addFeatureFlagEvaluation(name: name, value: value)
@@ -278,7 +278,7 @@ public class DdRumImplementation: NSObject {
     }
     
     @objc
-    public func getCurrentSessionId(_ resolve: @escaping (Any?) -> Void, reject: RCTPromiseRejectBlock) -> Void {
+    public func getCurrentSessionId(_ resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) -> Void {
         nativeRUM.currentSessionID { sessionId in
             resolve(sessionId)
         }
@@ -289,8 +289,8 @@ public class DdRumImplementation: NSObject {
         name: String,
         operationKey: String?,
         attributes: NSDictionary,
-        resolve: @escaping (Any?) -> Void,
-        reject: RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolve,
+        reject: @escaping RCTPromiseReject
     ){
         let castedAttributes = castAttributesToSwift(attributes)
         nativeRUM.startFeatureOperation(name: name, operationKey: operationKey, attributes: castedAttributes)
@@ -302,8 +302,8 @@ public class DdRumImplementation: NSObject {
         name: String,
         operationKey: String?,
         attributes: NSDictionary,
-        resolve: @escaping (Any?) -> Void,
-        reject: RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolve,
+        reject: @escaping RCTPromiseReject
     ){
         let castedAttributes = castAttributesToSwift(attributes)
         nativeRUM.succeedFeatureOperation(name: name, operationKey: operationKey, attributes: castedAttributes)
@@ -316,8 +316,8 @@ public class DdRumImplementation: NSObject {
         operationKey: String?,
         reason: String,
         attributes: NSDictionary,
-        resolve: @escaping (Any?) -> Void,
-        reject: RCTPromiseRejectBlock
+        resolve: @escaping RCTPromiseResolve,
+        reject: @escaping RCTPromiseReject
     ){
         let castedAttributes = castAttributesToSwift(attributes)
         nativeRUM.failFeatureOperation(name: name, operationKey: operationKey,

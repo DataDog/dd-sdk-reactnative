@@ -33,6 +33,7 @@ const DEFAULTS = {
     telemetrySampleRate: 20.0,
     trackBackgroundEvents: false,
     trackErrors: false,
+    trackFetchResources: false,
     trackFrustrations: true,
     trackInteractions: false,
     trackMemoryWarnings: true,
@@ -102,6 +103,9 @@ export class RumConfiguration implements RumConfigurationType {
 
     // Track Background Events Enabled
     public trackBackgroundEvents: boolean = DEFAULTS.trackBackgroundEvents;
+
+    // Track native Fetch resources
+    public trackFetchResources: boolean = DEFAULTS.trackFetchResources;
 
     // Track Frustrations Enabled
     public trackFrustrations: boolean = DEFAULTS.trackFrustrations;

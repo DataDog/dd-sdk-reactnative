@@ -137,6 +137,7 @@ internal class DdSessionReplayImplementationTest {
             SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
             startRecordingImmediately,
             false,
+            false,
             mockPromise
         )
 
@@ -172,6 +173,7 @@ internal class DdSessionReplayImplementationTest {
             ),
             startRecordingImmediately,
             false,
+            false,
             mockPromise
         )
 
@@ -203,6 +205,7 @@ internal class DdSessionReplayImplementationTest {
             SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
             startRecordingImmediately,
             enableHeatmaps = true,
+            enableCompositionTreeRecording = false,
             mockPromise
         )
 
@@ -228,6 +231,7 @@ internal class DdSessionReplayImplementationTest {
             SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
             startRecordingImmediately,
             enableHeatmaps = false,
+            enableCompositionTreeRecording = false,
             mockPromise
         )
 
@@ -253,6 +257,7 @@ internal class DdSessionReplayImplementationTest {
             SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
             startRecordingImmediately,
             enableHeatmaps = true,
+            enableCompositionTreeRecording = false,
             mockPromise
         )
 
@@ -280,6 +285,7 @@ internal class DdSessionReplayImplementationTest {
             SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
             startRecordingImmediately,
             enableHeatmaps = false,
+            enableCompositionTreeRecording = false,
             mockPromise
         )
 
@@ -308,6 +314,7 @@ internal class DdSessionReplayImplementationTest {
                 SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
                 startRecordingImmediately,
                 enableHeatmaps = true,
+                enableCompositionTreeRecording = false,
                 mockPromise
             )
         }

@@ -20,6 +20,7 @@ export type AutoInstrumentationConfiguration = {
     readonly rumConfiguration: {
         readonly trackInteractions: boolean;
         readonly trackResources: boolean;
+        readonly trackFetchResources?: boolean;
         readonly trackErrors: boolean;
         readonly useAccessibilityLabel?: boolean;
         readonly actionNameAttribute?: string;
@@ -45,6 +46,7 @@ export type AutoInstrumentationParameters = {
         readonly useAccessibilityLabel: boolean;
         readonly trackInteractions: boolean;
         readonly trackResources: boolean;
+        readonly trackFetchResources: boolean;
         readonly trackErrors: boolean;
         readonly actionNameAttribute?: string;
         readonly resourceTraceSampleRate?: number;
@@ -81,6 +83,9 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
             trackResources:
                 features.rumConfiguration.trackResources ??
                 RUM_DEFAULTS.trackResources,
+            trackFetchResources:
+                features.rumConfiguration.trackFetchResources ??
+                RUM_DEFAULTS.trackFetchResources,
             trackErrors:
                 features.rumConfiguration.trackErrors ??
                 RUM_DEFAULTS.trackErrors,

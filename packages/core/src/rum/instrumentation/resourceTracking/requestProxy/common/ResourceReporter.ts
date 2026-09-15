@@ -4,9 +4,9 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRum } from '../../../../../DdRum';
-import { TracingIdFormat } from '../../../distributedTracing/TracingIdentifier';
-import type { RUMResource } from '../../interfaces/RumResource';
+import { DdRum } from '../../../../DdRum';
+import { TracingIdFormat } from '../../distributedTracing/TracingIdentifier';
+import type { RUMResource } from '../interfaces/RumResource';
 
 import { createTimings } from './resourceTiming';
 
@@ -15,8 +15,8 @@ type ResourceMapper = (resource: RUMResource) => RUMResource | null;
 export class ResourceReporter {
     private mappers: ResourceMapper[];
 
-    constructor(resourceMappers: ResourceMapper[]) {
-        this.mappers = resourceMappers;
+    constructor(mappers: ResourceMapper[]) {
+        this.mappers = mappers;
     }
 
     reportResource = (resource: RUMResource) => {

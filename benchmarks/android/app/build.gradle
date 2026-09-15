@@ -129,7 +129,7 @@ dependencies {
 
     // Benchmark tools from dd-sdk-android are used for vitals recording
     // Remember to bump this alongside the main dd-sdk-android dependencies
-    implementation("com.datadoghq:dd-sdk-android-benchmark-internal:3.12.1")
+    implementation("com.datadoghq:dd-sdk-android-benchmark-internal:3.13.1")
     // Required for compile-time access to Datadog.getInstance() required by BenchmarkVitalsModuleImpl
-    implementation("com.datadoghq:dd-sdk-android-core:3.12.1")
+    implementation("com.datadoghq:dd-sdk-android-core:3.13.1")
 }

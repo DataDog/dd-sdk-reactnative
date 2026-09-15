@@ -187,8 +187,6 @@ internal class EventWriteScopeInterceptor : EventWriteScope {
     }
 
     private val writer = object : EventBatchWriter {
-        override fun currentMetadata(): ByteArray? = null
-
         override fun write(
             event: RawBatchEvent,
             batchMetadata: ByteArray?,

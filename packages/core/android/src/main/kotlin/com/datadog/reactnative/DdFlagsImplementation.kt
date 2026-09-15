@@ -182,6 +182,8 @@ private fun buildEvaluationContext(
     return EvaluationContext(targetingKey, parsed)
 }
 
+private const val SERIAL_ID_KEY = "serialId"
+
 private fun convertUnparsedFlagToMap(
     flagKey: String,
     flag: UnparsedFlag,
@@ -222,6 +224,8 @@ private fun convertUnparsedFlagToMap(
         "reason" to flag.reason,
         "doLog" to flag.doLog,
         "extraLogging" to flag.extraLogging.toMap(),
+        // Serialized as a String because the React Native bridge converts Long values to Double
+        SERIAL_ID_KEY to flag.serialId?.toString()
     )
 }
 
@@ -237,4 +241,7 @@ private fun convertMapToUnparsedFlag(map: Map<String, Any>): UnparsedFlag =
             (map["extraLogging"] as? Map<String, Any>)?.toJSONObject()
                 ?: JSONObject()
         override val reason: String = map["reason"] as? String ?: ""
+        override val serialId: Long? =
+            (map[SERIAL_ID_KEY] as? String)?.toLongOrNull()
+                ?: (map[SERIAL_ID_KEY] as? Number)?.toLong()
     }

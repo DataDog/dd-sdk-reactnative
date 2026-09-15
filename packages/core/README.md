@@ -47,6 +47,7 @@ const datadogConfiguration = new DatadogProviderConfiguration(
             applicationId: '<RUM_APPLICATION_ID>',
             trackInteractions: true, // track User interactions (e.g.: Tap on buttons. You can use 'accessibilityLabel' element property to give tap action the name, otherwise element type will be reported)
             trackResources: true, // track XHR Resources
+            trackFetchResources: true, // Optional: also track requests made with the global Expo Fetch implementation
             trackFrustrations: true, // track Frustrations
             trackErrors: true, // track errors
             nativeCrashReportEnabled: true, // Optional: enable or disable native crash reports
@@ -79,6 +80,15 @@ export default function App() {
     );
 }
 ```
+
+`trackFetchResources` tracks calls made through the Expo-installed global
+`fetch`. Direct imports retained from `expo/fetch` are not intercepted. XHR
+tracking remains enabled for clients such as axios.
+
+GraphQL error extraction (via `DatadogLink({ trackErrors: true })`) for
+requests made through `expo/fetch` requires Expo SDK 56 or later, as older
+versions of `expo/fetch` do not implement `Response.clone()`. On earlier
+versions, GraphQL metadata is still reported, but response errors are not.
 
 ### Track view navigation
 

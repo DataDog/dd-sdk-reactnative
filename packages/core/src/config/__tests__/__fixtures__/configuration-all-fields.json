@@ -10,6 +10,7 @@
             "useAccessibilityLabel": false,
             "trackInteractions": true,
             "trackResources": true,
+            "trackFetchResources": true,
             "trackErrors": true,
             "longTaskThresholdMs": 44,
             "trackNonFatalAnrs": true,

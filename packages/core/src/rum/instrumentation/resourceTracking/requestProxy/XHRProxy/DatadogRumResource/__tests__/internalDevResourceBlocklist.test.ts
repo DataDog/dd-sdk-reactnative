@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { filterDevResource } from '../internalDevResourceBlocklist';
+import { filterDevResource } from '../../../common/internalDevResourceBlocklist';
 
 import { ResourceMockFactory } from './__utils__/ResourceMockFactory';
 

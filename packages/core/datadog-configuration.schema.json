@@ -176,6 +176,10 @@
                             "description": "Track React Native resources.",
                             "type": "boolean"
                         },
+                        "trackFetchResources": {
+                            "description": "Track requests made with supported native Fetch implementations, such as the global Fetch installed by Expo. Only applies when resource tracking is enabled.",
+                            "type": "boolean"
+                        },
                         "trackErrors": {
                             "description": "Track React Native errors.",
                             "type": "boolean"

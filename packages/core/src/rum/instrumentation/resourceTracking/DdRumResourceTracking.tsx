@@ -13,6 +13,7 @@ import type { FirstPartyHost } from '../../types';
 
 import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
+import { FetchProxy } from './requestProxy/FetchProxy/FetchProxy';
 import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
 import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
 
@@ -24,7 +25,7 @@ const RUM_RESOURCE_TRACKING_MODULE =
  */
 class RumResourceTracking {
     private _isTracking = false;
-    private _requestProxy: RequestProxy | null = null;
+    private _requestProxies: RequestProxy[] = [];
     private _maxSampledTraceId: BigInt.BigInteger | null = null;
 
     get isTracking(): boolean {
@@ -40,32 +41,54 @@ class RumResourceTracking {
      */
     startTracking({
         resourceTraceSampleRate,
-        firstPartyHosts
+        firstPartyHosts,
+        trackFetchResources = false
     }: {
         resourceTraceSampleRate: number;
         firstPartyHosts: FirstPartyHost[];
+        trackFetchResources?: boolean;
     }): void {
         // extra safety to avoid proxying the XHR class twice
         if (this._isTracking) {
             InternalLog.log(
-                'Datadog SDK is already tracking XHR resources',
+                'Datadog SDK is already tracking resources',
                 SdkVerbosity.WARN
             );
             return;
         }
 
-        this._requestProxy = XHRProxy.createWithResourceReporter();
-        this._requestProxy.onTrackingStart({
+        const requestProxyOptions = {
             tracingSamplingRate: resourceTraceSampleRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
                 firstPartyHosts
             )
-        });
+        };
+
+        const xhrProxy = XHRProxy.createWithResourceReporter();
+        xhrProxy.onTrackingStart(requestProxyOptions);
+        this._requestProxies.push(xhrProxy);
 
         InternalLog.log(
             'Datadog SDK is tracking XHR resources',
             SdkVerbosity.INFO
         );
+
+        if (trackFetchResources) {
+            if (typeof globalThis.fetch !== 'function') {
+                InternalLog.log(
+                    'Datadog SDK did not install Fetch resource tracking because global Fetch is not available',
+                    SdkVerbosity.INFO
+                );
+            } else {
+                const fetchProxy = FetchProxy.createWithResourceReporter();
+                fetchProxy.onTrackingStart(requestProxyOptions);
+                this._requestProxies.push(fetchProxy);
+                InternalLog.log(
+                    'Datadog SDK is tracking Fetch resources',
+                    SdkVerbosity.INFO
+                );
+            }
+        }
 
         this._isTracking = true;
         DistributedTracingSampling.setResourceTraceSampleRate(
@@ -85,11 +108,13 @@ class RumResourceTracking {
     }: {
         resourceTraceSampleRate: number;
     }): void {
-        if (!this._isTracking || !this._requestProxy) {
+        if (!this._isTracking) {
             return;
         }
-        this._requestProxy.onTrackingUpdate({
-            tracingSamplingRate: resourceTraceSampleRate
+        this._requestProxies.forEach(requestProxy => {
+            requestProxy.onTrackingUpdate({
+                tracingSamplingRate: resourceTraceSampleRate
+            });
         });
         // Keep the distributed-tracing sampler's max-trace-id in sync; the
         // shouldSampleTrace path consults this for rates strictly between 0
@@ -102,10 +127,10 @@ class RumResourceTracking {
     stopTracking(): void {
         if (this._isTracking) {
             this._isTracking = false;
-            if (this._requestProxy) {
-                this._requestProxy.onTrackingStop();
-            }
-            this._requestProxy = null;
+            this._requestProxies.forEach(requestProxy =>
+                requestProxy.onTrackingStop()
+            );
+            this._requestProxies = [];
             this._maxSampledTraceId = null;
         }
     }

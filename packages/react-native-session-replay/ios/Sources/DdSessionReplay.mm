@@ -3,12 +3,14 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+
 // Import this first to prevent require cycles
 #if __has_include("DatadogSDKReactNativeSessionReplay-Swift.h")
 #import <DatadogSDKReactNativeSessionReplay-Swift.h>
 #else
 #import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
 #endif
+
 #import "DdSessionReplay.h"
 
 
@@ -24,6 +26,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
                  withTextAndInputPrivacyLevel:(NSString*)textAndInputPrivacyLevel
                  withStartRecordingImmediately:(BOOL)startRecordingImmediately
                  withEnableHeatmaps:(BOOL)enableHeatmaps
+                 withEnableCompositionTreeRecording:(BOOL)enableCompositionTreeRecording
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -34,6 +37,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
           textAndInputPrivacyLevel:textAndInputPrivacyLevel
           startRecordingImmediately:startRecordingImmediately
           enableHeatmaps:enableHeatmaps
+          enableCompositionTreeRecording:enableCompositionTreeRecording
           resolve:resolve
           reject:reject];
 }
@@ -76,6 +80,7 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
         textAndInputPrivacyLevel:(NSString *)textAndInputPrivacyLevel
         startRecordingImmediately:(BOOL)startRecordingImmediately
         enableHeatmaps:(BOOL)enableHeatmaps
+        enableCompositionTreeRecording:(BOOL)enableCompositionTreeRecording
         resolve:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject {
     [self.ddSessionReplayImplementation enableWithReplaySampleRate:replaySampleRate
@@ -85,6 +90,7 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
                                           textAndInputPrivacyLevel:textAndInputPrivacyLevel
                                          startRecordingImmediately:startRecordingImmediately
                                                     enableHeatmaps:enableHeatmaps
+                                    enableCompositionTreeRecording:enableCompositionTreeRecording
                                                            resolve:resolve
                                                             reject:reject];
 }

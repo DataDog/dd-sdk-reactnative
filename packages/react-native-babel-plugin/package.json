@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-babel-plugin",
-    "version": "3.5.4",
+    "version": "3.7.0",
     "description": "A Babel plugin that enhances Datadog's React Native SDK by automatically enriching React components with contextual metadata.",
     "keywords": [
         "babel",
@@ -49,7 +49,7 @@
         "@babel/traverse": "^7.28.6",
         "@babel/types": "^7.27.7",
         "fast-glob": "^3.3.3",
-        "svgo": "^4.0.1",
+        "svgo": "^4.0.2",
         "uuid": "^8.3.2"
     },
     "devDependencies": {

@@ -34,6 +34,7 @@ export interface JsonConfiguration extends CoreConfigurationOptions {
         useAccessibilityLabel?: boolean;
         trackInteractions?: boolean;
         trackResources?: boolean;
+        trackFetchResources?: boolean;
         trackErrors?: boolean;
         longTaskThresholdMs?: number;
         actionNameAttribute?: string;

@@ -58,6 +58,36 @@ describe('DatadogOpenFeatureProvider', () => {
         );
     });
 
+    it('recovers after a context update fails', async () => {
+        const provider = new DatadogOpenFeatureProvider();
+        mockFlagsClient.setEvaluationContext
+            .mockResolvedValueOnce(undefined)
+            .mockRejectedValueOnce(new Error('temporarily offline'))
+            .mockResolvedValueOnce(undefined);
+
+        await provider.initialize({ targetingKey: 'user-1' });
+
+        await expect(
+            provider.onContextChange(
+                { targetingKey: 'user-1' },
+                { targetingKey: 'user-2' }
+            )
+        ).rejects.toThrow('temporarily offline');
+
+        await expect(
+            provider.onContextChange(
+                { targetingKey: 'user-2' },
+                { targetingKey: 'user-3' }
+            )
+        ).resolves.toBeUndefined();
+
+        expect(mockFlagsClient.setEvaluationContext).toHaveBeenCalledTimes(3);
+        expect(mockFlagsClient.setEvaluationContext).toHaveBeenNthCalledWith(
+            3,
+            expect.objectContaining({ targetingKey: 'user-3' })
+        );
+    });
+
     it('resolves boolean evaluation through the client', () => {
         const provider = new DatadogOpenFeatureProvider();
 

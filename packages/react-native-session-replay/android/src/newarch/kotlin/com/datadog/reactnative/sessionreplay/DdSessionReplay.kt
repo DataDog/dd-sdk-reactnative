@@ -30,7 +30,7 @@ class DdSessionReplay(
      * @param textAndInputPrivacyLevel Defines the way text and input should be masked.
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
      * @param enableHeatmaps Enables heatmap identifier computation.
-     * Currently unused on Android; reserved for heatmap support.
+     * @param enableCompositionTreeRecording Enables the Composition Tree recording pipeline.
      */
     @Suppress("LongParameterList")
     @ReactMethod
@@ -42,6 +42,7 @@ class DdSessionReplay(
         textAndInputPrivacyLevel: String,
         startRecordingImmediately: Boolean,
         enableHeatmaps: Boolean,
+        enableCompositionTreeRecording: Boolean,
         promise: Promise
     ) {
         implementation.enable(
@@ -54,6 +55,7 @@ class DdSessionReplay(
             ),
             startRecordingImmediately,
             enableHeatmaps,
+            enableCompositionTreeRecording,
             promise
         )
     }

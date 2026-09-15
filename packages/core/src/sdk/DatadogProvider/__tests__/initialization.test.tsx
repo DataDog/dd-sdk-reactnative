@@ -104,6 +104,7 @@ describe('DatadogProvider', () => {
                     "telemetrySampleRate": 20,
                     "trackBackgroundEvents": false,
                     "trackErrors": true,
+                    "trackFetchResources": false,
                     "trackFrustrations": true,
                     "trackInteractions": true,
                     "trackMemoryWarnings": true,

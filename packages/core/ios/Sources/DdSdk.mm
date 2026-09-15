@@ -122,12 +122,14 @@ RCT_REMAP_METHOD(telemetryError, withMessage:(NSString*)message
     [self telemetryError:message stack:stack kind:kind resolve:resolve reject:reject];
 }
                  
+#if TARGET_OS_IOS
 RCT_REMAP_METHOD(consumeWebviewEvent, withWebviewMessage:(NSString*)message
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
     [self consumeWebviewEvent:message resolve:resolve reject:reject];
 }
+#endif
 
 RCT_EXPORT_METHOD(clearAllData:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)

@@ -6,56 +6,30 @@
 
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types';
-import { Timer } from '../../../../../utils/Timer';
-import {
-    getCachedAccountId,
-    getCachedSessionId,
-    getCachedUserId
-} from '../../../../helper';
-import type { DdRumResourceTracingAttributes } from '../../distributedTracing/distributedTracingAttributes';
-import { getTracingHeadersFromAttributes } from '../../distributedTracing/distributedTracingHeaders';
-import { getTracingAttributes } from '../../distributedTracing/distributedTracing';
-import {
-    BAGGAGE_HEADER_KEY,
-    TRACKED_BY_HEADER_KEY,
-    TRACKED_BY_HEADER_VALUE
-} from '../../distributedTracing/headers';
-import {
-    DATADOG_GRAPH_QL_ERROR_HEADER,
-    DATADOG_GRAPH_QL_OPERATION_NAME_HEADER,
-    DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
-    DATADOG_GRAPH_QL_PAYLOAD_HEADER,
-    DATADOG_GRAPH_QL_VARIABLES_HEADER
-} from '../../graphql/graphqlHeaders';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
-import { DATADOG_BAGGAGE_HEADER, isDatadogCustomHeader } from '../../headers';
+import { isRunningWithinFetchProxy } from '../common/FetchProxyState';
+import type { RequestContext } from '../common/RequestContext';
+import { createRequestContext } from '../common/RequestContext';
+import { ResourceReporter } from '../common/ResourceReporter';
+import { filterDevResource } from '../common/internalDevResourceBlocklist';
+import {
+    getInstrumentationHeaders,
+    processRequestHeader
+} from '../common/requestHeaders';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import { RequestProxy } from '../interfaces/RequestProxy';
-import type { DdRumResourceGraphqlAttributes } from '../interfaces/RumResource';
 
-import { ResourceReporter } from './DatadogRumResource/ResourceReporter';
-import { filterDevResource } from './DatadogRumResource/internalDevResourceBlocklist';
-import { URLHostParser } from './URLHostParser';
-import { formatBaggageHeader } from './baggageHeaderUtils';
 import { calculateResponseSize } from './responseSize';
 import { getErrorData, readXhrJsonBody } from './xhrUtils';
 
 const RESPONSE_START_LABEL = 'response_start';
 
 interface DdRumXhr extends XMLHttpRequest {
-    _datadog_xhr: DdRumXhrContext;
+    _datadog_xhr?: DdRumXhrContext;
 }
 
-interface DdRumXhrContext {
-    graphql: DdRumResourceGraphqlAttributes & {
-        trackErrors?: boolean;
-    };
-    method: string;
-    url: string;
+interface DdRumXhrContext extends RequestContext {
     reported: boolean;
-    timer: Timer;
-    tracingAttributes: DdRumResourceTracingAttributes;
-    baggageHeaderEntries: Set<string>;
 }
 
 interface XHRProxyProviders {
@@ -129,24 +103,17 @@ const proxyOpen = (
         method: string,
         url: string
     ) {
-        const hostname = URLHostParser(url);
+        if (isRunningWithinFetchProxy()) {
+            this._datadog_xhr = undefined;
+            // eslint-disable-next-line prefer-rest-params
+            return originalXhrOpen.apply(this, arguments as any);
+        }
+
         // Keep track of the method and url
         // start time is tracked by the `send` method
         this._datadog_xhr = {
-            method,
-            url,
-            reported: false,
-            timer: new Timer(),
-            graphql: {},
-            tracingAttributes: getTracingAttributes({
-                hostname,
-                firstPartyHostsRegexMap: context.firstPartyHostsRegexMap,
-                tracingSamplingRate: context.tracingSamplingRate,
-                rumSessionId: getCachedSessionId(),
-                userId: getCachedUserId(),
-                accountId: getCachedAccountId()
-            }),
-            baggageHeaderEntries: new Set<string>()
+            ...createRequestContext({ method, url, options: context }),
+            reported: false
         };
         // eslint-disable-next-line prefer-rest-params
         return originalXhrOpen.apply(this, arguments as any);
@@ -162,30 +129,13 @@ const proxySend = (providers: XHRProxyProviders): void => {
             // keep track of start time
             this._datadog_xhr.timer.start();
 
-            // Tracing Headers
-            const tracingHeaders = getTracingHeadersFromAttributes(
-                this._datadog_xhr.tracingAttributes
+            getInstrumentationHeaders(this._datadog_xhr).forEach(
+                ({ header, value }) => {
+                    this.setRequestHeader(header, value);
+                }
             );
-
-            tracingHeaders.forEach(({ header, value }) => {
-                this.setRequestHeader(header, value);
-            });
-
-            // Join all baggage header entries
-            const baggageHeader = formatBaggageHeader(
-                this._datadog_xhr.baggageHeaderEntries
-            );
-            if (baggageHeader) {
-                this.setRequestHeader(DATADOG_BAGGAGE_HEADER, baggageHeader);
-            }
-
-            this.setRequestHeader(
-                TRACKED_BY_HEADER_KEY,
-                TRACKED_BY_HEADER_VALUE
-            );
+            proxyOnReadyStateChange(this, providers);
         }
-
-        proxyOnReadyStateChange(this, providers);
 
         // eslint-disable-next-line prefer-rest-params
         return originalXhrSend.apply(this, arguments as any);
@@ -197,11 +147,15 @@ const proxyOnReadyStateChange = (
     providers: XHRProxyProviders
 ): void => {
     const xhrType = providers.xhrType;
+    const requestContext = xhrProxy._datadog_xhr;
+    if (!requestContext) {
+        return;
+    }
     const originalOnreadystatechange = xhrProxy.onreadystatechange;
 
     xhrProxy.onreadystatechange = function onreadystatechange() {
         if (xhrProxy.readyState === xhrType.DONE) {
-            if (!xhrProxy._datadog_xhr.reported) {
+            if (!requestContext.reported) {
                 reportXhr(xhrProxy, providers.resourceReporter).catch(error => {
                     const errorData = getErrorData(error);
                     if (errorData) {
@@ -211,10 +165,10 @@ const proxyOnReadyStateChange = (
                         );
                     }
                 });
-                xhrProxy._datadog_xhr.reported = true;
+                requestContext.reported = true;
             }
         } else if (xhrProxy.readyState === xhrType.HEADERS_RECEIVED) {
-            xhrProxy._datadog_xhr.timer.recordTick(RESPONSE_START_LABEL);
+            requestContext.timer.recordTick(RESPONSE_START_LABEL);
         }
 
         if (originalOnreadystatechange) {
@@ -231,6 +185,9 @@ const reportXhr = async (
     const responseSize = calculateResponseSize(xhrProxy);
 
     const context = xhrProxy._datadog_xhr;
+    if (!context) {
+        return;
+    }
 
     const key = `${context.timer.startTime}/${context.method}`;
 
@@ -290,44 +247,21 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
         header: string,
         value: string
     ) {
-        const key = header.toLowerCase();
-        if (isDatadogCustomHeader(key)) {
-            switch (key) {
-                case DATADOG_GRAPH_QL_OPERATION_NAME_HEADER:
-                    this._datadog_xhr.graphql.operationName = value;
-                    break;
-                case DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER:
-                    this._datadog_xhr.graphql.operationType = value;
-                    break;
-                case DATADOG_GRAPH_QL_VARIABLES_HEADER:
-                    this._datadog_xhr.graphql.variables = value;
-                    break;
-                case DATADOG_GRAPH_QL_PAYLOAD_HEADER:
-                    this._datadog_xhr.graphql.payload = value;
-                    break;
-                case DATADOG_GRAPH_QL_ERROR_HEADER:
-                    this._datadog_xhr.graphql.trackErrors =
-                        value === 'true' || value === '1';
-                    break;
-                case DATADOG_BAGGAGE_HEADER:
-                    // Apply Baggage Header only if pre-processed by Datadog
-                    return originalXhrSetRequestHeader.apply(this, [
-                        BAGGAGE_HEADER_KEY,
-                        value
-                    ]);
-                default:
-                    return originalXhrSetRequestHeader.apply(
-                        this,
-                        // eslint-disable-next-line prefer-rest-params
-                        arguments as any
-                    );
-            }
-        } else if (key === BAGGAGE_HEADER_KEY) {
-            // Intercept User Baggage Header entries to apply them later
-            this._datadog_xhr.baggageHeaderEntries?.add(value);
-        } else {
-            // eslint-disable-next-line prefer-rest-params
-            return originalXhrSetRequestHeader.apply(this, arguments as any);
+        if (!this._datadog_xhr) {
+            return originalXhrSetRequestHeader.apply(this, [header, value]);
+        }
+
+        const processedHeader = processRequestHeader({
+            context: this._datadog_xhr,
+            header,
+            value
+        });
+
+        if (processedHeader.type === 'send') {
+            return originalXhrSetRequestHeader.apply(this, [
+                processedHeader.header,
+                processedHeader.value
+            ]);
         }
     };
 };
