@@ -17,8 +17,7 @@ Technical names and API names do not change.
 - The Obfuscation RFC defines the proposed client-rules protection.
 
 The RFC documents are drafts.
-Upstream PR #344 now defines the expected implementation contract.
-Names and versions can still change before publication.
+Published flagging-core version 3.0.0 defines the implementation contract.
 
 ## 1. Objective
 
@@ -53,7 +52,7 @@ Use this existing flow:
 configurationFromString -> setConfiguration -> evaluate
 ```
 
-## 2. Current upstream state
+## 2. Published upstream state
 
 ### 2.1 Published version 2.0.2
 
@@ -68,11 +67,11 @@ It also contains sharding, MD5, UFC v1 types, and `spark-md5`.
 The React Native wire module already imports the package root.
 Thus, the current application bundle already contains the existing rules engine.
 
-### 2.2 Expected features from upstream PR #344
+### 2.2 Published features from upstream PR #344
 
-PR #344 is the required upstream dependency change.
-Its code head is `78a0c14` as of 2026-08-20.
-The branch now includes PR #353 and PR #366.
+PR #344 merged on 2026-09-14 at head `e43836d`.
+Its code is published in `@datadog/flagging-core@3.0.0`.
+The merged branch includes PR #353 and PR #366.
 The packed rules-based package test decodes protobuf data, evaluates rules, serializes rules, and evaluates SHA-256 conditions.
 It also runs without global `BigInt`, `TextEncoder`, or `TextDecoder`.
 Commit `186dd5d` limits condition coercion to supported primitive values and strict finite numeric strings.
@@ -83,6 +82,15 @@ Commit `3e94855` moves the complete wire parser to `@datadog/flagging-core/rules
 Commit `c7ac6ec` uses a native `TextEncoder` when it is usable and keeps the internal encoder as a fallback.
 Commit `fd303e0` removes the redundant flagging-core and browser `/precomputed` subpaths.
 Merged PR #353 adds `getPrecomputedContext` to the package root and `/rules-based` entry point.
+Later commits update the evaluator for the final UFC schema and correct partition and resolution semantics.
+They preserve malformed precomputed responses as branch errors.
+They align evaluation-context coercion with OpenFeature values.
+They cache prepared comparator, regular-expression, membership, and partition values on the parsed rules configuration.
+They validate comparators during evaluation.
+They compare protobuf partition bounds as `bigint` before safe conversion.
+They support references to the OpenFeature `targetingKey` as an attribute.
+They construct the legacy MD5 sharder only when the selected configuration needs it.
+They guard the default package entry points against loading Protobuf-ES.
 It adds these features:
 
 - The opaque `FlagsConfigurationWire` type
@@ -142,7 +150,7 @@ The schema says that an unsupported feature level must produce an informative fl
 The evaluator returns a deterministic `PARSE_ERROR` for that case.
 The generated message types are compiled into the package output.
 
-The published package will expose `configuration.rules.response`.
+The published package exposes `configuration.rules.response`.
 Do not use the old planned name `rulesBased`.
 
 The package root exports the precomputed-only parser, `FlagsConfigurationWire`, and `getPrecomputedContext`.
@@ -173,22 +181,20 @@ It removed its stricter custom padding and canonical-encoding checks.
 The producer must still add one base64 layer.
 Do not depend on the parser to reject every non-canonical base64 spelling.
 
-### 2.3 Expected features from upstream PR #336
+### 2.3 Merged features from upstream PR #336
 
-PR #336 is stacked on PR #344.
+PR #336 merged on 2026-09-14 at head `f5ad267`.
 It adds the browser `DatadogOfflineProvider` and a combined core `evaluate` function.
 It proves that `configurationFromString` from `/rules-based` returns a rules object that the evaluator can use.
-Its head is `9fd61c4` as of 2026-08-20.
-Its merge base is the current PR #344 head, `78a0c14`.
-GitHub reports both PRs as mergeable.
-PR #336 was restacked on the new PR #344 head.
 Commit `77a62b8` aligns the final package entry points.
 Commit `184937f` makes offline initialization return an already resolved or rejected promise.
 Commit `ddcb770` preserves online configuration errors instead of returning a silent default.
 Commit `9fd61c4` defers offline configuration validation and events until provider initialization supplies the real context.
+Later commits preserve compatibility with precomputed configurations, integrate the final parser changes, keep the offline browser provider behind the opt-in `/rules-based` entry point, and preserve protobuf text-encoding initialization.
 Its current commits include valid-sibling fallback, optional configuration at construction, aligned parse errors, and standardized provider error events.
 The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
-The default browser root and browser `/rules-based` entry point export that provider.
+Only the browser `/rules-based` entry point exports `DatadogOfflineProvider`.
+The default browser root stays protobuf-free and does not export the offline provider.
 The shared `DatadogCoreProvider` base is internal.
 PR #336 says that this hierarchy follows the React Native integration.
 PR #336 uses the current decoder contract and a real rules wire fixture.
@@ -217,12 +223,12 @@ It can call `evaluateRulesBasedConfiguration` only for the rules path.
 This keeps current precomputed validation and native tracking behavior.
 Do not adopt the combined `evaluate` function without a parity review.
 The parity review must include the upstream capability selector, parse-error precedence, and native tracking.
-Use `getFlagsConfigurationError` as the lifecycle parity contract after the dependency is published.
+Use the published `getFlagsConfigurationError` as the lifecycle parity contract when it does not replace native precomputed tracking behavior.
 
-PR #346 is still the next stack layer at `81106cc`.
+PR #346 merged on 2026-09-14 at head `c88003c`.
 It now documents the merged `getPrecomputedContext` helper, literal empty contexts, and the final root versus `/rules-based` imports.
 PR #349 remains an independent tracking-parity follow-up at `d4b7c33`.
-PR #351 is an independent fetcher follow-up at `dfc299c`.
+PR #351 merged on 2026-09-14 at head `f8ee843`.
 PR #351 removes unsupported ETag handling and validates successful precomputed responses through the shared parser.
 These browser follow-ups do not add a React Native configuration fetcher.
 
@@ -359,7 +365,7 @@ The React Native compatibility code accounts for 1,106 minified bytes and 459 gz
 The upstream decision accepts this cost for the opt-in rules-based browser capability.
 The default flagging-core entry point parses and serializes only precomputed data.
 It ignores rules and does not load Protobuf-ES.
-The default browser entry point exposes the provider and precomputed parser without Protobuf-ES.
+The default browser entry point exposes the online provider and precomputed parser without Protobuf-ES.
 Its React Native smoke test bundles Android and iOS with React Native 0.76.9.
 The test uses the packed flagging-core package and the export-condition order from this repository.
 The test runs the Android bundle under Node without `TextEncoder`, `TextDecoder`, or `BigInt`.
@@ -373,25 +379,24 @@ The React Native SDK currently re-exports complete configuration parsing from it
 Thus, the upstream opt-in subpath does not by itself prove that the React Native root bundle excludes Protobuf-ES.
 Measure the React Native root import and decide whether to keep the current API or add a React Native rules-based subpath.
 
-Pin React Native to the released flagging-core version that contains PR #344.
-Verify the final version and package exports after publication.
+Pin React Native to `@datadog/flagging-core@3.0.0`.
+Use the verified package root and `/rules-based` exports.
 
 ## 3. Upstream gaps
 
 ### G1 — Rules wire parsing and parsed field
 
-**Status:** Implemented in PR #344. Publication is pending.
+**Status:** Published in flagging-core 3.0.0.
 
 Use `FlagsConfiguration.rules.response`.
 Do not use `rulesBased`.
 Import complete wire parsing from `@datadog/flagging-core/rules-based`.
 Do not import the package-root parser for rules because it intentionally ignores the rules branch.
-Use an `npm pack` package during development.
-After publication, bump `@datadog/flagging-core` in `packages/core/package.json`.
+Use flagging-core 3.0.0 from npm.
 
 ### G2 — Protobuf rules response
 
-**Status:** The service encoder code is merged. Decoder publication, distribution packaging, and runtime verification are pending.
+**Status:** The service encoder and npm decoder are published. Distribution packaging and React Native runtime verification remain.
 
 PR #344 includes the canonical schema, generated message types, and the Protobuf-ES parser.
 React Native must use the opaque parser.
@@ -429,7 +434,7 @@ Include safe and unsafe 64-bit integer fixtures.
 
 ### G3 — Package exports
 
-**Status:** Implemented. Publication is pending.
+**Status:** Published in flagging-core 3.0.0.
 
 The package root exports the evaluator and shared configuration types.
 The opt-in `@datadog/flagging-core/rules-based` subpath exports:
@@ -442,12 +447,12 @@ The package root exports the precomputed-only parser, `FlagsConfigurationWire`, 
 Its parser ignores rules and does not load Protobuf-ES.
 Its default entry point does not load Protobuf-ES.
 The redundant flagging-core `/configuration` and `/precomputed` subpaths were removed.
-The default browser package root exports the precomputed-only parser, provider, and `getPrecomputedContext`.
+The default browser package root exports the precomputed-only parser, online provider, and `getPrecomputedContext`.
 The `@datadog/openfeature-browser/rules-based` subpath exports the complete parser and the same provider API.
 Do not use the removed browser `/configuration` or `/precomputed` subpaths.
 PR #344 populates `rules`.
 PR #336 adds the optional combined `evaluate` function.
-PR #336 exports `DatadogOfflineProvider` from the default browser root and browser `/rules-based` subpath.
+PR #336 exports `DatadogOfflineProvider` only from the browser `/rules-based` subpath.
 It does not export the shared `DatadogCoreProvider` base.
 
 ### G4 — Native tracking metadata
@@ -537,7 +542,7 @@ It accepts only strings for semantic-version conditions.
 It memoizes each protobuf condition result during one flag evaluation.
 It compares sorted protobuf membership strings by Unicode code point to match the producer's UTF-8 byte order.
 
-Do not duplicate these evaluation checks in React Native after publication.
+Do not duplicate these published evaluation checks in React Native.
 
 Do not claim that structural validation stops ReDoS.
 PR #344 compiles regular expressions lazily and caches the result by configuration and regex index.
@@ -568,7 +573,7 @@ Relax the internal context type and error union.
 
 ### G9 — Prototype-unsafe flag and context lookup
 
-**Status:** Implemented in PR #344. Publication is pending.
+**Status:** Published in flagging-core 3.0.0.
 
 PR #344 adds a shared own-property helper.
 The legacy rules evaluator and the protobuf evaluator use it.
@@ -580,7 +585,7 @@ An inherited context attribute with one of these names does not satisfy a condit
 An explicit own context attribute with one of these names remains usable.
 The React Native precomputed cache also uses a `Map`.
 
-Pin the released dependency that contains this fix.
+Use flagging-core 3.0.0, which contains this fix.
 Keep reserved-name contract tests in React Native.
 Do not add a duplicate local guard after that dependency is available.
 
@@ -648,22 +653,22 @@ Publish cross-SDK vectors.
 - [ ] Identify the component that packages the raw service response into `FlagsConfigurationWire`.
 - [ ] Confirm that the producer requests and receives `application/protobuf`.
 - [ ] Confirm that the producer base64-encodes the raw bytes one time in `rules.response`.
-- [ ] Publish flagging-core with rules wire parsing.
-- [ ] Publish the parsed `rules` field.
-- [ ] Publish the SHA operators and synchronous SHA-256 implementation.
+- [x] Publish flagging-core with rules wire parsing in version 3.0.0.
+- [x] Publish the parsed `rules` field.
+- [x] Publish the SHA operators and synchronous SHA-256 implementation.
 - [x] Validate 32-byte SHA digests in the upstream protobuf evaluator.
 - [ ] Confirm the remaining salt and size-limit rules.
 - [ ] Confirm the current mobile exposure contract.
-- [ ] Pin the flagging-core release that contains the own-property lookup fix.
+- [x] Identify flagging-core 3.0.0 as the release that contains the own-property lookup fix.
 - [ ] Select a regular-expression safety policy.
 - [ ] Bump `@datadog/flagging-core` in `packages/core`.
 - [ ] Update `yarn.lock`.
 - [ ] Change complete parser imports to `@datadog/flagging-core/rules-based`.
 - [ ] Keep evaluator and shared configuration imports on the package root.
-- [ ] Verify that the flagging-core package-root parser ignores rules and excludes Protobuf-ES.
+- [x] Verify that the flagging-core 3.0.0 package-root parser ignores rules and excludes Protobuf-ES.
 - [ ] Decide whether the React Native package root continues to export configuration parsing.
 - [ ] Verify all final field names, versions, and exports.
-- [ ] Record the exact flagging-core version.
+- [x] Record flagging-core version 3.0.0.
 
 ### Step 1 — Define the parsed configuration type
 
@@ -1144,18 +1149,15 @@ Add a native API only if the confirmed mobile contract requires more fields.
 
 ## 7. Risks
 
-### R1 — Unpublished upstream configuration support
+### R1 — Published upstream configuration support
 
-PR #344 and PR #336 are not published.
-Their APIs can change.
-PR #336 is based on PR #344 head `78a0c14`.
-Its head is `9fd61c4`.
-GitHub reports both PRs as mergeable.
-PR #344 still calls the follow-up `CoreProvider` in its description.
-Use the current PR #336 `DatadogOfflineProvider` name.
+PR #344 and PR #336 are merged.
+Flagging-core 3.0.0 contains the required parser, evaluator, context helper, and lifecycle-selection APIs.
+Remove the temporary compatibility code in this stack.
+Use the merged `DatadogOfflineProvider` behavior as the browser parity reference.
 Keep the React Native integration small.
 Use one dependency update as the integration point.
-Recheck both heads before the dependency is pinned.
+Do not restore unpublished compatibility shapes after the dependency is pinned.
 
 ### R2 — Two evaluation paths
 
@@ -1444,6 +1446,8 @@ PR #336 was restacked at `dde93ea` and removed only unrelated `extraLogging` tes
 The plan was updated on 2026-08-20 after PR #344 changed the final entry points, merged `getPrecomputedContext`, tightened condition coercion, fixed UTF-8 membership ordering, memoized condition evaluation, preferred native UTF-8 encoding, and removed SHA-256 from the legacy JSON evaluator.
 PR #336 was restacked at `9fd61c4` and now defers offline configuration validation until initialization supplies the actual context.
 PR #351 removed unsupported ETag handling and added fetched precomputed response validation.
+The plan was updated on 2026-09-14 after PR #344, PR #336, PR #346, and PR #351 merged and flagging-core 3.0.0 was published.
+This update records the final package exports and the late evaluator, schema, partition, targeting-key, validation, and caching changes.
 
 The reviews produced these main corrections:
 
@@ -1451,8 +1455,8 @@ The reviews produced these main corrections:
 - Version 2.0.2 removes an unnecessary dependency but does not add rules wire parsing.
 - PR #344 defines the expected `rules` protobuf contract.
 - PR #336 proves browser provider integration with that contract.
-- PR #336 is restacked on the latest PR #344 head.
-- PR #336 exposes `DatadogOfflineProvider` and keeps `DatadogCoreProvider` internal.
+- PR #336 merged after PR #344.
+- PR #336 exposes `DatadogOfflineProvider` only from the browser `/rules-based` entry point and keeps `DatadogCoreProvider` internal.
 - The browser offline-provider lifecycle matches the React Native lifecycle.
 - Complete configuration parsing moved to `@datadog/flagging-core/rules-based`.
 - The package-root parser supports precomputed data only and must not parse rules.
@@ -1470,7 +1474,7 @@ The reviews produced these main corrections:
 - The current native bridge is sufficient unless the mobile exposure contract changes.
 - `extraLogging` is deprecated and is not an upstream blocker.
 - The engine already adds bundle size today.
-- PR #344 adds Protobuf-ES and synchronous SHA-256.
+- Flagging-core 3.0.0 includes Protobuf-ES and synchronous SHA-256 in its opt-in `/rules-based` entry point.
 - PR #344 accepts a measured 6,229-byte minified and 2,070-byte gzipped browser bundle increase.
 - PR #344 tests a packed package with the React Native Metro export conditions.
 - PR #344 performs structural validation during evaluation.

@@ -16,12 +16,10 @@ PR3 uses `blake.thomas/FFL-2837-PR2` as its base.
 
 Keep all three pull requests in draft state.
 
-## Temporary upstream code
+## Published upstream dependency
 
-Published flagging-core version 2.0.2 does not contain the new rules wire contract.
-Upstream PR #344 adds the generated Protobuf-ES rules parser, SHA-256 evaluation, evaluation-time validation, safe flag lookup, and React Native compatibility.
-Its code head is `78a0c14` as of 2026-08-20.
-The branch now includes PR #353 and PR #366.
+Published `@datadog/flagging-core@3.0.0` contains the rules wire contract from merged PR #344 at head `e43836d`.
+The merged branch includes PR #353 and PR #366.
 Commit `186dd5d` limits condition coercion to supported primitives and strict finite numeric strings.
 Commit `aa7398a` compares protobuf membership strings in UTF-8-compatible order.
 Commit `0e1a2fe` memoizes protobuf condition results during one flag evaluation.
@@ -30,6 +28,7 @@ Commit `3e94855` makes complete rules-based parsing opt-in.
 Commit `c7ac6ec` prefers a usable native `TextEncoder` and keeps the internal fallback.
 Commit `fd303e0` removes the redundant `/configuration` and `/precomputed` subpaths.
 Merged PR #353 exposes `getPrecomputedContext` from the package root and `/rules-based`.
+Later commits align the evaluator with the final UFC schema, correct partition and resolution semantics, preserve malformed precomputed responses, support targeting-key attribute references, validate comparators during evaluation, compare partition bounds as `bigint`, attach prepared-value caches to parsed rules, construct the MD5 sharder only when required, and guard the default entry points against Protobuf-ES.
 It adds `@bufbuild/protobuf` as a runtime dependency.
 Its packed-package smoke test uses the Metro export conditions from this repository.
 The package root exports the evaluator, shared types, precomputed-only parser, `FlagsConfigurationWire`, and `getPrecomputedContext`.
@@ -69,20 +68,17 @@ The protobuf evaluator no longer calls global `BigInt(...)` for integer and shar
 React Native must still test unsafe integers and safe and unsafe shard values without global `BigInt`.
 The parser now preserves `configurationError` for an invalid envelope and `rulesError` for an invalid rules entry or response.
 
-Upstream PR #336 uses that parser in the browser `DatadogOfflineProvider`.
+Merged PR #336 uses that parser in the browser `DatadogOfflineProvider`.
 PR #336 also uses the safe upstream lookup for precomputed flags.
-Its head is `9fd61c4` as of 2026-08-20.
-Its merge base is the current PR #344 head, `78a0c14`.
-GitHub reports both PRs as mergeable.
-PR #336 was restacked on the new PR #344 head.
+Its merged head is `f5ad267`.
 Commit `77a62b8` aligns the final package entry points.
 Commit `184937f` makes offline initialization return an already resolved or rejected promise.
 Commit `ddcb770` preserves online configuration errors instead of returning a silent default.
 Commit `9fd61c4` defers offline validation and events until initialization supplies the real context.
 Its current commits include valid-sibling fallback, optional configuration at construction, aligned parse errors, and standardized provider error events.
 The default flagging-core entry point now exports `getFlagsConfigurationError` for lifecycle checks.
-The browser root and `/rules-based` entry points both export `DatadogOfflineProvider`.
-The browser root still loads no Protobuf-ES modules.
+Only the browser `/rules-based` entry point exports `DatadogOfflineProvider`.
+The browser root does not export that provider and still loads no Protobuf-ES modules.
 The shared `DatadogCoreProvider` is internal.
 This provider hierarchy explicitly follows the React Native integration.
 The browser provider emits `Ready` before `ConfigurationChanged` when valid configuration recovers an error.
@@ -94,10 +90,10 @@ Its `Error` event payload uses `{ message, errorCode? }`.
 The combined evaluator now selects valid matching precomputed data, then valid rules, before it returns an applicable parse error.
 React Native must use the same capability and error precedence.
 
-PR #346 remains the next stack layer at `81106cc`.
+PR #346 merged at head `c88003c`.
 It documents `getPrecomputedContext`, literal empty contexts, and the final root versus `/rules-based` imports.
 PR #349 remains an independent tracking-parity follow-up at `d4b7c33`.
-PR #351 is an independent fetcher follow-up at `dfc299c`.
+PR #351 merged at head `f8ee843`.
 PR #351 removes unsupported ETag handling and validates successful precomputed responses through the shared parser.
 These browser follow-ups do not add React Native configuration fetching.
 
@@ -115,13 +111,10 @@ A configuration producer must base64-encode the raw bytes one time and put the r
 The React Native SDK does not fetch the service response.
 It does not build the portable envelope.
 
-Put a `TODO` immediately before each temporary implementation.
-The `TODO` must identify the upstream replacement.
-Do not hide temporary behavior in a general helper.
 Tests can use a fake rules engine.
 Production code must use one internal engine adapter.
 
-Remove temporary JSON rules-wire parsing, duplicate rules evaluation checks, and local lookup guards after the upstream package is published.
+Remove temporary JSON rules-wire parsing, duplicate rules evaluation checks, and local lookup guards when upgrading to flagging-core 3.0.0.
 Do not add a local protobuf parser.
 Do not copy the removed strict base64 validator.
 Do not add a service HTTP client.
@@ -134,8 +127,7 @@ Use an empty object only where the current Android bridge requires it.
 
 Add the internal boundary for the rules engine.
 
-- Bump to the flagging-core release that contains PR #344.
-- Use a packed PR #344 package before publication.
+- Bump to `@datadog/flagging-core@3.0.0`.
 - Import complete wire parsing from `@datadog/flagging-core/rules-based`.
 - Keep the evaluator and shared configuration types on the package root.
 - Do not import the package-root parser for rules because it intentionally ignores the rules branch.
@@ -213,7 +205,7 @@ Add dynamic evaluation to `FlagsClient`.
 - Keep valid precomputed data when the parsed configuration also contains `rulesError`.
 - Preserve `configurationError`, `rulesError`, and `precomputedError`.
 - Follow the combined PR #336 capability and error precedence.
-- Replace local lifecycle compatibility checks with `getFlagsConfigurationError` after publication when native precomputed behavior remains unchanged.
+- Use published `getFlagsConfigurationError` for lifecycle parity when native precomputed behavior remains unchanged.
 - Preserve `precomputed.flagErrors` beside the decoded precomputed `Map`.
 - Return a matching precomputed flag error as `PARSE_ERROR` before `FLAG_NOT_FOUND`.
 - Do not fall back to rules for a malformed key in matching precomputed data.
