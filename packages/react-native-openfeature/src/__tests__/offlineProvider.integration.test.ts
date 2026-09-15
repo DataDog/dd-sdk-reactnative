@@ -37,6 +37,7 @@ const wireFor = (context?: EvaluationContext): string =>
                 data: {
                     attributes: {
                         obfuscated: false,
+                        createdAt: '2026-09-14T00:00:00.000Z',
                         flags: {
                             'new-feature': {
                                 variationType: 'boolean',

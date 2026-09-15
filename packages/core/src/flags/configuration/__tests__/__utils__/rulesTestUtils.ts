@@ -4,62 +4,33 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { OperatorType } from '@datadog/flagging-core';
-import type { UniversalFlagConfigurationV1 } from '@datadog/flagging-core';
-
 import type {
+    RulesConfigurationResponse,
     RulesEngine,
     RulesEvaluationDetails,
     RulesEvaluationRequest,
     RulesValueType
 } from '../../rules';
+import { configurationFromString } from '../../wire';
 
-export const buildRulesConfiguration = (): UniversalFlagConfigurationV1 => ({
-    createdAt: '2026-07-23T12:00:00.000Z',
-    format: 'SERVER',
-    environment: { name: 'test' },
-    flags: {
-        'dynamic-flag': {
-            key: 'dynamic-flag',
-            enabled: true,
-            variationType: 'BOOLEAN',
-            variations: {
-                enabled: { key: 'enabled', value: true },
-                disabled: { key: 'disabled', value: false }
-            },
-            allocations: [
-                {
-                    key: 'allocation-1',
-                    rules: [
-                        {
-                            conditions: [
-                                {
-                                    operator: OperatorType.ONE_OF,
-                                    attribute: 'country',
-                                    value: ['US']
-                                }
-                            ]
-                        }
-                    ],
-                    splits: [
-                        {
-                            variationKey: 'enabled',
-                            serialId: 7,
-                            shards: [
-                                {
-                                    salt: 'test-salt',
-                                    ranges: [{ start: 0, end: 100 }],
-                                    totalShards: 100
-                                }
-                            ]
-                        }
-                    ],
-                    doLog: false
-                }
-            ]
-        }
+// A complete protobuf response from the flagging-core 3.0.0 wire contract.
+// It contains one static boolean flag with the key `browser-flag`.
+export const RULES_RESPONSE =
+    'EgRwcm9kGigKDGJyb3dzZXItZmxhZxIYEAQaAigBIhAKCmFsbG9jYXRpb24iAiADKgJvbg==';
+
+export const buildRulesWire = (response: string = RULES_RESPONSE): string =>
+    JSON.stringify({
+        version: 1,
+        rules: { response, fetchedAt: 1731939819456, etag: 'rules-etag' }
+    });
+
+export const buildRulesConfiguration = (): RulesConfigurationResponse => {
+    const response = configurationFromString(buildRulesWire()).rules?.response;
+    if (!response) {
+        throw new Error('The rules test fixture could not be decoded.');
     }
-});
+    return response;
+};
 
 type FakeRulesEvaluation = RulesEvaluationDetails<unknown>;
 

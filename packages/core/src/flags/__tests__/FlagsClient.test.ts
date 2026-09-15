@@ -364,7 +364,13 @@ describe('FlagsClient', () => {
                 version: 1,
                 precomputed: {
                     response: JSON.stringify({
-                        data: { attributes: { obfuscated, flags } }
+                        data: {
+                            attributes: {
+                                obfuscated,
+                                createdAt: '2026-09-14T00:00:00.000Z',
+                                flags
+                            }
+                        }
                     }),
                     context
                 }

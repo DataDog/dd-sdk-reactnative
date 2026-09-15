@@ -34,9 +34,13 @@ import { DdFlags } from './flags/DdFlags';
 import type { FlagsClient } from './flags/FlagsClient';
 import {
     configurationFromString,
-    configurationToString
+    configurationToString,
+    getPrecomputedContext
 } from './flags/configuration';
-import type { ParsedFlagsConfiguration } from './flags/configuration';
+import type {
+    FlagsConfigurationWire,
+    ParsedFlagsConfiguration
+} from './flags/configuration';
 import { enrichEvaluationContextWithRumUser } from './flags/rumIntegration';
 import type {
     FlagsConfiguration,
@@ -80,6 +84,7 @@ export {
     DdFlags,
     configurationFromString,
     configurationToString,
+    getPrecomputedContext,
     DdTrace,
     DdRum,
     RumActionType,
@@ -127,6 +132,7 @@ export type {
     TraceConfigurationOptions,
     FlagsConfiguration,
     FlagsClient,
+    FlagsConfigurationWire,
     ParsedFlagsConfiguration,
     EvaluationContext,
     PrimitiveValue,
