@@ -20,9 +20,11 @@ export interface DdFlagsType {
      * // Initialize the Datadog SDK.
      * await DdSdkReactNative.initialize(...);
      *
-     * // Optinal flags configuration object.
+     * // Optional flags configuration object.
      * const flagsConfig = {
-     *     customFlagsEndpoint: 'https://flags.example.com'
+     *     customFlagsEndpoint: 'https://flags.example.com',
+     *     assignmentRequestTimeoutMs: 1_000,
+     *     assignmentRequestRetryCount: 1
      * };
      *
      * // Enable the feature.
@@ -77,6 +79,30 @@ export interface FlagsConfiguration {
      * @default undefined
      */
     customFlagsEndpoint?: string;
+    /**
+     * Timeout for each request that retrieves precomputed flag assignments, in milliseconds.
+     *
+     * The timeout includes downloading the complete response body. When omitted or set to `0`,
+     * no timeout is applied by Datadog. This setting does not apply to loading cached assignments
+     * or sending exposure, evaluation, or RUM data.
+     *
+     * The value must be a non-negative integer.
+     *
+     * @default undefined
+     */
+    assignmentRequestTimeoutMs?: number;
+    /**
+     * Number of times to retry a failed request for precomputed flag assignments.
+     *
+     * This is the number of retries after the initial request. The native SDKs retry transport
+     * errors, timeouts, HTTP `408`, and HTTP `5xx` responses with randomized exponential backoff.
+     * HTTP `429` responses are not retried. Set to `0` to disable retries.
+     *
+     * The value must be an integer between `0` and `10`, inclusive.
+     *
+     * @default 1
+     */
+    assignmentRequestRetryCount?: number;
     /**
      * Custom server URL for sending Flags exposure data.
      *
