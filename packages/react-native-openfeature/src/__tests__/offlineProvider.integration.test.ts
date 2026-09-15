@@ -56,101 +56,19 @@ const wireFor = (context?: EvaluationContext): string =>
         }
     });
 
-const rulesResponseFor = (flagKey: string) => ({
-    createdAt: '2026-07-23T12:00:00.000Z',
-    format: 'SERVER',
-    environment: { name: 'test' },
-    flags: {
-        [flagKey]: {
-            key: flagKey,
-            enabled: true,
-            variationType: 'BOOLEAN',
-            variations: {
-                enabled: { key: 'enabled', value: true }
-            },
-            allocations: [
-                {
-                    key: 'rules-allocation',
-                    rules: [
-                        {
-                            conditions: [
-                                {
-                                    operator: 'ONE_OF',
-                                    attribute: 'country',
-                                    value: ['US']
-                                }
-                            ]
-                        }
-                    ],
-                    splits: [
-                        {
-                            variationKey: 'enabled',
-                            serialId: 7,
-                            shards: [
-                                {
-                                    salt: 'test-salt',
-                                    ranges: [{ start: 0, end: 100 }],
-                                    totalShards: 100
-                                }
-                            ]
-                        }
-                    ],
-                    doLog: false
-                }
-            ]
-        }
-    }
-});
+// Protobuf UFC fixtures encoded once inside the version 1 portable envelope.
+// They follow the schema published by flagging-core 3.0.0. The first fixture
+// targets country=US and shards on the targeting key. The second contains an
+// int64 variation that cannot be represented as a JavaScript number.
+const RULES_RESPONSE =
+    'EgR0ZXN0Gm4KD2R5bmFtaWMtZmVhdHVyZRJbEAQaAigBGgQIASgAIi4KEHJ1bGVzLWFsbG9jYXRpb24QABoMEgoKBHNhbHQQARhkIgoKBAgAEGQYByABIh0KE2ZhbGxiYWNrLWFsbG9jYXRpb24iBhABGAggBCIGEgQKAggCIgIKACoHZW5hYmxlZCoIZGlzYWJsZWQqB2NvdW50cnkqAlVTSgUqAxIBAw==';
+const UNSAFE_INTEGER_RULES_RESPONSE =
+    'EgR0ZXN0GjIKD2ludmFsaWQtZmVhdHVyZRIfEAIaCRiBgICAgICAECIQCgphbGxvY2F0aW9uIgIgAyoGdW5zYWZl';
 
-// TODO(FFL-2837): Replace this legacy `rulesBased` JSON helper after a published
-// flagging-core release contains DataDog/openfeature-js-client#344 through
-// `78a0c14`. It validates 32-byte SHA digests, UTF-8-compatible membership
-// ordering, semantic-version bounds, strict condition coercion, and own condition
-// and shard context attributes. It memoizes condition results per evaluation.
-// Its packed Chromium tests cover protobuf decode, rules serialization, SHA
-// evaluation, and execution without global `BigInt`, `TextEncoder`, or
-// `TextDecoder`. They do not cover unsafe integers, shard values, Hermes, or JSC.
-// Use
-// canonical raw protobuf bytes produced from the dd-source#34959
-// client-distribution path. Record dd-source#40304 commit `071c4ad` as the schema
-// revision and dd-source#34959 as the service producer path.
-// PR #336 through `9fd61c4` uses the same wire contract. It defines valid-sibling
-// and parse-error precedence, defers offline validation and events until
-// initialization supplies the effective context, and uses the
-// `{ message, errorCode? }` provider error event. Keep the existing React Native
-// provider name and its Ready-before-ConfigurationChanged recovery order.
-// Put one base64 encoding of those bytes in a version 1 `rules.response` envelope,
-// verify that decoding returns the original bytes, and record the source revision.
-// Use the upstream `@datadog/flagging-core/rules-based` parser. Do not copy the
-// strict base64 validator removed by PR #344. The package-root parser is
-// protobuf-free, parses precomputed data only, and ignores rules. The old
-// `/configuration` and `/precomputed` subpaths were removed. Reuse the
-// portable-wire fixture for examples, Metro, Hermes, and JSC checks. Confirm that
-// the default flagging-core entry point excludes Protobuf-ES and
-// measure whether the React Native root includes it.
-// The fixture must prove that unknown fields preserve supported known data and
-// that an out-of-range `int64` stays a `bigint` before evaluation returns
-// `PARSE_ERROR`. Round-trip it through `configurationToString` and prove that
-// unknown fields survive serialization. Run safe and unsafe integer variations,
-// shard counts, and shard ranges without global `BigInt`; invalid data must return
-// `PARSE_ERROR`, not `GENERAL`. Add fixtures for malformed SHA digests, unsorted
-// string and SHA-256 membership indexes, semantic-version components at and above
-// the unsigned 64-bit maximum, supported primitive and strict numeric coercion,
-// non-ASCII membership order, per-evaluation condition memoization, and absent
-// inherited condition and shard attributes. Confirm that explicit own
-// reserved-name attributes remain usable.
-// Run the same fixture in the supported Hermes and JSC versions. Also require
-// flag-scoped `PARSE_ERROR`, not `FLAG_NOT_FOUND`, for an unsupported minimum
-// feature level.
-const rulesWireFor = (
-    flagKey: string,
-    response = rulesResponseFor(flagKey)
-): string =>
+const rulesWireFor = (response: string = RULES_RESPONSE): string =>
     JSON.stringify({
         version: 1,
-        rulesBased: {
-            response: JSON.stringify(response)
-        }
+        rules: { response }
     });
 
 // A unique OpenFeature domain + Datadog clientName per test keeps providers isolated (separate
@@ -213,9 +131,7 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
     it('evaluates rules for each new context without a fetch', async () => {
         const { domain, clientName } = freshNames();
         const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
-        provider.setConfiguration(
-            configurationFromString(rulesWireFor('dynamic-feature'))
-        );
+        provider.setConfiguration(configurationFromString(rulesWireFor()));
         await OpenFeature.setProviderAndWait(domain, provider);
 
         const client = OpenFeature.getClient(domain);
@@ -260,9 +176,7 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
     it('does not synthesize an empty targeting key when a shard requires one', async () => {
         const { domain, clientName } = freshNames();
         const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
-        provider.setConfiguration(
-            configurationFromString(rulesWireFor('dynamic-feature'))
-        );
+        provider.setConfiguration(configurationFromString(rulesWireFor()));
         await OpenFeature.setProviderAndWait(domain, provider);
 
         await OpenFeature.setContext(domain, { country: 'US' });
@@ -277,17 +191,9 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
 
     it('preserves an unsafe-integer PARSE_ERROR and does not track it', async () => {
         const { domain, clientName } = freshNames();
-        const response = rulesResponseFor('invalid-feature');
-        const flag = (response.flags['invalid-feature'] as unknown) as {
-            variationType: string;
-            variations: { enabled: { value: unknown } };
-        };
-        flag.variationType = 'INTEGER';
-        flag.variations.enabled.value = Number.MAX_SAFE_INTEGER + 1;
-
         const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
         provider.setConfiguration(
-            configurationFromString(rulesWireFor('invalid-feature', response))
+            configurationFromString(rulesWireFor(UNSAFE_INTEGER_RULES_RESPONSE))
         );
         await OpenFeature.setProviderAndWait(domain, provider);
 
