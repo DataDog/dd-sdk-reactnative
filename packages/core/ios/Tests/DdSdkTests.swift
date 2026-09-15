@@ -1435,14 +1435,14 @@ class DdSdkTests: XCTestCase {
         let customLogsEndpoint = try XCTUnwrap(
             logsFeature?.requestBuilder as? DatadogLogs.RequestBuilder
         ).customIntakeURL
-        XCTAssertEqual(customLogsEndpoint?.absoluteString, "https://logs.example.com/api/v2/logs")
+        XCTAssertEqual(customLogsEndpoint?.absoluteString, "https://logs.example.com")
 
         let rumFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(
             feature: RUMFeature.self)
         let customRumEndpoint = try XCTUnwrap(
             rumFeature?.requestBuilder as? DatadogRUM.RequestBuilder
         ).customIntakeURL
-        XCTAssertEqual(customRumEndpoint?.absoluteString, "https://rum.example.com/api/v2/rum")
+        XCTAssertEqual(customRumEndpoint?.absoluteString, "https://rum.example.com")
 
         let traceFeature = try XCTUnwrap(CoreRegistry.default as? DatadogCore).get(
             feature: TraceFeature.self)
@@ -1450,7 +1450,7 @@ class DdSdkTests: XCTestCase {
             traceFeature?.requestBuilder as? TracingRequestBuilder
         ).customIntakeURL
         XCTAssertEqual(
-            customTraceEndpoint?.absoluteString, "https://trace.example.com/api/v2/spans")
+            customTraceEndpoint?.absoluteString, "https://trace.example.com")
     }
 
     func testSDKInitializationWithLoggerConfiguration() {
