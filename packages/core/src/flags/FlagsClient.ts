@@ -15,7 +15,6 @@ import { stringifyFlagValue } from './configuration/precomputed';
 import {
     flaggingCoreRulesEngine,
     getNoopRulesLogger,
-    prepareRulesConfiguration,
     toRulesEvaluationContext
 } from './configuration/rules';
 import type {
@@ -90,47 +89,6 @@ type LoadedConfigurationState =
           precomputed: LoadedBranch<LoadedPrecomputed>;
           rules: LoadedBranch<RulesConfigurationResponse>;
       };
-
-// TODO(FFL-2837): Delete this legacy `rulesBased` compatibility shape after a
-// flagging-core release contains DataDog/openfeature-js-client#344 through
-// `78a0c14`. Read `configuration.rules.response` directly. The configuration is
-// already parsed from the complete portable envelope. Do not add
-// raw-service-response handling or envelope construction to `FlagsClient`.
-// Import complete parsing from `@datadog/flagging-core/rules-based`; the
-// package-root parser intentionally remains protobuf-free, parses precomputed
-// data only, and ignores rules. The old `/configuration` and `/precomputed`
-// subpaths were removed. Keep the opt-in import in the local wire module and
-// keep `FlagsClient` independent of the parser and Protobuf-ES.
-// Keep `configurationError`, `rulesError`, `precomputedError`, and
-// `precomputed.flagErrors` when the released type provides them. PR #336 through
-// `9fd61c4` selects valid matching precomputed data, then valid rules, before
-// it returns an applicable parse error. It now defers lifecycle validation until
-// provider initialization supplies the real context; that provider behavior is
-// separate from this per-resolution selector.
-// Keep these separate paths for the native precomputed cache and
-// tracking behavior, but use the same capability and error precedence. Replace
-// compatible lifecycle checks with the upstream
-// `getFlagsConfigurationError` helper after publication. The released evaluator
-// must include PR #344's deterministic flag-scoped
-// `PARSE_ERROR` results, including unsupported feature levels, unknown-field
-// tolerance, lossless protobuf integer parsing, and the required SHA-256
-// digest-length validation. It also rejects unsorted protobuf membership data
-// using UTF-8-compatible string order and unsafe semantic-version components.
-// Its conditions use supported primitive coercion, strict finite numeric strings,
-// and per-evaluation condition memoization. Its safe-integer conversion no longer
-// calls global `BigInt`; keep coverage for unsafe integers and shard values without
-// that global. `FlagsClient` must not convert a parsed `bigint`. It must preserve
-// the evaluator's `PARSE_ERROR` when a value cannot be represented safely as a
-// JavaScript number.
-type ConfigurationWithPendingRules = ParsedFlagsConfiguration & {
-    configurationError?: string;
-    rulesError?: string;
-    rulesBased?: { response?: unknown };
-    precomputedError?: string;
-    precomputed?: ParsedPrecomputedConfiguration & {
-        flagErrors?: Record<string, string>;
-    };
-};
 
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -326,9 +284,7 @@ export class FlagsClient {
     private loadConfiguration = (
         configuration: ParsedFlagsConfiguration
     ): LoadedConfigurationState => {
-        const pendingConfiguration = configuration as ConfigurationWithPendingRules;
-        const precomputed = pendingConfiguration?.precomputed;
-        const rulesResponse = pendingConfiguration?.rulesBased?.response;
+        const precomputed = configuration.precomputed;
 
         let precomputedBranch: LoadedBranch<LoadedPrecomputed> = {
             status: 'absent'
@@ -356,38 +312,31 @@ export class FlagsClient {
                 );
                 precomputedBranch = { status: 'invalid', errorMessage };
             }
-        } else if (pendingConfiguration.precomputedError !== undefined) {
+        } else if (configuration.precomputedError !== undefined) {
             precomputedBranch = {
                 status: 'invalid',
-                errorMessage: pendingConfiguration.precomputedError
+                errorMessage: configuration.precomputedError
             };
         }
 
         let rulesBranch: LoadedBranch<RulesConfigurationResponse> = {
             status: 'absent'
         };
-        if (rulesResponse !== undefined) {
-            const prepared = prepareRulesConfiguration(rulesResponse);
-            rulesBranch =
-                prepared.status === 'ready'
-                    ? {
-                          status: 'ready',
-                          value: prepared.configuration
-                      }
-                    : {
-                          status: 'invalid',
-                          errorMessage: prepared.errorMessage
-                      };
-        } else if (pendingConfiguration.rulesError !== undefined) {
+        if (configuration.rules !== undefined) {
+            rulesBranch = {
+                status: 'ready',
+                value: configuration.rules.response
+            };
+        } else if (configuration.rulesError !== undefined) {
             rulesBranch = {
                 status: 'invalid',
-                errorMessage: pendingConfiguration.rulesError
+                errorMessage: configuration.rulesError
             };
         }
 
         return {
             kind: 'configuration',
-            configurationError: pendingConfiguration.configurationError,
+            configurationError: configuration.configurationError,
             precomputed: precomputedBranch,
             rules: rulesBranch
         };

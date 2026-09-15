@@ -9,7 +9,7 @@ import { NativeModules } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { DdFlags } from '../DdFlags';
-import { buildRulesConfiguration } from '../configuration/__tests__/__utils__/rulesTestUtils';
+import { RULES_RESPONSE } from '../configuration/__tests__/__utils__/rulesTestUtils';
 import {
     flaggingCoreRulesEngine,
     getNoopRulesLogger
@@ -388,27 +388,22 @@ describe('FlagsClient', () => {
             })
         );
 
-    // These builders exercise the temporary `rulesBased` shim from the complete
-    // portable JSON envelope. They do not model the external UFC service transport.
-    const buildRulesConfig = (
-        rulesResponse: unknown = buildRulesConfiguration()
-    ) =>
+    const buildRulesConfig = (rulesResponse: unknown = RULES_RESPONSE) =>
         configurationFromString(
             JSON.stringify({
                 version: 1,
-                rulesBased: {
-                    response: JSON.stringify(rulesResponse)
-                }
+                rules: { response: rulesResponse }
             })
         );
 
     const buildMixedConfig = (
         context: Record<string, unknown>,
-        rulesResponse: unknown = buildRulesConfiguration(),
+        rulesResponse: unknown = RULES_RESPONSE,
         precomputedResponse: unknown = {
             data: {
                 attributes: {
                     obfuscated: false,
+                    createdAt: '2026-09-14T00:00:00.000Z',
                     flags: offlineFlags
                 }
             }
@@ -421,9 +416,7 @@ describe('FlagsClient', () => {
                     response: JSON.stringify(precomputedResponse),
                     context
                 },
-                rulesBased: {
-                    response: JSON.stringify(rulesResponse)
-                }
+                rules: { response: rulesResponse }
             })
         );
 
@@ -603,12 +596,11 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('serves the coded default with TYPE_MISMATCH for a primitive-valued object flag', () => {
+        it('serves the coded default with PARSE_ERROR for a primitive-valued object flag', () => {
             const flagsClient = DdFlags.getClient();
 
-            // The decoder accepts any JSON value for an `object` flag, but evaluation requires an
-            // object. A primitive value (only possible from a malformed/hand-crafted wire, never a
-            // real Datadog config) is therefore served the coded default with TYPE_MISMATCH.
+            // Flagging-core 3.0.0 isolates a malformed precomputed flag during
+            // parsing and retains its flag-scoped error.
             flagsClient.setConfiguration(
                 buildConfig(
                     {
@@ -633,7 +625,7 @@ describe('FlagsClient', () => {
             ).toMatchObject({
                 value: { fallback: true },
                 reason: 'ERROR',
-                errorCode: 'TYPE_MISMATCH'
+                errorCode: 'PARSE_ERROR'
             });
         });
 
@@ -1038,6 +1030,17 @@ describe('FlagsClient', () => {
 
     describe('dynamic offline rules', () => {
         it('loads rules and evaluates a new context without fetching', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.context.country === 'US',
+                reason: 'TARGETING_MATCH',
+                variant:
+                    request.context.country === 'US' ? 'enabled' : 'disabled',
+                metadata: {
+                    allocationKey: 'allocation',
+                    variationType: 'boolean',
+                    doLog: false
+                }
+            }));
             const flagsClient = DdFlags.getClient();
 
             expect(flagsClient.setConfiguration(buildRulesConfig())).toEqual({
@@ -1066,6 +1069,8 @@ describe('FlagsClient', () => {
             expect(
                 NativeModules.DdFlags.setEvaluationContext
             ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
         });
 
         it('does not replace a missing targeting key with an empty key', () => {
@@ -1167,7 +1172,7 @@ describe('FlagsClient', () => {
                 flagsClient.setConfiguration(
                     buildMixedConfig(
                         { targetingKey: 'user-1' },
-                        buildRulesConfiguration(),
+                        RULES_RESPONSE,
                         { data: { attributes: {} } }
                     )
                 )
@@ -1336,8 +1341,8 @@ describe('FlagsClient', () => {
 
             expect(details).toMatchObject({
                 value: true,
-                variant: 'enabled',
-                allocationKey: 'allocation-1'
+                variant: 'on',
+                allocationKey: 'allocation'
             });
         });
 
@@ -1356,8 +1361,8 @@ describe('FlagsClient', () => {
                 'default',
                 'dynamic-flag',
                 expect.objectContaining({
-                    allocationKey: 'allocation-1',
-                    variationKey: 'enabled',
+                    allocationKey: 'allocation',
+                    variationKey: 'on',
                     variationType: 'boolean',
                     variationValue: 'true',
                     doLog: false,
@@ -1368,20 +1373,22 @@ describe('FlagsClient', () => {
             );
         });
 
-        it.each([
-            ['INTEGER', 42],
-            ['NUMERIC', 1.5]
-        ] as const)(
-            'tracks %s assignments with number metadata',
-            (variationType, variationValue) => {
-                const configuration = buildRulesConfiguration();
-                const flag = configuration.flags['dynamic-flag'];
-                flag.variationType = variationType;
-                flag.variations.enabled.value = variationValue;
-                flag.variations.disabled.value = 0;
+        it.each([42, 1.5])(
+            'tracks the number assignment %s with number metadata',
+            variationValue => {
+                const evaluate = installFakeRulesEngine(() => ({
+                    value: variationValue,
+                    reason: 'TARGETING_MATCH',
+                    variant: String(variationValue),
+                    metadata: {
+                        allocationKey: 'allocation',
+                        variationType: 'number',
+                        doLog: false
+                    }
+                }));
 
                 const flagsClient = DdFlags.getClient();
-                flagsClient.setConfiguration(buildRulesConfig(configuration));
+                flagsClient.setConfiguration(buildRulesConfig());
                 flagsClient.setEvaluationContextWithoutFetching({
                     targetingKey: 'user-1',
                     attributes: { country: 'US' }
@@ -1402,6 +1409,8 @@ describe('FlagsClient', () => {
                     'user-1',
                     { country: 'US' }
                 );
+
+                evaluate.mockRestore();
             }
         );
 
