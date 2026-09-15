@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getNodeName } from '../../utils';
 
 import { HandlerResolver } from './handlers/HandlerResolver';
+import { PathAliasResolver } from './pathAliasResolver';
 import { writeAssetToDisk } from './processing/fs';
 
 // Used when the caller (e.g. the plugin's own pre() hook) doesn't have a more
@@ -31,6 +32,17 @@ const DEFAULT_SCAN_IGNORE_PATTERNS = [
     '**/*.test.*',
     '**/*.config.js'
 ];
+
+// Mirrors the early-exit check in PathAliasResolver.resolve() -- a relative
+// or absolute specifier can never resolve through it (it guarantees `null`
+// for both), so there's no point deferring one into pendingBareSources at
+// all. Relative component imports rendered as JSX (`import Foo from
+// './Foo'; <Foo/>`) are the single most common React import pattern, so
+// skipping this eagerly avoids a closure allocation and a second-pass
+// iteration for the overwhelming majority of a typical project's imports.
+function isBareSpecifier(source: string): boolean {
+    return source[0] !== '.' && !pathN.isAbsolute(source);
+}
 
 /**
  * Internal processor responsible for detecting, transforming, and wrapping
@@ -47,13 +59,17 @@ export class ReactNativeSVG {
 
     t: typeof Babel.types | null = null;
 
+    private pathAliasResolver: PathAliasResolver;
+
     constructor(
         private rootDir: string,
         private assetsPath: string,
         private saveSvgMapToDisk: boolean = false,
         private scanIgnorePatterns: string[] = DEFAULT_SCAN_IGNORE_PATTERNS,
         private followSymlinks: boolean = false
-    ) {}
+    ) {
+        this.pathAliasResolver = new PathAliasResolver(rootDir);
+    }
 
     setApiTypes(t: typeof Babel.types) {
         this.t = t;
@@ -100,13 +116,38 @@ export class ReactNativeSVG {
             }
         }
 
-        // TODO: Support aliased paths (RUM-12185)
+        // Drop any alias config cached from a previous buildSvgMap() run --
+        // otherwise edits to tsconfig.json/babel.config.js made since then
+        // would be invisible to a reused instance.
+        this.pathAliasResolver.reset();
+
         const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
             cwd: this.rootDir,
             absolute: true,
             ignore: this.scanIgnorePatterns,
             followSymbolicLinks: this.followSymlinks
         });
+
+        // An extensionless aliased import (e.g. `@logo` -> a .svg with no
+        // extension in the specifier) can only be told apart from an
+        // ordinary bare import (e.g. 'react') by actually attempting alias
+        // resolution, which is expensive per file (it can trigger
+        // @babel/core's loadPartialConfig()). Running that for every bare
+        // import in every file -- most of which are never SVGs -- would
+        // regress badly on large codebases. So this defers alias resolution
+        // for non-'.svg'-suffixed sources to a second pass, run only for
+        // import/export names that are provably rendered as JSX somewhere
+        // in the project (checked project-wide, not per file, since a
+        // barrel re-export and its JSX usage can live in different files --
+        // see the barrel-export tests). An import never rendered as JSX
+        // could never be looked up via localSvgMap anyway.
+        const pendingBareSources: Array<{
+            file: string;
+            source: string;
+            candidateNames: string[];
+            populate: (resolved: string) => void;
+        }> = [];
+        const usedJsxNames = new Set<string>();
 
         for (const file of files) {
             try {
@@ -127,68 +168,143 @@ export class ReactNativeSVG {
                 });
 
                 traverse(ast, {
+                    JSXOpeningElement: path => {
+                        if (!this.t) {
+                            return;
+                        }
+                        const name = getNodeName(this.t, path.node.name);
+                        if (name) {
+                            usedJsxNames.add(name);
+                        }
+                    },
                     ImportDeclaration: path => {
                         if (!this.t) {
                             return;
                         }
                         const source = path.node.source.value;
-                        if (!source.endsWith('.svg')) {
-                            return;
-                        }
 
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
-                        for (const spec of path.node.specifiers) {
-                            const name = getNodeName(this.t, spec.local.name);
-                            if (name) {
-                                this.localSvgMap[name] = {
-                                    path: resolved
-                                };
-                            }
-                        }
-                    },
-                    ExportNamedDeclaration: path => {
-                        if (!this.t) {
-                            return;
-                        }
-                        const source = path.node.source?.value;
-                        if (!source?.endsWith('.svg')) {
-                            return;
-                        }
-
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
-                        for (const spec of path.node.specifiers) {
-                            if (spec.type === 'ExportSpecifier') {
-                                // spec.exported is the name consumers import under
-                                // ('default' would be wrong for `export { default as Logo }`)
-                                const exported = spec.exported;
+                        if (source.endsWith('.svg')) {
+                            const resolved = this.resolveImportSource(
+                                file,
+                                source
+                            );
+                            for (const spec of path.node.specifiers) {
                                 const name = getNodeName(
                                     this.t,
-                                    this.t.isStringLiteral(exported)
-                                        ? exported.value
-                                        : exported.name
+                                    spec.local.name
                                 );
                                 if (name) {
                                     this.localSvgMap[name] = {
                                         path: resolved
                                     };
                                 }
-                            } else {
-                                console.warn(
-                                    `[buildSvgMap]: Unhandled export specifier type: ${spec.type}`
-                                );
+                            }
+                            return;
+                        }
+
+                        if (!isBareSpecifier(source)) {
+                            return;
+                        }
+
+                        const candidateNames: string[] = [];
+                        for (const spec of path.node.specifiers) {
+                            const name = getNodeName(this.t, spec.local.name);
+                            if (name) {
+                                candidateNames.push(name);
                             }
                         }
+                        if (!candidateNames.length) {
+                            return;
+                        }
+
+                        pendingBareSources.push({
+                            file,
+                            source,
+                            candidateNames,
+                            populate: resolved => {
+                                for (const name of candidateNames) {
+                                    this.localSvgMap[name] = {
+                                        path: resolved
+                                    };
+                                }
+                            }
+                        });
+                    },
+                    ExportNamedDeclaration: path => {
+                        if (!this.t) {
+                            return;
+                        }
+                        const source = path.node.source?.value;
+                        if (!source) {
+                            return;
+                        }
+
+                        if (source.endsWith('.svg')) {
+                            const resolved = this.resolveImportSource(
+                                file,
+                                source
+                            );
+                            this.populateExportedSvgNames(path, resolved);
+                            return;
+                        }
+
+                        if (!isBareSpecifier(source)) {
+                            return;
+                        }
+
+                        const candidateNames: string[] = [];
+                        for (const spec of path.node.specifiers) {
+                            if (spec.type !== 'ExportSpecifier') {
+                                continue;
+                            }
+                            // spec.exported is the name consumers import under
+                            // ('default' would be wrong for `export { default as Logo }`)
+                            const exported = spec.exported;
+                            const name = getNodeName(
+                                this.t,
+                                this.t.isStringLiteral(exported)
+                                    ? exported.value
+                                    : exported.name
+                            );
+                            if (name) {
+                                candidateNames.push(name);
+                            }
+                        }
+                        if (!candidateNames.length) {
+                            return;
+                        }
+
+                        pendingBareSources.push({
+                            file,
+                            source,
+                            candidateNames,
+                            populate: resolved =>
+                                this.populateExportedSvgNames(path, resolved)
+                        });
                     }
                 });
             } catch (err) {
                 console.error(`[buildSvgMap]: \n File: ${file}\n`, err);
             }
+        }
+
+        // Second pass: only now attempt the (potentially expensive) alias
+        // resolution, and only for sources with at least one candidate name
+        // that's actually used as JSX somewhere in the project.
+        for (const pending of pendingBareSources) {
+            if (!pending.candidateNames.some(name => usedJsxNames.has(name))) {
+                continue;
+            }
+
+            const resolved = this.resolveSvgImportSource(
+                pending.file,
+                pending.source
+            );
+            if (!resolved) {
+                continue;
+            }
+
+            pending.populate(resolved);
         }
 
         // Save the mapping to disk if requested
@@ -209,6 +325,68 @@ export class ReactNativeSVG {
                 );
             }
         }
+    }
+
+    /** Populates `localSvgMap` for each `ExportSpecifier` on an
+     * `export { ... } from '...svg'` declaration once its source has been
+     * resolved to a real `.svg` path. */
+    private populateExportedSvgNames(
+        path: Babel.NodePath<Babel.types.ExportNamedDeclaration>,
+        resolved: string
+    ): void {
+        if (!this.t) {
+            return;
+        }
+
+        for (const spec of path.node.specifiers) {
+            if (spec.type === 'ExportSpecifier') {
+                // spec.exported is the name consumers import under
+                // ('default' would be wrong for `export { default as Logo }`)
+                const exported = spec.exported;
+                const name = getNodeName(
+                    this.t,
+                    this.t.isStringLiteral(exported)
+                        ? exported.value
+                        : exported.name
+                );
+                if (name) {
+                    this.localSvgMap[name] = {
+                        path: resolved
+                    };
+                }
+            } else {
+                console.warn(
+                    `[buildSvgMap]: Unhandled export specifier type: ${spec.type}`
+                );
+            }
+        }
+    }
+
+    private resolveImportSource(file: string, source: string): string {
+        return (
+            this.pathAliasResolver.resolve(source, file) ??
+            pathN.resolve(pathN.dirname(file), source)
+        );
+    }
+
+    /**
+     * Returns the resolved `.svg` file path for an import/export source, or
+     * `null` if it isn't an SVG import. A source that already ends in `.svg`
+     * is resolved directly; otherwise it may still be an aliased specifier
+     * (e.g. `alias: { '@logo': './src/assets/logo.svg' }` used as
+     * `import Logo from '@logo'`) whose specifier itself carries no
+     * extension, so alias resolution is attempted before giving up.
+     */
+    private resolveSvgImportSource(
+        file: string,
+        source: string
+    ): string | null {
+        if (source.endsWith('.svg')) {
+            return this.resolveImportSource(file, source);
+        }
+
+        const aliased = this.pathAliasResolver.resolve(source, file);
+        return aliased?.endsWith('.svg') ? aliased : null;
     }
 
     /**
