@@ -1,178 +1,64 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogCrashReporting (3.16.0):
-    - DatadogInternal (= 3.16.0)
+  - DatadogCore (3.17.0):
+    - DatadogInternal (= 3.17.0)
+  - DatadogCrashReporting (3.17.0):
+    - DatadogInternal (= 3.17.0)
     - KSCrash/Filters (= 2.5.1)
     - KSCrash/Recording (= 2.5.1)
-  - DatadogFlags (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogInternal (3.16.0)
-  - DatadogLogs (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogRUM (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogSDKReactNative (3.6.0):
-    - DatadogCore (= 3.16.0)
-    - DatadogCrashReporting (= 3.16.0)
-    - DatadogFlags (= 3.16.0)
-    - DatadogLogs (= 3.16.0)
-    - DatadogRUM (= 3.16.0)
-    - DatadogTrace (= 3.16.0)
-    - DatadogWebViewTracking (= 3.16.0)
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
+  - DatadogFlags (3.17.0):
+    - DatadogInternal (= 3.17.0)
+  - DatadogInternal (3.17.0)
+  - DatadogLogs (3.17.0):
+    - DatadogInternal (= 3.17.0)
+  - DatadogRUM (3.17.0):
+    - DatadogInternal (= 3.17.0)
+  - DatadogSDKReactNative (3.7.0):
+    - DatadogCore (= 3.17.0)
+    - DatadogCrashReporting (= 3.17.0)
+    - DatadogFlags (= 3.17.0)
+    - DatadogLogs (= 3.17.0)
+    - DatadogRUM (= 3.17.0)
+    - DatadogTrace (= 3.17.0)
+    - DatadogWebViewTracking (= 3.17.0)
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - DatadogSDKReactNative/Tests (3.6.0):
-    - DatadogCore (= 3.16.0)
-    - DatadogCrashReporting (= 3.16.0)
-    - DatadogFlags (= 3.16.0)
-    - DatadogLogs (= 3.16.0)
-    - DatadogRUM (= 3.16.0)
-    - DatadogTrace (= 3.16.0)
-    - DatadogWebViewTracking (= 3.16.0)
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
+  - DatadogSDKReactNative/Tests (3.7.0):
+    - DatadogCore (= 3.17.0)
+    - DatadogCrashReporting (= 3.17.0)
+    - DatadogFlags (= 3.17.0)
+    - DatadogLogs (= 3.17.0)
+    - DatadogRUM (= 3.17.0)
+    - DatadogTrace (= 3.17.0)
+    - DatadogWebViewTracking (= 3.17.0)
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - DatadogSDKReactNativeSessionReplay (3.6.0):
+  - DatadogSDKReactNativeSessionReplay (3.7.0):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (= 3.16.0)
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
+    - DatadogSessionReplay (= 3.17.0)
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - DatadogSDKReactNativeSessionReplay/Tests (3.6.0):
+  - DatadogSDKReactNativeSessionReplay/Tests (3.7.0):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (= 3.16.0)
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
+    - DatadogSessionReplay (= 3.17.0)
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
     - React-RCTText
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - DatadogSDKReactNativeWebView (3.6.0):
-    - DatadogInternal (= 3.16.0)
+  - DatadogSDKReactNativeWebView (3.7.0):
+    - DatadogInternal (= 3.17.0)
     - DatadogSDKReactNative
-    - DatadogWebViewTracking (= 3.16.0)
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
+    - DatadogWebViewTracking (= 3.17.0)
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - DatadogSDKReactNativeWebView/Tests (3.6.0):
-    - DatadogInternal (= 3.16.0)
+  - DatadogSDKReactNativeWebView/Tests (3.7.0):
+    - DatadogInternal (= 3.17.0)
     - DatadogSDKReactNative
-    - DatadogWebViewTracking (= 3.16.0)
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
+    - DatadogWebViewTracking (= 3.17.0)
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
     - react-native-webview
-    - React-NativeModulesApple
-    - React-RCTFabric
     - React-RCTText
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - DatadogSessionReplay (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogTrace (3.16.0):
-    - DatadogInternal (= 3.16.0)
+  - DatadogSessionReplay (3.17.0):
+    - DatadogInternal (= 3.17.0)
+  - DatadogTrace (3.17.0):
+    - DatadogInternal (= 3.17.0)
     - OpenTelemetry-Swift-Api (~> 2.5.0)
-  - DatadogWebViewTracking (3.16.0):
-    - DatadogInternal (= 3.16.0)
+  - DatadogWebViewTracking (3.17.0):
+    - DatadogInternal (= 3.17.0)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.76.9)
@@ -233,7 +119,6 @@ PODS:
     - React-RCTText (= 0.76.9)
     - React-RCTVibration (= 0.76.9)
   - React-callinvoker (0.76.9)
-  - React-Codegen (0.1.0)
   - React-Core (0.76.9):
     - glog
     - hermes-engine
@@ -1476,71 +1361,7 @@ PODS:
   - react-native-crash-tester (0.2.3):
     - React-Core
   - react-native-safe-area-context (5.1.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - react-native-safe-area-context/common (= 5.1.0)
-    - react-native-safe-area-context/fabric (= 5.1.0)
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - react-native-safe-area-context/common (5.1.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
-  - react-native-safe-area-context/fabric (5.1.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - react-native-safe-area-context/common
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - react-native-webview (13.14.2):
     - DoubleConversion
     - glog
@@ -1835,87 +1656,20 @@ PODS:
     - React-perflogger
     - React-utils (= 0.76.9)
   - ReactNativeNavigation (8.0.0-snapshot.1658):
-    - DoubleConversion
-    - glog
-    - hermes-engine
     - HMSegmentedControl
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-Codegen
     - React-Core
     - React-CoreModules
-    - React-cxxreact
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
     - React-RCTImage
     - React-RCTText
-    - React-rendererdebug
-    - React-rncore
-    - React-runtimeexecutor
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
     - ReactNativeNavigation/Core (= 8.0.0-snapshot.1658)
-    - Yoga
   - ReactNativeNavigation/Core (8.0.0-snapshot.1658):
-    - DoubleConversion
-    - glog
-    - hermes-engine
     - HMSegmentedControl
-    - RCT-Folly
-    - RCTRequired
-    - RCTTypeSafety
-    - React
-    - React-Codegen
     - React-Core
     - React-CoreModules
-    - React-cxxreact
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
     - React-RCTImage
     - React-RCTText
-    - React-rendererdebug
-    - React-rncore
-    - React-runtimeexecutor
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - RNCAsyncStorage (2.2.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
     - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - Yoga
   - RNGestureHandler (2.24.0):
     - DoubleConversion
     - glog
@@ -1938,29 +1692,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - RNScreens (4.5.0):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2024.10.14.00)
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-RCTImage
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.5.0)
-    - Yoga
-  - RNScreens/common (4.5.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2080,7 +1811,6 @@ SPEC REPOS:
     - HMSegmentedControl
     - KSCrash
     - OpenTelemetry-Swift-Api
-    - React-Codegen
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -2236,18 +1966,18 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
-  DatadogCore: 7eed8fbaaa1575503c389f343c230858343c8baf
-  DatadogCrashReporting: 04f3c3a5bfd9921aef4d44b4ab80accb39c84ddb
-  DatadogFlags: 033cf48e769c271843e77068c015519880011866
-  DatadogInternal: e5a4652ee266986e29c6b8491aff7f78dc3b731d
-  DatadogLogs: 52792add5827042f619771a23656e2bfb6b0f4e7
-  DatadogRUM: b78d608e013f39c5679ed31ad97dad323c6113e8
-  DatadogSDKReactNative: a95c7c6d0965d480cb16a5209432164fcb155952
-  DatadogSDKReactNativeSessionReplay: e65d2cb39d1d56e2d02fe96d7c20f6aed0f58302
-  DatadogSDKReactNativeWebView: 5117c723e01ec3b4e5e0d4e9344c30aed789e44e
-  DatadogSessionReplay: 932b2077b1a5367de1450479d72093621b9fd618
-  DatadogTrace: 5ef84e254e2e1d337bc52e0cdf16396ca102aeb1
-  DatadogWebViewTracking: e0470157f55a83680a549d79ba2985e0d17465db
+  DatadogCore: e2fadbba978370f56fe861ebc1e07c4d7be0449c
+  DatadogCrashReporting: bc57b765956053d99862ee5f7420b91ec881f971
+  DatadogFlags: 93e4f3b84aa89d8307f054815cb359d72188081b
+  DatadogInternal: 71064dddf89dd1799cc86668efab2b1ad1bc5133
+  DatadogLogs: cbdf7b4da6e53474525d4c402b0298e0f9d71c68
+  DatadogRUM: cbc60301bee178b2d2c46f056209e72a14d41483
+  DatadogSDKReactNative: 34aa35de708269c053f67dded92c6402805e4cf7
+  DatadogSDKReactNativeSessionReplay: 9507f37b6126b485f16706b47b5e9d43aafe7aa5
+  DatadogSDKReactNativeWebView: 0d7b8e2fab2d35f36525f75888bf766fa4e978a5
+  DatadogSessionReplay: 70a9c19456527b7acee1d29f76713e77afcabc9c
+  DatadogTrace: 64b5ca26e0b2c89fffa2ee2771438937f5f7f99c
+  DatadogWebViewTracking: fb153779d1147ad340f9f9b771558830d98077b4
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45
@@ -2263,21 +1993,20 @@ SPEC CHECKSUMS:
   RCTTypeSafety: e7678bd60850ca5a41df9b8dc7154638cb66871f
   React: 4641770499c39f45d4e7cde1eba30e081f9d8a3d
   React-callinvoker: 4bef67b5c7f3f68db5929ab6a4d44b8a002998ea
-  React-Codegen: 4b8b4817cea7a54b83851d4c1f91f79aa73de30a
   React-Core: a68cea3e762814e60ecc3fa521c7f14c36c99245
   React-CoreModules: d81b1eaf8066add66299bab9d23c9f00c9484c7c
   React-cxxreact: 984f8b1feeca37181d4e95301fcd6f5f6501c6ab
   React-debug: 817160c07dc8d24d020fbd1eac7b3558ffc08964
-  React-defaultsnativemodule: 18a684542f82ce1897552a1c4b847be414c9566e
-  React-domnativemodule: 90bdd4ec3ab38c47cfc3461c1e9283a8507d613f
+  React-defaultsnativemodule: 21f216e8db975897eb32b5f13247f5bbfaa97f41
+  React-domnativemodule: 19270ad4b8d33312838d257f24731a0026809d49
   React-Fabric: f6dade7007533daeb785ba5925039d83f343be4b
   React-FabricComponents: b0655cc3e1b5ae12a4a1119aa7d8308f0ad33520
   React-FabricImage: 9b157c4c01ac2bf433f834f0e1e5fe234113a576
   React-featureflags: f2792b067a351d86fdc7bec23db3b9a2f2c8d26c
-  React-featureflagsnativemodule: 742a8325b3c821d2a1ca13a6d2a0fc72d04555e0
+  React-featureflagsnativemodule: 3a8731d8fd9f755be57e00d9fa8a7f92aa77e87d
   React-graphics: 68969e4e49d73f89da7abef4116c9b5f466aa121
   React-hermes: ac0bcba26a5d288ebc99b500e1097da2d0297ddf
-  React-idlecallbacksnativemodule: d61d9c9816131bf70d3d80cd04889fc625ee523f
+  React-idlecallbacksnativemodule: 9a2c5b5c174c0c476f039bedc1b9497a8272133e
   React-ImageManager: e906eec93a9eb6102a06576b89d48d80a4683020
   React-jserrorhandler: ac5dde01104ff444e043cad8f574ca02756e20d6
   React-jsi: 496fa2b9d63b726aeb07d0ac800064617d71211d
@@ -2286,19 +2015,19 @@ SPEC CHECKSUMS:
   React-jsitracing: 7a1c9cd484248870cf660733cd3b8114d54c035f
   React-logger: c4052eb941cca9a097ef01b59543a656dc088559
   React-Mapbuffer: 33546a3ebefbccb8770c33a1f8a5554fa96a54de
-  React-microtasksnativemodule: d80ff86c8902872d397d9622f1a97aadcc12cead
+  React-microtasksnativemodule: 5c3d795318c22ab8df55100e50b151384a4a60b3
   react-native-crash-tester: 48bde9d6f5256c61ef2e0c52dfc74256b26e55eb
-  react-native-safe-area-context: 60695fadbcee6ab51b28b835abb10ea983dbe181
-  react-native-webview: c22f2daa3134c9e5b26ab4b47bde9f0df9093086
+  react-native-safe-area-context: e134b241010ebe2aacdcea013565963d13826faa
+  react-native-webview: 2ea635bc43fd8a4b89de61133e8cc0607084e9f8
   React-nativeconfig: 8efdb1ef1e9158c77098a93085438f7e7b463678
   React-NativeModulesApple: cebca2e5320a3d66e123cade23bd90a167ffce5e
   React-perflogger: 72e653eb3aba9122f9e57cf012d22d2486f33358
   React-performancetimeline: cd6a9374a72001165995d2ab632f672df04076dc
   React-RCTActionSheet: aacf2375084dea6e7c221f4a727e579f732ff342
   React-RCTAnimation: 395ab53fd064dff81507c15efb781c8684d9a585
-  React-RCTAppDelegate: 345a6f1b82abc578437df0ce7e9c48740eca827c
+  React-RCTAppDelegate: 1e5b43833e3e36e9fa34eec20be98174bc0e14a2
   React-RCTBlob: 13311e554c1a367de063c10ee7c5e6573b2dd1d6
-  React-RCTFabric: 007b1a98201cc49b5bc6e1417d7fe3f6fc6e2b78
+  React-RCTFabric: bd906861a4e971e21d8df496c2d8f3ca6956f840
   React-RCTImage: 1b1f914bcc12187c49ba5d949dac38c2eb9f5cc8
   React-RCTLinking: 4ac7c42beb65e36fba0376f3498f3cd8dd0be7fa
   React-RCTNetwork: 938902773add4381e84426a7aa17a2414f5f94f7
@@ -2317,10 +2046,10 @@ SPEC CHECKSUMS:
   React-utils: ed818f19ab445000d6b5c4efa9d462449326cc9f
   ReactCodegen: f853a20cc9125c5521c8766b4b49375fec20648b
   ReactCommon: 300d8d9c5cb1a6cd79a67cf5d8f91e4d477195f9
-  ReactNativeNavigation: 3cba7b34997204db62b2a48d528a915ea29330c4
-  RNCAsyncStorage: 87a74d13ba0128f853817e45e21c4051e1f2cd45
-  RNGestureHandler: 92c39001ed1490dc416a90f9632d42dc8a5acee7
-  RNScreens: c7c659490e59cb0887cb098a9c9e9431392c05b2
+  ReactNativeNavigation: 445f86273eb245d15b14023ee4ef9d6e4f891ad6
+  RNCAsyncStorage: b44e8a4e798c3e1f56bffccd0f591f674fb9198f
+  RNGestureHandler: cb711d56ee3b03a5adea1d38324d4459ab55653f
+  RNScreens: f75b26fd4777848c216e27b0a09e1bf9c9f4760a
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: feb4910aba9742cfedc059e2b2902e22ffe9954a
 

@@ -10,7 +10,7 @@ import XCTest
 @testable import DatadogCrashReporting
 @testable import DatadogInternal
 @testable import DatadogLogs
-@testable import DatadogRUM
+@_spi(Experimental) @testable import DatadogRUM
 @testable import DatadogSDKReactNative
 @testable import DatadogTrace
 
@@ -1060,6 +1060,19 @@ class DdSdkTests: XCTestCase {
         )
 
         XCTAssertEqual(ddConfig.timeseries?.collectTypes, [.cpu])
+    }
+
+    func testBuildConfigurationEnabledTimeseriesWithoutCollectTypes() {
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.enableTimeseries = true
+        rumConfiguration.timeseriesCollectTypes = nil
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+
+        let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertEqual(ddConfig.timeseries?.collectTypes, RUM.Configuration.Timeseries.default.collectTypes)
     }
 
     func testBuildConfigurationDisabledTimeseriesByDefault() {
