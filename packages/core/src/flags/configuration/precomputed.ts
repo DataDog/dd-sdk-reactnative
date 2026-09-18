@@ -106,8 +106,7 @@ const toFlagCacheEntry = (
         variationKey,
         allocationKey,
         reason,
-        doLog,
-        extraLogging
+        doLog
     } = flag as Partial<PrecomputedFlag>;
 
     if (
@@ -137,13 +136,7 @@ const toFlagCacheEntry = (
         typeof allocationKey !== 'string' ||
         typeof variationKey !== 'string' ||
         typeof reason !== 'string' ||
-        typeof doLog !== 'boolean' ||
-        // `extraLogging` must be a key/value map; an array (also `typeof === 'object'`) would
-        // break native exposure tracking that expects an object, so treat it as malformed.
-        (extraLogging !== undefined &&
-            (typeof extraLogging !== 'object' ||
-                extraLogging === null ||
-                Array.isArray(extraLogging)))
+        typeof doLog !== 'boolean'
     ) {
         InternalLog.log(
             `Flag "${key}" has malformed metadata. Omitting it from the configuration.`,
@@ -164,7 +157,9 @@ const toFlagCacheEntry = (
         variationValue: stringifyValue(variationValue),
         reason,
         doLog,
-        extraLogging: extraLogging ?? {}
+        // The native bridge still requires this deprecated field. Portable
+        // precomputed flags no longer carry it in flagging-core 3.0.0.
+        extraLogging: {}
     };
 };
 

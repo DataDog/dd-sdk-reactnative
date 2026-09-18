@@ -205,11 +205,10 @@ export class FlagsClient {
     /**
      * Clear any externally-set evaluation context and reconcile.
      *
-     * This is the offline counterpart to clearing/omitting an OpenFeature context: it drops the
-     * external override so a loaded precomputed configuration is served against **its embedded
-     * context** again. Clearing the override (rather than skipping) matters so that a
-     * configuration loaded *after* a clear is not judged against a stale override. With no
-     * configuration loaded the result is `PROVIDER_NOT_READY`.
+     * This is an explicit low-level Datadog reset operation. It drops the external override so a
+     * loaded precomputed configuration is served against **its embedded context** again. It does
+     * not represent OpenFeature `clearContext()`, which supplies the resulting effective context
+     * to a provider. With no configuration loaded the result is `PROVIDER_NOT_READY`.
      */
     resetEvaluationContextWithoutFetching = (): ConfigurationResult => {
         this.externalContext = undefined;

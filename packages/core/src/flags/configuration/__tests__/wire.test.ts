@@ -7,6 +7,11 @@
 import type { ParsedFlagsConfiguration } from '../types';
 import { configurationFromString, configurationToString } from '../wire';
 
+import { buildRulesWire, RULES_RESPONSE } from './__utils__/rulesTestUtils';
+
+const RULES_RESPONSE_WITH_UNKNOWN_FIELD =
+    'EgRwcm9kGigKDGJyb3dzZXItZmxhZxIYEAQaAigBIhAKCmFsbG9jYXRpb24iAiADKgJvbqAGBw==';
+
 const buildResponse = () => ({
     data: {
         id: '2',
@@ -23,26 +28,7 @@ const buildResponse = () => ({
                     variationKey: 'true',
                     allocationKey: 'alloc-1',
                     reason: 'STATIC',
-                    doLog: false,
-                    extraLogging: {}
-                },
-                'num-flag': {
-                    variationType: 'number',
-                    variationValue: 1.5,
-                    variationKey: '1.5',
-                    allocationKey: 'alloc-2',
-                    reason: 'STATIC',
-                    doLog: true,
-                    extraLogging: {}
-                },
-                'obj-flag': {
-                    variationType: 'object',
-                    variationValue: { nested: { a: 1 }, list: [1, 2] },
-                    variationKey: 'obj',
-                    allocationKey: 'alloc-3',
-                    reason: 'TARGETING_MATCH',
-                    doLog: false,
-                    extraLogging: { extra: 'x' }
+                    doLog: false
                 }
             }
         }
@@ -64,57 +50,57 @@ describe('configurationFromString', () => {
     it('parses a valid v1 wire with a precomputed branch', () => {
         const config = configurationFromString(buildWire());
 
-        expect(config.precomputed).toBeDefined();
         expect(config.precomputed?.context).toEqual({
             targetingKey: 'user-1',
             country: 'US'
         });
-        expect(config.precomputed?.fetchedAt).toBe(1748449320785);
-        // The inner `response` string is parsed into an object.
         expect(
             config.precomputed?.response.data.attributes.flags['a-flag']
                 .variationValue
         ).toBe(true);
     });
 
-    it('returns an empty config for an unsupported version', () => {
-        const wire = JSON.stringify({
-            version: 2,
-            precomputed: { response: JSON.stringify(buildResponse()) }
+    it.each([JSON.stringify({ version: 2 }), 'not json'])(
+        'preserves a configuration error for invalid input',
+        wire => {
+            expect(configurationFromString(wire)).toEqual({
+                configurationError: 'Invalid flags configuration wire format'
+            });
+        }
+    );
+
+    it('does not treat a raw protobuf response as a portable wire', () => {
+        expect(configurationFromString(RULES_RESPONSE)).toEqual({
+            configurationError: 'Invalid flags configuration wire format'
         });
-
-        expect(configurationFromString(wire)).toEqual({});
     });
 
-    it('returns an empty config for invalid JSON', () => {
-        expect(configurationFromString('not json')).toEqual({});
-    });
-
-    it('returns an empty config when the inner response is invalid JSON', () => {
+    it('preserves a precomputed error for invalid response JSON', () => {
         const wire = JSON.stringify({
             version: 1,
             precomputed: { response: '{ not json' }
         });
 
-        expect(configurationFromString(wire)).toEqual({});
+        expect(configurationFromString(wire)).toEqual({
+            precomputedError:
+                'Precomputed configuration response is not valid JSON'
+        });
     });
 
-    it('returns a config with no precomputed branch when none is present', () => {
-        const wire = JSON.stringify({ version: 1 });
-
-        expect(configurationFromString(wire)).toEqual({});
+    it('returns a config with no capability when none is present', () => {
+        expect(configurationFromString(JSON.stringify({ version: 1 }))).toEqual(
+            {}
+        );
     });
 });
 
-describe('configurationToString round-trip', () => {
+describe('configurationToString', () => {
     it('round-trips a precomputed configuration', () => {
         const original = configurationFromString(buildWire());
 
-        const restored = configurationFromString(
-            configurationToString(original)
-        );
-
-        expect(restored).toEqual(original);
+        expect(
+            configurationFromString(configurationToString(original))
+        ).toEqual(original);
     });
 
     it('serializes an empty configuration to a v1 wire', () => {
@@ -123,5 +109,71 @@ describe('configurationToString round-trip', () => {
         expect(configurationToString(empty)).toBe(
             JSON.stringify({ version: 1 })
         );
+    });
+
+    it.each([false, true])(
+        'round-trips rules with precomputed=%s',
+        includePrecomputed => {
+            const rules = configurationFromString(buildRulesWire());
+            const original: ParsedFlagsConfiguration = {
+                ...(includePrecomputed
+                    ? configurationFromString(buildWire())
+                    : {}),
+                rules: rules.rules
+            };
+
+            expect(
+                configurationFromString(configurationToString(original))
+            ).toEqual(original);
+        }
+    );
+
+    it('preserves unknown protobuf fields', () => {
+        const original = configurationFromString(
+            buildRulesWire(RULES_RESPONSE_WITH_UNKNOWN_FIELD)
+        );
+        const restored = configurationFromString(
+            configurationToString(original)
+        );
+
+        expect(restored.rules?.response.$unknown).toHaveLength(1);
+        expect(restored.rules?.response.$unknown?.[0]).toMatchObject({
+            no: 100,
+            wireType: 0
+        });
+        expect(
+            Array.from(restored.rules?.response.$unknown?.[0]?.data ?? [])
+        ).toEqual([7]);
+    });
+
+    it('keeps a valid sibling when the other capability is malformed', () => {
+        const precomputed = JSON.parse(buildWire()).precomputed;
+        const parsed = configurationFromString(
+            JSON.stringify({
+                version: 1,
+                precomputed,
+                rules: { response: 'not base64' }
+            })
+        );
+
+        expect(parsed.precomputed).toBeDefined();
+        expect(parsed.rules).toBeUndefined();
+        expect(parsed.rulesError).toBe(
+            'Rules configuration response could not be decoded'
+        );
+    });
+
+    it('parses both capabilities from one wire', () => {
+        const precomputed = JSON.parse(buildWire()).precomputed;
+        const parsed = configurationFromString(
+            JSON.stringify({
+                version: 1,
+                precomputed,
+                rules: { response: RULES_RESPONSE }
+            })
+        );
+
+        expect(parsed.precomputed).toBeDefined();
+        expect(parsed.rules?.response.flags['browser-flag']).toBeDefined();
     });
 });

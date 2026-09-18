@@ -5,12 +5,12 @@
  */
 
 // Module boundary for portable-configuration handling. The public entry point
-// (`packages/core/src/index.tsx`) re-exports only the customer-facing surface —
-// `configurationFromString`/`configurationToString` and the `ParsedFlagsConfiguration` type;
-// the decoder and other helpers stay internal to this boundary. Keeping the surface contained
-// here makes a future "port -> depend on a shared core" swap easier.
+// re-exports only the customer-facing surface; decoding and evaluation adapters
+// stay internal to this boundary.
 
+export { getPrecomputedContext } from '@datadog/flagging-core';
 export { configurationFromString, configurationToString } from './wire';
+export type { FlagsConfigurationWire } from './wire';
 export {
     decodePrecomputedFlags,
     UnsupportedConfigurationError

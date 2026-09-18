@@ -28,7 +28,6 @@ const flag = (overrides: Partial<PrecomputedFlag>): PrecomputedFlag => ({
     allocationKey: 'alloc-1',
     reason: 'STATIC',
     doLog: false,
-    extraLogging: {},
     ...overrides
 });
 
@@ -125,10 +124,8 @@ describe('decodePrecomputedFlags', () => {
         expect(cache.get('my-feature')?.key).toBe('my-feature');
     });
 
-    it('defaults missing extraLogging to an empty object', () => {
-        const cache = decodePrecomputedFlags(
-            responseWith({ f: flag({ extraLogging: undefined }) })
-        );
+    it('adds the empty extraLogging object required by the native bridge', () => {
+        const cache = decodePrecomputedFlags(responseWith({ f: flag({}) }));
 
         expect(cache.get('f')?.extraLogging).toEqual({});
     });
@@ -191,21 +188,6 @@ describe('decodePrecomputedFlags', () => {
 
         expect(cache.get('badReason')).toBeUndefined();
         expect(cache.get('badDoLog')).toBeUndefined();
-        expect(InternalLog.log).toHaveBeenCalled();
-    });
-
-    it('omits a flag whose extraLogging is an array (not a key/value map)', () => {
-        const cache = decodePrecomputedFlags(
-            responseWith({
-                arr: flag({
-                    extraLogging: ([] as unknown) as PrecomputedFlag['extraLogging']
-                })
-            })
-        );
-
-        // Arrays also satisfy `typeof === 'object'`; forwarding one to native exposure tracking
-        // (which expects an object map) would break it, so the entry is omitted.
-        expect(cache.get('arr')).toBeUndefined();
         expect(InternalLog.log).toHaveBeenCalled();
     });
 

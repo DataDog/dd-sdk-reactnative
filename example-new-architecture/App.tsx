@@ -95,10 +95,9 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 })();
 
 function AppWithProviders() {
-  // No OpenFeature.setContext here on purpose: the offline precomputed configuration is a
-  // single-subject snapshot served against the context it was computed for (see the wire's
-  // embedded context in flags/). Setting a different runtime context would put the provider into
-  // the OpenFeature ERROR state and fall back to coded defaults.
+  // setFlagsProvider gets a supported copy of the precomputed context and sets it on OpenFeature
+  // before provider registration. A later different context puts the offline provider into ERROR
+  // and evaluations use their coded defaults.
   return (
     <Suspense
       fallback={

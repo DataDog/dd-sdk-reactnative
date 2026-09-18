@@ -364,7 +364,13 @@ describe('FlagsClient', () => {
                 version: 1,
                 precomputed: {
                     response: JSON.stringify({
-                        data: { attributes: { obfuscated, flags } }
+                        data: {
+                            attributes: {
+                                obfuscated,
+                                createdAt: '2026-09-14T00:00:00.000Z',
+                                flags
+                            }
+                        }
                     }),
                     context
                 }
@@ -772,6 +778,33 @@ describe('FlagsClient', () => {
             expect(
                 NativeModules.DdFlags.trackEvaluation
             ).not.toHaveBeenCalled();
+        });
+
+        it('stores an empty context as an explicit override', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildConfig(offlineFlags, { targetingKey: 'user-1' })
+            );
+
+            const result = flagsClient.setEvaluationContextWithoutFetching({
+                attributes: {}
+            } as never);
+
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'INVALID_CONTEXT'
+            });
+
+            // Reloading the snapshot reconciles against the stored empty override. It does not
+            // silently restore the snapshot's embedded user-1 context.
+            expect(
+                flagsClient.setConfiguration(
+                    buildConfig(offlineFlags, { targetingKey: 'user-1' })
+                )
+            ).toEqual({
+                status: 'error',
+                errorCode: 'INVALID_CONTEXT'
+            });
         });
 
         it('recovers to ready when a matching context is set after a mismatch', () => {

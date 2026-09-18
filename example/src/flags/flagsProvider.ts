@@ -1,7 +1,8 @@
 import {
     DatadogOpenFeatureProvider,
     DatadogOfflineOpenFeatureProvider,
-    configurationFromString
+    configurationFromString,
+    getPrecomputedContext
 } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
 
@@ -28,12 +29,19 @@ export const setFlagsProvider = async (
     offlineContext?: OfflineWireContext
 ): Promise<void> => {
     if (source === 'offline') {
+        const configuration = configurationFromString(
+            buildSampleWire(offlineContext)
+        );
+        const context = getPrecomputedContext(configuration);
+
+        if (context !== undefined) {
+            await OpenFeature.setContext(context);
+        }
+
         const provider = new DatadogOfflineOpenFeatureProvider({
             clientName: 'offline'
         });
-        provider.setConfiguration(
-            configurationFromString(buildSampleWire(offlineContext))
-        );
+        provider.setConfiguration(configuration);
         await OpenFeature.setProviderAndWait(provider);
         return;
     }

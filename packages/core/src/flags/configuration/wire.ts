@@ -4,12 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-// Wire (de)serialization is reused from `@datadog/flagging-core` (the canonical
-// implementation) rather than reimplemented here. `configurationFromString` is lenient:
-// it returns an empty configuration (`{}`) for malformed input or an unsupported wire
-// version rather than throwing. `configurationToString` is the inverse (its fix from
-// https://github.com/DataDog/openfeature-js-client/pull/331 shipped in flagging-core 2.0.0).
+// Rules parsing is intentionally opt-in. The flagging-core package root parser
+// handles only precomputed data and does not load the Protobuf-ES runtime.
 export {
     configurationFromString,
     configurationToString
-} from '@datadog/flagging-core';
+} from '@datadog/flagging-core/rules-based';
+export type { FlagsConfigurationWire } from '@datadog/flagging-core/rules-based';
