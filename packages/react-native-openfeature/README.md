@@ -82,16 +82,20 @@ Application values can therefore supply a different targeting key (for example, 
 ID). An application field set to `undefined` removes the corresponding RUM value and is omitted from
 the returned context. Nested RUM user properties are not included.
 
-Keep the original application-owned context and enrich it before passing it to OpenFeature:
+Keep the original application-owned context and enrich it before passing it to OpenFeature.
+Use the exported `EnrichableEvaluationContext` type to explicitly type contexts that contain
+`undefined` values; the helper returns an OpenFeature `EvaluationContext`:
 
 ```tsx
 import {
     DatadogOpenFeatureProvider,
     enrichRumContext
 } from '@datadog/mobile-react-native-openfeature';
+import type { EnrichableEvaluationContext } from '@datadog/mobile-react-native-openfeature';
 
-const applicationContext = {
-    region: 'us-east-1'
+const applicationContext: EnrichableEvaluationContext = {
+    region: 'us-east-1',
+    email: undefined // Omit the RUM email from the evaluation context.
 };
 
 await DdSdkReactNative.setUserInfo({

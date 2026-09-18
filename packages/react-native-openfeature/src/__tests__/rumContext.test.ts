@@ -5,7 +5,8 @@
  */
 
 import { UserInfoSingleton } from '../../../core/src/sdk/UserInfoSingleton/UserInfoSingleton';
-import { enrichRumContext } from '../rumContext';
+import type { EnrichableEvaluationContext } from '../index';
+import { enrichRumContext } from '../index';
 
 describe('enrichRumContext', () => {
     beforeEach(() => {
@@ -52,6 +53,24 @@ describe('enrichRumContext', () => {
             })
         ).toStrictEqual({ targetingKey: 'rum-user' });
     });
+
+    it.each([undefined, 'application-user'])(
+        'uses an optional application targeting key of %s without falling back to the RUM user',
+        targetingKey => {
+            UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user' });
+            const context: EnrichableEvaluationContext = {
+                targetingKey,
+                region: 'us'
+            };
+
+            expect(enrichRumContext(context)).toStrictEqual(
+                targetingKey === undefined
+                    ? { region: 'us' }
+                    : { targetingKey, region: 'us' }
+            );
+            expect(context).toHaveProperty('targetingKey', targetingKey);
+        }
+    );
 
     it('normalizes undefined fields when no RUM user is available', () => {
         expect(

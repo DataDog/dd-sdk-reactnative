@@ -10,6 +10,7 @@ import { DatadogOfflineOpenFeatureProvider } from './offlineProvider';
 import { DatadogOpenFeatureProvider } from './provider';
 import type { DatadogOpenFeatureProviderOptions } from './provider';
 import { enrichRumContext } from './rumContext';
+import type { EnrichableEvaluationContext } from './rumContext';
 
 export {
     DatadogOpenFeatureProvider,
@@ -17,4 +18,4 @@ export {
     enrichRumContext,
     configurationFromString
 };
-export type { DatadogOpenFeatureProviderOptions };
+export type { DatadogOpenFeatureProviderOptions, EnrichableEvaluationContext };

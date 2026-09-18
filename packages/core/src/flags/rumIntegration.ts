@@ -10,7 +10,7 @@ import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from '../sdk/UserInfoSingleton/types';
 
 type FlatEvaluationContext = Record<string, unknown> & {
-    targetingKey?: string;
+    targetingKey?: string | undefined;
 };
 
 /**
@@ -21,11 +21,9 @@ type FlatEvaluationContext = Record<string, unknown> & {
  * fields explicitly supplied by the application remain authoritative. An explicitly undefined
  * field removes the corresponding RUM default and is omitted from the effective context.
  */
-export const __ddEnrichEvaluationContextWithRumUser = <
-    T extends FlatEvaluationContext
->(
-    context: T
-): T => {
+export const __ddEnrichEvaluationContextWithRumUser = (
+    context: FlatEvaluationContext
+): FlatEvaluationContext => {
     const effectiveContext = new Map(getRumContextEntries());
 
     try {
@@ -37,7 +35,7 @@ export const __ddEnrichEvaluationContextWithRumUser = <
             }
         }
 
-        return Object.fromEntries(effectiveContext) as T;
+        return Object.fromEntries(effectiveContext);
     } catch (error) {
         InternalLog.log(
             `Could not read the application evaluation context (${errorMessage(

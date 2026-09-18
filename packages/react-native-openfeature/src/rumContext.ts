@@ -5,9 +5,20 @@
  */
 
 import * as DatadogSdk from '@datadog/mobile-react-native';
-import type { EvaluationContext } from '@openfeature/web-sdk';
+import type {
+    EvaluationContext,
+    EvaluationContextValue
+} from '@openfeature/web-sdk';
 
-type RumContextEnricher = (context: EvaluationContext) => EvaluationContext;
+/**
+ * An application context that permits top-level undefined values to remove RUM defaults.
+ * Unlike OpenFeature's EvaluationContext, this input can contain these explicit tombstones.
+ */
+export type EnrichableEvaluationContext = {
+    targetingKey?: string | undefined;
+} & Record<string, EvaluationContextValue | undefined>;
+
+type RumContextEnricher = typeof DatadogSdk.__ddEnrichEvaluationContextWithRumUser;
 
 /**
  * Explicitly add the current RUM user to an OpenFeature evaluation context.
@@ -19,7 +30,7 @@ type RumContextEnricher = (context: EvaluationContext) => EvaluationContext;
  * from the returned context.
  */
 export const enrichRumContext = (
-    context: EvaluationContext
+    context: EnrichableEvaluationContext
 ): EvaluationContext => {
     const enricher = (DatadogSdk as {
         __ddEnrichEvaluationContextWithRumUser?: RumContextEnricher;
@@ -31,5 +42,5 @@ export const enrichRumContext = (
         );
     }
 
-    return enricher(context);
+    return enricher(context) as EvaluationContext;
 };
