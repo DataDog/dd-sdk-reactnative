@@ -8,7 +8,7 @@ import { __ddEnrichEvaluationContextWithRumUser } from '@datadog/mobile-react-na
 import type { EvaluationContext } from '@openfeature/web-sdk';
 
 import type { EnrichableEvaluationContext } from '../../index';
-import { enrichRumContext } from '../../index';
+import { enrichWithRumUser } from '../../index';
 
 // Compiled, not executed: valid inputs must compile, and invalid inputs must stay rejected.
 export const checkRumContextTypes = (optionalId: string | undefined) => {
@@ -29,21 +29,21 @@ export const checkRumContextTypes = (optionalId: string | undefined) => {
     const optionalTargetingKey = { targetingKey: optionalId, region: 'us' };
 
     const results: EvaluationContext[] = [
-        enrichRumContext(applicationContext),
-        enrichRumContext(existingContext),
-        enrichRumContext({}),
-        enrichRumContext({ email: undefined, plan: undefined }),
-        enrichRumContext(emailTombstone),
-        enrichRumContext({ targetingKey: undefined }),
-        enrichRumContext(optionalTargetingKey)
+        enrichWithRumUser(applicationContext),
+        enrichWithRumUser(existingContext),
+        enrichWithRumUser({}),
+        enrichWithRumUser({ email: undefined, plan: undefined }),
+        enrichWithRumUser(emailTombstone),
+        enrichWithRumUser({ targetingKey: undefined }),
+        enrichWithRumUser(optionalTargetingKey)
     ];
 
     // @ts-expect-error A targeting key must be a string or undefined.
-    enrichRumContext({ targetingKey: 42 });
+    enrichWithRumUser({ targetingKey: 42 });
     // @ts-expect-error Functions are not OpenFeature context values.
-    enrichRumContext({ callback: () => true });
+    enrichWithRumUser({ callback: () => true });
     // @ts-expect-error Tombstones only apply to top-level attributes.
-    enrichRumContext({ profile: { tier: undefined } });
+    enrichWithRumUser({ profile: { tier: undefined } });
 
     const coreResult = __ddEnrichEvaluationContextWithRumUser({
         email: undefined

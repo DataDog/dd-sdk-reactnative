@@ -33,7 +33,7 @@ type RumContextEnricher = typeof DatadogSdk.__ddEnrichEvaluationContextWithRumUs
  * If the core SDK's enrichment helper is unavailable, logs a warning and returns the application
  * context unchanged so OpenFeature initialization and evaluation can continue without RUM values.
  */
-export const enrichRumContext = (
+export const enrichWithRumUser = (
     context: EnrichableEvaluationContext
 ): EvaluationContext => {
     const enricher = (DatadogSdk as {
@@ -44,7 +44,7 @@ export const enrichRumContext = (
         // InternalLog may also be absent from the core module, or have verbosity disabled.
         // eslint-disable-next-line no-console
         console.warn(
-            'DATADOG: `enrichRumContext` could not find a callable `__ddEnrichEvaluationContextWithRumUser` on @datadog/mobile-react-native, so the RUM user was not added and the application context is used unchanged. Update @datadog/mobile-react-native to at least the version of @datadog/mobile-react-native-openfeature, check for a duplicate install with `npm ls @datadog/mobile-react-native`, and make sure any test mock of the module preserves the real one (use `@datadog/mobile-react-native/jest`, or spread `jest.requireActual`).'
+            'DATADOG: `enrichWithRumUser` could not find a callable `__ddEnrichEvaluationContextWithRumUser` on @datadog/mobile-react-native, so the RUM user was not added and the application context is used unchanged. Update @datadog/mobile-react-native to at least the version of @datadog/mobile-react-native-openfeature, check for a duplicate install with `npm ls @datadog/mobile-react-native`, and make sure any test mock of the module preserves the real one (use `@datadog/mobile-react-native/jest`, or spread `jest.requireActual`).'
         );
 
         return context as EvaluationContext;

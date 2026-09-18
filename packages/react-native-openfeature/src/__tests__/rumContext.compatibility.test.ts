@@ -7,7 +7,7 @@
 import * as DatadogSdk from '@datadog/mobile-react-native';
 import { OpenFeature } from '@openfeature/web-sdk';
 
-import { DatadogOpenFeatureProvider, enrichRumContext } from '../index';
+import { DatadogOpenFeatureProvider, enrichWithRumUser } from '../index';
 
 const mockFlagsClient = {
     setEvaluationContext: jest.fn(() => Promise.resolve()),
@@ -61,11 +61,11 @@ describe('RUM context core compatibility', () => {
         });
 
         expect(DatadogSdk.InternalLog).toBeUndefined();
-        expect(enrichRumContext(context)).toBe(context);
+        expect(enrichWithRumUser(context)).toBe(context);
         expect(console.warn).toHaveBeenCalledTimes(1);
         expect(console.warn).toHaveBeenCalledWith(
             expect.stringContaining(
-                'could not find a callable `__ddEnrichEvaluationContextWithRumUser` on @datadog/mobile-react-native'
+                '`enrichWithRumUser` could not find a callable `__ddEnrichEvaluationContextWithRumUser` on @datadog/mobile-react-native'
             )
         );
         expect(console.warn).toHaveBeenCalledWith(
@@ -87,7 +87,7 @@ describe('RUM context core compatibility', () => {
             });
             const context = { targetingKey: 'application-user', plan: 'pro' };
 
-            expect(enrichRumContext(context)).toBe(context);
+            expect(enrichWithRumUser(context)).toBe(context);
             expect(console.warn).toHaveBeenCalledTimes(1);
         }
     );
@@ -99,7 +99,7 @@ describe('RUM context core compatibility', () => {
             email: undefined
         };
 
-        await OpenFeature.setContext(enrichRumContext(context));
+        await OpenFeature.setContext(enrichWithRumUser(context));
         await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
 
         expect(OpenFeature.getContext()).toStrictEqual(context);
@@ -125,7 +125,7 @@ describe('RUM context core compatibility', () => {
             __ddEnrichEvaluationContextWithRumUser: enricher
         });
 
-        expect(enrichRumContext(context)).toBe(enriched);
+        expect(enrichWithRumUser(context)).toBe(enriched);
         expect(enricher).toHaveBeenCalledWith(context);
         expect(enricher).toHaveBeenCalledTimes(1);
         expect(console.warn).not.toHaveBeenCalled();

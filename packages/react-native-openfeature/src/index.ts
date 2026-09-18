@@ -9,13 +9,13 @@ import { configurationFromString } from '@datadog/mobile-react-native';
 import { DatadogOfflineOpenFeatureProvider } from './offlineProvider';
 import { DatadogOpenFeatureProvider } from './provider';
 import type { DatadogOpenFeatureProviderOptions } from './provider';
-import { enrichRumContext } from './rumContext';
+import { enrichWithRumUser } from './rumContext';
 import type { EnrichableEvaluationContext } from './rumContext';
 
 export {
     DatadogOpenFeatureProvider,
     DatadogOfflineOpenFeatureProvider,
-    enrichRumContext,
+    enrichWithRumUser,
     configurationFromString
 };
 export type { DatadogOpenFeatureProviderOptions, EnrichableEvaluationContext };

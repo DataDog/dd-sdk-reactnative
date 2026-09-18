@@ -10,7 +10,7 @@ import { InMemoryProvider, OpenFeature } from '@openfeature/web-sdk';
 import { UserInfoSingleton } from '../../../core/src/sdk/UserInfoSingleton/UserInfoSingleton';
 import NativeDdFlags from '../../../core/src/specs/NativeDdFlags';
 import { DatadogOpenFeatureProvider } from '../provider';
-import { enrichRumContext } from '../rumContext';
+import { enrichWithRumUser } from '../rumContext';
 
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
@@ -102,7 +102,7 @@ describe('explicit RUM context enrichment', () => {
                 nullable: null
             }
         });
-        const enrichedContext = enrichRumContext({
+        const enrichedContext = enrichWithRumUser({
             email: 'explicit@example.com'
         });
 
@@ -141,7 +141,7 @@ describe('explicit RUM context enrichment', () => {
             }
         });
         const { clientName, domain } = await setupProvider(
-            enrichRumContext({ region: 'us' })
+            enrichWithRumUser({ region: 'us' })
         );
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 
@@ -171,7 +171,7 @@ describe('explicit RUM context enrichment', () => {
             email: 'a@example.com'
         });
         const { clientName, domain } = await setupProvider(
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
 
         UserInfoSingleton.getInstance().setUserInfo({
@@ -181,7 +181,7 @@ describe('explicit RUM context enrichment', () => {
         });
         await OpenFeature.setContext(
             domain,
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 
@@ -221,11 +221,11 @@ describe('explicit RUM context enrichment', () => {
             extraInfo: { plan: 'pro' }
         });
         const { clientName, domain } = await setupProvider(
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
 
         await DdSdkReactNative.setUserInfo({ id: '' });
-        expect(enrichRumContext(applicationContext)).toStrictEqual({
+        expect(enrichWithRumUser(applicationContext)).toStrictEqual({
             targetingKey: 'rum-user',
             email: 'user@example.com',
             plan: 'pro',
@@ -235,7 +235,7 @@ describe('explicit RUM context enrichment', () => {
         await DdSdkReactNative.clearUserInfo();
         await OpenFeature.setContext(
             domain,
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 
@@ -266,7 +266,7 @@ describe('explicit RUM context enrichment', () => {
 
         const applicationContext = { region: 'datadog-region' };
         const { domain } = await setupProvider(
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
         await DdSdkReactNative.setUserInfo({
             id: 'rum-user',
@@ -274,7 +274,7 @@ describe('explicit RUM context enrichment', () => {
         });
         await OpenFeature.setContext(
             domain,
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
         expect(OpenFeature.getContext(domain)).toStrictEqual({
             targetingKey: 'rum-user',
@@ -288,7 +288,7 @@ describe('explicit RUM context enrichment', () => {
         await DdSdkReactNative.clearUserInfo();
         await OpenFeature.setContext(
             domain,
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
         expect(OpenFeature.getContext(domain)).toStrictEqual(
             applicationContext
@@ -304,7 +304,7 @@ describe('explicit RUM context enrichment', () => {
         await DdFlags.enable({ rumIntegrationEnabled: false });
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user' });
 
-        const { clientName } = await setupProvider(enrichRumContext({}));
+        const { clientName } = await setupProvider(enrichWithRumUser({}));
 
         expect(NativeDdFlags.setEvaluationContext).toHaveBeenLastCalledWith(
             clientName,
@@ -321,7 +321,7 @@ describe('explicit RUM context enrichment', () => {
         });
 
         const { clientName, domain } = await setupProvider(
-            enrichRumContext({ email: undefined, plan: undefined })
+            enrichWithRumUser({ email: undefined, plan: undefined })
         );
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 
