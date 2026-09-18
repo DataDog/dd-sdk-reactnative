@@ -10,7 +10,7 @@ import { configurationFromString, configurationToString } from '../wire';
 import { buildRulesWire, RULES_RESPONSE } from './__utils__/rulesTestUtils';
 
 const RULES_RESPONSE_WITH_UNKNOWN_FIELD =
-    'EgRwcm9kGigKDGJyb3dzZXItZmxhZxIYEAQaAigBIhAKCmFsbG9jYXRpb24iAiADKgJvbqAGBw==';
+    'EgRwcm9kGigKDGR5bmFtaWMtZmxhZxIYEAQaAigBIhAKCmFsbG9jYXRpb24iAiADKgJvbqAGBw==';
 
 const buildResponse = () => ({
     data: {
@@ -174,6 +174,6 @@ describe('configurationToString', () => {
         );
 
         expect(parsed.precomputed).toBeDefined();
-        expect(parsed.rules?.response.flags['browser-flag']).toBeDefined();
+        expect(parsed.rules?.response.flags['dynamic-flag']).toBeDefined();
     });
 });

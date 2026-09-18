@@ -9,7 +9,18 @@ import { NativeModules } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { DdFlags } from '../DdFlags';
+import { RULES_RESPONSE } from '../configuration/__tests__/__utils__/rulesTestUtils';
+import {
+    flaggingCoreRulesEngine,
+    getNoopRulesLogger
+} from '../configuration/rules';
+import type {
+    RulesEvaluationDetails,
+    RulesEvaluationRequest,
+    RulesValueType
+} from '../configuration/rules';
 import { configurationFromString } from '../configuration';
+import type { ParsedFlagsConfiguration } from '../configuration';
 
 jest.spyOn(NativeModules.DdFlags, 'setEvaluationContext').mockResolvedValue({
     'test-boolean-flag': {
@@ -377,6 +388,50 @@ describe('FlagsClient', () => {
             })
         );
 
+    const buildRulesConfig = (rulesResponse: unknown = RULES_RESPONSE) =>
+        configurationFromString(
+            JSON.stringify({
+                version: 1,
+                rules: { response: rulesResponse }
+            })
+        );
+
+    const buildMixedConfig = (
+        context: Record<string, unknown>,
+        rulesResponse: unknown = RULES_RESPONSE,
+        precomputedResponse: unknown = {
+            data: {
+                attributes: {
+                    obfuscated: false,
+                    createdAt: '2026-09-14T00:00:00.000Z',
+                    flags: offlineFlags
+                }
+            }
+        }
+    ) =>
+        configurationFromString(
+            JSON.stringify({
+                version: 1,
+                precomputed: {
+                    response: JSON.stringify(precomputedResponse),
+                    context
+                },
+                rules: { response: rulesResponse }
+            })
+        );
+
+    // Client tests use this fake to control non-assignment and error results
+    // independently of flagging-core integration vectors.
+    const installFakeRulesEngine = (
+        implementation: (
+            request: RulesEvaluationRequest<RulesValueType>
+        ) => RulesEvaluationDetails<unknown>
+    ) => {
+        return jest
+            .spyOn(flaggingCoreRulesEngine, 'evaluate')
+            .mockImplementation(implementation as never);
+    };
+
     describe('setConfiguration', () => {
         it('serves flags from the configuration without a native fetch', () => {
             const flagsClient = DdFlags.getClient();
@@ -449,37 +504,61 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('errors with GENERAL for an empty/unparseable configuration', () => {
+        it('errors with PARSE_ERROR for an unparseable configuration', () => {
             const flagsClient = DdFlags.getClient();
 
             const result = flagsClient.setConfiguration(
                 configurationFromString('garbage')
             );
 
-            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
             ).toMatchObject({
                 value: false,
                 reason: 'ERROR',
-                errorCode: 'GENERAL'
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Invalid flags configuration wire format'
             });
         });
 
-        it('errors with GENERAL for an unsupported (obfuscated) configuration', () => {
+        it('distinguishes an empty supplied configuration from no configuration', () => {
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration({})).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                errorCode: 'PARSE_ERROR',
+                errorMessage:
+                    'Flags configuration contains no usable capability'
+            });
+        });
+
+        it('errors with PARSE_ERROR for an unsupported (obfuscated) configuration', () => {
             const flagsClient = DdFlags.getClient();
 
             const result = flagsClient.setConfiguration(
                 buildConfig(offlineFlags, { targetingKey: 'user-1' }, true)
             );
 
-            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({ errorCode: 'GENERAL' });
+            ).toMatchObject({ errorCode: 'PARSE_ERROR' });
         });
 
-        it('errors with GENERAL for a structurally malformed response envelope', () => {
+        it('errors with PARSE_ERROR for a structurally malformed response envelope', () => {
             const flagsClient = DdFlags.getClient();
 
             // A wire whose precomputed response omits `data.attributes.flags` entirely.
@@ -495,10 +574,13 @@ describe('FlagsClient', () => {
                 configurationFromString(wire)
             );
 
-            expect(result).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            expect(result).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+            ).toMatchObject({ value: false, errorCode: 'PARSE_ERROR' });
         });
 
         it('serves a context-agnostic configuration (no embedded context)', () => {
@@ -514,12 +596,11 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
         });
 
-        it('serves the coded default with TYPE_MISMATCH for a primitive-valued object flag', () => {
+        it('serves the coded default with PARSE_ERROR for a primitive-valued object flag', () => {
             const flagsClient = DdFlags.getClient();
 
-            // The decoder accepts any JSON value for an `object` flag, but evaluation requires an
-            // object. A primitive value (only possible from a malformed/hand-crafted wire, never a
-            // real Datadog config) is therefore served the coded default with TYPE_MISMATCH.
+            // Flagging-core 3.0.0 isolates a malformed precomputed flag during
+            // parsing and retains its flag-scoped error.
             flagsClient.setConfiguration(
                 buildConfig(
                     {
@@ -544,7 +625,7 @@ describe('FlagsClient', () => {
             ).toMatchObject({
                 value: { fallback: true },
                 reason: 'ERROR',
-                errorCode: 'TYPE_MISMATCH'
+                errorCode: 'PARSE_ERROR'
             });
         });
 
@@ -645,7 +726,7 @@ describe('FlagsClient', () => {
             // Invalid replacement.
             expect(
                 flagsClient.setConfiguration(configurationFromString('garbage'))
-            ).toEqual({ status: 'error', errorCode: 'GENERAL' });
+            ).toEqual({ status: 'error', errorCode: 'PARSE_ERROR' });
 
             // A later context change must NOT promote the invalid load back to ready.
             const afterContextChange = flagsClient.setEvaluationContextWithoutFetching(
@@ -653,11 +734,11 @@ describe('FlagsClient', () => {
             );
             expect(afterContextChange).toEqual({
                 status: 'error',
-                errorCode: 'GENERAL'
+                errorCode: 'PARSE_ERROR'
             });
             expect(
                 flagsClient.getBooleanDetails('offline-bool', false)
-            ).toMatchObject({ value: false, errorCode: 'GENERAL' });
+            ).toMatchObject({ value: false, errorCode: 'PARSE_ERROR' });
 
             // A valid replacement recovers.
             expect(
@@ -944,6 +1025,532 @@ describe('FlagsClient', () => {
             expect(
                 flagsClient.resetEvaluationContextWithoutFetching()
             ).toEqual({ status: 'error', errorCode: 'PROVIDER_NOT_READY' });
+        });
+    });
+
+    describe('dynamic offline rules', () => {
+        it('loads rules and evaluates a new context without fetching', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.context.country === 'US',
+                reason: 'TARGETING_MATCH',
+                variant:
+                    request.context.country === 'US' ? 'enabled' : 'disabled',
+                metadata: {
+                    allocationKey: 'allocation',
+                    variationType: 'boolean',
+                    doLog: false
+                }
+            }));
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(buildRulesConfig())).toEqual({
+                status: 'ready'
+            });
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-1',
+                    attributes: { country: 'US' }
+                })
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: { country: 'CA' }
+                })
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                false
+            );
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('does not replace a missing targeting key with an empty key', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'DEFAULT',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.getBooleanValue('dynamic-flag', false);
+
+            expect(evaluate.mock.calls[0][0].context).toHaveProperty(
+                'targetingKey',
+                undefined
+            );
+        });
+
+        it('uses matching precomputed data before rules data', () => {
+            const evaluate = jest.spyOn(flaggingCoreRulesEngine, 'evaluate');
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(
+                flagsClient.setConfiguration(
+                    buildMixedConfig({ targetingKey: 'user-1' })
+                )
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+            expect(evaluate).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('uses rules after a precomputed context mismatch', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildMixedConfig({ targetingKey: 'user-1' })
+            );
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: { country: 'US' }
+                })
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ errorCode: 'FLAG_NOT_FOUND' });
+        });
+
+        it('keeps matching precomputed data when rules are invalid', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(
+                flagsClient.setConfiguration(
+                    buildMixedConfig({ targetingKey: 'user-1' }, {})
+                )
+            ).toEqual({ status: 'ready' });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('returns PARSE_ERROR when mismatched precomputed data falls through to invalid rules', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildMixedConfig({ targetingKey: 'user-1' }, {})
+            );
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: {}
+                })
+            ).toEqual({ status: 'error', errorCode: 'PARSE_ERROR' });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({ value: false, errorCode: 'PARSE_ERROR' });
+        });
+
+        it('keeps valid rules when the precomputed branch is invalid', () => {
+            const flagsClient = DdFlags.getClient();
+
+            expect(
+                flagsClient.setConfiguration(
+                    buildMixedConfig(
+                        { targetingKey: 'user-1' },
+                        RULES_RESPONSE,
+                        { data: { attributes: {} } }
+                    )
+                )
+            ).toEqual({ status: 'ready' });
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-2',
+                attributes: { country: 'US' }
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+        });
+
+        it('keeps valid rules when precomputedError is present', () => {
+            const configuration = buildRulesConfig() as ReturnType<
+                typeof buildRulesConfig
+            > & {
+                precomputedError?: string;
+            };
+            configuration.precomputedError =
+                'Invalid precomputed configuration wire entry';
+
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+        });
+
+        it('keeps matching precomputed data when rulesError is present', () => {
+            const configuration = buildConfig(offlineFlags, {
+                targetingKey: 'user-1'
+            }) as ReturnType<typeof buildConfig> & {
+                rulesError?: string;
+            };
+            configuration.rulesError = 'Malformed rules data';
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+            expect(flagsClient.getBooleanValue('offline-bool', false)).toBe(
+                true
+            );
+        });
+
+        it('returns rulesError when precomputed data does not match', () => {
+            const configuration = buildConfig(offlineFlags, {
+                targetingKey: 'user-1'
+            }) as ReturnType<typeof buildConfig> & {
+                rulesError?: string;
+            };
+            configuration.rulesError = 'Malformed rules data';
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(configuration);
+
+            expect(
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-2',
+                    attributes: {}
+                })
+            ).toEqual({ status: 'error', errorCode: 'PARSE_ERROR' });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Malformed rules data'
+            });
+        });
+
+        it('keeps valid rules when configurationError is present', () => {
+            const configuration = buildRulesConfig() as ReturnType<
+                typeof buildRulesConfig
+            > & {
+                configurationError?: string;
+            };
+            configuration.configurationError =
+                'Malformed configuration envelope';
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+        });
+
+        it('uses configurationError before branch errors when no capability is usable', () => {
+            const flagsClient = DdFlags.getClient();
+            const configuration = ({
+                configurationError: 'Malformed configuration envelope',
+                rulesError: 'Malformed rules data',
+                precomputedError: 'Malformed precomputed data'
+            } as unknown) as ParsedFlagsConfiguration;
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'error',
+                errorCode: 'PARSE_ERROR'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Malformed configuration envelope'
+            });
+        });
+
+        it('preserves a matching precomputed flag error before rules fallback', () => {
+            const configuration = buildMixedConfig({
+                targetingKey: 'user-1'
+            }) as ReturnType<typeof buildMixedConfig> & {
+                precomputed?: {
+                    flagErrors?: Record<string, string>;
+                };
+            };
+            if (!configuration.precomputed) {
+                throw new Error('The fixture has no precomputed branch.');
+            }
+            configuration.precomputed.flagErrors = {
+                'offline-bool': 'Invalid precomputed flag configuration'
+            };
+            const evaluate = jest.spyOn(flaggingCoreRulesEngine, 'evaluate');
+            const flagsClient = DdFlags.getClient();
+
+            expect(flagsClient.setConfiguration(configuration)).toEqual({
+                status: 'ready'
+            });
+            expect(
+                flagsClient.getBooleanDetails('offline-bool', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Invalid precomputed flag configuration'
+            });
+            expect(evaluate).not.toHaveBeenCalled();
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('selects the path again for a per-resolution context', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(
+                buildMixedConfig({ targetingKey: 'user-1' })
+            );
+
+            const details = flagsClient.getDetailsForContext(
+                'dynamic-flag',
+                false,
+                'boolean',
+                {
+                    targetingKey: 'user-2',
+                    attributes: { country: 'US' }
+                },
+                getNoopRulesLogger()
+            );
+
+            expect(details).toMatchObject({
+                value: true,
+                variant: 'on',
+                allocationKey: 'allocation'
+            });
+        });
+
+        it('tracks each real rules assignment even when doLog is false', () => {
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: { country: 'US' }
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                'default',
+                'dynamic-flag',
+                expect.objectContaining({
+                    allocationKey: 'allocation',
+                    variationKey: 'on',
+                    variationType: 'boolean',
+                    variationValue: 'true',
+                    doLog: false,
+                    extraLogging: {}
+                }),
+                'user-1',
+                { country: 'US' }
+            );
+        });
+
+        it.each([42, 1.5])(
+            'tracks the number assignment %s with number metadata',
+            variationValue => {
+                const evaluate = installFakeRulesEngine(() => ({
+                    value: variationValue,
+                    reason: 'TARGETING_MATCH',
+                    variant: String(variationValue),
+                    metadata: {
+                        allocationKey: 'allocation',
+                        variationType: 'number',
+                        doLog: false
+                    }
+                }));
+
+                const flagsClient = DdFlags.getClient();
+                flagsClient.setConfiguration(buildRulesConfig());
+                flagsClient.setEvaluationContextWithoutFetching({
+                    targetingKey: 'user-1',
+                    attributes: { country: 'US' }
+                });
+
+                expect(flagsClient.getNumberValue('dynamic-flag', 0)).toBe(
+                    variationValue
+                );
+                expect(
+                    NativeModules.DdFlags.trackEvaluation
+                ).toHaveBeenCalledWith(
+                    'default',
+                    'dynamic-flag',
+                    expect.objectContaining({
+                        variationType: 'number',
+                        variationValue: String(variationValue)
+                    }),
+                    'user-1',
+                    { country: 'US' }
+                );
+
+                evaluate.mockRestore();
+            }
+        );
+
+        it('tracks a DEFAULT result that contains a real assignment', () => {
+            const evaluate = installFakeRulesEngine(() => ({
+                value: true,
+                reason: 'DEFAULT',
+                variant: 'default-variant',
+                metadata: {
+                    allocationKey: 'default-allocation',
+                    variationType: 'boolean',
+                    doLog: false
+                }
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                true
+            );
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                'default',
+                'dynamic-flag',
+                expect.objectContaining({
+                    allocationKey: 'default-allocation',
+                    variationKey: 'default-variant',
+                    reason: 'DEFAULT'
+                }),
+                'user-1',
+                {}
+            );
+
+            evaluate.mockRestore();
+        });
+
+        it('does not track an unmatched DEFAULT result', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'DEFAULT',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+            flagsClient.setEvaluationContextWithoutFetching({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+
+            expect(flagsClient.getBooleanValue('dynamic-flag', false)).toBe(
+                false
+            );
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('preserves an upstream unsafe-integer PARSE_ERROR and does not track it', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'ERROR',
+                variant: 'invalid-variant',
+                errorCode: 'PARSE_ERROR',
+                errorMessage:
+                    'Integer variation value cannot be represented safely as a JavaScript number',
+                metadata: {
+                    allocationKey: 'invalid-allocation',
+                    variationType: 'number',
+                    doLog: true
+                }
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+
+            expect(
+                flagsClient.getNumberDetails('dynamic-flag', 0)
+            ).toMatchObject({
+                value: 0,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage:
+                    'Integer variation value cannot be represented safely as a JavaScript number'
+            });
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('preserves an unsupported-feature-level PARSE_ERROR and does not track it', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Flag requires an unsupported feature level',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+
+            expect(
+                flagsClient.getBooleanDetails('dynamic-flag', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'PARSE_ERROR',
+                errorMessage: 'Flag requires an unsupported feature level'
+            });
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+
+            evaluate.mockRestore();
+        });
+
+        it('maps an unknown engine error to GENERAL', () => {
+            const evaluate = installFakeRulesEngine(request => ({
+                value: request.defaultValue,
+                reason: 'ERROR',
+                errorCode: 'FUTURE_ERROR',
+                metadata: {}
+            }));
+            const flagsClient = DdFlags.getClient();
+            flagsClient.setConfiguration(buildRulesConfig());
+
+            expect(
+                flagsClient.getBooleanDetails('dynamic-flag', false)
+            ).toMatchObject({
+                value: false,
+                reason: 'ERROR',
+                errorCode: 'GENERAL'
+            });
+
+            evaluate.mockRestore();
         });
     });
 });

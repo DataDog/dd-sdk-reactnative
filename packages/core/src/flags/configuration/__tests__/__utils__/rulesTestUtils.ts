@@ -14,9 +14,9 @@ import type {
 import { configurationFromString } from '../../wire';
 
 // A complete protobuf response from the flagging-core 3.0.0 wire contract.
-// It contains one static boolean flag with the key `browser-flag`.
+// It contains one static boolean flag with the key `dynamic-flag`.
 export const RULES_RESPONSE =
-    'EgRwcm9kGigKDGJyb3dzZXItZmxhZxIYEAQaAigBIhAKCmFsbG9jYXRpb24iAiADKgJvbg==';
+    'EgRwcm9kGigKDGR5bmFtaWMtZmxhZxIYEAQaAigBIhAKCmFsbG9jYXRpb24iAiADKgJvbg==';
 
 export const buildRulesWire = (response: string = RULES_RESPONSE): string =>
     JSON.stringify({

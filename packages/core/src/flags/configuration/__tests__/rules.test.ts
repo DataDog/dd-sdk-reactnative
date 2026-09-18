@@ -72,7 +72,7 @@ describe('rules configuration', () => {
         const result = flaggingCoreRulesEngine.evaluate({
             configuration: buildRulesConfiguration(),
             type: 'boolean',
-            flagKey: 'browser-flag',
+            flagKey: 'dynamic-flag',
             defaultValue: false,
             context: { targetingKey: 'user-1' },
             logger: getNoopRulesLogger()
@@ -92,13 +92,13 @@ describe('rules configuration', () => {
 
     it('preserves a deterministic flag-scoped PARSE_ERROR', () => {
         const configuration = buildRulesConfiguration();
-        configuration.flags['browser-flag'].minimumFeatureLevel = 1;
+        configuration.flags['dynamic-flag'].minimumFeatureLevel = 1;
 
         expect(
             flaggingCoreRulesEngine.evaluate({
                 configuration,
                 type: 'boolean',
-                flagKey: 'browser-flag',
+                flagKey: 'dynamic-flag',
                 defaultValue: false,
                 context: { targetingKey: 'user-1' },
                 logger: getNoopRulesLogger()
@@ -144,7 +144,7 @@ describe('rules configuration', () => {
             fake.evaluate({
                 configuration: buildRulesConfiguration(),
                 type: 'boolean',
-                flagKey: 'browser-flag',
+                flagKey: 'dynamic-flag',
                 defaultValue: false,
                 context: { targetingKey: 'user-1' },
                 logger: getNoopRulesLogger()

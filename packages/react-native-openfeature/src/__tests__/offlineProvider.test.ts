@@ -8,6 +8,7 @@ import {
     ErrorCode,
     GeneralError,
     InvalidContextError,
+    ParseError,
     ProviderEvents,
     ProviderNotReadyError
 } from '@openfeature/web-sdk';
@@ -17,6 +18,7 @@ import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
 const READY = { status: 'ready' as const };
 const mismatch = { status: 'error' as const, errorCode: 'INVALID_CONTEXT' };
 const notReady = { status: 'error' as const, errorCode: 'PROVIDER_NOT_READY' };
+const parseError = { status: 'error' as const, errorCode: 'PARSE_ERROR' };
 const generalError = { status: 'error' as const, errorCode: 'GENERAL' };
 
 const mockFlagsClient = {
@@ -104,6 +106,15 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         await expect(provider.initialize({})).rejects.toThrow(
             ProviderNotReadyError
         );
+    });
+
+    it('rejects initialize with a parse error for an unusable configuration', async () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        mockFlagsClient.setEvaluationContextWithoutFetching.mockReturnValueOnce(
+            parseError
+        );
+
+        await expect(provider.initialize({})).rejects.toThrow(ParseError);
     });
 
     it('reconciles a matching context change without fetching or signalling a change', () => {
