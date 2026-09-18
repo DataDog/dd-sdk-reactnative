@@ -61,7 +61,7 @@ const getRumContextEntries = (): Array<[string, unknown]> => {
         for (const [key, value] of Object.entries(user.extraInfo ?? {})) {
             if (!isSupportedAttribute(value)) {
                 InternalLog.log(
-                    `RUM user property "${key}" is not a string, number, boolean, or null. Omitting it from the evaluation context.`,
+                    `RUM user property "${key}" is not a string, number, or boolean. Omitting it from the evaluation context.`,
                     SdkVerbosity.WARN
                 );
                 continue;
@@ -138,9 +138,8 @@ const errorMessage = (error: unknown): string => {
 
 const isSupportedAttribute = (
     value: unknown
-): value is string | number | boolean | null => {
+): value is string | number | boolean => {
     return (
-        value === null ||
         typeof value === 'string' ||
         typeof value === 'number' ||
         typeof value === 'boolean'

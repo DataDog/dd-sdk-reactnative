@@ -68,21 +68,20 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
             company_name: 'Example, Inc.',
             age: 42,
             active: true,
-            nullable: null,
             request_attribute: 'request-value'
         });
-        expect(InternalLog.log).toHaveBeenCalledTimes(3);
-        for (const key of ['missing', 'profile', 'roles']) {
+        expect(InternalLog.log).toHaveBeenCalledTimes(4);
+        for (const key of ['nullable', 'missing', 'profile', 'roles']) {
             expect(InternalLog.log).toHaveBeenCalledWith(
                 expect.stringContaining(
-                    `RUM user property "${key}" is not a string, number, boolean, or null`
+                    `RUM user property "${key}" is not a string, number, or boolean`
                 ),
                 SdkVerbosity.WARN
             );
         }
     });
 
-    it('preserves null RUM attributes unless explicitly overridden or removed', () => {
+    it('omits null RUM attributes without changing application values', () => {
         const extraInfo = {
             nullable: null,
             overridden: null,
@@ -101,7 +100,6 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
 
         expect(__ddEnrichEvaluationContextWithRumUser(context)).toStrictEqual({
             targetingKey: 'rum-user',
-            nullable: null,
             overridden: 'application-value',
             plan: null
         });
@@ -116,7 +114,15 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
             removed: null,
             plan: 'pro'
         });
-        expect(InternalLog.log).not.toHaveBeenCalled();
+        expect(InternalLog.log).toHaveBeenCalledTimes(3);
+        for (const key of ['nullable', 'overridden', 'removed']) {
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    `RUM user property "${key}" is not a string, number, or boolean`
+                ),
+                SdkVerbosity.WARN
+            );
+        }
     });
 
     it('preserves an explicitly empty targeting key', () => {
@@ -257,7 +263,7 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
         }
     );
 
-    it.each(['custom-value', 42, true, null])(
+    it.each(['custom-value', 42, true])(
         'merges custom identity attributes with value %p when RUM identity fields are absent',
         value => {
             const extraInfo = {

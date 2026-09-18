@@ -75,13 +75,13 @@ This keeps context changes visible through OpenFeature and avoids changing flag 
 your application opts in.
 
 The helper maps the RUM user ID to `targetingKey`. It maps `name`, `email`, and flat string, number,
-boolean, or `null` `extraInfo` properties to evaluation attributes. Merge precedence is `extraInfo`,
+or boolean `extraInfo` properties to evaluation attributes. Merge precedence is `extraInfo`,
 then the RUM user's own identity fields, then the application context (highest precedence).
 `targetingKey`, `name`, and `email` in `extraInfo` follow the same rules as other attributes.
 Application values can therefore supply a different targeting key (for example, a device or session
 ID). When enrichment succeeds, an application field set to `undefined` removes the
-corresponding RUM value and is omitted from the returned context. In contrast, `null` is preserved
-as an attribute value for `IS_NULL` targeting rules. Nested RUM user properties are not included.
+corresponding RUM value and is omitted from the returned context. Null-valued and nested RUM user
+properties are not included.
 
 > **Note:** Numeric evaluation attributes currently differ by platform: Android converts them to
 > strings (for example, `42` can become `"42.0"` across the React Native bridge), while iOS preserves

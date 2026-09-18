@@ -112,8 +112,7 @@ describe('explicit RUM context enrichment', () => {
         const expectedAttributes = {
             name: 'custom-name',
             email: 'explicit@example.com',
-            company_name: 'Example, Inc.',
-            nullable: null
+            company_name: 'Example, Inc.'
         };
         expect(OpenFeature.getContext(domain)).toStrictEqual(enrichedContext);
         expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
