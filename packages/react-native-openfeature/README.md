@@ -79,8 +79,16 @@ or boolean `extraInfo` properties to evaluation attributes. Merge precedence is 
 then the RUM user's own identity fields, then the application context (highest precedence).
 `targetingKey`, `name`, and `email` in `extraInfo` follow the same rules as other attributes.
 Application values can therefore supply a different targeting key (for example, a device or session
-ID). An application field set to `undefined` removes the corresponding RUM value and is omitted from
-the returned context. Nested RUM user properties are not included.
+ID). When enrichment succeeds, an application field set to `undefined` removes the
+corresponding RUM value and is omitted from the returned context. Nested RUM user properties are not included.
+
+If the core SDK's enrichment helper is missing or not callable, `enrichRumContext()` logs a console
+warning and returns the original application context unchanged, including any `undefined` fields.
+OpenFeature initialization and evaluation can continue using the application's context without RUM
+values. Update the core SDK to at least the OpenFeature package's version, check for duplicate
+installs with `npm ls @datadog/mobile-react-native`, and ensure test mocks preserve the real module
+exports (use `@datadog/mobile-react-native/jest` or spread `jest.requireActual`). The warning is
+visible even when SDK verbosity is not configured.
 
 Keep the original application-owned context and enrich it before passing it to OpenFeature.
 Use the exported `EnrichableEvaluationContext` type to explicitly type contexts that contain
