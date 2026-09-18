@@ -8,7 +8,7 @@ import DatadogCore
 import DatadogCrashReporting
 import DatadogInternal
 import DatadogLogs
-import DatadogRUM
+@_spi(Experimental) import DatadogRUM
 import DatadogTrace
 import Foundation
 import React
@@ -198,7 +198,7 @@ public class DdSdkNativeInitialization: NSObject {
                 threshold: initialThreshold)
         }
 
-        return RUM.Configuration(
+        var configuration = RUM.Configuration(
             applicationID: rumConfig.applicationId,
             sessionSampleRate: Float(
                 rumConfig.sessionSampleRate ?? DefaultConfiguration.sessionSamplingRate),
@@ -238,6 +238,28 @@ public class DdSdkNativeInitialization: NSObject {
             telemetrySampleRate: Float(
                 rumConfig.telemetrySampleRate ?? DefaultConfiguration.telemetrySampleRate)
         )
+
+        if rumConfig.enableTimeseries ?? false {
+            if let types = rumConfig.timeseriesCollectTypes {
+                let collectTypes: Set<RUM.Configuration.TimeseriesType> = Set(
+                    types.compactMap { (type: String) -> RUM.Configuration.TimeseriesType? in
+                        switch type.lowercased() {
+                        case "cpu":
+                            return .cpu
+                        case "memory":
+                            return .memory
+                        default:
+                            return nil
+                        }
+                    }
+                )
+                configuration.timeseries = RUM.Configuration.Timeseries(collectTypes: collectTypes)
+            } else {
+                configuration.timeseries = .default
+            }
+        }
+
+        return configuration
     }
 
     func buildLogsConfiguration(configuration: DdSdkConfiguration) -> Logs.Configuration {

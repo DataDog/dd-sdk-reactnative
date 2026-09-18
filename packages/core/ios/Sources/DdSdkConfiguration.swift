@@ -103,6 +103,10 @@ public class DdSdkConfiguration: NSObject {
 ///    - trackMemoryWarnings: Whether memory warning events should be tracked.
 ///    - telemetrySampleRate: Sampling rate (0–100) for internal telemetry emitted via RUM.
 ///    - customEndpoint: A custom RUM  intake endpoint to override the default Datadog intake.
+///    - enableTimeseries: Experimental: enables collection of memory and CPU timeseries events.
+///      Requires a native SDK build with timeseries support.
+///    - timeseriesCollectTypes: The types of timeseries data to collect ("cpu", "memory").
+///      Nil collects all supported types.
 public class RumConfiguration: NSObject {
     public var applicationId: String = ""
     public var trackFrustrations: Bool? = true
@@ -122,6 +126,8 @@ public class RumConfiguration: NSObject {
     public var trackMemoryWarnings: Bool? = nil
     public var telemetrySampleRate: Double? = nil
     public var customEndpoint: String? = nil
+    public var enableTimeseries: Bool? = nil
+    public var timeseriesCollectTypes: [String]? = nil
 
     init(
         applicationId: String,
@@ -141,7 +147,9 @@ public class RumConfiguration: NSObject {
         initialResourceThreshold: Double?,
         trackMemoryWarnings: Bool?,
         telemetrySampleRate: Double?,
-        customEndpoint: String?
+        customEndpoint: String?,
+        enableTimeseries: Bool? = nil,
+        timeseriesCollectTypes: [String]? = nil
     ) {
         self.applicationId = applicationId
         self.trackFrustrations = trackFrustrations
@@ -161,6 +169,8 @@ public class RumConfiguration: NSObject {
         self.trackMemoryWarnings = trackMemoryWarnings
         self.telemetrySampleRate = telemetrySampleRate
         self.customEndpoint = customEndpoint
+        self.enableTimeseries = enableTimeseries
+        self.timeseriesCollectTypes = timeseriesCollectTypes
     }
 
 }

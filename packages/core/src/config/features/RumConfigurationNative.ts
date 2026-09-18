@@ -3,6 +3,8 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
+import type { TimeseriesConfiguration } from '../types';
+
 export type RumNativeConfiguration = {
     readonly applicationId: string;
     readonly trackFrustrations: boolean;
@@ -23,4 +25,5 @@ export type RumNativeConfiguration = {
     readonly telemetrySampleRate: number;
     readonly customEndpoint: string;
     readonly firstPartyHosts: { match: string; propagatorTypes: string[] }[];
+    readonly unstable_timeseries: TimeseriesConfiguration | undefined;
 };
