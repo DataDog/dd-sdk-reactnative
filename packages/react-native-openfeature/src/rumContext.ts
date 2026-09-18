@@ -44,7 +44,7 @@ export const enrichWithRumUser = (
         // InternalLog may also be absent from the core module, or have verbosity disabled.
         // eslint-disable-next-line no-console
         console.warn(
-            'DATADOG: `enrichWithRumUser` could not find a callable `__ddEnrichEvaluationContextWithRumUser` on @datadog/mobile-react-native, so the RUM user was not added and the application context is used unchanged. Update @datadog/mobile-react-native to at least the version of @datadog/mobile-react-native-openfeature, check for a duplicate install with `npm ls @datadog/mobile-react-native`, and make sure any test mock of the module preserves the real one (use `@datadog/mobile-react-native/jest`, or spread `jest.requireActual`).'
+            'DATADOG: `enrichWithRumUser` could not access the core RUM enrichment helper. Returning the application context unchanged. Check SDK compatibility.'
         );
 
         return context as EvaluationContext;

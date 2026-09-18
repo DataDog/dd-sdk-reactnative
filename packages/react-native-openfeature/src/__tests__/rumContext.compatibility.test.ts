@@ -64,18 +64,7 @@ describe('RUM context core compatibility', () => {
         expect(enrichWithRumUser(context)).toBe(context);
         expect(console.warn).toHaveBeenCalledTimes(1);
         expect(console.warn).toHaveBeenCalledWith(
-            expect.stringContaining(
-                '`enrichWithRumUser` could not find a callable `__ddEnrichEvaluationContextWithRumUser` on @datadog/mobile-react-native'
-            )
-        );
-        expect(console.warn).toHaveBeenCalledWith(
-            expect.stringContaining('application context is used unchanged')
-        );
-        expect(console.warn).toHaveBeenCalledWith(
-            expect.stringContaining('npm ls @datadog/mobile-react-native')
-        );
-        expect(console.warn).toHaveBeenCalledWith(
-            expect.stringContaining('jest.requireActual')
+            'DATADOG: `enrichWithRumUser` could not access the core RUM enrichment helper. Returning the application context unchanged. Check SDK compatibility.'
         );
     });
 

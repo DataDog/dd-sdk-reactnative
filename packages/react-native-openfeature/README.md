@@ -96,8 +96,9 @@ to read the RUM user still produce an SDK warning.
 > numeric values. For consistent cross-platform targeting, explicitly supply consistently formatted
 > strings in the application context, or omit inherited numeric attributes with `undefined`.
 
-If the core SDK's enrichment helper is missing or not callable, `enrichWithRumUser()` logs a console
-warning and returns the original application context unchanged, including any `undefined` fields.
+If the core SDK's `__ddEnrichEvaluationContextWithRumUser` helper is missing or not callable,
+`enrichWithRumUser()` logs a console warning and returns the original application context unchanged,
+including any `undefined` fields.
 OpenFeature initialization and evaluation can continue using the application's context without RUM
 values. Update the core SDK to at least the OpenFeature package's version, check for duplicate
 installs with `npm ls @datadog/mobile-react-native`, and ensure test mocks preserve the real module
