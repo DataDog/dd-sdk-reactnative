@@ -12,6 +12,7 @@ import {
     bufferNativeCallReturningId,
     bufferNativeCallWithId
 } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
+import { getNativeDdTrace } from '../specs/NativeDdTrace';
 import type { DdTraceType } from '../types';
 import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
@@ -21,9 +22,7 @@ const TRACE_MODULE = 'com.datadog.reactnative.trace';
 const timeProvider = new DefaultTimeProvider();
 
 class DdTraceWrapper implements DdTraceType {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeTrace: DdNativeTraceType = require('../specs/NativeDdTrace')
-        .default;
+    private nativeTrace: DdNativeTraceType = getNativeDdTrace() as DdNativeTraceType;
 
     startSpan = (
         operation: string,
