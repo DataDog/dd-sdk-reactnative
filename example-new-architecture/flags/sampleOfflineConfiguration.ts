@@ -1,50 +1,30 @@
 // The flag key shared with the online example, so the UI is comparable across providers.
 export const OFFLINE_FLAG_KEY = 'rn-sdk-test-boolean-flag';
 
-export type OfflineWireContext = {targetingKey?: string} & Record<
-  string,
-  string | number | boolean
->;
-
-// The evaluation context the bundled configuration is precomputed for. Because the wire
-// carries its own context, the app does not need to call `OpenFeature.setContext` for the
-// offline flow.
-export const DEFAULT_OFFLINE_CONTEXT: OfflineWireContext = {
-  targetingKey: 'example-offline-user',
+export const DYNAMIC_OFFLINE_CONTEXTS = {
+  included: {
+    targetingKey: 'example-offline-user-a',
+    country: 'US',
+  },
+  excluded: {
+    targetingKey: 'example-offline-user-b',
+    country: 'CA',
+  },
 };
 
 /**
- * Build a bundled `ConfigurationWire` v1 string for the offline example.
+ * Build a complete bundled portable rules `ConfigurationWire` string.
  *
- * Mirrors the shape the Datadog Flags CDN returns, but is bundled with the app so the demo
- * is fully offline — it never hits the network. Flip `variationValue` to `false` to confirm
- * the flag's fallback renders.
+ * The example is fully offline. It evaluates the same rules for each new
+ * OpenFeature context. It does not fetch a UFC response or build a wire at runtime.
  */
-export const buildSampleWire = (
-  context: OfflineWireContext = DEFAULT_OFFLINE_CONTEXT,
-  variationValue = true,
-): string =>
+export const buildSampleWire = (): string =>
   JSON.stringify({
     version: 1,
-    precomputed: {
-      context,
-      response: JSON.stringify({
-        data: {
-          attributes: {
-            obfuscated: false,
-            flags: {
-              [OFFLINE_FLAG_KEY]: {
-                variationType: 'boolean',
-                variationValue,
-                variationKey: String(variationValue),
-                allocationKey: 'offline-example-alloc',
-                reason: 'STATIC',
-                doLog: true,
-                extraLogging: {},
-              },
-            },
-          },
-        },
-      }),
+    rules: {
+      // One base64 encoding of a UFC protobuf response. It contains
+      // OFFLINE_FLAG_KEY, targets country=US, and shards on targetingKey.
+      response:
+        'EgdleGFtcGxlGnkKGHJuLXNkay10ZXN0LWJvb2xlYW4tZmxhZxJdEAQaAigBGgQIASgAIjAKEHJ1bGVzLWFsbG9jYXRpb24QABoMEgoKBHNhbHQQARhkIgoKBAgAEGQYByABKAEiHQoTZmFsbGJhY2stYWxsb2NhdGlvbiIGEAEYCCAEIgYSBAoCCAIiAgoAKgdlbmFibGVkKghkaXNhYmxlZCoHY291bnRyeSoCVVNKBSoDEgED',
     },
   });

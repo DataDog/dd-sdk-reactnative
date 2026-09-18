@@ -52,14 +52,20 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * exposure/RUM tracking — **except it never fetches configuration from the network**.
  * Instead of fetching on `initialize`/`onContextChange`, it evaluates against a configuration
  * supplied via {@link DatadogOfflineOpenFeatureProvider.setConfiguration}.
+ * Supply a configuration parsed from the complete portable JSON envelope. The provider does not
+ * accept a raw UFC protobuf response and does not build the envelope.
  *
- * A runtime context that does not match the configuration's embedded context (compared after
- * normalization) cannot be served (offline never fetches), so it puts the provider into the
- * OpenFeature `ERROR` state and evaluations fall back to your coded defaults (`INVALID_CONTEXT`).
- * An empty context is a real context. It does not select the embedded context. Use
- * `getPrecomputedContext` to get a supported copy of the embedded context, and set it on
- * OpenFeature before provider registration. Load the configuration before setting the provider so
- * it is ready with real flag values from the start:
+ * A rules configuration evaluates each new context locally. Call `OpenFeature.setContext` to
+ * change the subject. The provider does not fetch after this call.
+ *
+ * A precomputed configuration is a single-context snapshot. A different runtime context cannot
+ * use that snapshot. If no rules fallback exists, the provider enters the OpenFeature `ERROR`
+ * state and evaluations return coded defaults with `INVALID_CONTEXT`. An empty context is a real
+ * context; it does not select the embedded context. Use `getPrecomputedContext` to get a supported
+ * copy of the embedded context, and set it on OpenFeature before provider registration.
+ *
+ * A configuration can contain both branches. Matching precomputed data has priority. Rules data
+ * is the fallback for a different context. Load the configuration before you set the provider:
  *
  * @example
  * ```ts
@@ -89,6 +95,13 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         name: 'datadog-react-native-offline'
     };
 
+    protected readonly useResolutionContext = true;
+
+    // OpenFeature supplies the effective context during initialization. Until then,
+    // setConfiguration must only store the configuration: there is no real context
+    // against which the provider can validate it or emit lifecycle events.
+    private context: OFEvaluationContext | undefined;
+
     // Whether the provider is currently in an error state, so a successful `setConfiguration` must
     // emit `PROVIDER_READY` to recover (a bare `CONFIGURATION_CHANGED` would not clear `ERROR`).
     // It may be set before the provider is registered, so it does not necessarily mirror
@@ -96,6 +109,7 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     private configurationInError = false;
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
+        this.context = context;
         const result = this.applyContext(context);
 
         // OpenFeature derives the initial status from whether `initialize` settles: resolve =>
@@ -111,6 +125,7 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         _oldContext: OFEvaluationContext,
         newContext: OFEvaluationContext
     ): void {
+        this.context = newContext;
         // Synchronous on purpose. Reconciliation is synchronous, and a synchronous throw makes the
         // Web SDK transition straight to ERROR (skipping the transient RECONCILING state) with no
         // async window in which an interleaved `setConfiguration` could clobber the final status.
@@ -125,11 +140,19 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     /**
      * Load a configuration into the provider for offline evaluation.
      *
-     * @param configuration A configuration parsed from a `ConfigurationWire` string via
-     * `configurationFromString`.
+     * @param configuration A configuration parsed from a complete portable
+     * `FlagsConfigurationWire` JSON envelope via `configurationFromString`. The provider does not
+     * fetch a UFC service response or construct this envelope.
      */
     setConfiguration(configuration: ParsedFlagsConfiguration): void {
         const result = this.flagsClient.setConfiguration(configuration);
+
+        // Match the browser offline provider: configuration can be supplied before
+        // registration, but validation and lifecycle events wait for initialize(),
+        // when OpenFeature provides the effective context.
+        if (this.context === undefined) {
+            return;
+        }
 
         if (result.status === 'ready') {
             if (this.configurationInError) {

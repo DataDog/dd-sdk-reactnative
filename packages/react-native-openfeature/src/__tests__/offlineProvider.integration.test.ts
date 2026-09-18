@@ -56,6 +56,21 @@ const wireFor = (context?: EvaluationContext): string =>
         }
     });
 
+// Protobuf UFC fixtures encoded once inside the version 1 portable envelope.
+// They follow the schema published by flagging-core 3.0.0. The first fixture
+// targets country=US and shards on the targeting key. The second contains an
+// int64 variation that cannot be represented as a JavaScript number.
+const RULES_RESPONSE =
+    'EgR0ZXN0Gm4KD2R5bmFtaWMtZmVhdHVyZRJbEAQaAigBGgQIASgAIi4KEHJ1bGVzLWFsbG9jYXRpb24QABoMEgoKBHNhbHQQARhkIgoKBAgAEGQYByABIh0KE2ZhbGxiYWNrLWFsbG9jYXRpb24iBhABGAggBCIGEgQKAggCIgIKACoHZW5hYmxlZCoIZGlzYWJsZWQqB2NvdW50cnkqAlVTSgUqAxIBAw==';
+const UNSAFE_INTEGER_RULES_RESPONSE =
+    'EgR0ZXN0GjIKD2ludmFsaWQtZmVhdHVyZRIfEAIaCRiBgICAgICAECIQCgphbGxvY2F0aW9uIgIgAyoGdW5zYWZl';
+
+const rulesWireFor = (response: string = RULES_RESPONSE): string =>
+    JSON.stringify({
+        version: 1,
+        rules: { response }
+    });
+
 // A unique OpenFeature domain + Datadog clientName per test keeps providers isolated (separate
 // domains otherwise share the same underlying FlagsClient).
 let seq = 0;
@@ -83,6 +98,7 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         await OpenFeature.clearProviders();
         // Reset the global context so a context set by one test does not leak into the next.
         await OpenFeature.clearContext();
+        jest.clearAllMocks();
     });
 
     it('uses the helper context to start READY with a precomputed configuration', async () => {
@@ -110,6 +126,93 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
             jest.requireMock('../../../core/src/specs/NativeDdFlags').default
                 .setEvaluationContext
         ).not.toHaveBeenCalled();
+    });
+
+    it('evaluates rules for each new context without a fetch', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString(rulesWireFor()));
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        const client = OpenFeature.getClient(domain);
+        await OpenFeature.setContext(domain, {
+            targetingKey: 'user-1',
+            country: 'US'
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('dynamic-feature', false)).toBe(true);
+
+        await OpenFeature.setContext(domain, {
+            targetingKey: 'user-2',
+            country: 'CA'
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('dynamic-feature', false)).toBe(false);
+
+        const nativeFlags = jest.requireMock(
+            '../../../core/src/specs/NativeDdFlags'
+        ).default;
+        expect(nativeFlags.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('reports PARSE_ERROR for a supplied unusable configuration', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString('not json'));
+
+        await expect(
+            OpenFeature.setProviderAndWait(domain, provider)
+        ).rejects.toMatchObject({ code: ErrorCode.PARSE_ERROR });
+
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+        expect(client.getBooleanDetails('new-feature', false)).toMatchObject({
+            value: false,
+            errorCode: ErrorCode.PARSE_ERROR,
+            errorMessage: 'Invalid flags configuration wire format'
+        });
+    });
+
+    it('does not synthesize an empty targeting key when a shard requires one', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configurationFromString(rulesWireFor()));
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        await OpenFeature.setContext(domain, { country: 'US' });
+
+        const details = OpenFeature.getClient(domain).getBooleanDetails(
+            'dynamic-feature',
+            false
+        );
+        expect(details.value).toBe(false);
+        expect(details.errorCode).toBe(ErrorCode.TARGETING_KEY_MISSING);
+    });
+
+    it('preserves an unsafe-integer PARSE_ERROR and does not track it', async () => {
+        const { domain, clientName } = freshNames();
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(
+            configurationFromString(rulesWireFor(UNSAFE_INTEGER_RULES_RESPONSE))
+        );
+        await OpenFeature.setProviderAndWait(domain, provider);
+
+        const details = OpenFeature.getClient(domain).getNumberDetails(
+            'invalid-feature',
+            0
+        );
+        expect(details).toMatchObject({
+            value: 0,
+            reason: 'ERROR',
+            errorCode: ErrorCode.PARSE_ERROR,
+            errorMessage:
+                'Integer variation value cannot be represented safely as a JavaScript number'
+        });
+
+        const nativeFlags = jest.requireMock(
+            '../../../core/src/specs/NativeDdFlags'
+        ).default;
+        expect(nativeFlags.trackEvaluation).not.toHaveBeenCalled();
     });
 
     it('starts in ERROR when a context-specific configuration has no OpenFeature context', async () => {
