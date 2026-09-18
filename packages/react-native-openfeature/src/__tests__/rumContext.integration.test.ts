@@ -98,7 +98,8 @@ describe('explicit RUM context enrichment', () => {
                 targetingKey: 'custom-user',
                 name: 'custom-name',
                 email: 'custom@example.com',
-                company_name: 'Example, Inc.'
+                company_name: 'Example, Inc.',
+                nullable: null
             }
         });
         const enrichedContext = enrichRumContext({
@@ -111,7 +112,8 @@ describe('explicit RUM context enrichment', () => {
         const expectedAttributes = {
             name: 'custom-name',
             email: 'explicit@example.com',
-            company_name: 'Example, Inc.'
+            company_name: 'Example, Inc.',
+            nullable: null
         };
         expect(OpenFeature.getContext(domain)).toStrictEqual(enrichedContext);
         expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(

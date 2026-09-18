@@ -49,6 +49,7 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
                 age: 42,
                 active: true,
                 nullable: null,
+                missing: undefined,
                 profile: { plan: 'enterprise' },
                 roles: ['admin']
             }
@@ -67,17 +68,55 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
             company_name: 'Example, Inc.',
             age: 42,
             active: true,
+            nullable: null,
             request_attribute: 'request-value'
         });
         expect(InternalLog.log).toHaveBeenCalledTimes(3);
-        for (const key of ['nullable', 'profile', 'roles']) {
+        for (const key of ['missing', 'profile', 'roles']) {
             expect(InternalLog.log).toHaveBeenCalledWith(
                 expect.stringContaining(
-                    `RUM user property "${key}" is not a string, number, or boolean`
+                    `RUM user property "${key}" is not a string, number, boolean, or null`
                 ),
                 SdkVerbosity.WARN
             );
         }
+    });
+
+    it('preserves null RUM attributes unless explicitly overridden or removed', () => {
+        const extraInfo = {
+            nullable: null,
+            overridden: null,
+            removed: null,
+            plan: 'pro'
+        };
+        UserInfoSingleton.getInstance().setUserInfo({
+            id: 'rum-user',
+            extraInfo
+        });
+        const context = {
+            overridden: 'application-value',
+            removed: undefined,
+            plan: null
+        };
+
+        expect(__ddEnrichEvaluationContextWithRumUser(context)).toStrictEqual({
+            targetingKey: 'rum-user',
+            nullable: null,
+            overridden: 'application-value',
+            plan: null
+        });
+        expect(context).toStrictEqual({
+            overridden: 'application-value',
+            removed: undefined,
+            plan: null
+        });
+        expect(extraInfo).toStrictEqual({
+            nullable: null,
+            overridden: null,
+            removed: null,
+            plan: 'pro'
+        });
+        expect(InternalLog.log).not.toHaveBeenCalled();
     });
 
     it('preserves an explicitly empty targeting key', () => {
@@ -218,7 +257,7 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
         }
     );
 
-    it.each(['custom-value', 42, true])(
+    it.each(['custom-value', 42, true, null])(
         'merges custom identity attributes with value %p when RUM identity fields are absent',
         value => {
             const extraInfo = {
