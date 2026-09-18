@@ -59,6 +59,13 @@ const getRumContextEntries = (): Array<[string, unknown]> => {
     // Isolate custom properties from the user's own fields: either group may invoke getters.
     try {
         for (const [key, value] of Object.entries(user.extraInfo ?? {})) {
+            if (key === 'targetingKey' && typeof value !== 'string') {
+                InternalLog.log(
+                    'RUM user property "targetingKey" is not a string. Omitting it from the evaluation context.',
+                    SdkVerbosity.WARN
+                );
+                continue;
+            }
             if (!isSupportedAttribute(value)) {
                 InternalLog.log(
                     `RUM user property "${key}" is not a string, number, or boolean. Omitting it from the evaluation context.`,
@@ -102,10 +109,8 @@ const getRumContextEntries = (): Array<[string, unknown]> => {
 };
 
 const readRumUser = (): UserInfo | undefined => {
-    let user: UserInfo | undefined;
-
     try {
-        user = UserInfoSingleton.getInstance().getUserInfo();
+        return UserInfoSingleton.getInstance().getUserInfo();
     } catch (error) {
         InternalLog.log(
             `Could not read the RUM user (${errorMessage(
@@ -116,15 +121,6 @@ const readRumUser = (): UserInfo | undefined => {
 
         return undefined;
     }
-
-    if (!user) {
-        InternalLog.log(
-            'No RUM user is set, so no RUM values were added to the evaluation context. Call DdSdkReactNative.setUserInfo() and await it before enriching.',
-            SdkVerbosity.WARN
-        );
-    }
-
-    return user;
 };
 
 const errorMessage = (error: unknown): string => {

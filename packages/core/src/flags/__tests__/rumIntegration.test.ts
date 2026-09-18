@@ -32,11 +32,29 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
             targetingKey: 'explicit-user',
             email: undefined
         });
-        expect(InternalLog.log).toHaveBeenCalledTimes(1);
-        expect(InternalLog.log).toHaveBeenCalledWith(
-            expect.stringContaining('No RUM user is set'),
-            SdkVerbosity.WARN
-        );
+        expect(InternalLog.log).not.toHaveBeenCalled();
+    });
+
+    it('silently removes RUM defaults after clearing the user', () => {
+        const applicationContext = { region: 'us', email: undefined };
+        UserInfoSingleton.getInstance().setUserInfo({
+            id: 'rum-user',
+            extraInfo: { plan: 'pro' }
+        });
+        expect(
+            __ddEnrichEvaluationContextWithRumUser(applicationContext)
+        ).toStrictEqual({
+            targetingKey: 'rum-user',
+            plan: 'pro',
+            region: 'us'
+        });
+
+        UserInfoSingleton.getInstance().clearUserInfo();
+
+        expect(
+            __ddEnrichEvaluationContextWithRumUser(applicationContext)
+        ).toStrictEqual({ region: 'us' });
+        expect(InternalLog.log).not.toHaveBeenCalled();
     });
 
     it('adds flat primitive RUM user properties and lets explicit context win', () => {
@@ -264,10 +282,9 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
     );
 
     it.each(['custom-value', 42, true])(
-        'merges custom identity attributes with value %p when RUM identity fields are absent',
+        'merges custom name and email attributes with value %p when RUM identity fields are absent',
         value => {
             const extraInfo = {
-                targetingKey: value,
                 name: value,
                 email: value,
                 plan: 'pro'
@@ -280,6 +297,62 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
             expect(InternalLog.log).not.toHaveBeenCalled();
         }
     );
+
+    it.each(['custom-user', ''])(
+        'uses the custom string targeting key %p when the RUM user ID is absent',
+        targetingKey => {
+            UserInfoSingleton.getInstance().addUserExtraInfo({ targetingKey });
+
+            expect(__ddEnrichEvaluationContextWithRumUser({})).toStrictEqual({
+                targetingKey
+            });
+            expect(InternalLog.log).not.toHaveBeenCalled();
+        }
+    );
+
+    it.each([42, true, false, null, undefined, {}, []])(
+        'omits the invalid custom targeting key %p without changing other attributes',
+        targetingKey => {
+            const extraInfo = {
+                targetingKey,
+                name: 42,
+                email: true,
+                plan: 'pro'
+            };
+            UserInfoSingleton.getInstance().addUserExtraInfo(extraInfo);
+
+            expect(__ddEnrichEvaluationContextWithRumUser({})).toStrictEqual({
+                name: 42,
+                email: true,
+                plan: 'pro'
+            });
+            expect(extraInfo.targetingKey).toBe(targetingKey);
+            expect(InternalLog.log).toHaveBeenCalledTimes(1);
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'RUM user property "targetingKey" is not a string. Omitting it from the evaluation context.',
+                SdkVerbosity.WARN
+            );
+        }
+    );
+
+    it('keeps RUM and application targeting keys when the custom targeting key is invalid', () => {
+        UserInfoSingleton.getInstance().setUserInfo({
+            id: 'rum-user',
+            extraInfo: { targetingKey: 42 }
+        });
+
+        expect(__ddEnrichEvaluationContextWithRumUser({})).toStrictEqual({
+            targetingKey: 'rum-user'
+        });
+        expect(
+            __ddEnrichEvaluationContextWithRumUser({
+                targetingKey: 'application-user'
+            })
+        ).toStrictEqual({ targetingKey: 'application-user' });
+        expect(
+            __ddEnrichEvaluationContextWithRumUser({ targetingKey: undefined })
+        ).toStrictEqual({});
+    });
 
     it('merges extraInfo, then RUM identity fields, then application context', () => {
         UserInfoSingleton.getInstance().setUserInfo({

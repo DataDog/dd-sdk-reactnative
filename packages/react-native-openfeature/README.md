@@ -77,11 +77,16 @@ your application opts in.
 The helper maps the RUM user ID to `targetingKey`. It maps `name`, `email`, and flat string, number,
 or boolean `extraInfo` properties to evaluation attributes. Merge precedence is `extraInfo`,
 then the RUM user's own identity fields, then the application context (highest precedence).
-`targetingKey`, `name`, and `email` in `extraInfo` follow the same rules as other attributes.
+`name` and `email` in `extraInfo` follow the same primitive rules as other attributes, but
+`targetingKey` is a reserved OpenFeature field and must be a string (including an empty string).
+Non-string `extraInfo.targetingKey` values are omitted with an SDK warning; a RUM user ID or an
+application-supplied targeting key can still provide the targeting key.
 Application values can therefore supply a different targeting key (for example, a device or session
 ID). When enrichment succeeds, an application field set to `undefined` removes the
 corresponding RUM value and is omitted from the returned context. Null-valued and nested RUM user
-properties are not included.
+properties are not included. If no RUM user is set, including after `clearUserInfo()`, the helper
+normalizes the application context without adding RUM values or logging a warning. Actual failures
+to read the RUM user still produce an SDK warning.
 
 > **Note:** Numeric evaluation attributes currently differ by platform: Android converts them to
 > strings (for example, `42` can become `"42.0"` across the React Native bridge), while iOS preserves
@@ -184,7 +189,8 @@ precomputed configuration context requirements below.
 > providers. Use a dedicated domain if RUM user attributes should only reach the Datadog provider.
 
 As an alternative to the global setup above, register an explicit context and provider on the same
-domain. This example uses the current RUM user; await any `setUserInfo()` call first:
+domain. Put this setup in `featureFlags.ts`. This example uses the current RUM user; await any
+`setUserInfo()` call first:
 
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
@@ -195,9 +201,10 @@ import {
 import { OpenFeature } from '@openfeature/react-sdk';
 
 export const DATADOG_DOMAIN = 'datadog';
-const applicationContext = { region: 'us-east-1', email: undefined };
+// Retain and export the application-owned context, not the enriched result.
+export const applicationContext = { region: 'us-east-1', email: undefined };
 
-const setUpDatadogDomain = async (): Promise<void> => {
+export const setUpDatadogDomain = async (): Promise<void> => {
     await DdFlags.enable();
     await OpenFeature.setContext(
         DATADOG_DOMAIN,
@@ -209,13 +216,13 @@ const setUpDatadogDomain = async (): Promise<void> => {
     );
 };
 
-void setUpDatadogDomain();
+// In your app bootstrap, await setUpDatadogDomain() after core SDK initialization.
 ```
 
 Consumers must use the same domain: import `DATADOG_DOMAIN` from your setup module and use
-`<OpenFeatureProvider domain={DATADOG_DOMAIN}>` instead of the unqualified `<OpenFeatureProvider>`
-in the React example below, or use `OpenFeature.getClient(DATADOG_DOMAIN)` for a direct client.
-A client without a domain does not use this domain's provider.
+`<OpenFeatureProvider domain={DATADOG_DOMAIN}>`, as in the React example below, or use
+`OpenFeature.getClient(DATADOG_DOMAIN)` for a direct client. A client without a domain does not use
+this domain's provider.
 
 Pass `DATADOG_DOMAIN` to **every** subsequent context update as well:
 `OpenFeature.setContext(DATADOG_DOMAIN, enrichWithRumUser(applicationContext))`. This includes both
@@ -228,27 +235,31 @@ than calling `clearContext(DATADOG_DOMAIN)`, which would resume inheriting the g
 
 For complete details on using the OpenFeature React SDK, including flag evaluation, evaluation context management, and advanced setup options, see the OpenFeature React SDK [documentation][1].
 
-Short-form OpenFeature SDK usage example:
+This example uses the dedicated Datadog domain and retained application context from
+`featureFlags.ts` above. Await `setUpDatadogDomain()` after core SDK initialization and before
+rendering the app.
+Use domain-scoped login and logout handlers to re-enrich the context when the RUM user changes.
+If you choose the global setup instead, omit the domain argument from context updates and the
+`domain` prop from `OpenFeatureProvider` consistently.
 
 ```tsx
+import { useEffect } from 'react';
+import { enrichWithRumUser } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature, OpenFeatureProvider, useFlag } from '@openfeature/react-sdk';
+import { applicationContext, DATADOG_DOMAIN } from './featureFlags';
 
 function AppWithProviders() {
-    // For advanced feature flag targeting based on current user or device.
     useEffect(() => {
-        const user = { ... }; // Obtained from your authentication logic.
+        // Enrich the retained application context, never OpenFeature.getContext().
+        void OpenFeature.setContext(
+            DATADOG_DOMAIN,
+            enrichWithRumUser(applicationContext)
+        );
+    }, []);
 
-        OpenFeature.setContext({
-            // User or anonymous ID for consistent feature flag evaluations.
-            targetingKey: user.id,
-            // Properties for more granular targeting.
-            region: user.country
-        });
-    }, [])
-
-    // Wrap your app with OpenFeatureProvider to allow flag evaluations throughout the app.
+    // Use the same domain for flag evaluation and context updates.
     return (
-        <OpenFeatureProvider>
+        <OpenFeatureProvider domain={DATADOG_DOMAIN}>
             <App />
         </OpenFeatureProvider>
     );

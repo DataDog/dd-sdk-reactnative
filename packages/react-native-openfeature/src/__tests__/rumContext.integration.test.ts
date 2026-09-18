@@ -129,6 +129,41 @@ describe('explicit RUM context enrichment', () => {
         );
     });
 
+    it.each([42, true, false])(
+        'uses the anonymous native subject when the custom targeting key is %p',
+        async targetingKey => {
+            UserInfoSingleton.getInstance().addUserExtraInfo({
+                targetingKey,
+                plan: 'pro'
+            });
+
+            const { clientName, domain } = await setupProvider(
+                enrichWithRumUser({ region: 'us' })
+            );
+            await OpenFeature.getClient(domain).getBooleanValue(
+                'test-flag',
+                false
+            );
+
+            const expectedAttributes = { plan: 'pro', region: 'us' };
+            expect(OpenFeature.getContext(domain)).toStrictEqual(
+                expectedAttributes
+            );
+            expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+                clientName,
+                '',
+                expectedAttributes
+            );
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+                clientName,
+                'test-flag',
+                expect.any(Object),
+                '',
+                expectedAttributes
+            );
+        }
+    );
+
     it('preserves the RUM targeting key through evaluation when a custom property throws', async () => {
         UserInfoSingleton.getInstance().setUserInfo({
             id: 'rum-user',
