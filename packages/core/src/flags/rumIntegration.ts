@@ -56,16 +56,13 @@ const getRumContextEntries = (): Array<[string, unknown]> => {
 
     const entries: Array<[string, unknown]> = [];
 
+    // Do not add identity-key-specific filtering here: targetingKey, name, and email follow
+    // the same merge precedence as other attributes (extraInfo -> RUM fields -> application).
+    // Merge precedence and validation are separate: processEvaluationContext validates the final
+    // targetingKey regardless of its source, without warning about values overwritten in the merge.
     // Isolate custom properties from the user's own fields: either group may invoke getters.
     try {
         for (const [key, value] of Object.entries(user.extraInfo ?? {})) {
-            if (key === 'targetingKey' && typeof value !== 'string') {
-                InternalLog.log(
-                    'RUM user property "targetingKey" is not a string. Omitting it from the evaluation context.',
-                    SdkVerbosity.WARN
-                );
-                continue;
-            }
             if (!isSupportedAttribute(value)) {
                 InternalLog.log(
                     `RUM user property "${key}" is not a string, number, or boolean. Omitting it from the evaluation context.`,

@@ -77,10 +77,13 @@ your application opts in.
 The helper maps the RUM user ID to `targetingKey`. It maps `name`, `email`, and flat string, number,
 or boolean `extraInfo` properties to evaluation attributes. Merge precedence is `extraInfo`,
 then the RUM user's own identity fields, then the application context (highest precedence).
-`name` and `email` in `extraInfo` follow the same primitive rules as other attributes, but
-`targetingKey` is a reserved OpenFeature field and must be a string (including an empty string).
-Non-string `extraInfo.targetingKey` values are omitted with an SDK warning; a RUM user ID or an
-application-supplied targeting key can still provide the targeting key.
+`targetingKey`, `name`, and `email` in `extraInfo` follow the same merge rules as other attributes;
+these keys are not reserved to a particular source. The helper does not apply targeting-key-specific
+validation: numeric or boolean values overwritten later in the merge do not trigger targeting-key
+warnings. The final `targetingKey` must be a string (including an empty string). If a non-string value
+reaches the Datadog Flags context-processing layer, it logs an SDK warning and uses the anonymous subject
+(`''`) for evaluation and tracking, regardless of whether the value came from `extraInfo` or the
+application. It does not fall back to a lower-precedence identity or rewrite OpenFeature's context.
 Application values can therefore supply a different targeting key (for example, a device or session
 ID). When enrichment succeeds, an application field set to `undefined` removes the
 corresponding RUM value and is omitted from the returned context. Null-valued and nested RUM user

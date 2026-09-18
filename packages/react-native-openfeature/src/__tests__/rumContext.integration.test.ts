@@ -7,6 +7,8 @@
 import { DdFlags, DdSdkReactNative } from '@datadog/mobile-react-native';
 import { InMemoryProvider, OpenFeature } from '@openfeature/web-sdk';
 
+import { InternalLog } from '../../../core/src/InternalLog';
+import { SdkVerbosity } from '../../../core/src/config/types/SdkVerbosity';
 import { UserInfoSingleton } from '../../../core/src/sdk/UserInfoSingleton/UserInfoSingleton';
 import NativeDdFlags from '../../../core/src/specs/NativeDdFlags';
 import { DatadogOpenFeatureProvider } from '../provider';
@@ -68,11 +70,13 @@ describe('explicit RUM context enrichment', () => {
             clients: {}
         });
         await DdFlags.enable();
+        jest.spyOn(InternalLog, 'log').mockImplementation(() => {});
     });
 
     afterEach(async () => {
         await OpenFeature.clearProviders();
         await OpenFeature.clearContext();
+        jest.restoreAllMocks();
     });
 
     it('does not implicitly add the RUM user to provider context', async () => {
@@ -129,25 +133,57 @@ describe('explicit RUM context enrichment', () => {
         );
     });
 
-    it.each([42, true, false])(
-        'uses the anonymous native subject when the custom targeting key is %p',
-        async targetingKey => {
-            UserInfoSingleton.getInstance().addUserExtraInfo({
+    it.each([
+        ['extraInfo', 42],
+        ['extraInfo', true],
+        ['extraInfo', false],
+        ['application', 42],
+        ['application', true],
+        ['application', false],
+        ['unenriched application', 42],
+        ['unenriched application', true],
+        ['unenriched application', false]
+    ])(
+        'validates a final targeting key from %s with value %p only after merging',
+        async (source, targetingKey) => {
+            const applicationContext = { region: 'us' };
+            if (source === 'extraInfo') {
+                UserInfoSingleton.getInstance().addUserExtraInfo({
+                    targetingKey,
+                    plan: 'pro'
+                });
+            } else {
+                UserInfoSingleton.getInstance().setUserInfo({
+                    id: 'rum-user',
+                    extraInfo: { targetingKey: 'custom-user', plan: 'pro' }
+                });
+            }
+            const context =
+                source === 'unenriched application'
+                    ? { targetingKey, plan: 'pro', ...applicationContext }
+                    : enrichWithRumUser({
+                          ...applicationContext,
+                          ...(source === 'application'
+                              ? { targetingKey: targetingKey as never }
+                              : {})
+                      });
+            const expectedAttributes = { plan: 'pro', region: 'us' };
+            expect(context).toStrictEqual({
                 targetingKey,
-                plan: 'pro'
+                ...expectedAttributes
             });
+            expect(InternalLog.log).not.toHaveBeenCalled();
 
-            const { clientName, domain } = await setupProvider(
-                enrichWithRumUser({ region: 'us' })
-            );
+            const { clientName, domain } = await setupProvider(context);
             await OpenFeature.getClient(domain).getBooleanValue(
                 'test-flag',
                 false
             );
 
-            const expectedAttributes = { plan: 'pro', region: 'us' };
-            expect(OpenFeature.getContext(domain)).toStrictEqual(
-                expectedAttributes
+            expect(OpenFeature.getContext(domain)).toStrictEqual(context);
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                "The evaluation context targetingKey is not a string. Using the anonymous subject ('') instead.",
+                SdkVerbosity.WARN
             );
             expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
                 clientName,

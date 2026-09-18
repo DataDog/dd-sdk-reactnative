@@ -281,10 +281,11 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
         }
     );
 
-    it.each(['custom-value', 42, true])(
-        'merges custom name and email attributes with value %p when RUM identity fields are absent',
+    it.each(['custom-value', '', 42, true, false])(
+        'merges custom identity attributes with value %p when RUM identity fields are absent',
         value => {
             const extraInfo = {
+                targetingKey: value,
                 name: value,
                 email: value,
                 plan: 'pro'
@@ -295,43 +296,6 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
                 extraInfo
             );
             expect(InternalLog.log).not.toHaveBeenCalled();
-        }
-    );
-
-    it.each(['custom-user', ''])(
-        'uses the custom string targeting key %p when the RUM user ID is absent',
-        targetingKey => {
-            UserInfoSingleton.getInstance().addUserExtraInfo({ targetingKey });
-
-            expect(__ddEnrichEvaluationContextWithRumUser({})).toStrictEqual({
-                targetingKey
-            });
-            expect(InternalLog.log).not.toHaveBeenCalled();
-        }
-    );
-
-    it.each([42, true, false, null, undefined, {}, []])(
-        'omits the invalid custom targeting key %p without changing other attributes',
-        targetingKey => {
-            const extraInfo = {
-                targetingKey,
-                name: 42,
-                email: true,
-                plan: 'pro'
-            };
-            UserInfoSingleton.getInstance().addUserExtraInfo(extraInfo);
-
-            expect(__ddEnrichEvaluationContextWithRumUser({})).toStrictEqual({
-                name: 42,
-                email: true,
-                plan: 'pro'
-            });
-            expect(extraInfo.targetingKey).toBe(targetingKey);
-            expect(InternalLog.log).toHaveBeenCalledTimes(1);
-            expect(InternalLog.log).toHaveBeenCalledWith(
-                'RUM user property "targetingKey" is not a string. Omitting it from the evaluation context.',
-                SdkVerbosity.WARN
-            );
         }
     );
 
@@ -352,7 +316,25 @@ describe('__ddEnrichEvaluationContextWithRumUser', () => {
         expect(
             __ddEnrichEvaluationContextWithRumUser({ targetingKey: undefined })
         ).toStrictEqual({});
+        expect(InternalLog.log).not.toHaveBeenCalled();
     });
+
+    it.each([42, true, false])(
+        'preserves an application targeting key of %p over RUM defaults without validating it',
+        targetingKey => {
+            UserInfoSingleton.getInstance().setUserInfo({
+                id: 'rum-user',
+                extraInfo: { targetingKey: 'custom-user' }
+            });
+            // JavaScript callers can provide values outside the TypeScript contract.
+            const context = { targetingKey: targetingKey as never };
+
+            expect(
+                __ddEnrichEvaluationContextWithRumUser(context)
+            ).toStrictEqual(context);
+            expect(InternalLog.log).not.toHaveBeenCalled();
+        }
+    );
 
     it('merges extraInfo, then RUM identity fields, then application context', () => {
         UserInfoSingleton.getInstance().setUserInfo({
