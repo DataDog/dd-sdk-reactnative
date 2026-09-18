@@ -18,7 +18,7 @@ type FlatEvaluationContext = Record<string, unknown> & {
  * fields explicitly supplied by the application remain authoritative. An explicitly undefined
  * field removes the corresponding RUM default and is omitted from the effective context.
  */
-export const enrichEvaluationContextWithRumUser = <
+export const __ddEnrichEvaluationContextWithRumUser = <
     T extends FlatEvaluationContext
 >(
     context: T

@@ -5,9 +5,9 @@
  */
 
 import { UserInfoSingleton } from '../../sdk/UserInfoSingleton/UserInfoSingleton';
-import { enrichEvaluationContextWithRumUser } from '../rumIntegration';
+import { __ddEnrichEvaluationContextWithRumUser } from '../rumIntegration';
 
-describe('enrichEvaluationContextWithRumUser', () => {
+describe('__ddEnrichEvaluationContextWithRumUser', () => {
     beforeEach(() => {
         UserInfoSingleton.reset();
     });
@@ -18,7 +18,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
             email: undefined
         };
 
-        expect(enrichEvaluationContextWithRumUser(context)).toStrictEqual({
+        expect(__ddEnrichEvaluationContextWithRumUser(context)).toStrictEqual({
             targetingKey: 'explicit-user'
         });
         expect(context).toStrictEqual({
@@ -43,7 +43,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
         });
 
         expect(
-            enrichEvaluationContextWithRumUser({
+            __ddEnrichEvaluationContextWithRumUser({
                 targetingKey: 'explicit-user',
                 email: 'explicit@example.com',
                 request_attribute: 'request-value'
@@ -63,7 +63,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user' });
 
         expect(
-            enrichEvaluationContextWithRumUser({ targetingKey: '' })
+            __ddEnrichEvaluationContextWithRumUser({ targetingKey: '' })
         ).toEqual({ targetingKey: '' });
     });
 
@@ -75,7 +75,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
         });
 
         expect(
-            enrichEvaluationContextWithRumUser({
+            __ddEnrichEvaluationContextWithRumUser({
                 targetingKey: undefined,
                 email: undefined,
                 plan: undefined,
@@ -86,7 +86,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
 
     it('uses the latest RUM user each time it is called', () => {
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user-a' });
-        expect(enrichEvaluationContextWithRumUser({})).toEqual({
+        expect(__ddEnrichEvaluationContextWithRumUser({})).toEqual({
             targetingKey: 'rum-user-a'
         });
 
@@ -94,7 +94,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
             id: 'rum-user-b',
             extraInfo: { plan: 'pro' }
         });
-        expect(enrichEvaluationContextWithRumUser({})).toEqual({
+        expect(__ddEnrichEvaluationContextWithRumUser({})).toEqual({
             targetingKey: 'rum-user-b',
             plan: 'pro'
         });
@@ -113,7 +113,7 @@ describe('enrichEvaluationContextWithRumUser', () => {
         });
         const context = { targetingKey: 'explicit-user' };
 
-        expect(enrichEvaluationContextWithRumUser(context)).toStrictEqual(
+        expect(__ddEnrichEvaluationContextWithRumUser(context)).toStrictEqual(
             context
         );
     });
