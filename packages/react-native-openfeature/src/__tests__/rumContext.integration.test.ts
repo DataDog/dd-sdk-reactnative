@@ -86,7 +86,12 @@ describe('explicit RUM context enrichment', () => {
         UserInfoSingleton.getInstance().setUserInfo({
             id: 'rum-user',
             email: 'rum@example.com',
-            extraInfo: { company_name: 'Example, Inc.' }
+            extraInfo: {
+                targetingKey: 'custom-user',
+                name: 'custom-name',
+                email: 'custom@example.com',
+                company_name: 'Example, Inc.'
+            }
         });
         const enrichedContext = enrichRumContext({
             email: 'explicit@example.com'
@@ -96,10 +101,45 @@ describe('explicit RUM context enrichment', () => {
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 
         const expectedAttributes = {
+            name: 'custom-name',
             email: 'explicit@example.com',
             company_name: 'Example, Inc.'
         };
         expect(OpenFeature.getContext(domain)).toStrictEqual(enrichedContext);
+        expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+            clientName,
+            'rum-user',
+            expectedAttributes
+        );
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            clientName,
+            'test-flag',
+            expect.any(Object),
+            'rum-user',
+            expectedAttributes
+        );
+    });
+
+    it('preserves the RUM targeting key through evaluation when a custom property throws', async () => {
+        UserInfoSingleton.getInstance().setUserInfo({
+            id: 'rum-user',
+            email: 'rum@example.com',
+            extraInfo: {
+                get broken() {
+                    throw new Error('cannot read custom property');
+                }
+            }
+        });
+        const { clientName, domain } = await setupProvider(
+            enrichRumContext({ region: 'us' })
+        );
+        await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
+
+        const expectedAttributes = { email: 'rum@example.com', region: 'us' };
+        expect(OpenFeature.getContext(domain)).toStrictEqual({
+            targetingKey: 'rum-user',
+            ...expectedAttributes
+        });
         expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
             clientName,
             'rum-user',

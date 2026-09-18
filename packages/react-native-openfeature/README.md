@@ -75,8 +75,10 @@ This keeps context changes visible through OpenFeature and avoids changing flag 
 your application opts in.
 
 The helper maps the RUM user ID to `targetingKey`. It maps `name`, `email`, and flat string, number,
-or boolean `extraInfo` properties to evaluation attributes. Values in the application context take
-precedence over RUM values, so you can use a different targeting key (for example, a device or session
+or boolean `extraInfo` properties to evaluation attributes. Merge precedence is `extraInfo`,
+then the RUM user's own identity fields, then the application context (highest precedence).
+`targetingKey`, `name`, and `email` in `extraInfo` follow the same rules as other attributes.
+Application values can therefore supply a different targeting key (for example, a device or session
 ID). An application field set to `undefined` removes the corresponding RUM value and is omitted from
 the returned context. Nested RUM user properties are not included.
 
