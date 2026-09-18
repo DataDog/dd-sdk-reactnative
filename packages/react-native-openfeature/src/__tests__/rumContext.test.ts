@@ -5,9 +5,10 @@
  */
 
 import { UserInfoSingleton } from '../../../core/src/sdk/UserInfoSingleton/UserInfoSingleton';
-import { enrichRumContext } from '../rumContext';
+import type { EnrichableEvaluationContext } from '../index';
+import { enrichWithRumUser } from '../index';
 
-describe('enrichRumContext', () => {
+describe('enrichWithRumUser', () => {
     beforeEach(() => {
         UserInfoSingleton.reset();
     });
@@ -24,7 +25,7 @@ describe('enrichRumContext', () => {
         });
 
         expect(
-            enrichRumContext({
+            enrichWithRumUser({
                 targetingKey: 'device-subject',
                 email: 'application@example.com',
                 region: 'us-east-1'
@@ -46,16 +47,34 @@ describe('enrichRumContext', () => {
         });
 
         expect(
-            enrichRumContext({
+            enrichWithRumUser({
                 email: undefined,
                 plan: undefined
             })
         ).toStrictEqual({ targetingKey: 'rum-user' });
     });
 
+    it.each([undefined, 'application-user'])(
+        'uses an optional application targeting key of %s without falling back to the RUM user',
+        targetingKey => {
+            UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user' });
+            const context: EnrichableEvaluationContext = {
+                targetingKey,
+                region: 'us'
+            };
+
+            expect(enrichWithRumUser(context)).toStrictEqual(
+                targetingKey === undefined
+                    ? { region: 'us' }
+                    : { targetingKey, region: 'us' }
+            );
+            expect(context).toHaveProperty('targetingKey', targetingKey);
+        }
+    );
+
     it('normalizes undefined fields when no RUM user is available', () => {
         expect(
-            enrichRumContext({
+            enrichWithRumUser({
                 targetingKey: 'application-subject',
                 email: undefined
             })
@@ -66,13 +85,13 @@ describe('enrichRumContext', () => {
         const applicationContext = { region: 'us-east-1' };
 
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user-a' });
-        expect(enrichRumContext(applicationContext)).toStrictEqual({
+        expect(enrichWithRumUser(applicationContext)).toStrictEqual({
             targetingKey: 'rum-user-a',
             region: 'us-east-1'
         });
 
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user-b' });
-        expect(enrichRumContext(applicationContext)).toStrictEqual({
+        expect(enrichWithRumUser(applicationContext)).toStrictEqual({
             targetingKey: 'rum-user-b',
             region: 'us-east-1'
         });

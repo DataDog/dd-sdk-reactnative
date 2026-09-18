@@ -4,13 +4,15 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdFlags } from '@datadog/mobile-react-native';
-import { OpenFeature } from '@openfeature/web-sdk';
+import { DdFlags, DdSdkReactNative } from '@datadog/mobile-react-native';
+import { InMemoryProvider, OpenFeature } from '@openfeature/web-sdk';
 
+import { InternalLog } from '../../../core/src/InternalLog';
+import { SdkVerbosity } from '../../../core/src/config/types/SdkVerbosity';
 import { UserInfoSingleton } from '../../../core/src/sdk/UserInfoSingleton/UserInfoSingleton';
 import NativeDdFlags from '../../../core/src/specs/NativeDdFlags';
 import { DatadogOpenFeatureProvider } from '../provider';
-import { enrichRumContext } from '../rumContext';
+import { enrichWithRumUser } from '../rumContext';
 
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
@@ -32,6 +34,14 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
             })
         ),
         trackEvaluation: jest.fn(() => Promise.resolve())
+    }
+}));
+
+jest.mock('../../../core/src/specs/NativeDdSdk', () => ({
+    __esModule: true,
+    default: {
+        setUserInfo: jest.fn(() => Promise.resolve()),
+        clearUserInfo: jest.fn(() => Promise.resolve())
     }
 }));
 
@@ -60,11 +70,13 @@ describe('explicit RUM context enrichment', () => {
             clients: {}
         });
         await DdFlags.enable();
+        jest.spyOn(InternalLog, 'log').mockImplementation(() => {});
     });
 
     afterEach(async () => {
         await OpenFeature.clearProviders();
         await OpenFeature.clearContext();
+        jest.restoreAllMocks();
     });
 
     it('does not implicitly add the RUM user to provider context', async () => {
@@ -86,9 +98,15 @@ describe('explicit RUM context enrichment', () => {
         UserInfoSingleton.getInstance().setUserInfo({
             id: 'rum-user',
             email: 'rum@example.com',
-            extraInfo: { company_name: 'Example, Inc.' }
+            extraInfo: {
+                targetingKey: 'custom-user',
+                name: 'custom-name',
+                email: 'custom@example.com',
+                company_name: 'Example, Inc.',
+                nullable: null
+            }
         });
-        const enrichedContext = enrichRumContext({
+        const enrichedContext = enrichWithRumUser({
             email: 'explicit@example.com'
         });
 
@@ -96,10 +114,112 @@ describe('explicit RUM context enrichment', () => {
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 
         const expectedAttributes = {
+            name: 'custom-name',
             email: 'explicit@example.com',
             company_name: 'Example, Inc.'
         };
         expect(OpenFeature.getContext(domain)).toStrictEqual(enrichedContext);
+        expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+            clientName,
+            'rum-user',
+            expectedAttributes
+        );
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            clientName,
+            'test-flag',
+            expect.any(Object),
+            'rum-user',
+            expectedAttributes
+        );
+    });
+
+    it.each([
+        ['extraInfo', 42],
+        ['extraInfo', true],
+        ['extraInfo', false],
+        ['application', 42],
+        ['application', true],
+        ['application', false],
+        ['unenriched application', 42],
+        ['unenriched application', true],
+        ['unenriched application', false]
+    ])(
+        'validates a final targeting key from %s with value %p only after merging',
+        async (source, targetingKey) => {
+            const applicationContext = { region: 'us' };
+            if (source === 'extraInfo') {
+                UserInfoSingleton.getInstance().addUserExtraInfo({
+                    targetingKey,
+                    plan: 'pro'
+                });
+            } else {
+                UserInfoSingleton.getInstance().setUserInfo({
+                    id: 'rum-user',
+                    extraInfo: { targetingKey: 'custom-user', plan: 'pro' }
+                });
+            }
+            const context =
+                source === 'unenriched application'
+                    ? { targetingKey, plan: 'pro', ...applicationContext }
+                    : enrichWithRumUser({
+                          ...applicationContext,
+                          ...(source === 'application'
+                              ? { targetingKey: targetingKey as never }
+                              : {})
+                      });
+            const expectedAttributes = { plan: 'pro', region: 'us' };
+            expect(context).toStrictEqual({
+                targetingKey,
+                ...expectedAttributes
+            });
+            expect(InternalLog.log).not.toHaveBeenCalled();
+
+            const { clientName, domain } = await setupProvider(context);
+            await OpenFeature.getClient(domain).getBooleanValue(
+                'test-flag',
+                false
+            );
+
+            expect(OpenFeature.getContext(domain)).toStrictEqual(context);
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                "The evaluation context targetingKey is not a string. Using the anonymous subject ('') instead.",
+                SdkVerbosity.WARN
+            );
+            expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+                clientName,
+                '',
+                expectedAttributes
+            );
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+                clientName,
+                'test-flag',
+                expect.any(Object),
+                '',
+                expectedAttributes
+            );
+        }
+    );
+
+    it('preserves the RUM targeting key through evaluation when a custom property throws', async () => {
+        UserInfoSingleton.getInstance().setUserInfo({
+            id: 'rum-user',
+            email: 'rum@example.com',
+            extraInfo: {
+                get broken() {
+                    throw new Error('cannot read custom property');
+                }
+            }
+        });
+        const { clientName, domain } = await setupProvider(
+            enrichWithRumUser({ region: 'us' })
+        );
+        await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
+
+        const expectedAttributes = { email: 'rum@example.com', region: 'us' };
+        expect(OpenFeature.getContext(domain)).toStrictEqual({
+            targetingKey: 'rum-user',
+            ...expectedAttributes
+        });
         expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
             clientName,
             'rum-user',
@@ -121,7 +241,7 @@ describe('explicit RUM context enrichment', () => {
             email: 'a@example.com'
         });
         const { clientName, domain } = await setupProvider(
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
 
         UserInfoSingleton.getInstance().setUserInfo({
@@ -131,7 +251,7 @@ describe('explicit RUM context enrichment', () => {
         });
         await OpenFeature.setContext(
             domain,
-            enrichRumContext(applicationContext)
+            enrichWithRumUser(applicationContext)
         );
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 
@@ -163,11 +283,98 @@ describe('explicit RUM context enrichment', () => {
         expect(applicationContext).toStrictEqual({ region: 'us' });
     });
 
+    it('uses the anonymous subject after clearing the RUM user and reapplying application context', async () => {
+        const applicationContext = { region: 'us' };
+        await DdSdkReactNative.setUserInfo({
+            id: 'rum-user',
+            email: 'user@example.com',
+            extraInfo: { plan: 'pro' }
+        });
+        const { clientName, domain } = await setupProvider(
+            enrichWithRumUser(applicationContext)
+        );
+
+        await DdSdkReactNative.setUserInfo({ id: '' });
+        expect(enrichWithRumUser(applicationContext)).toStrictEqual({
+            targetingKey: 'rum-user',
+            email: 'user@example.com',
+            plan: 'pro',
+            region: 'us'
+        });
+
+        await DdSdkReactNative.clearUserInfo();
+        await OpenFeature.setContext(
+            domain,
+            enrichWithRumUser(applicationContext)
+        );
+        await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
+
+        expect(OpenFeature.getContext(domain)).toStrictEqual(
+            applicationContext
+        );
+        expect(
+            NativeDdFlags.setEvaluationContext
+        ).toHaveBeenLastCalledWith(clientName, '', { region: 'us' });
+        expect(
+            NativeDdFlags.trackEvaluation
+        ).toHaveBeenLastCalledWith(
+            clientName,
+            'test-flag',
+            expect.any(Object),
+            '',
+            { region: 'us' }
+        );
+    });
+
+    it('isolates RUM login and logout updates from providers inheriting the global context', async () => {
+        const globalContext = { region: 'shared-region' };
+        await OpenFeature.setContext(globalContext);
+        const otherProvider = Object.assign(new InMemoryProvider({}), {
+            onContextChange: jest.fn(() => Promise.resolve())
+        });
+        await OpenFeature.setProviderAndWait('other-provider', otherProvider);
+
+        const applicationContext = { region: 'datadog-region' };
+        const { domain } = await setupProvider(
+            enrichWithRumUser(applicationContext)
+        );
+        await DdSdkReactNative.setUserInfo({
+            id: 'rum-user',
+            email: 'user@example.com'
+        });
+        await OpenFeature.setContext(
+            domain,
+            enrichWithRumUser(applicationContext)
+        );
+        expect(OpenFeature.getContext(domain)).toStrictEqual({
+            targetingKey: 'rum-user',
+            email: 'user@example.com',
+            region: 'datadog-region'
+        });
+        expect(
+            OpenFeature.getClient(domain).getBooleanValue('test-flag', false)
+        ).toBe(true);
+
+        await DdSdkReactNative.clearUserInfo();
+        await OpenFeature.setContext(
+            domain,
+            enrichWithRumUser(applicationContext)
+        );
+        expect(OpenFeature.getContext(domain)).toStrictEqual(
+            applicationContext
+        );
+        expect(OpenFeature.getContext()).toStrictEqual(globalContext);
+        expect(OpenFeature.getContext('other-provider')).toStrictEqual(
+            globalContext
+        );
+        expect(otherProvider.onContextChange).not.toHaveBeenCalled();
+    });
+
     it('is independent of RUM feature flag evaluation tracking', async () => {
         await DdFlags.enable({ rumIntegrationEnabled: false });
         UserInfoSingleton.getInstance().setUserInfo({ id: 'rum-user' });
 
-        const { clientName } = await setupProvider(enrichRumContext({}));
+        const { clientName } = await setupProvider(enrichWithRumUser({}));
 
         expect(NativeDdFlags.setEvaluationContext).toHaveBeenLastCalledWith(
             clientName,
@@ -184,7 +391,7 @@ describe('explicit RUM context enrichment', () => {
         });
 
         const { clientName, domain } = await setupProvider(
-            enrichRumContext({ email: undefined, plan: undefined })
+            enrichWithRumUser({ email: undefined, plan: undefined })
         );
         await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
 

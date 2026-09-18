@@ -24,7 +24,18 @@ export interface FlagCacheEntry {
 export const processEvaluationContext = (
     context: EvaluationContext
 ): EvaluationContext => {
-    const { targetingKey } = context;
+    let { targetingKey } = context;
+
+    // Validate only the final targeting key, after any RUM/application merge. Its source must
+    // not affect validation or cause a fallback to a lower-precedence user's identity.
+    // Both online and offline clients share this boundary; native calls require a string.
+    if (typeof targetingKey !== 'string') {
+        InternalLog.log(
+            "The evaluation context targetingKey is not a string. Using the anonymous subject ('') instead.",
+            SdkVerbosity.WARN
+        );
+        targetingKey = '';
+    }
 
     // We should ignore non-primitive values in the context as per FFE SDK requirements OF.3.
     const providedAttributes: Record<string, unknown> =
