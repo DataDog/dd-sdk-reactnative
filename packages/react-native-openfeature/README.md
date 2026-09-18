@@ -29,7 +29,7 @@ yarn add @datadog/mobile-react-native @datadog/mobile-react-native-openfeature @
 Use the following example code snippet to initialize the Datadog SDK, enable the Feature Flags feature, and set up the OpenFeature provider.
 
 ```tsx
-import { CoreConfiguration, DatadogProvider, DdFlags } from '@datadog/mobile-react-native';
+import { CoreConfiguration, DatadogProvider, DdFlags, DdSdkReactNative } from '@datadog/mobile-react-native';
 import { DatadogOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
 import { OpenFeature } from '@openfeature/react-sdk';
 
@@ -82,6 +82,11 @@ Application values can therefore supply a different targeting key (for example, 
 ID). When enrichment succeeds, an application field set to `undefined` removes the
 corresponding RUM value and is omitted from the returned context. Nested RUM user properties are not included.
 
+> **Note:** Numeric evaluation attributes currently differ by platform: Android converts them to
+> strings (for example, `42` can become `"42.0"` across the React Native bridge), while iOS preserves
+> numeric values. For consistent cross-platform targeting, explicitly supply consistently formatted
+> strings in the application context, or omit inherited numeric attributes with `undefined`.
+
 If the core SDK's enrichment helper is missing or not callable, `enrichRumContext()` logs a console
 warning and returns the original application context unchanged, including any `undefined` fields.
 OpenFeature initialization and evaluation can continue using the application's context without RUM
@@ -92,38 +97,75 @@ visible even when SDK verbosity is not configured.
 
 Keep the original application-owned context and enrich it before passing it to OpenFeature.
 Use the exported `EnrichableEvaluationContext` type to explicitly type contexts that contain
-`undefined` values; the helper returns an OpenFeature `EvaluationContext`:
+`undefined` values; the helper returns an OpenFeature `EvaluationContext`. The following examples
+assume the core Datadog SDK has already been initialized, as shown above. Await `setUserInfo()` before
+enriching: the new RUM user is available only after that promise resolves.
 
 ```tsx
+import { DdFlags, DdSdkReactNative } from '@datadog/mobile-react-native';
 import {
     DatadogOpenFeatureProvider,
     enrichRumContext
 } from '@datadog/mobile-react-native-openfeature';
 import type { EnrichableEvaluationContext } from '@datadog/mobile-react-native-openfeature';
+import { OpenFeature } from '@openfeature/react-sdk';
 
+// Keep the application-owned context; do not replace it with the enriched result.
 const applicationContext: EnrichableEvaluationContext = {
     region: 'us-east-1',
     email: undefined // Omit the RUM email from the evaluation context.
 };
 
-await DdSdkReactNative.setUserInfo({
-    id: 'user-123',
-    email: 'user@example.com',
-    extraInfo: { company_name: 'Example, Inc.' }
-});
+const setUpFlags = async (): Promise<void> => {
+    await DdFlags.enable();
+    await DdSdkReactNative.setUserInfo({
+        id: 'user-123',
+        email: 'user@example.com',
+        extraInfo: { company_name: 'Example, Inc.' }
+    });
 
-await OpenFeature.setContext(enrichRumContext(applicationContext));
-await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
+    await OpenFeature.setContext(enrichRumContext(applicationContext));
+    await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
+};
+
+void setUpFlags();
 ```
 
 `enrichRumContext()` reads the RUM user when it is called; it does not establish a live connection
-between RUM and OpenFeature. After a login, logout, or account switch, update the RUM user and enrich
-the original application-owned context again:
+between RUM and OpenFeature. After a login or account switch, update the RUM user and enrich the
+original application-owned context again. On logout, await `clearUserInfo()` before enriching;
+`setUserInfo({ id: '' })` is a no-op and does **not** clear the previous user.
 
 ```tsx
-await DdSdkReactNative.setUserInfo(newUser);
-await OpenFeature.setContext(enrichRumContext(applicationContext));
+import { DdSdkReactNative } from '@datadog/mobile-react-native';
+import { enrichRumContext } from '@datadog/mobile-react-native-openfeature';
+import type { EnrichableEvaluationContext } from '@datadog/mobile-react-native-openfeature';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+// The same application-owned context as in the setup example.
+const applicationContext: EnrichableEvaluationContext = {
+    region: 'us-east-1',
+    email: undefined
+};
+
+export const onLogin = async (): Promise<void> => {
+    await DdSdkReactNative.setUserInfo({
+        id: 'user-456',
+        email: 'next@example.com'
+    });
+    await OpenFeature.setContext(enrichRumContext(applicationContext));
+};
+
+export const onLogout = async (): Promise<void> => {
+    await DdSdkReactNative.clearUserInfo();
+    // No RUM targeting key remains; the provider uses the anonymous subject ('').
+    await OpenFeature.setContext(enrichRumContext(applicationContext));
+};
 ```
+
+Wire these handlers into your application's authentication flow after flag setup. This logout
+example assumes the application context has no targeting key of its own; explicitly supplied
+application values remain authoritative even after the RUM user is cleared.
 
 Do not pass `OpenFeature.getContext()` back to `enrichRumContext()`. That context already contains
 values from the previous RUM user, so those values would be treated as application-owned overrides
@@ -131,9 +173,55 @@ and could prevent the new RUM user from replacing them. Retain the original appl
 separately, as shown above.
 
 `rumIntegrationEnabled` only controls whether feature flag evaluation events are sent to RUM. It
-does not enable or disable `enrichRumContext()`. If you use OpenFeature domains or multiple providers,
-you can apply the enriched context only to the intended domain. For the offline provider, continue to
-follow the precomputed configuration context requirements below.
+does not enable or disable `enrichRumContext()`. For the offline provider, continue to follow the
+precomputed configuration context requirements below.
+
+#### Isolating RUM context with an OpenFeature domain
+
+> **Warning:** The examples above use the global OpenFeature context. A global `setContext()` also
+> reaches domain-bound providers that have no explicit domain context, including other vendors'
+> providers. Use a dedicated domain if RUM user attributes should only reach the Datadog provider.
+
+As an alternative to the global setup above, register an explicit context and provider on the same
+domain. This example uses the current RUM user; await any `setUserInfo()` call first:
+
+```tsx
+import { DdFlags } from '@datadog/mobile-react-native';
+import {
+    DatadogOpenFeatureProvider,
+    enrichRumContext
+} from '@datadog/mobile-react-native-openfeature';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+export const DATADOG_DOMAIN = 'datadog';
+const applicationContext = { region: 'us-east-1', email: undefined };
+
+const setUpDatadogDomain = async (): Promise<void> => {
+    await DdFlags.enable();
+    await OpenFeature.setContext(
+        DATADOG_DOMAIN,
+        enrichRumContext(applicationContext)
+    );
+    await OpenFeature.setProviderAndWait(
+        DATADOG_DOMAIN,
+        new DatadogOpenFeatureProvider()
+    );
+};
+
+void setUpDatadogDomain();
+```
+
+Consumers must use the same domain: import `DATADOG_DOMAIN` from your setup module and use
+`<OpenFeatureProvider domain={DATADOG_DOMAIN}>` instead of the unqualified `<OpenFeatureProvider>`
+in the React example below, or use `OpenFeature.getClient(DATADOG_DOMAIN)` for a direct client.
+A client without a domain does not use this domain's provider.
+
+Pass `DATADOG_DOMAIN` to **every** subsequent context update as well:
+`OpenFeature.setContext(DATADOG_DOMAIN, enrichRumContext(applicationContext))`. This includes both
+login and logout handlers above and the `setContext()` call in the React example below. A global
+update does not replace an explicit domain context, so omitting the domain would leave Datadog on
+the previous user's context. On logout, set the re-enriched application context on the domain rather
+than calling `clearContext(DATADOG_DOMAIN)`, which would resume inheriting the global context.
 
 ### Using the OpenFeature React SDK
 

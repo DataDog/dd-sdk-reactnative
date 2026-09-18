@@ -4,8 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdFlags } from '@datadog/mobile-react-native';
-import { OpenFeature } from '@openfeature/web-sdk';
+import { DdFlags, DdSdkReactNative } from '@datadog/mobile-react-native';
+import { InMemoryProvider, OpenFeature } from '@openfeature/web-sdk';
 
 import { UserInfoSingleton } from '../../../core/src/sdk/UserInfoSingleton/UserInfoSingleton';
 import NativeDdFlags from '../../../core/src/specs/NativeDdFlags';
@@ -32,6 +32,14 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
             })
         ),
         trackEvaluation: jest.fn(() => Promise.resolve())
+    }
+}));
+
+jest.mock('../../../core/src/specs/NativeDdSdk', () => ({
+    __esModule: true,
+    default: {
+        setUserInfo: jest.fn(() => Promise.resolve()),
+        clearUserInfo: jest.fn(() => Promise.resolve())
     }
 }));
 
@@ -201,6 +209,93 @@ describe('explicit RUM context enrichment', () => {
             { email: 'b@example.com', plan: 'pro', region: 'us' }
         );
         expect(applicationContext).toStrictEqual({ region: 'us' });
+    });
+
+    it('uses the anonymous subject after clearing the RUM user and reapplying application context', async () => {
+        const applicationContext = { region: 'us' };
+        await DdSdkReactNative.setUserInfo({
+            id: 'rum-user',
+            email: 'user@example.com',
+            extraInfo: { plan: 'pro' }
+        });
+        const { clientName, domain } = await setupProvider(
+            enrichRumContext(applicationContext)
+        );
+
+        await DdSdkReactNative.setUserInfo({ id: '' });
+        expect(enrichRumContext(applicationContext)).toStrictEqual({
+            targetingKey: 'rum-user',
+            email: 'user@example.com',
+            plan: 'pro',
+            region: 'us'
+        });
+
+        await DdSdkReactNative.clearUserInfo();
+        await OpenFeature.setContext(
+            domain,
+            enrichRumContext(applicationContext)
+        );
+        await OpenFeature.getClient(domain).getBooleanValue('test-flag', false);
+
+        expect(OpenFeature.getContext(domain)).toStrictEqual(
+            applicationContext
+        );
+        expect(
+            NativeDdFlags.setEvaluationContext
+        ).toHaveBeenLastCalledWith(clientName, '', { region: 'us' });
+        expect(
+            NativeDdFlags.trackEvaluation
+        ).toHaveBeenLastCalledWith(
+            clientName,
+            'test-flag',
+            expect.any(Object),
+            '',
+            { region: 'us' }
+        );
+    });
+
+    it('isolates RUM login and logout updates from providers inheriting the global context', async () => {
+        const globalContext = { region: 'shared-region' };
+        await OpenFeature.setContext(globalContext);
+        const otherProvider = Object.assign(new InMemoryProvider({}), {
+            onContextChange: jest.fn(() => Promise.resolve())
+        });
+        await OpenFeature.setProviderAndWait('other-provider', otherProvider);
+
+        const applicationContext = { region: 'datadog-region' };
+        const { domain } = await setupProvider(
+            enrichRumContext(applicationContext)
+        );
+        await DdSdkReactNative.setUserInfo({
+            id: 'rum-user',
+            email: 'user@example.com'
+        });
+        await OpenFeature.setContext(
+            domain,
+            enrichRumContext(applicationContext)
+        );
+        expect(OpenFeature.getContext(domain)).toStrictEqual({
+            targetingKey: 'rum-user',
+            email: 'user@example.com',
+            region: 'datadog-region'
+        });
+        expect(
+            OpenFeature.getClient(domain).getBooleanValue('test-flag', false)
+        ).toBe(true);
+
+        await DdSdkReactNative.clearUserInfo();
+        await OpenFeature.setContext(
+            domain,
+            enrichRumContext(applicationContext)
+        );
+        expect(OpenFeature.getContext(domain)).toStrictEqual(
+            applicationContext
+        );
+        expect(OpenFeature.getContext()).toStrictEqual(globalContext);
+        expect(OpenFeature.getContext('other-provider')).toStrictEqual(
+            globalContext
+        );
+        expect(otherProvider.onContextChange).not.toHaveBeenCalled();
     });
 
     it('is independent of RUM feature flag evaluation tracking', async () => {
