@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog } from '../../InternalLog';
+import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { processEvaluationContext } from '../internal';
 
 jest.mock('../../InternalLog', () => {
@@ -14,6 +16,43 @@ jest.mock('../../InternalLog', () => {
 });
 
 describe('processEvaluationContext', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it.each(['user-1', ''])(
+        'preserves the string targeting key %p without a warning',
+        targetingKey => {
+            expect(processEvaluationContext({ targetingKey })).toStrictEqual({
+                targetingKey,
+                attributes: {}
+            });
+            expect(InternalLog.log).not.toHaveBeenCalled();
+        }
+    );
+
+    it.each([42, true, false, null, undefined, {}, []])(
+        'uses the anonymous subject for a non-string final targeting key %p',
+        targetingKey => {
+            // JavaScript callers can provide values outside the TypeScript contract.
+            const context = {
+                targetingKey: targetingKey as never,
+                attributes: { plan: 'pro' }
+            };
+
+            expect(processEvaluationContext(context)).toStrictEqual({
+                targetingKey: '',
+                attributes: { plan: 'pro' }
+            });
+            expect(context.targetingKey).toBe(targetingKey);
+            expect(InternalLog.log).toHaveBeenCalledTimes(1);
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                "The evaluation context targetingKey is not a string. Using the anonymous subject ('') instead.",
+                SdkVerbosity.WARN
+            );
+        }
+    );
+
     it('keeps primitive attributes and drops non-primitive ones', () => {
         expect(
             processEvaluationContext({

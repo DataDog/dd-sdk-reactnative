@@ -37,7 +37,7 @@ import {
     configurationToString
 } from './flags/configuration';
 import type { ParsedFlagsConfiguration } from './flags/configuration';
-import { enrichEvaluationContextWithRumUser } from './flags/rumIntegration';
+import { __ddEnrichEvaluationContextWithRumUser } from './flags/rumIntegration';
 import type {
     FlagsConfiguration,
     FlagDetails,
@@ -114,7 +114,7 @@ export {
     DatadogTracingContext,
     DdBabelInteractionTracking,
     __ddExtractText,
-    enrichEvaluationContextWithRumUser as __ddEnrichEvaluationContextWithRumUser
+    __ddEnrichEvaluationContextWithRumUser
 };
 export type {
     Timestamp,
