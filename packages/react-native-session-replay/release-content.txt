@@ -78,6 +78,7 @@ package/ios/Sources/DdSessionReplay.mm
 package/ios/Sources/DdSessionReplayImplementation.swift
 package/ios/Sources/RCTFabricWrapper.h
 package/ios/Sources/RCTFabricWrapper.mm
+package/ios/Sources/RCTPromiseTypes.swift
 package/ios/Sources/RCTTextExtractor.h
 package/ios/Sources/RCTTextExtractor.mm
 package/ios/Sources/RCTTextPropertiesWrapper.h

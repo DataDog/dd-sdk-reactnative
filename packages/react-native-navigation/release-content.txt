@@ -85,6 +85,8 @@ package/lib/typescript/core/src/flags/configuration/wire.d.ts
 package/lib/typescript/core/src/flags/configuration/wire.d.ts.map
 package/lib/typescript/core/src/flags/internal.d.ts
 package/lib/typescript/core/src/flags/internal.d.ts.map
+package/lib/typescript/core/src/flags/rumIntegration.d.ts
+package/lib/typescript/core/src/flags/rumIntegration.d.ts.map
 package/lib/typescript/core/src/flags/types.d.ts
 package/lib/typescript/core/src/flags/types.d.ts.map
 package/lib/typescript/core/src/index.d.ts
