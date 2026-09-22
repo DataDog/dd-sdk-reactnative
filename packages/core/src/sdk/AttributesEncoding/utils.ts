@@ -11,6 +11,14 @@ export function warn(text: string) {
     InternalLog.log(`[ATTRIBUTES] ${text}`, SdkVerbosity.WARN);
 }
 
+export function safeToString(value: unknown): string {
+    try {
+        return String(value);
+    } catch {
+        return Object.prototype.toString.call(value);
+    }
+}
+
 export function isPlainObject(v: unknown): v is Record<string, unknown> {
     return !!v && typeof v === 'object' && (v as any).constructor === Object;
 }
