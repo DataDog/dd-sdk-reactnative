@@ -105,6 +105,7 @@ package/ios/Sources/GlobalState.swift
 package/ios/Sources/JSONFileReader.swift
 package/ios/Sources/JSRefreshRateListener.swift
 package/ios/Sources/QueueHolder.swift
+package/ios/Sources/RCTPromiseTypes.swift
 package/ios/Sources/RNDdSdkConfiguration.swift
 package/ios/Sources/RNViewResolution.swift
 package/ios/Sources/RUMMonitorInternalProtocol.swift
@@ -188,6 +189,8 @@ package/lib/commonjs/flags/configuration/wire.js
 package/lib/commonjs/flags/configuration/wire.js.map
 package/lib/commonjs/flags/internal.js
 package/lib/commonjs/flags/internal.js.map
+package/lib/commonjs/flags/rumIntegration.js
+package/lib/commonjs/flags/rumIntegration.js.map
 package/lib/commonjs/flags/types.js
 package/lib/commonjs/flags/types.js.map
 package/lib/commonjs/index.js
@@ -472,6 +475,8 @@ package/lib/module/flags/configuration/wire.js
 package/lib/module/flags/configuration/wire.js.map
 package/lib/module/flags/internal.js
 package/lib/module/flags/internal.js.map
+package/lib/module/flags/rumIntegration.js
+package/lib/module/flags/rumIntegration.js.map
 package/lib/module/flags/types.js
 package/lib/module/flags/types.js.map
 package/lib/module/index.js
@@ -756,6 +761,8 @@ package/lib/typescript/flags/configuration/wire.d.ts
 package/lib/typescript/flags/configuration/wire.d.ts.map
 package/lib/typescript/flags/internal.d.ts
 package/lib/typescript/flags/internal.d.ts.map
+package/lib/typescript/flags/rumIntegration.d.ts
+package/lib/typescript/flags/rumIntegration.d.ts.map
 package/lib/typescript/flags/types.d.ts
 package/lib/typescript/flags/types.d.ts.map
 package/lib/typescript/index.d.ts
@@ -1012,6 +1019,7 @@ package/src/flags/FlagsClient.ts
 package/src/flags/__tests__/DdFlags.test.ts
 package/src/flags/__tests__/FlagsClient.test.ts
 package/src/flags/__tests__/internal.test.ts
+package/src/flags/__tests__/rumIntegration.test.ts
 package/src/flags/configuration/__tests__/context.test.ts
 package/src/flags/configuration/__tests__/precomputed.test.ts
 package/src/flags/configuration/__tests__/wire.test.ts
@@ -1021,6 +1029,7 @@ package/src/flags/configuration/precomputed.ts
 package/src/flags/configuration/types.ts
 package/src/flags/configuration/wire.ts
 package/src/flags/internal.ts
+package/src/flags/rumIntegration.ts
 package/src/flags/types.ts
 package/src/index.tsx
 package/src/logs/DdLogs.ts
