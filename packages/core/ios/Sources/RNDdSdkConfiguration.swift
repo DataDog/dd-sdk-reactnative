@@ -71,6 +71,10 @@ extension NSDictionary {
             let telemetrySampleRate = rumDict["telemetrySampleRate"] as? Double
             let customEndpoint = rumDict["customEndpoint"] as? String
 
+            let timeseriesDict = rumDict["unstable_timeseries"] as? NSDictionary
+            let enableTimeseries = timeseriesDict != nil
+            let timeseriesCollectTypes = timeseriesDict?["collectTypes"] as? [String]
+
             rumConfiguration = RumConfiguration(
                 applicationId: applicationId,
                 trackFrustrations: trackFrustrations ?? DefaultConfiguration.trackFrustrations,
@@ -98,7 +102,9 @@ extension NSDictionary {
                     ?? DefaultConfiguration.trackMemoryWarnings,
                 telemetrySampleRate: telemetrySampleRate
                     ?? DefaultConfiguration.telemetrySampleRate,
-                customEndpoint: customEndpoint
+                customEndpoint: customEndpoint,
+                enableTimeseries: enableTimeseries,
+                timeseriesCollectTypes: timeseriesCollectTypes
             )
         } else {
             rumConfiguration = nil
@@ -357,6 +363,10 @@ extension Dictionary where Key == String, Value == AnyObject {
             let firstPartyHosts =
                 firstPartyHostsArray?.asFirstPartyHosts() ?? DefaultConfiguration.firstPartyHosts
 
+            let timeseriesDict = rum["unstable_timeseries"] as? [String: Any?]
+            let enableTimeseries = timeseriesDict != nil
+            let timeseriesCollectTypes = timeseriesDict?["collectTypes"] as? [String]
+
             rumConfiguration = RumConfiguration(
                 applicationId: applicationId,
                 trackFrustrations: rum["trackFrustrations"] as? Bool
@@ -387,7 +397,9 @@ extension Dictionary where Key == String, Value == AnyObject {
                     ?? DefaultConfiguration.trackMemoryWarnings,
                 telemetrySampleRate: (rum["telemetrySampleRate"] as? Double)
                     ?? DefaultConfiguration.telemetrySampleRate,
-                customEndpoint: rum["customEndpoint"] as? String
+                customEndpoint: rum["customEndpoint"] as? String,
+                enableTimeseries: enableTimeseries,
+                timeseriesCollectTypes: timeseriesCollectTypes
             )
         } else {
             rumConfiguration = nil

@@ -7,6 +7,7 @@ import type { ActionEventMapper } from '../../rum/eventMappers/actionEventMapper
 import type { ErrorEventMapper } from '../../rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../../rum/eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from '../../rum/types';
+import type { TimeseriesConfiguration } from '../types';
 import { VitalsUpdateFrequency } from '../types';
 
 import type {
@@ -40,6 +41,7 @@ const DEFAULTS = {
     trackNonFatalAnrs: undefined,
     trackResources: false,
     trackWatchdogTerminations: false,
+    unstable_timeseries: undefined,
     useAccessibilityLabel: true,
     vitalsUpdateFrequency: VitalsUpdateFrequency.AVERAGE
 };
@@ -119,6 +121,10 @@ export class RumConfiguration implements RumConfigurationType {
     // Track Watchdog Terminations enabled
     public trackWatchdogTerminations: boolean =
         DEFAULTS.trackWatchdogTerminations;
+
+    // Experimental Timeseries Configuration
+    public unstable_timeseries?: TimeseriesConfiguration =
+        DEFAULTS.unstable_timeseries;
 
     // Use Accessibility Label enabled for interaction tracking
     public useAccessibilityLabel: boolean = DEFAULTS.useAccessibilityLabel;
