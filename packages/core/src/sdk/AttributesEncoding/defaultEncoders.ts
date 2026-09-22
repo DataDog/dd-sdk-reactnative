@@ -16,7 +16,7 @@ import {
 } from './errorUtils';
 import { encodeAttributesInPlace, sanitizeForJson } from './helpers';
 import type { AttributeEncoder, Encodable } from './types';
-import { warn } from './utils';
+import { safeToString, warn } from './utils';
 
 /** Primitives: keep them explicit so the full pipeline is used uniformly. */
 export const stringEncoder: AttributeEncoder<string> = {
@@ -165,7 +165,11 @@ export const mapEncoder: AttributeEncoder<Map<unknown, unknown>> = {
                     value: sanitizeForJson(v, allEncoders)
                 });
             } catch (err) {
-                warn(`Failed to encode Map key: ${k}. ERROR: ${String(err)}`);
+                warn(
+                    `Failed to encode Map key: ${safeToString(
+                        k
+                    )}. ERROR: ${safeToString(err)}`
+                );
             }
         }
 

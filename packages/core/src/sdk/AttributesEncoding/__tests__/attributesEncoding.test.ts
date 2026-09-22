@@ -41,6 +41,31 @@ describe('encodeAttributes', () => {
         expect(warn).toHaveBeenCalled();
     });
 
+    it('drops a null-prototype object without throwing', () => {
+        expect(() =>
+            encodeAttributes({ bad: Object.create(null) })
+        ).not.toThrow();
+        expect(warn).toHaveBeenCalled();
+    });
+
+    it('drops a value whose toString throws without throwing', () => {
+        const bad = {
+            toString() {
+                throw new Error('boom');
+            }
+        };
+        Object.setPrototypeOf(bad, null);
+        expect(() => encodeAttributes({ bad })).not.toThrow();
+        expect(warn).toHaveBeenCalled();
+    });
+
+    it('drops a null-prototype object nested in an array without throwing', () => {
+        expect(() =>
+            encodeAttributes({ bad: [Object.create(null)] })
+        ).not.toThrow();
+        expect(warn).toHaveBeenCalled();
+    });
+
     it('drops unsupported root function', () => {
         const result = encodeAttributes(() => {});
         expect(result).toEqual({});
