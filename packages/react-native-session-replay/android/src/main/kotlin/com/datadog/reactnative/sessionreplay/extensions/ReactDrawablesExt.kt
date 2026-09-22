@@ -53,32 +53,37 @@ internal fun ArrayDrawable.getDrawableOrNull(index: Int): Drawable? {
 }
 
 internal fun ForwardingDrawable.tryToExtractBitmap(resources: Resources): Bitmap? {
-    val forwardedDrawable = drawable
-    return if (forwardedDrawable != null) {
-        forwardedDrawable.tryToExtractBitmap(resources)
-    } else {
-       toBitmapOrNull(
-            intrinsicWidth,
-            intrinsicHeight,
-            Config.ARGB_8888
-        )
-    }
+    // when there's no delegate to forward to, don't fall back to drawing this
+    // ForwardingDrawable directly - some subclasses (e.g. Fresco's RootDrawable, via its
+    // controller overlay) can still draw an independent live Drawable in that state, with
+    // no recycled protection at all.
+    return drawable?.tryToExtractBitmap(resources)
 }
 
 internal fun RoundedBitmapDrawable.tryToExtractBitmap(): Bitmap? {
-    val privateBitmap = try {
+    // if reflection itself fails (e.g. a future Fresco version renames/removes the field),
+    // we have no information about whether a live bitmap exists - falling back to draw()
+    // would read it unprotected, so return null instead of ever reaching that fallback.
+    val reflectedBitmap = try {
         val field = RoundedBitmapDrawable::class.java.getDeclaredField("mBitmap")
         field.isAccessible = true
         field.get(this) as? Bitmap
     } catch (_: NoSuchFieldException) {
-        null
+        return null
     } catch (_: IllegalAccessException) {
-        null
+        return null
     } catch (_: Exception) {
-        null
+        return null
     }
 
-    return privateBitmap ?: toBitmapOrNull(
+    // once we've identified the underlying bitmap, don't fall back to drawing this Drawable -
+    // draw() reads that same bitmap internally, so it carries the same recycle risk safeCopy()
+    // just ruled out. Only fall back when reflection succeeded and genuinely found no bitmap.
+    if (reflectedBitmap != null) {
+        return reflectedBitmap.safeCopy()
+    }
+
+    return toBitmapOrNull(
         intrinsicWidth,
         intrinsicHeight,
         Config.ARGB_8888
@@ -87,12 +92,13 @@ internal fun RoundedBitmapDrawable.tryToExtractBitmap(): Bitmap? {
 
 internal fun BitmapDrawable.tryToExtractBitmap(resources: Resources): Bitmap? {
     if (bitmap != null) {
-        return bitmap
+        // never hand out the live bitmap - its owner (e.g. Fresco) may recycle() it concurrently
+        return bitmap.safeCopy()
     }
 
     if (constantState != null) {
         val copy = constantState?.newDrawable(resources)
-        return (copy as? BitmapDrawable)?.bitmap ?: copy?.toBitmapOrNull(
+        return (copy as? BitmapDrawable)?.bitmap?.safeCopy() ?: copy?.toBitmapOrNull(
             intrinsicWidth,
             intrinsicHeight,
             Config.ARGB_8888
@@ -103,25 +109,18 @@ internal fun BitmapDrawable.tryToExtractBitmap(resources: Resources): Bitmap? {
 }
 
 internal fun ArrayDrawable.tryToExtractBitmap(resources: Resources): Bitmap? {
-    var width = 0
-    var height = 0
     for (index in 0 until numberOfLayers) {
         val drawable = getDrawableOrNull(index) ?: continue
 
         if (drawable is ScaleTypeDrawable) {
             return drawable.tryToExtractBitmap(resources)
         }
-
-        if (drawable.intrinsicWidth * drawable.intrinsicHeight > width * height) {
-            width = drawable.intrinsicWidth
-            height = drawable.intrinsicHeight
-        }
     }
 
-    return if (width > 0 && height > 0)
-        toBitmapOrNull(width, height, Config.ARGB_8888)
-    else
-        null
+    // no ScaleTypeDrawable layer found - falling back to drawing this ArrayDrawable would
+    // composite its layers via draw(), which can read a direct BitmapDrawable layer's live
+    // bitmap with no recycled protection. Safer to return null than risk that crash.
+    return null
 }
 
 internal fun Drawable.tryToExtractBitmap(
@@ -166,18 +165,21 @@ internal fun Drawable.toBitmap(
     width: Int = intrinsicWidth,
     height: Int = intrinsicHeight,
     config: Config? = null
-): Bitmap {
+): Bitmap? {
     if (this is BitmapDrawable) {
         if (bitmap == null) {
             return Bitmap.createBitmap(width, height, config ?: Config.ARGB_8888)
         }
-        if (config == null || bitmap.config == config) {
-            // Fast-path to return original. Bitmap.createScaledBitmap will do this check, but it
-            // involves allocation and two jumps into native code so we perform the check ourselves.
-            if (width == bitmap.width && height == bitmap.height) {
-                return bitmap
-            }
-            return Bitmap.createScaledBitmap(bitmap, width, height, true)
+        // never read/return `bitmap` as-is - its owner may recycle() it concurrently. This
+        // must never fall through to the draw() fallback below: draw() reads this same
+        // `bitmap` internally with no recycled check, regardless of any config mismatch.
+        val scaled = bitmap.safeScale(width, height) ?: return null
+        return if (config == null || scaled.config == config) {
+            scaled
+        } else {
+            // config differs from the source's own - convert on our own private `scaled`
+            // result, never on the original bitmap.
+            scaled.safeCopy(config)
         }
     }
 
