@@ -45,7 +45,8 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
             trackNonFatalAnrs = rm.getBooleanOrNull("trackNonFatalAnrs"),
             initialResourceThreshold = rm.getDoubleOrNull("initialResourceThreshold"),
             telemetrySampleRate = rm.getDoubleOrNull("telemetrySampleRate"),
-            customEndpoint = rm.getString("customEndpoint")
+            customEndpoint = rm.getString("customEndpoint"),
+            timeseries = rm.getMap("unstable_timeseries")?.asTimeseriesConfiguration()
         )
     }
 
@@ -85,6 +86,12 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     )
 }
 
+
+internal fun ReadableMap.asTimeseriesConfiguration(): TimeseriesConfiguration {
+    return TimeseriesConfiguration(
+        collectTypes = getArray("collectTypes")?.toArrayList()?.filterIsInstance<String>()
+    )
+}
 
 internal fun ReadableMap.asConfigurationForTelemetry(): ConfigurationForTelemetry {
     return ConfigurationForTelemetry(
@@ -187,7 +194,8 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
             initialResourceThreshold = rum.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold,
             telemetrySampleRate = rum.telemetrySampleRate?.toDouble()
                 ?: DefaultConfiguration.telemetrySampleRate,
-            customEndpoint = rum.customEndpoint
+            customEndpoint = rum.customEndpoint,
+            timeseries = rum.unstable_timeseries?.asTimeseriesConfiguration()
         )
     }
 
@@ -228,6 +236,12 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
     )
 }
 
+
+internal fun JSONTimeseriesConfiguration.asTimeseriesConfiguration(): TimeseriesConfiguration {
+    return TimeseriesConfiguration(
+        collectTypes = this.collectTypes
+    )
+}
 
 internal fun JSONProxyConfiguration.asProxyConfig(): Pair<Proxy, ProxyAuthenticator?>? {
     return buildProxyConfig(type, address, port, username, password)
@@ -331,6 +345,15 @@ internal fun DdSdkConfiguration.toReadableMap(): ReadableMap {
         rum.initialResourceThreshold?.let { rumMap.putDouble("initialResourceThreshold", it) }
         rum.telemetrySampleRate?.let { rumMap.putDouble("telemetrySampleRate", it) }
         rum.customEndpoint?.let { rumMap.putString("customEndpoint", it) }
+        rum.timeseries?.let { timeseries ->
+            val timeseriesMap = WritableNativeMap()
+            timeseries.collectTypes?.let { types ->
+                val typesArray = WritableNativeArray()
+                types.forEach { typesArray.pushString(it) }
+                timeseriesMap.putArray("collectTypes", typesArray)
+            }
+            rumMap.putMap("unstable_timeseries", timeseriesMap)
+        }
 
         map.putMap("rumConfiguration", rumMap)
     }
