@@ -26,6 +26,7 @@ internal class MockDatadogCore: DatadogCoreProtocol {
     private(set) var features: [String: DatadogFeature] = [:]
     @ReadWriteLock
     private(set) var baggages: [String: Any] = [:]
+    var remoteConfiguration: RemoteConfiguration? = nil
 
     func register<T>(feature: T) throws where T : DatadogInternal.DatadogFeature {
         features[T.name] = feature

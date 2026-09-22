@@ -261,6 +261,8 @@ private class MockDatadogWebViewDelegate: NSObject, RCTDatadogWebViewDelegate {
 }
 
 private class MockDatadogCore: DatadogCoreProtocol {
+    var remoteConfiguration: RemoteConfiguration? = nil
+
     func mostRecentModifiedFileAt(before: Date) throws -> Date? {
         return nil
     }
