@@ -22,9 +22,10 @@ import { DdRumUserInteractionTracking } from '../rum/instrumentation/interaction
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
-import { NativeDdSdk } from '../sdk/DdSdkInternal';
+import { DdSdkWrapper } from '../sdk/DdSdkInternal';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
+import NativeDdSdkSpec from '../specs/NativeDdSdk';
 import type { LogEvent } from '../types';
 import { ErrorSource } from '../types';
 import { version as sdkVersion } from '../version';
@@ -1184,8 +1185,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addAttribute(key, value);
 
             // THEN
-            expect(NativeDdSdk.addAttribute).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.addAttribute).toHaveBeenCalledWith(key, {
+            expect(NativeDdSdkSpec.addAttribute).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.addAttribute).toHaveBeenCalledWith(key, {
                 value
             });
             expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
@@ -1205,8 +1206,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.removeAttribute(key);
 
             // THEN
-            expect(NativeDdSdk.removeAttribute).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.removeAttribute).toHaveBeenCalledWith(key);
+            expect(NativeDdSdkSpec.removeAttribute).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.removeAttribute).toHaveBeenCalledWith(key);
             expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
                 undefined
             );
@@ -1223,8 +1224,10 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addAttributes(attributes);
 
             // THEN
-            expect(NativeDdSdk.addAttributes).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.addAttributes).toHaveBeenCalledWith(attributes);
+            expect(NativeDdSdkSpec.addAttributes).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.addAttributes).toHaveBeenCalledWith(
+                attributes
+            );
             expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
                 foo: 'bar'
             });
@@ -1241,8 +1244,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.removeAttributes(['foo', 'baz']);
 
             // THEN
-            expect(NativeDdSdk.removeAttributes).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.removeAttributes).toHaveBeenCalledWith([
+            expect(NativeDdSdkSpec.removeAttributes).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.removeAttributes).toHaveBeenCalledWith([
                 'foo',
                 'baz'
             ]);
@@ -1268,8 +1271,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.setUserInfo(userInfo);
 
             // THEN
-            expect(NativeDdSdk.setUserInfo).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.setUserInfo).toHaveBeenCalledWith(userInfo);
+            expect(NativeDdSdkSpec.setUserInfo).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.setUserInfo).toHaveBeenCalledWith(userInfo);
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
                 userInfo
             );
@@ -1289,8 +1292,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addUserExtraInfo(extraInfo);
 
             // THEN
-            expect(NativeDdSdk.addUserExtraInfo).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.addUserExtraInfo).toHaveBeenCalledWith(
+            expect(NativeDdSdkSpec.addUserExtraInfo).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.addUserExtraInfo).toHaveBeenCalledWith(
                 extraInfo
             );
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
@@ -1310,7 +1313,7 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addUserExtraInfo(extraInfo);
 
             // THEN
-            expect(NativeDdSdk.addUserExtraInfo).toHaveBeenCalledWith(
+            expect(NativeDdSdkSpec.addUserExtraInfo).toHaveBeenCalledWith(
                 extraInfo
             );
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
@@ -1339,8 +1342,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.clearUserInfo();
 
             // THEN
-            expect(NativeDdSdk.clearUserInfo).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.setUserInfo).toHaveBeenCalled();
+            expect(NativeDdSdkSpec.clearUserInfo).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.setUserInfo).toHaveBeenCalled();
             expect(
                 UserInfoSingleton.getInstance().getUserInfo()
             ).toBeUndefined();
@@ -1357,8 +1360,8 @@ describe('DdSdkReactNative', () => {
             DdSdkReactNative.setTrackingConsent(consent);
 
             // THEN
-            expect(NativeDdSdk.setTrackingConsent).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdk.setTrackingConsent).toHaveBeenCalledWith(
+            expect(NativeDdSdkSpec.setTrackingConsent).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.setTrackingConsent).toHaveBeenCalledWith(
                 consent
             );
         });
@@ -1370,7 +1373,7 @@ describe('DdSdkReactNative', () => {
             DdSdkReactNative.clearAllData();
 
             // THEN
-            expect(NativeDdSdk.clearAllData).toHaveBeenCalledTimes(1);
+            expect(NativeDdSdkSpec.clearAllData).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -1500,4 +1503,121 @@ describe('DdSdkReactNative', () => {
             });
         }
     );
+    describe('routing through DdSdkWrapper', () => {
+        it('DdSdkReactNative.addAttribute reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'addAttribute');
+
+            await DdSdkReactNative.addAttribute('key', 'value');
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.removeAttribute reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'removeAttribute');
+
+            await DdSdkReactNative.removeAttribute('key');
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.addAttributes reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'addAttributes');
+
+            await DdSdkReactNative.addAttributes({ key: 'value' });
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.removeAttributes reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'removeAttributes');
+
+            await DdSdkReactNative.removeAttributes(['key']);
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.setUserInfo reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'setUserInfo');
+
+            await DdSdkReactNative.setUserInfo({ id: 'user-id' });
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.clearUserInfo reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'clearUserInfo');
+
+            await DdSdkReactNative.clearUserInfo();
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.addUserExtraInfo reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'addUserExtraInfo');
+
+            await DdSdkReactNative.addUserExtraInfo({ role: 'admin' });
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.setAccountInfo reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'setAccountInfo');
+
+            await DdSdkReactNative.setAccountInfo({ id: 'account-id' });
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.clearAccountInfo reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'clearAccountInfo');
+
+            await DdSdkReactNative.clearAccountInfo();
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.addAccountExtraInfo reaches the native spec via the wrapper', async () => {
+            // addAccountExtraInfo bails out early unless an account ID is set.
+            await DdSdkReactNative.setAccountInfo({ id: 'account-id' });
+            const spy = jest.spyOn(
+                DdSdkWrapper.prototype,
+                'addAccountExtraInfo'
+            );
+
+            await DdSdkReactNative.addAccountExtraInfo({ tier: 'premium' });
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.setTrackingConsent reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(
+                DdSdkWrapper.prototype,
+                'setTrackingConsent'
+            );
+
+            await DdSdkReactNative.setTrackingConsent(TrackingConsent.GRANTED);
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+
+        it('DdSdkReactNative.clearAllData reaches the native spec via the wrapper', async () => {
+            const spy = jest.spyOn(DdSdkWrapper.prototype, 'clearAllData');
+
+            await DdSdkReactNative.clearAllData();
+
+            expect(spy).toHaveBeenCalled();
+            spy.mockRestore();
+        });
+    });
 });
