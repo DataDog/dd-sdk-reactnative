@@ -913,4 +913,82 @@ describe('FlagsClient', () => {
             ).toEqual({ status: 'error', errorCode: 'PROVIDER_NOT_READY' });
         });
     });
+
+    describe('serial id', () => {
+        const trackedFlag = () =>
+            (NativeModules.DdFlags.trackEvaluation as jest.Mock).mock
+                .calls[0][2];
+
+        it('hands the serial id to native exposure tracking on the offline path', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(
+                buildConfig({
+                    'offline-bool': {
+                        ...offlineFlags['offline-bool'],
+                        serialId: 340132
+                    }
+                })
+            );
+            flagsClient.getBooleanValue('offline-bool', false);
+
+            expect(trackedFlag().serialId).toBe('340132');
+        });
+
+        it('hands serial id 0 to native exposure tracking', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(
+                buildConfig({
+                    'offline-bool': {
+                        ...offlineFlags['offline-bool'],
+                        serialId: 0
+                    }
+                })
+            );
+            flagsClient.getBooleanValue('offline-bool', false);
+
+            expect(trackedFlag().serialId).toBe('0');
+        });
+
+        it('sends no serial id key when the configuration carries none', () => {
+            const flagsClient = DdFlags.getClient();
+
+            flagsClient.setConfiguration(buildConfig(offlineFlags));
+            flagsClient.getBooleanValue('offline-bool', false);
+
+            expect(JSON.stringify(trackedFlag())).not.toContain('serialId');
+        });
+
+        it('passes through the serial id from a native snapshot on the online path', async () => {
+            // The native snapshot is cached verbatim, so a field the bridge adds reaches
+            // trackEvaluation without the JS layer naming it.
+            jest.spyOn(
+                NativeModules.DdFlags,
+                'setEvaluationContext'
+            ).mockResolvedValueOnce({
+                'test-boolean-flag': {
+                    key: 'test-boolean-flag',
+                    value: true,
+                    allocationKey: '',
+                    variationKey: 'true',
+                    reason: 'STATIC',
+                    doLog: true,
+                    variationType: '',
+                    variationValue: '',
+                    extraLogging: {},
+                    serialId: '340132'
+                }
+            });
+
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'user-1',
+                attributes: {}
+            });
+            flagsClient.getBooleanValue('test-boolean-flag', false);
+
+            expect(trackedFlag().serialId).toBe('340132');
+        });
+    });
 });

@@ -214,19 +214,19 @@ private fun convertUnparsedFlagToMap(
     }
 
     // Return a [Map] as an intermediate because it is easier to use; we can convert it to WritableMap right before sending to React Native.
-    return mapOf(
-        "key" to flagKey,
-        "value" to (parsedValue ?: flag.variationValue),
-        "allocationKey" to flag.allocationKey,
-        "variationKey" to flag.variationKey,
-        "variationType" to flag.variationType,
-        "variationValue" to flag.variationValue,
-        "reason" to flag.reason,
-        "doLog" to flag.doLog,
-        "extraLogging" to flag.extraLogging.toMap(),
+    return buildMap {
+        put("key", flagKey)
+        put("value", parsedValue ?: flag.variationValue)
+        put("allocationKey", flag.allocationKey)
+        put("variationKey", flag.variationKey)
+        put("variationType", flag.variationType)
+        put("variationValue", flag.variationValue)
+        put("reason", flag.reason)
+        put("doLog", flag.doLog)
+        put("extraLogging", flag.extraLogging.toMap())
         // Serialized as a String because the React Native bridge converts Long values to Double
-        SERIAL_ID_KEY to flag.serialId?.toString()
-    )
+        flag.serialId?.let { put(SERIAL_ID_KEY, it.toString()) }
+    }
 }
 
 @Suppress("UNCHECKED_CAST")
