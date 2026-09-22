@@ -78,6 +78,11 @@ describe('FileBasedConfiguration', () => {
                     "trackNonFatalAnrs": true,
                     "trackResources": true,
                     "trackWatchdogTerminations": true,
+                    "unstable_timeseries": {
+                      "collectTypes": [
+                        "cpu",
+                      ],
+                    },
                     "useAccessibilityLabel": false,
                     "vitalsUpdateFrequency": "NEVER",
                   },
@@ -193,6 +198,7 @@ describe('FileBasedConfiguration', () => {
                     "trackNonFatalAnrs": undefined,
                     "trackResources": true,
                     "trackWatchdogTerminations": false,
+                    "unstable_timeseries": undefined,
                     "useAccessibilityLabel": false,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
@@ -260,6 +266,7 @@ describe('FileBasedConfiguration', () => {
                     "trackNonFatalAnrs": undefined,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
+                    "unstable_timeseries": undefined,
                     "useAccessibilityLabel": true,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },

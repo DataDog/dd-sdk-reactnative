@@ -13,6 +13,7 @@ import com.datadog.android.rum.configuration.VitalsUpdateFrequency
 import com.datadog.reactnative.ConfigurationForTelemetry
 import com.datadog.reactnative.DdSdkConfiguration
 import com.datadog.reactnative.ProxyAuthenticator
+import com.datadog.reactnative.TimeseriesConfiguration
 import com.facebook.react.bridge.ReadableMap
 import java.net.Proxy
 
@@ -67,6 +68,7 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         rumMap["initialResourceThreshold"] = rum?.initialResourceThreshold ?: 0.1
         rumMap["telemetrySampleRate"] = rum?.telemetrySampleRate ?: 20.0
         rum?.customEndpoint?.let { rumMap["customEndpoint"] = it }
+        rum?.timeseries?.let { rumMap["unstable_timeseries"] = it.toReadableMap() }
         map["rumConfiguration"] = rumMap.toReadableMap()
     }
 
@@ -90,6 +92,12 @@ fun DdSdkConfiguration.toReadableJavaOnlyMap(): ReadableMap {
         map["configurationForTelemetry"] = telemetry.toReadableJavaOnlyMap()
     }
 
+    return map.toReadableMap()
+}
+
+internal fun TimeseriesConfiguration.toReadableMap(): ReadableMap {
+    val map = mutableMapOf<String, Any?>()
+    collectTypes?.let { map["collectTypes"] = it.toReadableArray() }
     return map.toReadableMap()
 }
 

@@ -113,6 +113,7 @@ describe('DatadogProvider', () => {
                     "trackNonFatalAnrs": undefined,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
+                    "unstable_timeseries": undefined,
                     "useAccessibilityLabel": true,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
