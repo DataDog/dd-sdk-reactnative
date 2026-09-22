@@ -7,7 +7,7 @@
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getErrorStackTrace } from '../../AttributesEncoding/errorUtils';
-import { NativeDdSdk } from '../../DdSdkInternal';
+import { DdSdk } from '../../DdSdk';
 
 import { DatadogBuffer } from './DatadogBuffer';
 
@@ -206,7 +206,7 @@ export class BoundedBuffer extends DatadogBuffer {
     private drainTelemetry = () => {
         Object.values(this.telemetryBuffer).forEach(
             ({ message, stack, kind, occurrences }) => {
-                NativeDdSdk.telemetryError(
+                DdSdk.telemetryError(
                     `${message} happened ${occurrences} times.`,
                     stack,
                     kind

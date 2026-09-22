@@ -10,7 +10,7 @@ import { AccountInfoSingleton } from '../AccountInfoSingleton/AccountInfoSinglet
 import type { AccountInfo } from '../AccountInfoSingleton/types';
 import { AttributesSingleton } from '../AttributesSingleton/AttributesSingleton';
 import type { Attributes } from '../AttributesSingleton/types';
-import { NativeDdSdk } from '../DdSdkInternal';
+import { DdSdk } from '../DdSdk';
 import { UserInfoSingleton } from '../UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from '../UserInfoSingleton/types';
 
@@ -92,7 +92,7 @@ export class EventMapper<RawEvent, MapperEvent, NativeEvent> {
                 )}: ${error}`,
                 SdkVerbosity.WARN
             );
-            NativeDdSdk.telemetryDebug('Error while running the event mapper');
+            DdSdk.telemetryDebug('Error while running the event mapper');
             return this.formatMapperEventForNative(backupEvent, backupEvent);
         }
     };

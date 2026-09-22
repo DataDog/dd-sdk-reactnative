@@ -10,16 +10,11 @@ import type { DdNativeSdkType } from '../nativeModulesTypes';
 import type { AttributeEncoder } from './AttributesEncoding/types';
 
 // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-const NativeDdSdk: DdNativeSdkType = require('../specs/NativeDdSdk').default;
+const NativeDdSdkSpec: DdNativeSdkType = require('../specs/NativeDdSdk')
+    .default;
 
-export type DdSdkType = {
+export type DdSdkType = DdNativeSdkType & {
     readonly attributeEncoders: AttributeEncoder<any>[];
-
-    /**
-     * Initializes Datadog's features.
-     * @param configuration: The configuration to use.
-     */
-    initialize(configuration: DdSdkNativeConfiguration): Promise<void>;
 };
 
 export class DdSdkWrapper implements DdNativeSdkType {
@@ -30,49 +25,49 @@ export class DdSdkWrapper implements DdNativeSdkType {
 
     initialize(configuration: DdSdkNativeConfiguration): Promise<void> {
         this._attributeEncoders = [...configuration.attributeEncoders];
-        return NativeDdSdk.initialize(configuration);
+        return NativeDdSdkSpec.initialize(configuration);
     }
 
     getConstants() {
-        return NativeDdSdk.getConstants();
+        return NativeDdSdkSpec.getConstants();
     }
 
     setUserInfo(user: object): Promise<object> {
-        return NativeDdSdk.setUserInfo(user);
+        return NativeDdSdkSpec.setUserInfo(user);
     }
 
     clearUserInfo(): Promise<void> {
-        return NativeDdSdk.clearUserInfo();
+        return NativeDdSdkSpec.clearUserInfo();
     }
 
     addUserExtraInfo(extraInfo: object): Promise<object> {
-        return NativeDdSdk.addUserExtraInfo(extraInfo);
+        return NativeDdSdkSpec.addUserExtraInfo(extraInfo);
     }
 
     addAttribute(key: string, value: object): Promise<void> {
-        return NativeDdSdk.addAttribute(key, value);
+        return NativeDdSdkSpec.addAttribute(key, value);
     }
     removeAttribute(key: string): Promise<void> {
-        return NativeDdSdk.removeAttribute(key);
+        return NativeDdSdkSpec.removeAttribute(key);
     }
     addAttributes(attributes: object): Promise<void> {
-        return NativeDdSdk.addAttributes(attributes);
+        return NativeDdSdkSpec.addAttributes(attributes);
     }
     removeAttributes(keys: string[]): Promise<void> {
-        return NativeDdSdk.removeAttributes(keys);
+        return NativeDdSdkSpec.removeAttributes(keys);
     }
     setAccountInfo(account: object): Promise<object> {
-        return NativeDdSdk.setAccountInfo(account);
+        return NativeDdSdkSpec.setAccountInfo(account);
     }
     clearAccountInfo(): Promise<void> {
-        return NativeDdSdk.clearAccountInfo();
+        return NativeDdSdkSpec.clearAccountInfo();
     }
     addAccountExtraInfo(extraInfo: object): Promise<object> {
-        return NativeDdSdk.addAccountExtraInfo(extraInfo);
+        return NativeDdSdkSpec.addAccountExtraInfo(extraInfo);
     }
 
     setTrackingConsent(trackingConsent: string): Promise<void> {
-        return NativeDdSdk.setTrackingConsent(trackingConsent);
+        return NativeDdSdkSpec.setTrackingConsent(trackingConsent);
     }
 
     sendTelemetryLog(
@@ -80,11 +75,11 @@ export class DdSdkWrapper implements DdNativeSdkType {
         attributes: object,
         config: object
     ): Promise<void> {
-        return NativeDdSdk.sendTelemetryLog(message, attributes, config);
+        return NativeDdSdkSpec.sendTelemetryLog(message, attributes, config);
     }
 
     telemetryDebug(message: string): Promise<void> {
-        return NativeDdSdk.telemetryDebug(message);
+        return NativeDdSdkSpec.telemetryDebug(message);
     }
 
     telemetryError(
@@ -92,23 +87,23 @@ export class DdSdkWrapper implements DdNativeSdkType {
         stack: string,
         kind: string
     ): Promise<void> {
-        return NativeDdSdk.telemetryError(message, stack, kind);
+        return NativeDdSdkSpec.telemetryError(message, stack, kind);
     }
 
     consumeWebviewEvent(message: string): Promise<void> {
-        return NativeDdSdk.consumeWebviewEvent(message);
+        return NativeDdSdkSpec.consumeWebviewEvent(message);
     }
 
     clearAllData(): Promise<void> {
-        return NativeDdSdk.clearAllData();
+        return NativeDdSdkSpec.clearAllData();
     }
 
     addListener(eventType: string): void {
-        return NativeDdSdk.addListener(eventType);
+        return NativeDdSdkSpec.addListener(eventType);
     }
 
     removeListeners(count: number): void {
-        return NativeDdSdk.removeListeners(count);
+        return NativeDdSdkSpec.removeListeners(count);
     }
 
     _setAttributeEncodersForTesting(
@@ -117,5 +112,3 @@ export class DdSdkWrapper implements DdNativeSdkType {
         this._attributeEncoders = [...attributeEncoders];
     }
 }
-
-export { NativeDdSdk };

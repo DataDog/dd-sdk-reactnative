@@ -58,6 +58,20 @@ actualRN.NativeModules.DdSdk = {
     clearAllData: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdNativeSdkType['clearAllData']>,
+    setAccountInfo: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['setAccountInfo']>,
+    clearAccountInfo: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['clearAccountInfo']>,
+    addAccountExtraInfo: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdNativeSdkType['addAccountExtraInfo']>,
+    getConstants: jest
+        .fn()
+        .mockImplementation(() => ({})) as jest.MockedFunction<
+        DdNativeSdkType['getConstants']
+    >,
     addListener: jest.fn().mockImplementation((_: string) => {
         /* empty */
     }) as jest.MockedFunction<DdNativeSdkType['addListener']>,

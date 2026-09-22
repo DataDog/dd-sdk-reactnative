@@ -38,7 +38,7 @@ import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSinglet
 import type { Attributes } from './sdk/AttributesSingleton/types';
 import { registerNativeBridge } from './sdk/DatadogInternalBridge/DdSdkInternalNativeBridge';
 import { BufferSingleton } from './sdk/DatadogProvider/Buffer/BufferSingleton';
-import { NativeDdSdk } from './sdk/DdSdkInternal';
+import { DdSdk } from './sdk/DdSdk';
 import { GlobalState } from './sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from './sdk/UserInfoSingleton/UserInfoSingleton';
 import type { UserInfo } from './sdk/UserInfoSingleton/types';
@@ -86,7 +86,7 @@ export class DdSdkReactNative {
                 SdkVerbosity.WARN
             );
             if (!__DEV__) {
-                NativeDdSdk.telemetryDebug(
+                DdSdk.telemetryDebug(
                     'RN SDK was already initialized in javascript'
                 );
             }
@@ -97,7 +97,7 @@ export class DdSdkReactNative {
 
         registerNativeBridge();
 
-        await NativeDdSdk.initialize(
+        await DdSdk.initialize(
             DdSdkReactNative.buildConfiguration(configuration, params)
         );
 
@@ -218,7 +218,7 @@ export class DdSdkReactNative {
             `Adding attribute ${JSON.stringify(value)} for key ${key}`,
             SdkVerbosity.DEBUG
         );
-        await NativeDdSdk.addAttribute(key, { value });
+        await DdSdk.addAttribute(key, { value });
         AttributesSingleton.getInstance().addAttribute(key, value);
     };
 
@@ -231,7 +231,7 @@ export class DdSdkReactNative {
             `Removing attribute for key ${key}`,
             SdkVerbosity.DEBUG
         );
-        await NativeDdSdk.removeAttribute(key);
+        await DdSdk.removeAttribute(key);
         AttributesSingleton.getInstance().removeAttribute(key);
     };
 
@@ -245,7 +245,7 @@ export class DdSdkReactNative {
             `Adding attributes ${JSON.stringify(attributes)}`,
             SdkVerbosity.DEBUG
         );
-        await NativeDdSdk.addAttributes(attributes);
+        await DdSdk.addAttributes(attributes);
         AttributesSingleton.getInstance().addAttributes(attributes);
     };
 
@@ -258,7 +258,7 @@ export class DdSdkReactNative {
             `Removing attributes for keys ${JSON.stringify(keys)}`,
             SdkVerbosity.DEBUG
         );
-        await NativeDdSdk.removeAttributes(keys);
+        await DdSdk.removeAttributes(keys);
         AttributesSingleton.getInstance().removeAttributes(keys);
     };
 
@@ -285,7 +285,7 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
 
-        await NativeDdSdk.setUserInfo(userInfo);
+        await DdSdk.setUserInfo(userInfo);
         UserInfoSingleton.getInstance().setUserInfo(userInfo);
     };
 
@@ -295,7 +295,7 @@ export class DdSdkReactNative {
      */
     static clearUserInfo = async (): Promise<void> => {
         InternalLog.log('Clearing user info', SdkVerbosity.DEBUG);
-        await NativeDdSdk.clearUserInfo();
+        await DdSdk.clearUserInfo();
         UserInfoSingleton.getInstance().clearUserInfo();
     };
 
@@ -312,7 +312,7 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
 
-        await NativeDdSdk.addUserExtraInfo(extraUserInfo);
+        await DdSdk.addUserExtraInfo(extraUserInfo);
         UserInfoSingleton.getInstance().addUserExtraInfo(extraUserInfo);
     };
 
@@ -333,7 +333,7 @@ export class DdSdkReactNative {
             SdkVerbosity.DEBUG
         );
 
-        await NativeDdSdk.setAccountInfo(accountInfo);
+        await DdSdk.setAccountInfo(accountInfo);
         AccountInfoSingleton.getInstance().setAccountInfo(accountInfo);
     };
 
@@ -343,7 +343,7 @@ export class DdSdkReactNative {
      */
     static clearAccountInfo = async (): Promise<void> => {
         InternalLog.log('Clearing account info', SdkVerbosity.DEBUG);
-        await NativeDdSdk.clearAccountInfo();
+        await DdSdk.clearAccountInfo();
         AccountInfoSingleton.getInstance().clearAccountInfo();
     };
 
@@ -375,7 +375,7 @@ export class DdSdkReactNative {
             ...extraAccountInfo
         };
 
-        await NativeDdSdk.addAccountExtraInfo(extraInfo);
+        await DdSdk.addAccountExtraInfo(extraInfo);
         AccountInfoSingleton.getInstance().addAccountExtraInfo(
             extraAccountInfo
         );
@@ -388,7 +388,7 @@ export class DdSdkReactNative {
      */
     static setTrackingConsent = (consent: TrackingConsent): Promise<void> => {
         InternalLog.log(`Setting consent ${consent}`, SdkVerbosity.DEBUG);
-        return NativeDdSdk.setTrackingConsent(consent);
+        return DdSdk.setTrackingConsent(consent);
     };
 
     /**
@@ -397,7 +397,7 @@ export class DdSdkReactNative {
      */
     static clearAllData = (): Promise<void> => {
         InternalLog.log('Clearing all data', SdkVerbosity.DEBUG);
-        return NativeDdSdk.clearAllData();
+        return DdSdk.clearAllData();
     };
 
     private static buildConfiguration = (

@@ -21,7 +21,7 @@ import React from 'react';
 import type { DdNativeRumType } from '../../../nativeModulesTypes';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
-import { NativeDdSdk } from '../../../sdk/DdSdkInternal';
+import NativeDdSdkSpec from '../../../specs/NativeDdSdk';
 
 const styles = StyleSheet.create({
     button: {
@@ -467,7 +467,7 @@ describe('startTracking', () => {
         jest.setMock('react/jsx-runtime', {});
         DdRumUserInteractionTracking.startTracking({});
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
-        expect(NativeDdSdk.telemetryDebug).toBeCalledWith(
+        expect(NativeDdSdkSpec.telemetryDebug).toBeCalledWith(
             'React jsx runtime does not export new jsx transform'
         );
     });
@@ -477,7 +477,7 @@ describe('startTracking', () => {
 
         DdRumUserInteractionTracking.startTracking({});
         expect(DdRumUserInteractionTracking['isTracking']).toBe(true);
-        expect(NativeDdSdk.telemetryDebug).toBeCalledWith(
+        expect(NativeDdSdkSpec.telemetryDebug).toBeCalledWith(
             'React version does not support new jsx transform'
         );
     });
