@@ -13,6 +13,37 @@ import { FlagsClient } from './FlagsClient';
 import type { DdFlagsType, FlagsConfiguration } from './types';
 
 const FLAGS_MODULE = 'com.datadog.reactnative.flags';
+const MAX_ASSIGNMENT_REQUEST_RETRY_COUNT = 10;
+
+const validateAssignmentRequestConfiguration = (
+    configuration: FlagsConfiguration
+): void => {
+    const {
+        assignmentRequestTimeoutMs,
+        assignmentRequestRetryCount
+    } = configuration;
+
+    if (
+        assignmentRequestTimeoutMs !== undefined &&
+        (!Number.isSafeInteger(assignmentRequestTimeoutMs) ||
+            assignmentRequestTimeoutMs < 0)
+    ) {
+        throw new Error(
+            '`assignmentRequestTimeoutMs` must be a non-negative integer.'
+        );
+    }
+
+    if (
+        assignmentRequestRetryCount !== undefined &&
+        (!Number.isInteger(assignmentRequestRetryCount) ||
+            assignmentRequestRetryCount < 0 ||
+            assignmentRequestRetryCount > MAX_ASSIGNMENT_REQUEST_RETRY_COUNT)
+    ) {
+        throw new Error(
+            '`assignmentRequestRetryCount` must be an integer between 0 and 10.'
+        );
+    }
+};
 
 /**
  * Implementation class for {@link DdFlagsType}. Please see the interface for documentation.
@@ -32,6 +63,8 @@ class DdFlagsWrapper implements DdFlagsType {
     private clients: Record<string, FlagsClient> = {};
 
     enable = async (configuration: FlagsConfiguration = {}): Promise<void> => {
+        validateAssignmentRequestConfiguration(configuration);
+
         await this.nativeFlags.enable({ enabled: true, ...configuration });
 
         this.isFeatureEnabled = true;
