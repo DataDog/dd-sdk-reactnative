@@ -9,6 +9,8 @@ import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
+import { getNativeDdFlags } from '../specs/NativeDdFlags';
+
 import { FlagsClient } from './FlagsClient';
 import type { DdFlagsType, FlagsConfiguration } from './types';
 
@@ -18,9 +20,7 @@ const FLAGS_MODULE = 'com.datadog.reactnative.flags';
  * Implementation class for {@link DdFlagsType}. Please see the interface for documentation.
  */
 class DdFlagsWrapper implements DdFlagsType {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeFlags: DdNativeFlagsType = require('../specs/NativeDdFlags')
-        .default;
+    private nativeFlags: DdNativeFlagsType = getNativeDdFlags() as DdNativeFlagsType;
 
     private isFeatureEnabled = false;
 

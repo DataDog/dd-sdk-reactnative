@@ -7,10 +7,30 @@
 import type { DdSdkNativeConfiguration } from '../config/features/CoreConfigurationNative';
 import type { DdNativeSdkType } from '../nativeModulesTypes';
 
+import { getNativeDdSdk } from '../specs/NativeDdSdk';
 import type { AttributeEncoder } from './AttributesEncoding/types';
 
-// eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-const NativeDdSdk: DdNativeSdkType = require('../specs/NativeDdSdk').default;
+let cachedNativeDdSdk: DdNativeSdkType | null | undefined;
+const resolveNativeDdSdk = (): DdNativeSdkType | null => {
+    if (cachedNativeDdSdk === undefined) {
+        cachedNativeDdSdk = getNativeDdSdk() as DdNativeSdkType | null;
+    }
+    return cachedNativeDdSdk;
+};
+
+// Lazily-backed handle. Resolution happens on first property access (runtime),
+// never at import — so importing this module is safe on platforms without the
+// native module (e.g. Vega). Methods are bound to the resolved module.
+const NativeDdSdk: DdNativeSdkType = new Proxy({} as DdNativeSdkType, {
+    get: (_target, prop) => {
+        const resolved = resolveNativeDdSdk() as Record<string | symbol, unknown> | null;
+        const value = resolved ? resolved[prop] : undefined;
+        // Return the raw value without binding — TurboModule methods are stateless
+        // so `this` is irrelevant, and returning the original function reference
+        // preserves Jest mock-tracking in tests.
+        return value;
+    }
+});
 
 export type DdSdkType = {
     readonly attributeEncoders: AttributeEncoder<any>[];
