@@ -10,11 +10,9 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+# The Datadog podspecs resolve the native iOS SDK through Swift Package Manager, which requires
+# pods to be linked as dynamic frameworks.
+use_frameworks! :linkage => :dynamic
 
 target 'BenchmarkRunner' do
   config = use_native_modules!
@@ -27,6 +25,10 @@ target 'BenchmarkRunner' do
 
   # OpenTelemetrySdk is needed by the BenchmarkVitals code (metrics exporter, meter provider).
   # OpenTelemetryApi is already pulled in transitively via DatadogTrace, but OpenTelemetrySdk is not.
+  #
+  # /!\ DatadogTrace now pulls opentelemetry-swift-core through SwiftPM while this pod pulls
+  # OpenTelemetryApi through CocoaPods, so OpenTelemetryApi arrives via both package managers and
+  # may collide at link time. Untested -- if it does, source OpenTelemetrySdk from SPM too.
   pod 'OpenTelemetry-Swift-Sdk', '~> 2.5.0'
 
   post_install do |installer|

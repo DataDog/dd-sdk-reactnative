@@ -1,26 +1,6 @@
 PODS:
   - boost (1.84.0)
-  - DatadogCore (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogCrashReporting (3.16.0):
-    - DatadogInternal (= 3.16.0)
-    - KSCrash/Filters (= 2.5.1)
-    - KSCrash/Recording (= 2.5.1)
-  - DatadogFlags (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogInternal (3.16.0)
-  - DatadogLogs (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogRUM (3.16.0):
-    - DatadogInternal (= 3.16.0)
   - DatadogSDKReactNative (3.8.0):
-    - DatadogCore (= 3.16.0)
-    - DatadogCrashReporting (= 3.16.0)
-    - DatadogFlags (= 3.16.0)
-    - DatadogLogs (= 3.16.0)
-    - DatadogRUM (= 3.16.0)
-    - DatadogTrace (= 3.16.0)
-    - DatadogWebViewTracking (= 3.16.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -43,7 +23,6 @@ PODS:
     - Yoga
   - DatadogSDKReactNativeSessionReplay (3.8.0):
     - DatadogSDKReactNative
-    - DatadogSessionReplay (= 3.16.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -65,9 +44,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - DatadogSDKReactNativeWebView (3.8.0):
-    - DatadogInternal (= 3.16.0)
     - DatadogSDKReactNative
-    - DatadogWebViewTracking (= 3.16.0)
     - DoubleConversion
     - glog
     - hermes-engine
@@ -80,6 +57,7 @@ PODS:
     - React-featureflags
     - React-graphics
     - React-ImageManager
+    - react-native-webview
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -88,13 +66,6 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSessionReplay (3.16.0):
-    - DatadogInternal (= 3.16.0)
-  - DatadogTrace (3.16.0):
-    - DatadogInternal (= 3.16.0)
-    - OpenTelemetry-Swift-Api (~> 2.5.0)
-  - DatadogWebViewTracking (3.16.0):
-    - DatadogInternal (= 3.16.0)
   - DoubleConversion (1.1.6)
   - fast_float (6.1.4)
   - FBLazyVector (0.78.2)
@@ -103,17 +74,6 @@ PODS:
   - hermes-engine (0.78.2):
     - hermes-engine/Pre-built (= 0.78.2)
   - hermes-engine/Pre-built (0.78.2)
-  - KSCrash/Core (2.5.1)
-  - KSCrash/Filters (2.5.1):
-    - KSCrash/Recording
-    - KSCrash/RecordingCore
-    - KSCrash/ReportingCore
-  - KSCrash/Recording (2.5.1):
-    - KSCrash/RecordingCore
-  - KSCrash/RecordingCore (2.5.1):
-    - KSCrash/Core
-  - KSCrash/ReportingCore (2.5.1):
-    - KSCrash/Core
   - OpenTelemetry-Swift-Api (2.5.1)
   - OpenTelemetry-Swift-Sdk (2.5.1):
     - OpenTelemetry-Swift-Api (= 2.5.1)
@@ -1963,16 +1923,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
-    - DatadogCore
-    - DatadogCrashReporting
-    - DatadogFlags
-    - DatadogInternal
-    - DatadogLogs
-    - DatadogRUM
-    - DatadogSessionReplay
-    - DatadogTrace
-    - DatadogWebViewTracking
-    - KSCrash
     - OpenTelemetry-Swift-Api
     - OpenTelemetry-Swift-Sdk
     - SocketRocket
@@ -2134,25 +2084,15 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
-  DatadogCore: 7eed8fbaaa1575503c389f343c230858343c8baf
-  DatadogCrashReporting: 04f3c3a5bfd9921aef4d44b4ab80accb39c84ddb
-  DatadogFlags: 033cf48e769c271843e77068c015519880011866
-  DatadogInternal: e5a4652ee266986e29c6b8491aff7f78dc3b731d
-  DatadogLogs: 52792add5827042f619771a23656e2bfb6b0f4e7
-  DatadogRUM: b78d608e013f39c5679ed31ad97dad323c6113e8
-  DatadogSDKReactNative: 09dad2b43643ba603e1d8bdb241847917ba6f15d
-  DatadogSDKReactNativeSessionReplay: 6c6ec0adf5645e7167a4a6b1a6d1ceb656c29c51
-  DatadogSDKReactNativeWebView: 34b05bdd6f540bb48c2ed19a3744698075c1b463
-  DatadogSessionReplay: 932b2077b1a5367de1450479d72093621b9fd618
-  DatadogTrace: 5ef84e254e2e1d337bc52e0cdf16396ca102aeb1
-  DatadogWebViewTracking: e0470157f55a83680a549d79ba2985e0d17465db
+  DatadogSDKReactNative: a7089e56cc0cfa72a1cafdc7abe8fef5f627bf9a
+  DatadogSDKReactNativeSessionReplay: 459fac6340f6b5edbb0045ffe1ef0015f7cabfbb
+  DatadogSDKReactNativeWebView: 307574a321eb9646dbbe954d9b3654ec0666c240
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: e32d34492c519a2194ec9d7f5e7a79d11b73f91c
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: eb93e2f488219332457c3c4eafd2738ddc7e80b8
   hermes-engine: 2771b98fb813fdc6f92edd7c9c0035ecabf9fee7
-  KSCrash: 8c4464fd5da7de520f2ce4a00fdf63f169a80f18
   OpenTelemetry-Swift-Api: 3be9043f6288eb4ac3cbe7548b5bd45fb4ed5849
   OpenTelemetry-Swift-Sdk: d9fa7bc839350f5a81467a5e877f727a8a77712d
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
@@ -2164,39 +2104,39 @@ SPEC CHECKSUMS:
   React-Core: 88e817c42de035378cc71e009193b9a044d3f595
   React-CoreModules: dcf764d71efb4f75d38fcae8d4513b6729f49360
   React-cxxreact: 8cdcc937c5fbc406fe843a381102fd69440ca78a
-  React-debug: 440175830c448e7e53e61ebb8d8468c3256b645e
-  React-defaultsnativemodule: 4824bcd7b96ee2d75c28b1ca21f58976867f5535
-  React-domnativemodule: a421118b475618961cf282e8ea85347cc9bb453c
-  React-Fabric: 6ac7de06009eb96b609a770b17abba6e460b5f45
-  React-FabricComponents: e3bc2680a5a9a4917ff0c8d7f390688c30ef753c
-  React-FabricImage: 8bad558dec7478077974caa96acc79692d6b71f5
-  React-featureflags: b9cf9b35baca1c7f20c06a104ffc325a02752faa
-  React-featureflagsnativemodule: dc93d81da9f41f7132e24455ec8b4b60802fd5b0
-  React-graphics: aaa5a38bea15d7b895b210d95d554af45a07002a
+  React-debug: 0a9fb34ecb645333d905645dabdcfdc945626078
+  React-defaultsnativemodule: b5b92d4b4716825afa8c848b793fc7efdf8aeb5a
+  React-domnativemodule: 073b3161e1b49dfe9045884369ae1ec2b987de26
+  React-Fabric: f62d9ce5c158ae40c2a7b2805b7c055297c9dad7
+  React-FabricComponents: 4c48b1052f8f6c3b03c3c3e2a231f1abd6d89703
+  React-FabricImage: 5ad03b0081353e1e047ae3471bb129c521bf02b1
+  React-featureflags: 1bfa283a0e6f26eac629e8cef2add1b2670b6f4e
+  React-featureflagsnativemodule: 7dc781f04bbd4b394fccb85e187bdda954362bca
+  React-graphics: 7eefc878da8a522942358f53abd6a7170d757bf3
   React-hermes: 08ad9fb832d1b9faef391be17309aa6a69fad23b
-  React-idlecallbacksnativemodule: aacea33ef6c511a9781f9286cc7cdf93f39bba14
-  React-ImageManager: c596c3b658c9c14607f9183ed0f635c8dd77987c
-  React-jserrorhandler: 987609b2f16b7d79d63fcd621bf0110dd7400b35
+  React-idlecallbacksnativemodule: 4a5d5ee0f8d7a9fa94ebd1426d349e866c223979
+  React-ImageManager: ce227ed251701b3f37e25a2beede459078fcd82c
+  React-jserrorhandler: 6e5ffaef9b3364351ef6ef58d6665beabf615a0e
   React-jsi: afa286d7e0c102c2478dc420d4f8935e13c973fc
   React-jsiexecutor: 08f5b512b4db9e2f147416d60a0a797576b9cfef
-  React-jsinspector: 5a94bcae66e3637711c4d96a00038ab9ec935bf5
-  React-jsinspectortracing: a12589a0adbb2703cbc4380dabe9a58800810923
-  React-jsitracing: 0b1a403d7757cec66b7dd8b308d04db85eef75f3
+  React-jsinspector: ebe0817345b1c0194ed5c64185269b9668fadf9a
+  React-jsinspectortracing: 6f251cb68796f3496698127deabe5b0bbbb89b52
+  React-jsitracing: 4c3fd6a14f560c52c167254a07029bcf9b60f3d8
   React-logger: 304814ae37503c8eb54359851cc55bd4f936b39c
-  React-Mapbuffer: b588d1ca18d2ce626f868f04ab12d8b1f004f12c
-  React-microtasksnativemodule: 11831d070aa47755bb5739069eb04ec621fec548
+  React-Mapbuffer: 8ba61e036d346d363ad208cfb1dea6c7fce0dce0
+  React-microtasksnativemodule: feb934d19767f38faf9f9f0efb7cc1dcdf2d11b7
   react-native-config: 3367df9c1f25bb96197007ec531c7087ed4554c3
-  react-native-safe-area-context: 9b169299f9dc95f1d7fe1dd266fde53bd899cd0c
-  react-native-slider: 27263d134d55db948a4706f1e47d0ec88fb354dd
-  react-native-webview: be9957759cb73cb64f2ed5359e32a85f1f5bdff8
-  React-NativeModulesApple: 79a4404ac301b40bec3b367879c5e9a9ce81683c
+  react-native-safe-area-context: 4da09dc73a70ad08307a6c09f61c7b03fbd45699
+  react-native-slider: 01962232986a825f44af5e3537c2defe90ced096
+  react-native-webview: f3180bd28381ba09520b01f36fd84d377f6ebc49
+  React-NativeModulesApple: 55d6d890aa60200292a90cc1ca6c53409650f48f
   React-perflogger: 0ea25c109dba33d47dec36b2634bf7ea67c1a555
-  React-performancetimeline: f74480de6efbcd8541c34317c0baedb433f27296
+  React-performancetimeline: 21656d07aede48ca0c8c3ca7d0e755eaa17f697c
   React-RCTActionSheet: 2ef95837e89b9b154f13cd8401f9054fc3076aff
   React-RCTAnimation: 33d960d7f58a81779eea6dea47ad0364c67e1517
   React-RCTAppDelegate: 85c13403fd6f6b6cc630428d52bd8bd76a670dc9
   React-RCTBlob: 74c986a02d951931d2f6ed0e07ed5a7eb385bfc0
-  React-RCTFabric: 384a8fea4f22fc0f21299d771971862883ba630a
+  React-RCTFabric: 384a6e22644799f66f545bf0de4618f4652c791f
   React-RCTFBReactNativeSpec: eb1c3ec5149f76133593a516ff9d5efe32ebcecd
   React-RCTImage: 2c58b5ddeb3c65e52f942bbe13ff9c59bd649b09
   React-RCTLinking: b6b14f8a3e62c02fc627ac4f3fb0c7bd941f907c
@@ -2204,25 +2144,25 @@ SPEC CHECKSUMS:
   React-RCTSettings: 8148f6be0ccc0cfe6e313417ebf8a479caaa2146
   React-RCTText: 64114531ad1359e4e02a4a8af60df606dbbabc25
   React-RCTVibration: f4859417a7dd859b6bf18b1aba897e52beb72ef6
-  React-rendererconsistency: 5ac4164ec18cfdd76ed5f864dbfdc56a5a948bc9
-  React-rendererdebug: 3dc1d97bbee0c0c13191e501a96ed9325bbd920e
-  React-rncore: 0bace3b991d8843bb5b57c5f2301ec6e9c94718b
-  React-RuntimeApple: 1e1e0a0c6086bc8c3b07e8f1a2f6ca99b50419a0
-  React-RuntimeCore: d39322c59bef2a4b343fda663d20649f29f57fcc
+  React-rendererconsistency: 80ffb3fc9635edb785c19f06eb1ba9e1d3b85ea6
+  React-rendererdebug: ea9b0383484ade00d675582d7848be6a86c3feb5
+  React-rncore: 7c0b895671632ea5eb84edb85f48e180816e9e33
+  React-RuntimeApple: 8e0654961ab947d3febc60f77a4d9fe97e135d0a
+  React-RuntimeCore: b194b603daafd68b140ab4c871f1556efc2c69bc
   React-runtimeexecutor: 876dfc1d8daa819dfd039c40f78f277c5a3e66a6
-  React-RuntimeHermes: 44f5f2baf039f249b31ea4f3e224484fd1731e0e
-  React-runtimescheduler: 3b3c5b50743bb8743ca49b9e5a70c2c385f156e1
-  React-timing: 1ee3572c398f5579c9df5bf76aacddf5683ff74e
-  React-utils: 0cfb7c7fb37d4e5f31cc18ffc7426be0ae6bf907
+  React-RuntimeHermes: f337612527ff2ca8bb86a861be4636f177bc3bbb
+  React-runtimescheduler: 307946600cf701b3ffe38b454d1d1a710e8e74e7
+  React-timing: 96e060d0d0bf18522d363716623ed2c61f7107c7
+  React-utils: 8adf5864fc96ef51957fee06a3e43ed26559d8a7
   ReactAppDependencyProvider: b48473fe434569ff8f6cb6ed4421217ebcbda878
-  ReactCodegen: 653a0d8532d8c7dab50c391392044d98e20c9f79
-  ReactCommon: 547db015202a80a5b3e7e041586ea54c4a087180
-  RNCPicker: ffbd7b9fc7c1341929e61dbef6219f7860f57418
-  RNScreens: 0f01bbed9bd8045a8d58e4b46993c28c7f498f3c
-  RNSVG: 082ae2874b288a96c95326c4f6029793f7009d4b
+  ReactCodegen: 699df724d2244b1f6b87bce12580aabb172cc52a
+  ReactCommon: 8fdc2d8511f4099f25d5929f7fa4284c14a7e509
+  RNCPicker: 4f336c7d99a43802c0e2b51c8cbe0c32b1e3d3e3
+  RNScreens: ef58b1f3077f7ee62b58f958536ee5ccb52d96b5
+  RNSVG: 02ef1157622e9e59e31c257e48a0dc943411c7bf
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: e14bad835e12b6c7e2260fc320bd00e0f4b45add
+  Yoga: 6eb60fc2c0eef63e7d2ef4a56e0a3353534143a2
 
-PODFILE CHECKSUM: d0574c1c0410627561bf4b1b55d0f1754283e022
+PODFILE CHECKSUM: 1b136836f3fad4e4ab921bff5d885c5d6596bcf4
 
 COCOAPODS: 1.16.2

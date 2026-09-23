@@ -10,14 +10,18 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+# The Datadog podspecs resolve the native iOS SDK through Swift Package Manager, which requires
+# pods to be linked as dynamic frameworks: dd-sdk-ios declares its SPM products without an explicit
+# `type:`, so SwiftPM builds them as static libraries, and combining those with CocoaPods' default
+# static linkage produces duplicate symbols at link time. Dynamic frameworks are the only
+# combination that works -- see https://github.com/facebook/react-native/pull/44627 for the full
+# matrix.
+use_frameworks! :linkage => :dynamic
 
 target 'DdSdkReactNativeExample' do
-  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
+  # No `:testspecs` here: the Datadog podspecs declare no test spec, because the native tests need
+  # `@testable` access to Datadog pod targets that do not exist once the SDK comes from SPM.
+  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec'
 
   config = use_native_modules!
 
@@ -34,13 +38,6 @@ target 'DdSdkReactNativeExample' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
-
-    # Enable `DD_SDK_COMPILED_FOR_TESTING` condition when compiling `DatadogSDK` dependency:
-    datadog_sdk_target = installer.pods_project.targets.detect {|t| ["DatadogCore", "DatadogRUM", "DatadogLogs", "DatadogInternal", "DatadogTrace", "DatadogCrashReporting"].include?(t.name) }
-    datadog_sdk_target.build_configurations.each do |config|
-      config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_SDK_COMPILED_FOR_TESTING'
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
-    end
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
