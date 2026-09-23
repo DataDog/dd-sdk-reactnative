@@ -1989,7 +1989,7 @@ SPEC CHECKSUMS:
   DatadogProfiling: 60f18d5cca882178bf89ec4e6d0e539d18062e9d
   DatadogRUM: b78d608e013f39c5679ed31ad97dad323c6113e8
   DatadogSDKReactNative: d65150a6f37b4ca8f4d98909898a9c4632a7cbd6
-  DatadogSDKReactNativeProfiling: f50a774397123c846fecfecb3216d8f2d4105d14
+  DatadogSDKReactNativeProfiling: 66d2a8699d8e0cf05814168839e4810297422667
   DatadogSDKReactNativeSessionReplay: 53f8448c51ea23aeb47fe3d67e7c383b91d06acf
   DatadogSDKReactNativeWebView: 25586892c073fe6f95928dc556e6b623abe513f8
   DatadogSessionReplay: 932b2077b1a5367de1450479d72093621b9fd618

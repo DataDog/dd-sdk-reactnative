@@ -1903,7 +1903,7 @@ SPEC CHECKSUMS:
   DatadogProfiling: 60f18d5cca882178bf89ec4e6d0e539d18062e9d
   DatadogRUM: b78d608e013f39c5679ed31ad97dad323c6113e8
   DatadogSDKReactNative: c364fd3d7c3ff3f078bcc44fe164aa4b345e91c3
-  DatadogSDKReactNativeProfiling: 2f766b44f70049aa8ec95f52f50ff17082cd4936
+  DatadogSDKReactNativeProfiling: 73786f14619dce4dc24014b8a529cf1d0f9bb433
   DatadogTrace: 5ef84e254e2e1d337bc52e0cdf16396ca102aeb1
   DatadogWebViewTracking: e0470157f55a83680a549d79ba2985e0d17465db
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385

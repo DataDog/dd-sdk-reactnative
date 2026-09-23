@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-profiling",
-    "version": "3.7.0",
+    "version": "3.8.0",
     "description": "A client-side React Native module to enable native profiling with Datadog",
     "keywords": [
         "datadog",
