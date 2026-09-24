@@ -188,7 +188,6 @@ repositories {
   mavenCentral()
   google()
   maven { url "https://jitpack.io" }
-  mavenLocal()
 
   if (reactNativeMajorVersion == 0 && reactNativeMinorVersion < 71) {
     def androidSourcesDir = file("$reactNativeRootDir/android")

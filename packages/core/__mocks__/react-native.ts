@@ -148,6 +148,9 @@ actualRN.NativeModules.DdRum = {
     addViewLoadingTime: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdRumType['addViewLoadingTime']>,
+    reportAppFullyDisplayed: jest.fn().mockImplementation(
+        () => new Promise<void>(resolve => resolve())
+    ) as jest.MockedFunction<DdRumType['reportAppFullyDisplayed']>,
     stopSession: jest.fn().mockImplementation(
         () => new Promise<void>(resolve => resolve())
     ) as jest.MockedFunction<DdRumType['stopSession']>,
