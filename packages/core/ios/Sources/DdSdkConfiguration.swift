@@ -106,7 +106,8 @@ public class DdSdkConfiguration: NSObject {
 ///    - enableTimeseries: Experimental: enables collection of memory and CPU timeseries events.
 ///      Requires a native SDK build with timeseries support.
 ///    - timeseriesCollectTypes: The types of timeseries data to collect ("cpu", "memory").
-///      Nil collects all supported types.
+///      The native SDK requires an explicit set of types; if nil, this SDK
+///      passes its default set (cpu and memory) on your behalf.
 public class RumConfiguration: NSObject {
     public var applicationId: String = ""
     public var trackFrustrations: Bool? = true

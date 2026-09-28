@@ -12,6 +12,7 @@ export type {
     TimeseriesConfiguration,
     TimeseriesType
 } from './TimeseriesConfiguration';
+export { defaultTimeseriesTypes } from './TimeseriesConfiguration';
 export { TrackingConsent } from './TrackingConsent';
 export { UploadFrequency } from './UploadFrequency';
 export { VitalsUpdateFrequency } from './VitalsUpdateFrequency';
