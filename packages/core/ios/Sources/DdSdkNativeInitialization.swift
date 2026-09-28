@@ -240,17 +240,23 @@ public class DdSdkNativeInitialization: NSObject {
         )
 
         if rumConfig.enableTimeseries ?? false {
-            let collectTypes: [TimeseriesType]? = rumConfig.timeseriesCollectTypes?.compactMap {
-                switch $0.lowercased() {
-                case "cpu":
-                    return .cpu
-                case "memory":
-                    return .memory
-                default:
-                    return nil
-                }
+            if let timeseriesCollectTypes = rumConfig.timeseriesCollectTypes {
+                let collectTypes: Set<TimeseriesType> = Set(
+                    timeseriesCollectTypes.compactMap {
+                        switch $0.lowercased() {
+                        case "cpu":
+                            return .cpu
+                        case "memory":
+                            return .memory
+                        default:
+                            return nil
+                        }
+                    }
+                )
+                configuration.timeseries = Timeseries(collectTypes: collectTypes)
+            } else {
+                configuration.timeseries = .default
             }
-            configuration.timeseries = Timeseries(collectTypes: collectTypes)
         }
 
         return configuration
