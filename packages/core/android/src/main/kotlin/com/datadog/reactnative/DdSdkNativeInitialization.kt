@@ -270,14 +270,9 @@ class DdSdkNativeInitialization internal constructor(
         configBuilder: RumConfiguration.Builder,
         timeseries: TimeseriesConfiguration
     ) {
-        val collectTypes = timeseries.collectTypes?.mapNotNull { it.asTimeseriesType() }?.toSet()
-        val nativeConfig = if (collectTypes != null) {
-            NativeTimeseriesConfiguration(collectTypes)
-        } else {
-            NativeTimeseriesConfiguration.DEFAULT
-        }
+        val collectTypes = timeseries.collectTypes.mapNotNull { it.asTimeseriesType() }.toSet()
 
-        configBuilder.setTimeseriesConfiguration(nativeConfig)
+        configBuilder.setTimeseriesConfiguration(NativeTimeseriesConfiguration(collectTypes))
     }
 
     private fun String.asTimeseriesType(): NativeTimeseriesType? {

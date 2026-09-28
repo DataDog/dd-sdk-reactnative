@@ -90,6 +90,7 @@ internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
 internal fun ReadableMap.asTimeseriesConfiguration(): TimeseriesConfiguration {
     return TimeseriesConfiguration(
         collectTypes = getArray("collectTypes")?.toArrayList()?.filterIsInstance<String>()
+            ?: DEFAULT_TIMESERIES_COLLECT_TYPES
     )
 }
 
@@ -239,7 +240,7 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
 
 internal fun JSONTimeseriesConfiguration.asTimeseriesConfiguration(): TimeseriesConfiguration {
     return TimeseriesConfiguration(
-        collectTypes = this.collectTypes
+        collectTypes = this.collectTypes ?: DEFAULT_TIMESERIES_COLLECT_TYPES
     )
 }
 

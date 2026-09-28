@@ -15,8 +15,13 @@ export type TimeseriesType = 'cpu' | 'memory';
  */
 export interface TimeseriesConfiguration {
     /**
-     * The types of timeseries data to collect.
-     * Defaults to collecting all supported types when omitted.
+     * The types of timeseries data to collect. Required.
+     * Use `defaultTimeseriesTypes` to collect the default set (cpu and memory).
      */
-    collectTypes?: TimeseriesType[];
+    collectTypes: TimeseriesType[];
 }
+
+/**
+ * Experimental: the default set of timeseries types to collect (cpu and memory).
+ */
+export const defaultTimeseriesTypes: TimeseriesType[] = ['cpu', 'memory'];
