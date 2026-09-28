@@ -45,6 +45,10 @@ function App(): React.JSX.Element {
     switch (testConfig?.command) {
       case Command.Start: 
         if (isValidScenario(testConfig?.scenario)) {
+          if (testConfig.scenario === Scenario.Flags) {
+            setTestConfig(testConfig);
+            return;
+          }
           const datadogConfig = getDatadogConfig();
           testConfig.datadogConfig = datadogConfig;
 
@@ -69,6 +73,10 @@ function App(): React.JSX.Element {
   }
 
   switch(testConfig?.scenario) {
+    case Scenario.Flags: {
+      const FlagsScenario = require('./flags/FlagsScenario').default;
+      return <FlagsScenario />;
+    }
     case Scenario.Default:
       return <DefaultScenario testConfig={testConfig}/>;
     case Scenario.NavigationExample:

@@ -10,6 +10,7 @@ export enum Command {
 }
 
 export enum Scenario {
+    Flags = 'flags',
     Default = 'default',
     NavigationExample = 'navigation',
     LogsCustom = 'logsCustom',
