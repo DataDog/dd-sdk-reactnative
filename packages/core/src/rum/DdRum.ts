@@ -40,6 +40,8 @@ import {
     getTracingContext,
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
+import { getNativeDdRum } from '../specs/NativeDdRum';
+
 import type {
     DdRumType,
     FirstPartyHost,
@@ -77,9 +79,7 @@ const touchDataFromEvent = (
 };
 
 class DdRumWrapper implements DdRumType {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeRum: DdNativeRumType = require('../specs/NativeDdRum')
-        .default;
+    private nativeRum: DdNativeRumType = getNativeDdRum() as DdNativeRumType;
     private lastActionData?: { type: RumActionType; name: string };
     private errorEventMapper = generateErrorEventMapper(undefined);
     private resourceEventMapper = generateResourceEventMapper(undefined);

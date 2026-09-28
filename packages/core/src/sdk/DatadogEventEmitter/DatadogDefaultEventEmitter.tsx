@@ -5,6 +5,7 @@
  */
 import { NativeModules } from 'react-native';
 
+import { getNativeDdSdk } from '../../specs/NativeDdSdk';
 import { DatadogBatchedBridgeEventEmitter } from './DatadogBatchedBridgeEventEmitter';
 import type { DatadogEventEmitter } from './DatadogEventEmitter';
 import { DatadogNativeEventEmitter } from './DatadogNativeEventEmitter';
@@ -18,10 +19,7 @@ export class DatadogDefaultEventEmitter implements DatadogEventEmitter {
 
     constructor(errorHandler: (err: any) => void) {
         try {
-            const ddSdkModule =
-                NativeModules.DdSdk ||
-                // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-                require('../../specs/NativeDdSdk').default;
+            const ddSdkModule = NativeModules.DdSdk || getNativeDdSdk();
             this.eventEmitter = this.isNewArchitecture
                 ? new DatadogNativeEventEmitter(ddSdkModule, errorHandler)
                 : new DatadogBatchedBridgeEventEmitter(errorHandler);

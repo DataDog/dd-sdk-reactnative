@@ -39,5 +39,16 @@ export interface Spec extends TurboModule {
     ): Promise<void>;
 }
 
-// eslint-disable-next-line import/no-default-export
-export default TurboModuleRegistry.get<Spec>('DdTrace');
+let cachedModule: Spec | null | undefined;
+
+/**
+ * Lazily resolves the native TurboModule on first call and caches the result.
+ * Resolving lazily (instead of at module load) keeps this package importable on
+ * platforms where the native module is absent (e.g. Vega).
+ */
+export const getNativeDdTrace = (): Spec | null => {
+    if (cachedModule === undefined) {
+        cachedModule = TurboModuleRegistry.get<Spec>('DdTrace');
+    }
+    return cachedModule;
+};

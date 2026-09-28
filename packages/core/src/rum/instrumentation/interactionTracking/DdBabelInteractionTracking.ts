@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import DdSdk from '../../../specs/NativeDdSdk';
+import { getNativeDdSdk } from '../../../specs/NativeDdSdk';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../../../utils/time-provider/TimeProvider';
@@ -123,7 +123,7 @@ class BabelInteractionTracking {
     ): (...args: any[]) => any {
         return (...args: any[]) => {
             if (!this.telemetrySent) {
-                DdSdk?.sendTelemetryLog(
+                getNativeDdSdk()?.sendTelemetryLog(
                     BABEL_PLUGIN_TELEMETRY,
                     this.getTelemetryConfig(),
                     { onlyOnce: true }
@@ -147,7 +147,7 @@ class BabelInteractionTracking {
                     )
                     .catch(e => {
                         if (e instanceof Error) {
-                            DdSdk?.telemetryError(
+                            getNativeDdSdk()?.telemetryError(
                                 e.message,
                                 e.stack || '',
                                 'BabelActionTrack'
