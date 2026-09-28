@@ -89,14 +89,19 @@ data class RumConfiguration(
 )
 
 /**
+ * Experimental: the default set of timeseries types to collect (cpu and memory).
+ */
+internal val DEFAULT_TIMESERIES_COLLECT_TYPES = listOf("cpu", "memory")
+
+/**
  * Experimental: configuration for memory and CPU timeseries collection.
  * Requires a native SDK build with timeseries support.
  *
- * @param collectTypes The types of timeseries data to collect ("cpu", "memory").
- *   Defaults to collecting all supported types when omitted.
+ * @param collectTypes The types of timeseries data to collect ("cpu", "memory"). Required.
+ *   Use [DEFAULT_TIMESERIES_COLLECT_TYPES] to collect the default set.
  */
 data class TimeseriesConfiguration(
-    val collectTypes: List<String>? = null
+    val collectTypes: List<String>
 )
 
 /**
