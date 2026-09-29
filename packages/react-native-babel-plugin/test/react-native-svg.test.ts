@@ -1262,6 +1262,35 @@ describe('ReactNativeSVG.buildSvgMap', () => {
         scopedInstance.buildSvgMap();
         expect(scopedInstance.localSvgMap['StarIcon']).toBeUndefined();
     });
+
+    it("should store a __proto__-named import as an ordinary own property, not reassign localSvgMap's own prototype", () => {
+        // Read as a dynamic key rather than a literal `'__proto__'` string
+        // both to mirror how `localSvgMap` is actually indexed in
+        // production (always by a runtime-derived name) and to avoid
+        // triggering ESLint's `no-proto` rule, which exists for the
+        // opposite reason this test does -- accidental use of the special
+        // accessor -- not for deliberately verifying it's been neutralized.
+        const protoKey = '__proto__';
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import ${protoKey} from './icon.svg';\nexport default function C() { return <${protoKey} />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(Object.getPrototypeOf(instance.localSvgMap)).toBeNull();
+        expect(
+            Object.prototype.hasOwnProperty.call(instance.localSvgMap, protoKey)
+        ).toBe(true);
+        expect(instance.localSvgMap[protoKey].path).toBe(
+            path.join(tmpDir, 'icon.svg')
+        );
+        // A totally unrelated lookup must still behave like a normal missing
+        // key, not like a reassigned prototype leaking through.
+        expect(instance.localSvgMap['SomethingElse']).toBeUndefined();
+    });
 });
 
 describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
@@ -1363,6 +1392,62 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         );
     });
 
+    it('should resolve each of two monorepo subpackages using its OWN nearest tsconfig.json, not whichever one happened to resolve first for the whole scan', () => {
+        fs.mkdirSync(path.join(tmpDir, 'packages', 'appA', 'src'), {
+            recursive: true
+        });
+        fs.mkdirSync(path.join(tmpDir, 'packages', 'appB', 'assets'), {
+            recursive: true
+        });
+        fs.writeFileSync(
+            path.join(tmpDir, 'packages', 'appA', 'src', 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'packages', 'appB', 'assets', 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'packages', 'appA', 'tsconfig.json'),
+            JSON.stringify({
+                compilerOptions: {
+                    baseUrl: '.',
+                    paths: { '@a/*': ['src/*'] }
+                }
+            })
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'packages', 'appB', 'tsconfig.json'),
+            JSON.stringify({
+                compilerOptions: {
+                    baseUrl: '.',
+                    paths: { '@b/*': ['assets/*'] }
+                }
+            })
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'packages', 'appA', 'Component.tsx'),
+            `import IconA from '@a/icon.svg';\nexport default function A() { return <IconA />; }`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'packages', 'appB', 'Component.tsx'),
+            `import IconB from '@b/icon.svg';\nexport default function B() { return <IconB />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['IconA']).toBeDefined();
+        expect(instance.localSvgMap['IconA'].path).toBe(
+            path.join(tmpDir, 'packages', 'appA', 'src', 'icon.svg')
+        );
+        expect(instance.localSvgMap['IconB']).toBeDefined();
+        expect(instance.localSvgMap['IconB'].path).toBe(
+            path.join(tmpDir, 'packages', 'appB', 'assets', 'icon.svg')
+        );
+    });
+
     it('should resolve an aliased import using babel-plugin-module-resolver config', () => {
         const moduleResolverPath = require.resolve(
             'babel-plugin-module-resolver'
@@ -1390,6 +1475,132 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         expect(instance.localSvgMap['Logo']).toBeDefined();
         expect(instance.localSvgMap['Logo'].path).toBe(
             path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should resolve a babel-plugin-module-resolver alias from babel.config.js at the project root even when the scan root (e.g. --path ./src) is a subdirectory of it', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        // babel.config.js lives at the project root, one level above the
+        // scan root passed to ReactNativeSVG below. Its alias target is
+        // written naturally relative to the project root (where the config
+        // file itself lives) -- PathAliasResolver pins module-resolver's
+        // `cwd` to whatever directory `loadPartialConfig` actually resolved
+        // as the config root, not to its own (possibly narrower) rootDir.
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@components': './src/components' }
+                    }]
+                ]
+            };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'src', 'Component.tsx'),
+            `import Logo from '@components/icon.svg';\nexport default function C() { return <Logo />; }`
+        );
+
+        const scanRoot = path.join(tmpDir, 'src');
+        const instance = new ReactNativeSVG(scanRoot, scanRoot, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it("should resolve a babel-plugin-module-resolver alias that maps to a real npm package name (rather than a relative/local path), a pattern the library's own README documents", () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        // A real installed "package" the alias points at, so the resolved
+        // value (`fake-icon-lib/icon.svg`) is neither absolute nor
+        // `./`/`../`-relative -- it can only be found via Node's own module
+        // resolution, not by treating it as a filesystem path directly.
+        fs.mkdirSync(path.join(tmpDir, 'node_modules', 'fake-icon-lib'), {
+            recursive: true
+        });
+        fs.writeFileSync(
+            path.join(tmpDir, 'node_modules', 'fake-icon-lib', 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@icons': 'fake-icon-lib' }
+                    }]
+                ]
+            };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import Logo from '@icons/icon.svg';\nexport default function C() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        // `require.resolve` returns the canonicalized (symlink-resolved)
+        // path -- e.g. macOS's /tmp -> /private/tmp -- unlike the other
+        // resolvers here which just join path strings without touching the
+        // filesystem, so compare against the realpath rather than the raw
+        // `tmpDir` string.
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            fs.realpathSync(
+                path.join(tmpDir, 'node_modules', 'fake-icon-lib', 'icon.svg')
+            )
+        );
+    });
+
+    it('should resolve a babel-plugin-module-resolver alias to a real npm package .svg file even when the specifier itself omits the extension', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        // The specifier ('@icons/icon', no '.svg') means the alias
+        // substitution also lands on an extensionless bare specifier
+        // ('fake-icon-lib/icon') -- `require.resolve` alone won't find
+        // `icon.svg` for that (it only tries .js/.json/.node by default),
+        // so this needs the extension-guessing fallback.
+        fs.mkdirSync(path.join(tmpDir, 'node_modules', 'fake-icon-lib'), {
+            recursive: true
+        });
+        fs.writeFileSync(
+            path.join(tmpDir, 'node_modules', 'fake-icon-lib', 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="40"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@icons': 'fake-icon-lib' }
+                    }]
+                ]
+            };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import Logo from '@icons/icon';\nexport default function C() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            fs.realpathSync(
+                path.join(tmpDir, 'node_modules', 'fake-icon-lib', 'icon.svg')
+            )
         );
     });
 
@@ -1499,7 +1710,7 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         );
     });
 
-    it('should leave non-relative imports unresolved (falling back to the previous behavior) when no alias config is present', () => {
+    it('should NOT populate localSvgMap for a bare, .svg-suffixed import that no alias mechanism can resolve, rather than fabricate a path relative to the importing file (which would be guaranteed not to exist on disk)', () => {
         fs.writeFileSync(
             path.join(tmpDir, 'Component.tsx'),
             `import Logo from '@components/icon.svg';\nexport default function C() { return <Logo />; }`
@@ -1509,13 +1720,10 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         instance.setApiTypes(t);
         expect(() => instance.buildSvgMap()).not.toThrow();
 
-        expect(instance.localSvgMap['Logo']).toBeDefined();
-        expect(instance.localSvgMap['Logo'].path).toBe(
-            path.resolve(tmpDir, '@components/icon.svg')
-        );
+        expect(instance.localSvgMap['Logo']).toBeUndefined();
     });
 
-    it('should fall back to unresolved relative resolution when an alias is configured but does not match a file on disk', () => {
+    it('should NOT populate localSvgMap when a configured alias does not match a file on disk, rather than fabricate a nonexistent path', () => {
         fs.writeFileSync(
             path.join(tmpDir, 'tsconfig.json'),
             JSON.stringify({
@@ -1534,9 +1742,7 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         instance.setApiTypes(t);
         expect(() => instance.buildSvgMap()).not.toThrow();
 
-        expect(instance.localSvgMap['Logo'].path).toBe(
-            path.resolve(tmpDir, '@missing/icon.svg')
-        );
+        expect(instance.localSvgMap['Logo']).toBeUndefined();
     });
 
     it('should still resolve unaliased relative imports normally when alias config is present', () => {
@@ -1627,6 +1833,361 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         );
     });
 
+    it('should trace an aliased import through a default re-export (`import X from "@alias"; export default X;`) to a JSX usage in a different file', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `import Logo from '@logo';\nexport default Logo;`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import Icon from './icons';\nexport default function Screen() { return <Icon />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should trace an aliased import through a sourceless local re-export (`import X from "@alias"; export { X as Y };`) to a JSX usage in a different file', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `import Logo from '@logo';\nexport { Logo as AppLogo };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { AppLogo } from './icons';\nexport default function Screen() { return <AppLogo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should trace an aliased import through a sourceless local re-export that does NOT rename (`import X from "@alias"; export { X };`) to a JSX usage in a different file', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // No rename here -- the exported name and the local binding name
+        // are the same text ('Logo'), which is the common case for a
+        // sourceless re-export and the one the fix specifically targets.
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `import Logo from '@logo';\nexport { Logo };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './icons';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should trace an aliased import through an `export * from` wildcard barrel whose target is itself a NON-renaming sourceless local re-export', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // barrel.ts's own export is a sourceless, non-renaming local
+        // re-export of an aliased import -- the wildcard fan-out (an
+        // export node) has to hand off into barrel.ts's LOCAL scope (via
+        // recordLocalReexportEdges), not stay entirely within the export
+        // namespace the way the other wildcard tests do.
+        fs.writeFileSync(
+            path.join(tmpDir, 'barrel.ts'),
+            `import Logo from '@logo';\nexport { Logo };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export * from './barrel';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './icons';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should trace an aliased import through an `export * from` wildcard barrel to a JSX usage in a different file', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // icons/Icon1.ts named-re-exports the aliased SVG import; icons.ts
+        // wildcard-re-exports everything from Icon1.ts under the same name.
+        fs.mkdirSync(path.join(tmpDir, 'icons'), { recursive: true });
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons', 'Icon1.ts'),
+            `export { default as Logo } from '@logo';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export * from './icons/Icon1';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './icons';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should trace through the correct one of TWO `export * from` wildcards on the same barrel file, not just the first one visited', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // icons.ts wildcard-re-exports from BOTH IconsA (which exports
+        // nothing named Logo) and IconsB (which does, via the aliased SVG
+        // import). The wildcard for IconsA is declared first, so a naive
+        // "first wildcard claims the name" implementation would wrongly
+        // bind Logo to IconsA's (nonexistent) export and miss IconsB's.
+        fs.mkdirSync(path.join(tmpDir, 'icons'), { recursive: true });
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons', 'IconsA.ts'),
+            `export const Unrelated = 1;`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons', 'IconsB.ts'),
+            `export { default as Logo } from '@logo';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons.ts'),
+            `export * from './icons/IconsA';\nexport * from './icons/IconsB';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './icons';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should trace an aliased import through an `export * from` wildcard whose OWN source is itself a bare/aliased specifier (not just a relative path)', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: {
+                            '@logo': './src/components/icon.svg',
+                            '@icons': './icons'
+                        }
+                    }]
+                ]
+            };`
+        );
+        fs.mkdirSync(path.join(tmpDir, 'icons'), { recursive: true });
+        fs.writeFileSync(
+            path.join(tmpDir, 'icons', 'index.ts'),
+            `export { default as Logo } from '@logo';`
+        );
+        // The wildcard barrel's own source ('@icons') is a bare/aliased
+        // specifier, not a relative path.
+        fs.writeFileSync(
+            path.join(tmpDir, 'barrel.ts'),
+            `export * from '@icons';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './barrel';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should trace an aliased import through a re-export barrel whose target only exists as platform-specific files (e.g. Icon.ios.tsx/Icon.android.tsx, no plain Icon.tsx)', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // Icon.tsx re-exports the aliased SVG import, but only ever exists
+        // as platform-split files -- no plain Icon.tsx fallback.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Icon.ios.tsx'),
+            `export { default as Logo } from '@logo';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Icon.android.tsx'),
+            `export { default as Logo } from '@logo';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './Icon';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
+    it('should prefer a platform-specific re-export target (Icon.ios.tsx) over a plain fallback (Icon.tsx) when both exist, matching real Metro resolution order', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: {
+                            '@logoIos': './src/components/icon-ios.svg',
+                            '@logoPlain': './src/components/icon-plain.svg'
+                        }
+                    }]
+                ]
+            };`
+        );
+        // Both a plain fallback AND a platform-specific variant exist --
+        // Metro (and this resolver) must pick the platform-specific one.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Icon.tsx'),
+            `export { default as Logo } from '@logoPlain';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Icon.ios.tsx'),
+            `export { default as Logo } from '@logoIos';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './Icon';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon-ios.svg')
+        );
+    });
+
     it('should NOT populate localSvgMap for an extensionless aliased import that is never rendered as JSX anywhere in the project (performance guard skips alias resolution)', () => {
         const moduleResolverPath = require.resolve(
             'babel-plugin-module-resolver'
@@ -1653,6 +2214,114 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         expect(instance.localSvgMap['UnusedLogo']).toBeUndefined();
     });
 
+    it('should NOT resolve an aliased import in one file just because an unrelated, identically-named component is rendered as JSX in a different file (the JSX-usage guard is per-binding, not a project-wide name match)', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@icons/button': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // A real, non-SVG "Button" is imported from an unrelated package and
+        // rendered as JSX here -- this must not justify resolving the
+        // unrelated aliased "Button" SVG import in IconButton.tsx below,
+        // which is never itself rendered as JSX anywhere.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Button } from 'some-ui-library';\nexport default function Screen() { return <Button/>; }`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'IconButton.tsx'),
+            `import Button from '@icons/button';\nexport default Button;`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Button']).toBeUndefined();
+    });
+
+    it("should NOT let a same-file re-export's exported name leak into an unrelated LOCAL import that merely happens to share the same text", () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'svgBarrel.ts'),
+            `export { default as Icon } from '@logo';`
+        );
+        // Screen.tsx has an unrelated LOCAL "Icon" import (a real, non-SVG
+        // component) AND separately re-exports a DIFFERENT "Icon" from the
+        // SVG barrel above under the exact same name -- valid, non-
+        // conflicting ES module syntax, since an `export { X } from
+        // './y'` clause never references the importing file's own local
+        // scope. The JSX usage below refers only to the local import.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import Icon from 'some-ui-library';\nexport { Icon } from './svgBarrel';\nexport default function Screen() { return <Icon/>; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Icon']).toBeUndefined();
+    });
+
+    it('should only populate localSvgMap for the specific co-imported name proven JSX-reachable, not every name on the same aliased import statement', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@icons': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // A single, extensionless aliased (bare) import statement co-imports
+        // two names -- both resolve to the SAME aliased .svg file, since
+        // alias resolution operates on the whole import source, not per
+        // specifier. Only RealIcon is ever rendered as JSX through this
+        // import; UnrelatedName is merely co-imported alongside it.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Icons.tsx'),
+            `import { RealIcon, UnrelatedName } from '@icons';\nexport default function C() { return <RealIcon />; }`
+        );
+        // A completely unrelated, real (non-SVG) component happens to share
+        // the co-imported-but-unused name and IS rendered as JSX elsewhere.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { UnrelatedName } from 'some-real-ui-lib';\nexport default function Screen() { return <UnrelatedName/>; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['RealIcon']).toBeDefined();
+        expect(instance.localSvgMap['UnrelatedName']).toBeUndefined();
+    });
+
     it('should never attempt alias resolution for a relative or absolute import, even when its name is rendered as JSX (they can never resolve via PathAliasResolver, so deferring them would be pure overhead)', () => {
         const resolveSpy = jest.spyOn(PathAliasResolver.prototype, 'resolve');
 
@@ -1671,6 +2340,60 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
 
         expect(resolveSpy).not.toHaveBeenCalled();
         expect(instance.localSvgMap['Icon']).toBeUndefined();
+
+        resolveSpy.mockRestore();
+    });
+
+    it('should not let one aliased import whose resolution throws abort SVG detection for the rest of the project', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: { '@logo': './src/components/icon.svg' }
+                    }]
+                ]
+            };`
+        );
+        // @broken is never configured, but the important part is that
+        // resolving it throws (simulating a third-party resolver -- e.g.
+        // tsconfig-paths' matchPath -- misbehaving on a malformed config)
+        // rather than returning null.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Broken.tsx'),
+            `import Broken from '@broken';\nexport default function B() { return <Broken/>; }`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import Logo from '@logo';\nexport default function C() { return <Logo />; }`
+        );
+
+        const originalResolve = PathAliasResolver.prototype.resolve;
+        const resolveSpy = jest
+            .spyOn(PathAliasResolver.prototype, 'resolve')
+            .mockImplementation(function (
+                this: PathAliasResolver,
+                source,
+                file
+            ) {
+                if (source === '@broken') {
+                    throw new Error('simulated third-party resolver failure');
+                }
+                return originalResolve.call(this, source, file);
+            } as typeof PathAliasResolver.prototype.resolve);
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+
+        expect(() => instance.buildSvgMap()).not.toThrow();
+        expect(instance.localSvgMap['Broken']).toBeUndefined();
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
 
         resolveSpy.mockRestore();
     });
@@ -1736,6 +2459,38 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         );
     });
 
+    it('should resolve a metro.config.js extraNodeModules alias from the project root even when the scan root (e.g. --path ./src) is a subdirectory of it', () => {
+        // metro.config.js lives at the project root, one level above the
+        // scan root passed to ReactNativeSVG below -- a single lookup
+        // inside the scan root alone would miss it.
+        fs.writeFileSync(
+            path.join(tmpDir, 'metro.config.js'),
+            `module.exports = {
+                resolver: {
+                    extraNodeModules: {
+                        assets: ${JSON.stringify(
+                            path.join(tmpDir, 'src', 'components')
+                        )}
+                    }
+                }
+            };`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'src', 'Component.tsx'),
+            `import Logo from 'assets/icon.svg';\nexport default function C() { return <Logo />; }`
+        );
+
+        const scanRoot = path.join(tmpDir, 'src');
+        const instance = new ReactNativeSVG(scanRoot, scanRoot, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']).toBeDefined();
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+    });
+
     it("should resolve a scoped extraNodeModules alias only when the key matches the full specifier (single subpath segment), mirroring Metro's own parsing", () => {
         fs.writeFileSync(
             path.join(tmpDir, 'metro.config.js'),
@@ -1788,11 +2543,34 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
 
         // No extraNodeModules key matches the full '@assets/icon.svg' specifier
         // (per Metro's own parsing, '@assets' alone isn't a match), so this
-        // falls back to unresolved relative resolution like any other
-        // unmatched alias -- same fallback as the plain non-relative-import case.
-        expect(instance.localSvgMap['Logo'].path).toBe(
-            path.resolve(tmpDir, '@assets/icon.svg')
+        // stays unresolved like any other bare specifier no alias mechanism
+        // can find a real file for -- not populated in localSvgMap at all.
+        expect(instance.localSvgMap['Logo']).toBeUndefined();
+    });
+
+    it('should not crash the whole scan when a bare import specifier matches an inherited Object.prototype member (e.g. "constructor/whatever") against a configured extraNodeModules map', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'metro.config.js'),
+            `module.exports = {
+                resolver: {
+                    extraNodeModules: {
+                        assets: ${JSON.stringify(
+                            path.join(tmpDir, 'src', 'components')
+                        )}
+                    }
+                }
+            };`
         );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import Foo from 'constructor/whatever';\nexport default function C() { return <Foo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+
+        expect(() => instance.buildSvgMap()).not.toThrow();
+        expect(instance.localSvgMap['Foo']).toBeUndefined();
     });
 
     it('should prefer babel-plugin-module-resolver/tsconfig.json over metro.config.js when both are configured', () => {
@@ -1893,5 +2671,253 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         expect(instance.localSvgMap['Logo'].path).toBe(
             path.join(tmpDir, 'other', 'icon.svg')
         );
+    });
+});
+
+describe('ReactNativeSVG end-to-end: same local name aliased to different SVGs across files', () => {
+    it('should embed the correct, distinct SVG content for each file when two unrelated files each alias a DIFFERENT SVG under the same local name', () => {
+        const tmpDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-collision-')
+        );
+        const assetsDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-collision-assets-')
+        );
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+
+        fs.writeFileSync(
+            path.join(tmpDir, 'circle.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="red"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'square.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" fill="blue"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: {
+                            '@circle-icon': './circle.svg',
+                            '@square-icon': './square.svg'
+                        }
+                    }]
+                ]
+            };`
+        );
+
+        const fileACode =
+            "import Icon from '@circle-icon';\nexport default function A() { return <Icon width={24} height={24} />; }";
+        const fileBCode =
+            "import Icon from '@square-icon';\nexport default function B() { return <Icon width={24} height={24} />; }";
+        const fileAPath = path.join(tmpDir, 'FileA.tsx');
+        const fileBPath = path.join(tmpDir, 'FileB.tsx');
+        fs.writeFileSync(fileAPath, fileACode);
+        fs.writeFileSync(fileBPath, fileBCode);
+
+        // One shared ReactNativeSVG instance and one buildSvgMap() scan --
+        // exactly how a real build reuses it across every file compiled in
+        // the same session (see src/index.ts's `pre()` hook).
+        const instance = new ReactNativeSVG(tmpDir, assetsDir);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        const transformOpts = {
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
+            plugins: [
+                [
+                    plugin,
+                    {
+                        sessionReplay: { svgTracking: true },
+                        __internal_reactNativeSVG: instance
+                    }
+                ]
+            ],
+            configFile: false
+        };
+
+        const outputA = transform(fileACode, {
+            ...transformOpts,
+            filename: fileAPath
+        })?.code as string;
+        const outputB = transform(fileBCode, {
+            ...transformOpts,
+            filename: fileBPath
+        })?.code as string;
+
+        const hashA = outputA.match(/hash:\s*["']([0-9a-f]{32})["']/i)?.[1];
+        const hashB = outputB.match(/hash:\s*["']([0-9a-f]{32})["']/i)?.[1];
+        expect(hashA).toBeTruthy();
+        expect(hashB).toBeTruthy();
+
+        const contentA = fs.readFileSync(
+            path.join(assetsDir, `${hashA}.svg`),
+            'utf8'
+        );
+        const contentB = fs.readFileSync(
+            path.join(assetsDir, `${hashB}.svg`),
+            'utf8'
+        );
+
+        // FileA aliased Icon to circle.svg -- must never end up with
+        // FileB's square, and vice versa. svgo's optimizer converts the
+        // <rect> into an equivalent <path> as part of its default preset,
+        // so check for the shape actually surviving optimization (a
+        // `<circle>`) landing on the right file, rather than assuming the
+        // original tag names remain verbatim in the optimized output.
+        expect(contentA).toContain('circle');
+        expect(contentB).not.toContain('circle');
+        expect(contentA).not.toBe(contentB);
+    });
+
+    it('should resolve a local import correctly even when the same file also re-exports an unrelated SVG under the identical name (local scope and export table are separate namespaces)', () => {
+        const tmpDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-collision-')
+        );
+        const assetsDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-collision-assets-')
+        );
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+
+        fs.writeFileSync(
+            path.join(tmpDir, 'circle.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="red"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'square.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="20" height="20" fill="blue"/></svg>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: {
+                            '@circle-icon': './circle.svg',
+                            '@square-icon': './square.svg'
+                        }
+                    }]
+                ]
+            };`
+        );
+
+        // SameFile both LOCALLY imports Icon (from circle.svg) and
+        // separately re-exports an unrelated Icon (from square.svg) under
+        // its own export table -- two different namespaces that happen to
+        // share a name. Its own JSX unambiguously refers to the local
+        // import; the re-export only matters to another file that imports
+        // {Icon} from SameFile, never to SameFile's own scope.
+        const sameFileCode =
+            "import Icon from '@circle-icon';\nexport { default as Icon } from '@square-icon';\nexport default function SameFile() { return <Icon width={24} height={24} />; }";
+        // OtherFile is what makes the re-export actually reachable (and
+        // therefore populated at all) -- without a cross-file consumer,
+        // the performance guard would skip resolving '@square-icon'
+        // entirely.
+        const otherFileCode =
+            "import { Icon } from './SameFile';\nexport default function OtherFile() { return <Icon width={24} height={24} />; }";
+        const sameFilePath = path.join(tmpDir, 'SameFile.tsx');
+        const otherFilePath = path.join(tmpDir, 'OtherFile.tsx');
+        fs.writeFileSync(sameFilePath, sameFileCode);
+        fs.writeFileSync(otherFilePath, otherFileCode);
+
+        const instance = new ReactNativeSVG(tmpDir, assetsDir);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        const outputSameFile = transform(sameFileCode, {
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
+            plugins: [
+                [
+                    plugin,
+                    {
+                        sessionReplay: { svgTracking: true },
+                        __internal_reactNativeSVG: instance
+                    }
+                ]
+            ],
+            configFile: false,
+            filename: sameFilePath
+        })?.code as string;
+
+        const hash = outputSameFile.match(
+            /hash:\s*["']([0-9a-f]{32})["']/i
+        )?.[1];
+        expect(hash).toBeTruthy();
+
+        const content = fs.readFileSync(
+            path.join(assetsDir, `${hash}.svg`),
+            'utf8'
+        );
+
+        // SameFile's own `<Icon/>` must resolve to its LOCAL import
+        // (circle.svg), never to the unrelated re-export (square.svg) that
+        // merely happens to share the same exported name.
+        expect(content).toContain('circle');
+    });
+
+    it("should NOT let a completely unrelated file's real, non-SVG component be misidentified as an SVG just because some OTHER, disconnected file legitimately aliases a DIFFERENT component under the same local name", () => {
+        const tmpDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-collision-')
+        );
+        const assetsDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-collision-assets-')
+        );
+
+        fs.writeFileSync(
+            path.join(tmpDir, 'circle.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="red"/></svg>'
+        );
+
+        // FileB legitimately aliases (a direct relative import here, but
+        // the same risk applies to any resolution mechanism) a real SVG
+        // under the name "Icon", and renders it -- this is what proves
+        // the name reachable and gets it written to the flat
+        // `localSvgMap`.
+        const fileBCode =
+            "import Icon from './circle.svg';\nexport default function B() { return <Icon width={24} height={24} />; }";
+        // FileA has NO relationship to FileB whatsoever -- its own "Icon"
+        // is a real, unrelated component from some other library. It
+        // just happens to share the exact same local name.
+        const fileACode =
+            "import Icon from 'some-real-ui-lib';\nexport default function A() { return <Icon/>; }";
+        const fileBPath = path.join(tmpDir, 'FileB.tsx');
+        const fileAPath = path.join(tmpDir, 'FileA.tsx');
+        fs.writeFileSync(fileBPath, fileBCode);
+        fs.writeFileSync(fileAPath, fileACode);
+
+        const instance = new ReactNativeSVG(tmpDir, assetsDir);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        // The flat map still carries FileB's entry (backward-compatible,
+        // documented residual imprecision) -- the bug is specifically
+        // whether FileA's own JSX inherits it.
+        expect(instance.localSvgMap['Icon']).toBeDefined();
+
+        const outputFileA = transform(fileACode, {
+            presets: ['@babel/preset-react', '@babel/preset-typescript'],
+            plugins: [
+                [
+                    plugin,
+                    {
+                        sessionReplay: { svgTracking: true },
+                        __internal_reactNativeSVG: instance
+                    }
+                ]
+            ],
+            configFile: false,
+            filename: fileAPath
+        })?.code as string;
+
+        // FileA's unrelated `<Icon/>` must be left completely untouched --
+        // never wrapped in SessionReplayView.Privacy, never given FileB's
+        // circle.svg content, since it has no traceable relationship to
+        // FileB at all.
+        expect(outputFileA).not.toContain('SessionReplayView');
+        expect(outputFileA).not.toMatch(/hash:\s*["'][0-9a-f]{32}["']/i);
     });
 });
