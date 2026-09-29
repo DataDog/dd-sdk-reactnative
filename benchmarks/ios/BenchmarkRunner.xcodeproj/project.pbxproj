@@ -17,6 +17,8 @@
 		043403262DCB9CD700803AF8 /* BenchmarkVitals.mm in Sources */ = {isa = PBXBuildFile; fileRef = 043403242DCB9CD700803AF8 /* BenchmarkVitals.mm */; };
 		04576C962DCBAF900078DCAB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 04576C952DCBAF900078DCAB /* main.m */; };
 		04726DD72F46402A008D1A48 /* TracerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04726DD62F46402A008D1A48 /* TracerProvider.swift */; };
+		10520E8C306BAEDB00BBFBFF /* OpenTelemetryApi in Frameworks */ = {isa = PBXBuildFile; productRef = 10520E8B306BAEDB00BBFBFF /* OpenTelemetryApi */; };
+		10520E8E306BAEDB00BBFBFF /* OpenTelemetrySdk in Frameworks */ = {isa = PBXBuildFile; productRef = 10520E8D306BAEDB00BBFBFF /* OpenTelemetrySdk */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		20A397FC280595A8A9851556 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		52040CC80A3CB0E4C3A131B0 /* Pods_BenchmarkRunner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E927512A5C6D462705AE797 /* Pods_BenchmarkRunner.framework */; };
@@ -53,7 +55,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				10520E8E306BAEDB00BBFBFF /* OpenTelemetrySdk in Frameworks */,
 				52040CC80A3CB0E4C3A131B0 /* Pods_BenchmarkRunner.framework in Frameworks */,
+				10520E8C306BAEDB00BBFBFF /* OpenTelemetryApi in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,6 +204,9 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
+			packageReferences = (
+				10520E8A306BAEDB00BBFBFF /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */,
+			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -721,6 +728,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		10520E8A306BAEDB00BBFBFF /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/open-telemetry/opentelemetry-swift-core";
+			requirement = {
+				kind = upToNextMinorVersion;
+				minimumVersion = 2.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		10520E8B306BAEDB00BBFBFF /* OpenTelemetryApi */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 10520E8A306BAEDB00BBFBFF /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */;
+			productName = OpenTelemetryApi;
+		};
+		10520E8D306BAEDB00BBFBFF /* OpenTelemetrySdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 10520E8A306BAEDB00BBFBFF /* XCRemoteSwiftPackageReference "opentelemetry-swift-core" */;
+			productName = OpenTelemetrySdk;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 83CBB9F71A601CBA00E9B192 /* Project object */;
 }

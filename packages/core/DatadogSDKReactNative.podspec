@@ -39,9 +39,8 @@ Pod::Spec.new do |s|
   # package platforms — building this pod for tvOS through SPM is therefore untested.
   #
   # Note that DatadogInternal is deliberately absent: it is an internal target of
-  # dd-sdk-ios, not an exported SPM product, so it cannot be requested here. It is expected
-  # to remain importable because React Native's `spm_dependency` helper appends the SPM
-  # build-products directory to this target's SWIFT_INCLUDE_PATHS.
+  # dd-sdk-ios, not an exported SPM product, so it cannot be requested here. Making it
+  # importable takes an extra search path -- see the FRAMEWORK_SEARCH_PATHS note below.
   spm_dependency(s,
     url: datadog_ios_spm_url,
     requirement: { kind: 'exactVersion', version: datadog_ios_version },

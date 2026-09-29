@@ -41,11 +41,16 @@ Pod::Spec.new do |s|
   s.resources = ['assets/assets.json', 'assets/assets.bin']
 
   s.dependency "React-Core"
+  # RCTTextExtractor.mm references RCTTextView and the RCTText shadow view classes directly, so
+  # this pod has always had a link-time dependency on React-RCTText. It was only declared on the
+  # test spec, which went unnoticed while pods were linked statically and undefined symbols were
+  # deferred to the app link.
+  s.dependency "React-RCTText"
   s.dependency 'DatadogSDKReactNative'
 
-  # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so
-  # it cannot be requested here; it is expected to stay importable via the SWIFT_INCLUDE_PATHS
-  # entry that React Native's `spm_dependency` helper adds to this target.
+  # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so it
+  # cannot be requested here. Making it importable takes an extra search path -- see the
+  # FRAMEWORK_SEARCH_PATHS note below.
   spm_dependency(s,
     url: datadog_ios_spm_url,
     requirement: { kind: 'exactVersion', version: datadog_ios_version },

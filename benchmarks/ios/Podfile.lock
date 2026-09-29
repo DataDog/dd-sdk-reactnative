@@ -37,6 +37,7 @@ PODS:
     - React-ImageManager
     - React-NativeModulesApple
     - React-RCTFabric
+    - React-RCTText
     - React-rendererdebug
     - React-utils
     - ReactCodegen
@@ -74,9 +75,6 @@ PODS:
   - hermes-engine (0.78.2):
     - hermes-engine/Pre-built (= 0.78.2)
   - hermes-engine/Pre-built (0.78.2)
-  - OpenTelemetry-Swift-Api (2.5.1)
-  - OpenTelemetry-Swift-Sdk (2.5.1):
-    - OpenTelemetry-Swift-Api (= 2.5.1)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -1851,7 +1849,6 @@ DEPENDENCIES:
   - fmt (from `../node_modules/react-native/third-party-podspecs/fmt.podspec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
-  - OpenTelemetry-Swift-Sdk (~> 2.5.0)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -1923,8 +1920,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   https://github.com/CocoaPods/Specs.git:
-    - OpenTelemetry-Swift-Api
-    - OpenTelemetry-Swift-Sdk
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -2085,7 +2080,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DatadogSDKReactNative: a7089e56cc0cfa72a1cafdc7abe8fef5f627bf9a
-  DatadogSDKReactNativeSessionReplay: 459fac6340f6b5edbb0045ffe1ef0015f7cabfbb
+  DatadogSDKReactNativeSessionReplay: 1687076f3ccd50cff8233738a83188ad84480384
   DatadogSDKReactNativeWebView: 307574a321eb9646dbbe954d9b3654ec0666c240
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
@@ -2093,8 +2088,6 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: eb93e2f488219332457c3c4eafd2738ddc7e80b8
   hermes-engine: 2771b98fb813fdc6f92edd7c9c0035ecabf9fee7
-  OpenTelemetry-Swift-Api: 3be9043f6288eb4ac3cbe7548b5bd45fb4ed5849
-  OpenTelemetry-Swift-Sdk: d9fa7bc839350f5a81467a5e877f727a8a77712d
   RCT-Folly: e78785aa9ba2ed998ea4151e314036f6c49e6d82
   RCTDeprecation: be794de7dc6ed8f9f7fbf525f86e7651b8b68746
   RCTRequired: a83787b092ec554c2eb6019ff3f5b8d125472b3b
@@ -2163,6 +2156,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 6eb60fc2c0eef63e7d2ef4a56e0a3353534143a2
 
-PODFILE CHECKSUM: 1b136836f3fad4e4ab921bff5d885c5d6596bcf4
+PODFILE CHECKSUM: 26bbffd54a9dc71f8787dc1ed59dcb5c1fc2e42e
 
 COCOAPODS: 1.16.2

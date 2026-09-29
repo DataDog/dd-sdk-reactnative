@@ -5,6 +5,7 @@ PODS:
   - DatadogSDKReactNativeSessionReplay (3.8.0):
     - DatadogSDKReactNative
     - React-Core
+    - React-RCTText
   - DatadogSDKReactNativeWebView (3.8.0):
     - DatadogSDKReactNative
     - React-Core
@@ -1891,7 +1892,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
   DatadogSDKReactNative: 11a3d7460bac8d7e7750f4687fbe67214dd28edb
-  DatadogSDKReactNativeSessionReplay: 81c99bcdcbdb52aff01676bcdc15cbd4df67506c
+  DatadogSDKReactNativeSessionReplay: 4303aae49986751dbf7b7de4e2ad3026abe9dd90
   DatadogSDKReactNativeWebView: 410633d047e11261985c97e9f71749c727211e2c
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
