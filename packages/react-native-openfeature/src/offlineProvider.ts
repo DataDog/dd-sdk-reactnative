@@ -55,8 +55,10 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * configuration carries the evaluation context it was computed for, so you should **not** call
  * `OpenFeature.setContext` for the offline precomputed flow — see the class remarks.
  *
- * Rules are evaluated locally for the supplied context. Without usable rules, a runtime context
- * that does not match the precomputed configuration's embedded context (after normalization)
+ * Rules are evaluated locally for the supplied context. A missing/null targeting key is not an
+ * anonymous subject: shard-dependent rules return TARGETING_KEY_MISSING, while an explicit empty
+ * string remains a valid targeting key. Precomputed context normalization/adoption is unchanged.
+ * Without usable rules, a runtime context that does not match the precomputed configuration's embedded context (after normalization)
  * cannot be served (offline never fetches), so it puts the provider into the
  * OpenFeature `ERROR` state and evaluations fall back to your coded defaults (`INVALID_CONTEXT`).
  * An empty *effective* context re-adopts the embedded context and recovers — but note that
@@ -176,11 +178,23 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         // configuration is served against its embedded context. Order-independent — the synthetic
         // `initialize({})`, `setContext({})`, and `clearContext()` all re-adopt the embedded
         // context rather than being treated as a mismatch.
-        const result = isEmptyContext(context)
-            ? this.flagsClient.resetEvaluationContextWithoutFetching()
-            : this.flagsClient.setEvaluationContextWithoutFetching(
-                  toDdContext(context)
-              );
+        let result: ConfigurationResult;
+        if (isEmptyContext(context)) {
+            result = this.flagsClient.resetEvaluationContextWithoutFetching();
+        } else if (
+            typeof this.flagsClient.__ddSetOfflineEvaluationContext ===
+            'function'
+        ) {
+            result = this.flagsClient.__ddSetOfflineEvaluationContext(
+                toDdContext(context),
+                typeof context.targetingKey === 'string'
+            );
+        } else {
+            // Older core SDKs retain their precomputed-only context behavior.
+            result = this.flagsClient.setEvaluationContextWithoutFetching(
+                toDdContext(context)
+            );
+        }
 
         this.configurationInError = result.status === 'error';
 

@@ -11,6 +11,7 @@ import {
     DdFlags,
     InternalLog
 } from '@datadog/mobile-react-native';
+import type { EvaluationContext } from '@openfeature/web-sdk';
 import {
     ErrorCode,
     OpenFeature,
@@ -183,6 +184,142 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
         expect(resolve).toHaveBeenCalledTimes(2);
         expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(2);
+        expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        {},
+        { country: 'CA' },
+        { targetingKey: undefined, country: 'CA' },
+        { targetingKey: null, country: 'CA' }
+    ])(
+        'does not shard a missing/null subject, but permits an explicitly empty subject: %j',
+        async context => {
+            const { provider, flagsClient } = setup(rulesConfiguration());
+            // Null is untrusted runtime input, not a valid typed OpenFeature targeting key.
+            await OpenFeature.setProviderAndWait(
+                provider,
+                (context as unknown) as EvaluationContext
+            );
+            const client = OpenFeature.getClient();
+            expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
+                value: true,
+                reason: 'ERROR',
+                errorCode: ErrorCode.TARGETING_KEY_MISSING
+            });
+            expect(
+                flagsClient.getBooleanDetails('test-flag', true)
+            ).toMatchObject({
+                value: true,
+                errorCode: ErrorCode.TARGETING_KEY_MISSING
+            });
+            expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
+
+            await OpenFeature.setContext({ targetingKey: '', country: 'CA' });
+            expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
+                value: false,
+                reason: 'SPLIT'
+            });
+            expect(
+                NativeDdFlags.trackEvaluation
+            ).toHaveBeenLastCalledWith(
+                expect.any(String),
+                'test-flag',
+                expect.objectContaining({ value: false }),
+                '',
+                { country: 'CA' }
+            );
+            expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
+        }
+    );
+
+    it('still evaluates unsharded rules without a subject and normalizes native tracking only', async () => {
+        const configuration = rulesConfiguration();
+        const allocation =
+            configuration.rules.response.flags['test-flag'].allocations[0];
+        allocation.partitionKey = [];
+        allocation.splits.forEach(split => {
+            split.ranges = [];
+        });
+        const { provider } = setup(
+            coreConfigurationFromString(configurationToString(configuration))
+        );
+        await OpenFeature.setProviderAndWait(provider, { country: 'US' });
+        expect(
+            OpenFeature.getClient().getBooleanDetails('test-flag', false)
+        ).toMatchObject({
+            value: true,
+            reason: 'TARGETING_MATCH'
+        });
+        expect(
+            NativeDdFlags.trackEvaluation
+        ).toHaveBeenLastCalledWith(
+            expect.any(String),
+            'test-flag',
+            expect.objectContaining({ value: true }),
+            '',
+            { country: 'US' }
+        );
+    });
+
+    it('retains precomputed anonymous normalization for missing, null and explicit-empty contexts', async () => {
+        const configuration = precomputedConfiguration();
+        configuration.precomputed.context = { country: 'CA' };
+        const { provider } = setup(configuration);
+        await OpenFeature.setProviderAndWait(provider);
+        const client = OpenFeature.getClient();
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        for (const context of [
+            { country: 'CA' },
+            { targetingKey: null, country: 'CA' },
+            { targetingKey: '', country: 'CA' }
+        ]) {
+            // Reconcile each transition on the same client before asserting its value.
+            // eslint-disable-next-line no-await-in-loop
+            await OpenFeature.setContext(
+                (context as unknown) as EvaluationContext
+            );
+            expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        }
+        expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('shares subject presence across aliases, replacements, resets and combined-source selection', async () => {
+        const { provider, name, flagsClient } = setup(rulesConfiguration());
+        const alias = new DatadogOfflineOpenFeatureProvider({
+            clientName: name
+        });
+        await OpenFeature.setProviderAndWait(provider, { country: 'CA' });
+        alias.setConfiguration(rulesConfiguration());
+        expect(flagsClient.getBooleanDetails('test-flag', true).errorCode).toBe(
+            ErrorCode.TARGETING_KEY_MISSING
+        );
+
+        const snapshot = precomputedConfiguration();
+        snapshot.precomputed.context = { targetingKey: '', country: 'CA' };
+        alias.setConfiguration({ ...rulesConfiguration(), ...snapshot });
+        // Precomputed matching still uses normalized anonymous context, not raw subject presence.
+        expect(flagsClient.getBooleanValue('boolean-flag', false)).toBe(true);
+        expect(flagsClient.getBooleanDetails('test-flag', true).errorCode).toBe(
+            ErrorCode.FLAG_NOT_FOUND
+        );
+        await OpenFeature.setContext({ country: 'FR' });
+        expect(flagsClient.getBooleanDetails('test-flag', true).errorCode).toBe(
+            ErrorCode.TARGETING_KEY_MISSING
+        );
+        await OpenFeature.clearContext();
+        expect(flagsClient.getBooleanValue('boolean-flag', false)).toBe(true);
+        alias.setConfiguration(rulesConfiguration());
+        expect(flagsClient.getBooleanDetails('test-flag', true).errorCode).toBe(
+            ErrorCode.TARGETING_KEY_MISSING
+        );
+        flagsClient.setEvaluationContextWithoutFetching({
+            targetingKey: '',
+            attributes: { country: 'CA' }
+        });
+        expect(OpenFeature.getClient().getBooleanValue('test-flag', true)).toBe(
+            false
+        );
         expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
     });
 

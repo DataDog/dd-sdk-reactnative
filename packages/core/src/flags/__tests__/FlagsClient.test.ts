@@ -82,6 +82,92 @@ describe('FlagsClient', () => {
         await DdFlags.enable();
     });
 
+    describe('offline evaluator subject presence', () => {
+        const evaluator = () => ({
+            reconcile: jest.fn(() => ({ status: 'ready' as const })),
+            evaluate: jest.fn()
+        });
+
+        it('preserves presence on the named client across evaluator/direct configuration replacement', () => {
+            const client = DdFlags.getClient('presence');
+            const initial = evaluator();
+            client.__ddSetOfflineEvaluator(() => initial);
+            expect(initial.reconcile).toHaveBeenLastCalledWith(
+                undefined,
+                undefined
+            );
+            const anonymous = {
+                targetingKey: '',
+                attributes: { country: 'CA' }
+            };
+            client.__ddSetOfflineEvaluationContext(anonymous, false);
+            expect(initial.reconcile).toHaveBeenLastCalledWith(
+                anonymous,
+                false
+            );
+
+            client.setConfiguration(configurationFromString('invalid'));
+            const replacement = evaluator();
+            DdFlags.getClient('presence').__ddSetOfflineEvaluator(
+                () => replacement
+            );
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                anonymous,
+                false
+            );
+            client.setEvaluationContextWithoutFetching(anonymous);
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                anonymous,
+                true
+            );
+            client.resetEvaluationContextWithoutFetching();
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                undefined,
+                undefined
+            );
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+        });
+
+        it('keeps online normalization authoritative and clears stale offline presence', async () => {
+            const client = DdFlags.getClient('presence-online');
+            client.__ddSetOfflineEvaluator(evaluator);
+            client.__ddSetOfflineEvaluationContext({ targetingKey: '' }, false);
+            await client.setEvaluationContext({
+                targetingKey: '',
+                attributes: {}
+            });
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).toHaveBeenCalledWith('presence-online', '', {});
+            const replacement = evaluator();
+            client.__ddSetOfflineEvaluator(() => replacement);
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                { targetingKey: '', attributes: {} },
+                true
+            );
+        });
+
+        it('clears offline presence when an online fetch discards the overlay and fails', async () => {
+            const client = DdFlags.getClient('presence-failed-fetch');
+            client.__ddSetOfflineEvaluator(evaluator);
+            client.__ddSetOfflineEvaluationContext({ targetingKey: '' }, false);
+            NativeModules.DdFlags.setEvaluationContext.mockRejectedValueOnce(
+                new Error('fetch failed')
+            );
+            await expect(
+                client.setEvaluationContext({ targetingKey: 'user' })
+            ).rejects.toThrow('fetch failed');
+            const replacement = evaluator();
+            client.__ddSetOfflineEvaluator(() => replacement);
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                undefined,
+                undefined
+            );
+        });
+    });
+
     describe('setEvaluationContext', () => {
         it('should set the evaluation context', async () => {
             const flagsClient = DdFlags.getClient();

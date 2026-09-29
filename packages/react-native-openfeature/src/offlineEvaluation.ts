@@ -52,6 +52,7 @@ export class OfflineEvaluation implements OfflineEvaluator {
     private readonly configuration: FlagsConfiguration;
     private precomputedFlags: FlagCache = new Map();
     private context: EvaluationContext = { targetingKey: '', attributes: {} };
+    private coreContext: OFEvaluationContext = {};
 
     constructor(
         configuration: FlagsConfiguration,
@@ -113,10 +114,11 @@ export class OfflineEvaluation implements OfflineEvaluator {
     }
 
     reconcile(
-        context: EvaluationContext | undefined
+        context: EvaluationContext | undefined,
+        hasTargetingKey = typeof context?.targetingKey === 'string'
     ): ReturnType<OfflineEvaluator['reconcile']> {
         // An omitted override adopts the normalized embedded context. Rules-only configurations
-        // use the anonymous context until the app supplies one through OpenFeature.
+        // must not invent an anonymous subject: missing and explicitly empty keys differ.
         const embedded = this.configuration.precomputed?.context;
         this.context =
             context ??
@@ -126,9 +128,17 @@ export class OfflineEvaluation implements OfflineEvaluator {
                       attributes: withoutTargetingKey(embedded)
                   }
                 : { targetingKey: '', attributes: {} });
+        const normalizedContext = toOpenFeatureContext(this.context);
+        // Snapshot matching retains released normalization/adoption. Only rules fallback uses the
+        // original subject presence; native tracking still receives the normalized context.
+        this.coreContext =
+            configMatchesContext(this.configuration, normalizedContext) ||
+            hasTargetingKey === true
+                ? normalizedContext
+                : withoutTargetingKey(normalizedContext);
         try {
             // Synchronous validation preserves the offline provider's context-change lifecycle.
-            this.core.onContextChange({}, toOpenFeatureContext(this.context));
+            this.core.onContextChange({}, this.coreContext);
             return { status: 'ready' };
         } catch (error) {
             const code =
@@ -154,7 +164,7 @@ export class OfflineEvaluation implements OfflineEvaluator {
         details: FlagDetails<T>;
         exposure?: { flag: FlagCacheEntry; context: EvaluationContext };
     } {
-        const context = toOpenFeatureContext(this.context);
+        const context = this.coreContext;
         const result = this.resolve(key, defaultValue, type, context);
         const allocationKey = result.flagMetadata?.allocationKey;
         const details: FlagDetails<T> = {

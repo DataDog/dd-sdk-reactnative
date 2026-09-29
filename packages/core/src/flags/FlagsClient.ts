@@ -65,7 +65,10 @@ type LoadedConfigurationState =
 
 /** @internal JavaScript evaluation supplied by the OpenFeature package; tracking stays native. */
 interface OfflineFlagsEvaluator {
-    reconcile(context: EvaluationContext | undefined): ConfigurationResult;
+    reconcile(
+        context: EvaluationContext | undefined,
+        hasTargetingKey?: boolean
+    ): ConfigurationResult;
     evaluate<T>(
         key: string,
         defaultValue: T,
@@ -89,6 +92,10 @@ export class FlagsClient {
     // separately from {@link evaluationContext} so that adopting a configuration's embedded context
     // is never mistaken for an app-set override (which would spuriously fail a later replacement).
     private externalContext: EvaluationContext | undefined = undefined;
+
+    // Rules distinguish a missing subject from an explicitly anonymous ('') subject. Keep that
+    // information alongside the normalized context, without changing native/precomputed semantics.
+    private externalContextHasTargetingKey: boolean | undefined = undefined;
 
     // The effective context evaluation and exposure tracking run against: the external override
     // when set, otherwise the loaded configuration's embedded context.
@@ -165,6 +172,7 @@ export class FlagsClient {
             this.flagsCache = new Map();
             this.evaluationContext = undefined;
             this.externalContext = undefined;
+            this.externalContextHasTargetingKey = undefined;
         }
 
         try {
@@ -175,6 +183,7 @@ export class FlagsClient {
             );
 
             this.externalContext = processedContext;
+            this.externalContextHasTargetingKey = true;
             this.evaluationContext = processedContext;
             this.flagsCache = new Map(Object.entries(result));
 
@@ -215,7 +224,24 @@ export class FlagsClient {
     setEvaluationContextWithoutFetching = (
         context: EvaluationContext
     ): ConfigurationResult => {
+        return this.__ddSetOfflineEvaluationContext(
+            context,
+            typeof context.targetingKey === 'string'
+        );
+    };
+
+    /**
+     * Preserve subject presence before the OpenFeature adapter normalizes a missing key to ''.
+     * The context still follows native/precomputed normalization; only the offline evaluator
+     * receives the presence bit. Stored on the named client so aliases and replacements share it.
+     * @internal Used only by the matching-version OpenFeature integration.
+     */
+    __ddSetOfflineEvaluationContext = (
+        context: EvaluationContext,
+        hasTargetingKey: boolean
+    ): ConfigurationResult => {
         this.externalContext = processEvaluationContext(context);
+        this.externalContextHasTargetingKey = hasTargetingKey;
 
         return this.reconcile();
     };
@@ -231,6 +257,7 @@ export class FlagsClient {
      */
     resetEvaluationContextWithoutFetching = (): ConfigurationResult => {
         this.externalContext = undefined;
+        this.externalContextHasTargetingKey = undefined;
 
         return this.reconcile();
     };
@@ -339,7 +366,8 @@ export class FlagsClient {
     private reconcile = (): ConfigurationResult => {
         if (this.offlineEvaluator) {
             const result = this.offlineEvaluator.reconcile(
-                this.externalContext
+                this.externalContext,
+                this.externalContextHasTargetingKey
             );
             if (result.status === 'error') {
                 return this.enterError(

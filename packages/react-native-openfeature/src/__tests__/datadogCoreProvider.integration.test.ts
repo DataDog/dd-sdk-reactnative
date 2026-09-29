@@ -5,6 +5,7 @@
  */
 
 import { configurationToString } from '@datadog/flagging-core/rules-based';
+import type { EvaluationContext } from '@openfeature/web-sdk';
 import {
     ErrorCode,
     OpenFeature,
@@ -79,6 +80,42 @@ describe('DatadogCoreProvider with OpenFeature', () => {
             reason: 'TARGETING_MATCH'
         });
     });
+
+    it.each([
+        {},
+        { country: 'CA' },
+        { targetingKey: undefined, country: 'CA' },
+        { targetingKey: null, country: 'CA' }
+    ])(
+        'keeps missing/null subjects distinct from explicit empty keys for rules: %j',
+        async context => {
+            const provider = new DatadogCoreProvider();
+            provider.setConfiguration(coreConfigurationFromString(rulesWire));
+            await OpenFeature.setProviderAndWait(
+                DOMAIN,
+                provider,
+                (context as unknown) as EvaluationContext
+            );
+            const client = OpenFeature.getClient(DOMAIN);
+            expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
+                value: true,
+                reason: 'ERROR',
+                errorCode: ErrorCode.TARGETING_KEY_MISSING
+            });
+            await OpenFeature.setContext(DOMAIN, {
+                targetingKey: '',
+                country: 'CA'
+            });
+            expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
+                value: false,
+                reason: 'SPLIT'
+            });
+            await OpenFeature.setContext(DOMAIN, {});
+            expect(client.getBooleanDetails('test-flag', true).errorCode).toBe(
+                ErrorCode.TARGETING_KEY_MISSING
+            );
+        }
+    );
 
     it('enters ERROR on mismatching or cleared contexts and recovers on a matching context', async () => {
         await OpenFeature.setProviderAndWait(
