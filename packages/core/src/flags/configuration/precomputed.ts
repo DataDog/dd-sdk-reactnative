@@ -40,9 +40,11 @@ export class UnsupportedConfigurationError extends Error {
  * structurally malformed (missing/non-object `data.attributes.flags`).
  */
 export const decodePrecomputedFlags = (
-    response: PrecomputedConfigurationResponse
+    response: unknown
 ): Map<string, FlagCacheEntry> => {
-    const attributes = response?.data?.attributes;
+    const attributes = (response as
+        | PrecomputedConfigurationResponse
+        | undefined)?.data?.attributes;
 
     // `obfuscated` is not part of flagging-core's response type, but the CDN payload
     // carries it. Read it defensively so obfuscated payloads are still rejected:
@@ -152,9 +154,8 @@ const toFlagCacheEntry = (
         return null;
     }
 
-    // `serialId` is intentionally not propagated: `FlagCacheEntry` has no slot for it
-    // and the native CDN-fetched snapshot omits it too, so dropping it keeps
-    // offline/online parity.
+    // Keep the released precomputed decoder's tracking payload unchanged: it does not propagate
+    // serialId. The delegated rules path supplies the serial ID from its evaluation metadata.
     return {
         key,
         value: variationValue,

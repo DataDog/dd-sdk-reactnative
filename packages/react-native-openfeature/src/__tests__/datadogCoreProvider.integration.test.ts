@@ -67,7 +67,8 @@ describe('DatadogCoreProvider with OpenFeature', () => {
         });
         const client = OpenFeature.getClient(DOMAIN);
         expect(client.getBooleanDetails('test-flag', false)).toMatchObject({
-            value: true,
+            value: false,
+            variant: 'off',
             reason: 'SPLIT'
         });
 

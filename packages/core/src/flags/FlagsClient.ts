@@ -63,6 +63,19 @@ type LoadedConfigurationState =
           flags: Map<string, FlagCacheEntry>;
       };
 
+/** @internal JavaScript evaluation supplied by the OpenFeature package; tracking stays native. */
+interface OfflineFlagsEvaluator {
+    reconcile(context: EvaluationContext | undefined): ConfigurationResult;
+    evaluate<T>(
+        key: string,
+        defaultValue: T,
+        type: 'boolean' | 'string' | 'number' | 'object'
+    ): {
+        details: FlagDetails<T>;
+        exposure?: { flag: FlagCacheEntry; context: EvaluationContext };
+    };
+}
+
 export class FlagsClient {
     // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
     private nativeFlags: DdNativeFlagsType = require('../specs/NativeDdFlags')
@@ -90,6 +103,9 @@ export class FlagsClient {
 
     // The decoded outcome of the last loaded offline configuration (see the type).
     private loadedConfiguration: LoadedConfigurationState = { kind: 'none' };
+
+    // Owned by the named client (not the provider instance), preserving shared-client behavior.
+    private offlineEvaluator: OfflineFlagsEvaluator | undefined;
 
     // Internal serving status. `'none'` = online path (serve `flagsCache`); `'ready'` = serve
     // the offline snapshot; `'error'` = serve coded defaults with `configurationError`.
@@ -137,12 +153,13 @@ export class FlagsClient {
         // client for both online and offline is unsupported (give the offline provider its own
         // `clientName`), so warn when an offline configuration is discarded here. Online-only clients
         // have no overlay, so this does not touch their keep-last-known-flags-on-failure behavior.
-        if (this.loadedConfiguration.kind !== 'none') {
+        if (this.loadedConfiguration.kind !== 'none' || this.offlineEvaluator) {
             InternalLog.log(
                 `An offline configuration was loaded for '${this.clientName}' but an online fetch was requested; discarding it and serving default values on failure. Use a separate client for the offline provider.`,
                 SdkVerbosity.WARN
             );
             this.loadedConfiguration = { kind: 'none' };
+            this.offlineEvaluator = undefined;
             this.configurationStatus = 'none';
             this.configurationError = undefined;
             this.flagsCache = new Map();
@@ -165,6 +182,7 @@ export class FlagsClient {
             // prior offline error status (e.g. PROVIDER_NOT_READY from an offline op with no
             // configuration loaded) can't keep serving coded defaults over the fetched flags.
             this.loadedConfiguration = { kind: 'none' };
+            this.offlineEvaluator = undefined;
             this.configurationStatus = 'none';
             this.configurationError = undefined;
         } catch (error) {
@@ -239,8 +257,33 @@ export class FlagsClient {
     setConfiguration = (
         configuration: ParsedFlagsConfiguration
     ): ConfigurationResult => {
+        this.offlineEvaluator = undefined;
         this.loadedConfiguration = this.loadConfiguration(configuration);
 
+        return this.reconcile();
+    };
+
+    /**
+     * Install a JavaScript evaluator for this named client's offline configuration.
+     * The factory receives the SDK's existing compatibility helpers, so the provider can reuse
+     * precomputed validation/context normalization without depending on private module paths.
+     * All client getters use the delegate; successful evaluations still use native tracking.
+     * An online fetch or a direct setConfiguration replaces this overlay, just as before.
+     * @internal Used only by the matching-version OpenFeature integration.
+     */
+    __ddSetOfflineEvaluator = (
+        create: (helpers: {
+            decodePrecomputedFlags: typeof decodePrecomputedFlags;
+            normalizeWireContext: typeof normalizeWireContext;
+        }) => OfflineFlagsEvaluator
+    ): ConfigurationResult => {
+        this.offlineEvaluator = create({
+            decodePrecomputedFlags,
+            normalizeWireContext
+        });
+        this.loadedConfiguration = { kind: 'none' };
+        this.flagsCache = new Map();
+        this.evaluationContext = undefined;
         return this.reconcile();
     };
 
@@ -294,6 +337,21 @@ export class FlagsClient {
      * can never promote an invalid (or absent) load to `ready`.
      */
     private reconcile = (): ConfigurationResult => {
+        if (this.offlineEvaluator) {
+            const result = this.offlineEvaluator.reconcile(
+                this.externalContext
+            );
+            if (result.status === 'error') {
+                return this.enterError(
+                    result.errorCode,
+                    `The offline configuration for '${this.clientName}' cannot serve the current context.`
+                );
+            }
+            this.configurationStatus = 'ready';
+            this.configurationError = undefined;
+            return result;
+        }
+
         const loaded = this.loadedConfiguration;
 
         // No offline configuration engaged: an offline operation with nothing loaded is not ready.
@@ -391,6 +449,18 @@ export class FlagsClient {
         defaultValue: T,
         type: 'boolean' | 'string' | 'number' | 'object'
     ): FlagDetails<T> => {
+        if (this.offlineEvaluator) {
+            const { details, exposure } = this.offlineEvaluator.evaluate(
+                key,
+                defaultValue,
+                type
+            );
+            if (!details.errorCode && exposure) {
+                this.track(exposure.flag, exposure.context);
+            }
+            return details;
+        }
+
         // An offline configuration that cannot be served against the active context surfaces the
         // precise error code (INVALID_CONTEXT / GENERAL / PROVIDER_NOT_READY) with the coded
         // default. The OpenFeature provider maps this to a PROVIDER_ERROR / ERROR state.

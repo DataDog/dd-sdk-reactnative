@@ -10,14 +10,14 @@ import type {
     RulesConfiguration
 } from '@datadog/flagging-core';
 
-// From openfeature-js-client/packages/browser/test/data/rules-v1-wire.json.
-// Targets country=US with a logged allocation and otherwise uses an unlogged fallback split.
+// Adapted from openfeature-js-client/packages/browser/test/data/rules-v1-wire.json.
+// Targets country=US with a logged true/on allocation; the unlogged fallback returns false/off.
 export const rulesWire = JSON.stringify({
     version: 1,
     rules: {
         etag: 'rules-etag',
         response:
-            'CgQIABAAEgRwcm9kGm0KCXRlc3QtZmxhZxJgCAAQBBoECAAoASIsCgphbGxvY2F0aW9uEAAaDBIKCgRzYWx0EAEYZCIMCgQIABBkEAAYByABKAEiJgoIZmFsbGJhY2saDBIKCgRzYWx0EAEYZCIMCgQIABBkEAAYByACIgYSBAoCCAMiAgoAKgJvbioDb2ZmKgJVUyoHY291bnRyeTIEXlVTJDoJCgExCgEyCgEzSgYqBAgAEAJQAA=='
+            'CgASBHByb2QabQoJdGVzdC1mbGFnEmAQBBoCKAEaBAgBKAAiKgoKYWxsb2NhdGlvbhAAGgwSCgoEc2FsdBABGGQiCgoECAAQZBgHIAEoASImCghmYWxsYmFjaxoMEgoKBHNhbHQQARhkIgwKBAgAEGQQARgHIAIiBhIECgIIAyICCgAqAm9uKgNvZmYqAlVTKgdjb3VudHJ5MgReVVMkOgkKATEKATIKATNKBSoDEgEC'
     }
 });
 

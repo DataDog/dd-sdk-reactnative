@@ -215,8 +215,8 @@ describe('DatadogCoreProvider', () => {
                 logger
             )
         ).toMatchObject({
-            value: true,
-            variant: 'on',
+            value: false,
+            variant: 'off',
             reason: 'SPLIT',
             flagMetadata: { doLog: false }
         });

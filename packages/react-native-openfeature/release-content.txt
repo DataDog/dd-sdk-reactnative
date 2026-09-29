@@ -7,6 +7,8 @@ package/lib/commonjs/index.js
 package/lib/commonjs/index.js.map
 package/lib/commonjs/mappers.js
 package/lib/commonjs/mappers.js.map
+package/lib/commonjs/offlineEvaluation.js
+package/lib/commonjs/offlineEvaluation.js.map
 package/lib/commonjs/offlineProvider.js
 package/lib/commonjs/offlineProvider.js.map
 package/lib/commonjs/provider.js
@@ -21,6 +23,8 @@ package/lib/module/index.js
 package/lib/module/index.js.map
 package/lib/module/mappers.js
 package/lib/module/mappers.js.map
+package/lib/module/offlineEvaluation.js
+package/lib/module/offlineEvaluation.js.map
 package/lib/module/offlineProvider.js
 package/lib/module/offlineProvider.js.map
 package/lib/module/provider.js
@@ -303,6 +307,8 @@ package/lib/typescript/react-native-openfeature/src/index.d.ts
 package/lib/typescript/react-native-openfeature/src/index.d.ts.map
 package/lib/typescript/react-native-openfeature/src/mappers.d.ts
 package/lib/typescript/react-native-openfeature/src/mappers.d.ts.map
+package/lib/typescript/react-native-openfeature/src/offlineEvaluation.d.ts
+package/lib/typescript/react-native-openfeature/src/offlineEvaluation.d.ts.map
 package/lib/typescript/react-native-openfeature/src/offlineProvider.d.ts
 package/lib/typescript/react-native-openfeature/src/offlineProvider.d.ts.map
 package/lib/typescript/react-native-openfeature/src/provider.d.ts
@@ -315,6 +321,7 @@ package/src/__tests__/__utils__/rumContext.types.ts
 package/src/__tests__/__utils__/tsconfig.json
 package/src/__tests__/datadogCoreProvider.integration.test.ts
 package/src/__tests__/datadogCoreProvider.test.ts
+package/src/__tests__/offlineProvider.delegation.test.ts
 package/src/__tests__/offlineProvider.integration.test.ts
 package/src/__tests__/offlineProvider.test.ts
 package/src/__tests__/provider.test.ts
@@ -326,6 +333,7 @@ package/src/coreProvider.ts
 package/src/datadogCoreProvider.ts
 package/src/index.ts
 package/src/mappers.ts
+package/src/offlineEvaluation.ts
 package/src/offlineProvider.ts
 package/src/provider.ts
 package/src/rumContext.ts

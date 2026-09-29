@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { FlagsClient } from '@datadog/mobile-react-native';
+import type { EvaluationContext } from '@openfeature/web-sdk';
 import {
     ErrorCode,
     GeneralError,
@@ -14,15 +16,31 @@ import {
 
 import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
 
-const READY = { status: 'ready' as const };
-const mismatch = { status: 'error' as const, errorCode: 'INVALID_CONTEXT' };
-const notReady = { status: 'error' as const, errorCode: 'PROVIDER_NOT_READY' };
-const generalError = { status: 'error' as const, errorCode: 'GENERAL' };
+import { rulesConfiguration } from './__utils__/coreConfiguration';
+
+type ConfigurationResult = ReturnType<FlagsClient['setConfiguration']>;
+const READY: ConfigurationResult = { status: 'ready' };
+const mismatch: ConfigurationResult = {
+    status: 'error',
+    errorCode: 'INVALID_CONTEXT'
+};
+const notReady: ConfigurationResult = {
+    status: 'error',
+    errorCode: 'PROVIDER_NOT_READY'
+};
+const generalError: ConfigurationResult = {
+    status: 'error',
+    errorCode: 'GENERAL'
+};
 
 const mockFlagsClient = {
-    setConfiguration: jest.fn(() => READY),
-    setEvaluationContextWithoutFetching: jest.fn(() => READY),
-    resetEvaluationContextWithoutFetching: jest.fn(() => READY),
+    setConfiguration: jest.fn((): ConfigurationResult => READY),
+    setEvaluationContextWithoutFetching: jest.fn(
+        (): ConfigurationResult => READY
+    ),
+    resetEvaluationContextWithoutFetching: jest.fn(
+        (): ConfigurationResult => READY
+    ),
     setEvaluationContext: jest.fn(() => Promise.resolve()),
     getBooleanDetails: jest.fn(() => ({
         key: 'flag',
@@ -39,7 +57,7 @@ jest.mock('@datadog/mobile-react-native', () => {
     };
 });
 
-describe('DatadogOfflineOpenFeatureProvider', () => {
+describe('DatadogOfflineOpenFeatureProvider (legacy core SDK without the evaluator bridge)', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockFlagsClient.setConfiguration.mockReturnValue(READY);
@@ -48,6 +66,29 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
         );
         mockFlagsClient.resetEvaluationContextWithoutFetching.mockReturnValue(
             READY
+        );
+    });
+
+    afterEach(() => {
+        jest.restoreAllMocks();
+    });
+
+    it('rejects rules on an older core SDK instead of silently ignoring them or serving stale flags', () => {
+        const warning = jest
+            .spyOn(console, 'warn')
+            .mockImplementation(() => {});
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        const emit = jest.spyOn(provider.events, 'emit');
+
+        provider.setConfiguration(rulesConfiguration());
+
+        expect(mockFlagsClient.setConfiguration).toHaveBeenCalledWith({});
+        expect(emit).toHaveBeenCalledWith(
+            ProviderEvents.Error,
+            expect.objectContaining({ errorCode: ErrorCode.GENERAL })
+        );
+        expect(warning).toHaveBeenCalledWith(
+            expect.stringContaining('Update both Datadog packages together')
         );
     });
 
@@ -157,7 +198,9 @@ describe('DatadogOfflineOpenFeatureProvider', () => {
     it('treats a context with only an undefined targetingKey as empty', () => {
         const provider = new DatadogOfflineOpenFeatureProvider();
 
-        provider.onContextChange({}, { targetingKey: undefined });
+        provider.onContextChange({}, ({
+            targetingKey: undefined
+        } as unknown) as EvaluationContext);
 
         // `{ targetingKey: undefined }` carries no information: reset to the embedded context.
         expect(
