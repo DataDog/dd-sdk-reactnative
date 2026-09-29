@@ -4,11 +4,12 @@ Use [OpenFeature][1] with [Datadog Feature Flags][2] to evaluate feature flags a
 
 OpenFeature is a vendor-neutral, community-driven specification and SDK for feature flagging. It provides a unified API for feature flag evaluation that works across different providers. This enables you to switch vendors or integrate multiple feature flag systems.
 
-This package provides an OpenFeature-compatible provider that wraps Datadog's Feature Flags SDK.
+This package provides native-backed OpenFeature providers that wrap Datadog's Feature Flags SDK,
+and a `DatadogCoreProvider` that evaluates manually supplied configurations in JavaScript.
 
 ## Setup
 
-**Note**: This package is an integration for the [OpenFeature React SDK][1]. Install and set up the core [`@datadog/mobile-react-native`][3] SDK to start using Datadog Feature Flags.
+**Note**: This package is an integration for the [OpenFeature React SDK][1]. Install and set up the core [`@datadog/mobile-react-native`][3] SDK to use the native-backed providers. `DatadogCoreProvider` uses the same package dependencies but does not require Datadog SDK initialization or `DdFlags.enable()`.
 
 To install with NPM, run:
 
@@ -70,7 +71,7 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 ### RUM user context
 
 Use `enrichWithRumUser()` when you explicitly want to use the current RUM user as part of an
-OpenFeature evaluation context. Neither Datadog OpenFeature provider enriches context automatically.
+OpenFeature evaluation context. None of the Datadog OpenFeature providers enrich context automatically.
 This keeps context changes visible through OpenFeature and avoids changing flag assignments unless
 your application opts in.
 
@@ -283,6 +284,64 @@ function App() {
 
 export default AppWithProviders;
 ```
+
+### JavaScript evaluation with manual configuration
+
+Use `DatadogCoreProvider` to evaluate precomputed or rules-based configurations entirely in
+JavaScript with `@datadog/flagging-core`. This is a port of the browser `DatadogCoreProvider`;
+it does not use the native `FlagsClient`, fetch configuration, or send exposure or RUM events.
+Your application owns configuration delivery, storage, and updates.
+
+```tsx
+import {
+    DatadogCoreProvider,
+    coreConfigurationFromString
+} from '@datadog/mobile-react-native-openfeature';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+const provider = new DatadogCoreProvider();
+// `wire` is a ConfigurationWire string delivered by your application.
+// This parser supports both precomputed and rules-based configurations.
+provider.setConfiguration(coreConfigurationFromString(wire));
+
+// For precomputed data, supply the exact context the configuration was computed for.
+// For rules, supply the context you want to evaluate locally.
+const context = { targetingKey: 'user-123', country: 'US' };
+await OpenFeature.setProviderAndWait('datadog-core', provider, context);
+
+const client = OpenFeature.getClient('datadog-core');
+const enabled = client.getBooleanValue('new-feature', false);
+
+// Replace configuration whenever your application receives an update.
+provider.setConfiguration(coreConfigurationFromString(updatedWire));
+```
+
+You can also supply a parsed `FlagsConfiguration` directly; the type is exported by this package.
+`getConfiguration()` returns the currently supplied configuration, or `undefined` before one is set.
+Use `coreConfigurationFromString` for this provider, rather than the native offline provider's
+precomputed-only `configurationFromString` helper.
+
+- Matching precomputed data takes precedence over rules. If the context does not match, the
+  evaluator uses rules when available; otherwise evaluation returns your coded default with
+  `INVALID_CONTEXT` (or `PARSE_ERROR` if the fallback capability could not be parsed).
+- **Unlike `DatadogOfflineOpenFeatureProvider`, an empty OpenFeature context is literal.** It does
+  not adopt the precomputed configuration's embedded context. Clearing a context can therefore
+  make a precomputed-only provider enter `ERROR`. Use the same domain for registration,
+  evaluations, and subsequent `OpenFeature.setContext('datadog-core', context)` calls.
+- Load configuration **before** registration. Missing configuration rejects initialization with
+  `PROVIDER_NOT_READY`; unusable configuration produces `PARSE_ERROR`. If registration fails,
+  wait for that initialization to settle before loading a valid configuration to recover.
+- Replacing a usable configuration emits `ConfigurationChanged`. An unusable replacement emits
+  `Error`; loading a usable configuration after an error emits `Ready` then `ConfigurationChanged`.
+
+#### Evaluator version policy
+
+The OpenFeature package depends on **exactly `@datadog/flagging-core@3.1.1`**, without a `^` or `~`
+range. Keep this dependency exact when upgrading. Upstream React Native package tests do not
+replace system tests in React Native JavaScript runtimes such as JSC. Even patch upgrades must be
+explicitly tested with this repository's runtime coverage, such as
+[dd-react-native-nightly-tests](https://github.com/ddoghq/dd-react-native-nightly-tests), before
+changing the pin.
 
 ### Offline initialization
 

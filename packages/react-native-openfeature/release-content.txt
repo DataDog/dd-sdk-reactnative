@@ -1,6 +1,8 @@
 package/README.md
 package/lib/commonjs/coreProvider.js
 package/lib/commonjs/coreProvider.js.map
+package/lib/commonjs/datadogCoreProvider.js
+package/lib/commonjs/datadogCoreProvider.js.map
 package/lib/commonjs/index.js
 package/lib/commonjs/index.js.map
 package/lib/commonjs/mappers.js
@@ -13,6 +15,8 @@ package/lib/commonjs/rumContext.js
 package/lib/commonjs/rumContext.js.map
 package/lib/module/coreProvider.js
 package/lib/module/coreProvider.js.map
+package/lib/module/datadogCoreProvider.js
+package/lib/module/datadogCoreProvider.js.map
 package/lib/module/index.js
 package/lib/module/index.js.map
 package/lib/module/mappers.js
@@ -293,6 +297,8 @@ package/lib/typescript/core/src/version.d.ts
 package/lib/typescript/core/src/version.d.ts.map
 package/lib/typescript/react-native-openfeature/src/coreProvider.d.ts
 package/lib/typescript/react-native-openfeature/src/coreProvider.d.ts.map
+package/lib/typescript/react-native-openfeature/src/datadogCoreProvider.d.ts
+package/lib/typescript/react-native-openfeature/src/datadogCoreProvider.d.ts.map
 package/lib/typescript/react-native-openfeature/src/index.d.ts
 package/lib/typescript/react-native-openfeature/src/index.d.ts.map
 package/lib/typescript/react-native-openfeature/src/mappers.d.ts
@@ -304,8 +310,11 @@ package/lib/typescript/react-native-openfeature/src/provider.d.ts.map
 package/lib/typescript/react-native-openfeature/src/rumContext.d.ts
 package/lib/typescript/react-native-openfeature/src/rumContext.d.ts.map
 package/package.json
+package/src/__tests__/__utils__/coreConfiguration.ts
 package/src/__tests__/__utils__/rumContext.types.ts
 package/src/__tests__/__utils__/tsconfig.json
+package/src/__tests__/datadogCoreProvider.integration.test.ts
+package/src/__tests__/datadogCoreProvider.test.ts
 package/src/__tests__/offlineProvider.integration.test.ts
 package/src/__tests__/offlineProvider.test.ts
 package/src/__tests__/provider.test.ts
@@ -314,6 +323,7 @@ package/src/__tests__/rumContext.integration.test.ts
 package/src/__tests__/rumContext.test.ts
 package/src/__tests__/rumContext.types.test.ts
 package/src/coreProvider.ts
+package/src/datadogCoreProvider.ts
 package/src/index.ts
 package/src/mappers.ts
 package/src/offlineProvider.ts

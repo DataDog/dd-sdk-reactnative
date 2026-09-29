@@ -37,6 +37,9 @@
         "lint": "eslint .",
         "prepare": "rm -rf lib && yarn bob build"
     },
+    "dependencies": {
+        "@datadog/flagging-core": "3.1.1"
+    },
     "devDependencies": {
         "@datadog/mobile-react-native": "^3.9.0",
         "@openfeature/core": "^1.9.2",

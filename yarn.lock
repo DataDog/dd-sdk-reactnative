@@ -1753,6 +1753,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bufbuild/protobuf@npm:^2.13.0":
+  version: 2.16.0
+  resolution: "@bufbuild/protobuf@npm:2.16.0"
+  checksum: 946f965d5622f88e787f21ee2a63689aea310629ea17079a854a2581096625800d62662e5e936a92c651c3a7ea67e1d53e849d06a6093073c6d9dd3c70a54cd5
+  languageName: node
+  linkType: hard
+
 "@datadog/datadog-ci-base@npm:5.11.0":
   version: 5.11.0
   resolution: "@datadog/datadog-ci-base@npm:5.11.0"
@@ -1956,6 +1963,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@datadog/flagging-core@npm:3.1.1":
+  version: 3.1.1
+  resolution: "@datadog/flagging-core@npm:3.1.1"
+  dependencies:
+    "@bufbuild/protobuf": ^2.13.0
+    spark-md5: ^3.0.2
+  checksum: e5ff0c5959366d278a2e07ec2c0851bbab3e8b514a02bf79f790e730145f5fd8ae52a14068e51a844142643140563a2f34d1b56a4c8e32c85fef2a14cfe21eb6
+  languageName: node
+  linkType: hard
+
 "@datadog/flagging-core@npm:~2.0.1":
   version: 2.0.1
   resolution: "@datadog/flagging-core@npm:2.0.1"
@@ -2068,6 +2085,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature"
   dependencies:
+    "@datadog/flagging-core": 3.1.1
     "@datadog/mobile-react-native": ^3.9.0
     "@openfeature/core": ^1.9.2
     "@openfeature/web-sdk": ^1.8.0
