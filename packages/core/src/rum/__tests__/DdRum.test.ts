@@ -11,8 +11,8 @@ import type { GestureResponderEvent } from 'react-native';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types';
 import { BufferSingleton } from '../../sdk/DatadogProvider/Buffer/BufferSingleton';
-import { NativeDdSdk } from '../../sdk/DdSdkInternal';
 import { GlobalState } from '../../sdk/GlobalState/GlobalState';
+import NativeDdSdkSpec from '../../specs/NativeDdSdk';
 import { ErrorSource } from '../../types';
 import { DdRum } from '../DdRum';
 import type { ActionEventMapper } from '../eventMappers/actionEventMapper';
@@ -1444,7 +1444,7 @@ describe('DdRum', () => {
         test('does not call the native SDK when startAction has not been called before and using old API', async () => {
             await DdRum.stopAction({ user: 'me' }, 789);
             expect(NativeModules.DdRum.stopAction).not.toHaveBeenCalled();
-            expect(NativeDdSdk.telemetryDebug).not.toHaveBeenCalled();
+            expect(NativeDdSdkSpec.telemetryDebug).not.toHaveBeenCalled();
         });
 
         test('calls the native SDK when called with old API', async () => {
@@ -1456,7 +1456,7 @@ describe('DdRum', () => {
                 { user: 'me' },
                 789
             );
-            expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
+            expect(NativeDdSdkSpec.telemetryDebug).toHaveBeenCalledWith(
                 'DDdRum.stopAction called with the old signature'
             );
         });
@@ -1470,7 +1470,7 @@ describe('DdRum', () => {
                 {},
                 456
             );
-            expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
+            expect(NativeDdSdkSpec.telemetryDebug).toHaveBeenCalledWith(
                 'DDdRum.stopAction called with the old signature'
             );
         });
