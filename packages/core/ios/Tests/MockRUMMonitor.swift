@@ -4,6 +4,7 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
+import Foundation
 @testable import DatadogCore
 @testable import DatadogRUM
 @testable import DatadogInternal

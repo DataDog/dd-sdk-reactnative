@@ -15,11 +15,9 @@ prepare_react_native_project!
 use_frameworks! :linkage => :dynamic
 
 target 'ddSdkReactnativeExample' do
-  # No `:testspecs` here: the Datadog podspecs declare no test spec, because the native tests need
-  # `@testable` access to Datadog pod targets that do not exist once the SDK comes from SPM.
-  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec'
-  pod 'DatadogSDKReactNativeSessionReplay', :path => '../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec'
-  pod 'DatadogSDKReactNativeWebView', :path => '../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec'
+  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDKReactNativeSessionReplay', :path => '../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec', :testspecs => ['Tests']
+  pod 'DatadogSDKReactNativeWebView', :path => '../../packages/react-native-webview/DatadogSDKReactNativeWebView.podspec', :testspecs => ['Tests']
 
   config = use_native_modules!
 
@@ -38,8 +36,10 @@ target 'ddSdkReactnativeExample' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
-    # No `DD_SDK_COMPILED_FOR_TESTING` injection: the Datadog iOS SDK is no longer built as a pod
-    # target, so there is no build configuration to set it on.
+    # `DD_SDK_COMPILED_FOR_TESTING` is no longer injected. There is no pod target to set it on now
+    # that the SDK comes from SPM, and the native tests never needed it: none of them touch the
+    # three declarations it guards (`Datadog.flushAndDeinitialize` and its ObjC counterpart, and
+    # `DatadogContextProvider.replace(context:)`).
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|

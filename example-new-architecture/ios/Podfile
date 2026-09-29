@@ -19,9 +19,7 @@ prepare_react_native_project!
 use_frameworks! :linkage => :dynamic
 
 target 'DdSdkReactNativeExample' do
-  # No `:testspecs` here: the Datadog podspecs declare no test spec, because the native tests need
-  # `@testable` access to Datadog pod targets that do not exist once the SDK comes from SPM.
-  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec'
+  pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
 
   config = use_native_modules!
 

@@ -57,10 +57,20 @@ Pod::Spec.new do |s|
     products: ['DatadogSessionReplay']
   )
 
-  # The native test suite in ios/Tests relies on `@testable import DatadogSessionReplay` and on the
-  # Podfile injecting DD_SDK_COMPILED_FOR_TESTING into the Datadog pod targets. Neither is possible
-  # with the SDK resolved by SPM, as it is no longer built as a pod target, so no test spec is
-  # declared.
+  # React-RCTText is not repeated here: it is declared on the main spec above, which the test spec
+  # inherits.
+  s.test_spec 'Tests' do |test_spec|
+    test_spec.source_files = 'ios/Tests/*.swift'
+    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+
+    # The tests reference DatadogInternal protocol descriptors (Storage, Telemetry) directly. Unlike
+    # the SPM products, DatadogInternal is not on this target's link line, so name it explicitly --
+    # and point the linker at PackageFrameworks, where SwiftPM writes non-product targets.
+    test_spec.pod_target_xcconfig = {
+      'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
+      'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
+    }
+  end
 
   header_paths = %W[
     $(inherited)

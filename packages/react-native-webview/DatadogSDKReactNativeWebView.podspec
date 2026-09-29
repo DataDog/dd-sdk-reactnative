@@ -47,10 +47,20 @@ Pod::Spec.new do |s|
     products: ['DatadogWebViewTracking']
   )
 
-  # The native test suite in ios/Tests relies on `@testable import DatadogWebViewTracking` and on
-  # the Podfile injecting DD_SDK_COMPILED_FOR_TESTING into the Datadog pod targets. Neither is
-  # possible with the SDK resolved by SPM, as it is no longer built as a pod target, so no test
-  # spec is declared.
+  s.test_spec 'Tests' do |test_spec|
+    test_spec.dependency "react-native-webview"
+    test_spec.dependency "React-RCTText"
+
+    test_spec.source_files = 'ios/Tests/*.swift'
+    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+
+    # The tests reach DatadogInternal directly, which is not on this target's link line because it
+    # is a target of dd-sdk-ios rather than one of the SPM products this pod requests.
+    test_spec.pod_target_xcconfig = {
+      'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
+      'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
+    }
+  end
 
   # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so
   # SwiftPM builds it into PackageFrameworks/ instead of emitting a bare .swiftmodule alongside

@@ -55,9 +55,11 @@ Pod::Spec.new do |s|
     ]
   )
 
-  # The native test suite in ios/Tests relies on `@testable import DatadogCore` and on the Podfile
-  # injecting DD_SDK_COMPILED_FOR_TESTING into the Datadog pod targets. Neither is possible with the
-  # SDK resolved by SPM, as it is no longer built as a pod target, so no test spec is declared.
+  s.test_spec 'Tests' do |test_spec|
+    test_spec.source_files = 'ios/Tests/**/*.{swift,json}'
+    test_spec.resources = 'ios/Tests/Fixtures'
+    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+  end
 
   # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so
   # SwiftPM builds it into PackageFrameworks/ instead of emitting a bare .swiftmodule alongside
