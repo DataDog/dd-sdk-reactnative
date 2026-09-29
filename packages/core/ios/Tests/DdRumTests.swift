@@ -150,6 +150,7 @@ internal class DdRumTests: XCTestCase {
         ]
 
         // When
+        let startTime = Date()
         rum.addAction(
             type: "tap",
             name: "tap action",
@@ -159,20 +160,25 @@ internal class DdRumTests: XCTestCase {
             resolve: mockResolve,
             reject: mockReject
         )
+        let endTime = Date()
 
         // Then
         XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        guard case let .addAction(time, type, name, heatmapAttributes) = try XCTUnwrap(mockNativeRUM.calledMethods.last) else {
+            return XCTFail("Expected an `addAction` call")
+        }
+
+        XCTAssertTrue((startTime...endTime).contains(time))
+        let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? Int64, Int64(randomTimestamp))
+        XCTAssertEqual(type, .tap)
+        XCTAssertEqual(name, "tap action")
         XCTAssertEqual(
-            mockNativeRUM.calledMethods.last,
-            .addAction(
-                time: Date(timeIntervalSince1970: randomTimestamp / 1_000),
-                type: .tap,
-                name: "tap action",
-                heatmapAttributes: HeatmapAttributes(
-                    identifier: identifier,
-                    size: CGSize(width: 200, height: 50),
-                    location: CGPoint(x: 10, y: 20)
-                )
+            heatmapAttributes,
+            HeatmapAttributes(
+                identifier: identifier,
+                size: CGSize(width: 200, height: 50),
+                location: CGPoint(x: 10, y: 20)
             )
         )
     }
@@ -195,6 +201,7 @@ internal class DdRumTests: XCTestCase {
         ]
 
         // When
+        let startTime = Date()
         rum.addAction(
             type: "tap",
             name: "tap action",
@@ -204,21 +211,26 @@ internal class DdRumTests: XCTestCase {
             resolve: mockResolve,
             reject: mockReject
         )
+        let endTime = Date()
 
         // Then
-        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
         XCTAssertEqual(mockRootView.receivedHitTestPoints, [CGPoint(x: 130, y: 220)])
+        XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
+        guard case let .addAction(time, type, name, heatmapAttributes) = try XCTUnwrap(mockNativeRUM.calledMethods.last) else {
+            return XCTFail("Expected an `addAction` call")
+        }
+
+        XCTAssertTrue((startTime...endTime).contains(time))
+        let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? Int64, Int64(randomTimestamp))
+        XCTAssertEqual(type, .tap)
+        XCTAssertEqual(name, "tap action")
         XCTAssertEqual(
-            mockNativeRUM.calledMethods.last,
-            .addAction(
-                time: Date(timeIntervalSince1970: randomTimestamp / 1_000),
-                type: .tap,
-                name: "tap action",
-                heatmapAttributes: HeatmapAttributes(
-                    identifier: identifier,
-                    size: CGSize(width: 200, height: 50),
-                    location: CGPoint(x: 80, y: 120)
-                )
+            heatmapAttributes,
+            HeatmapAttributes(
+                identifier: identifier,
+                size: CGSize(width: 200, height: 50),
+                location: CGPoint(x: 80, y: 120)
             )
         )
     }
@@ -236,6 +248,7 @@ internal class DdRumTests: XCTestCase {
         ]
 
         // When
+        let startTime = Date()
         rum.addAction(
             type: "tap",
             name: "tap action",
@@ -245,18 +258,20 @@ internal class DdRumTests: XCTestCase {
             resolve: mockResolve,
             reject: mockReject
         )
+        let endTime = Date()
 
         // Then
         XCTAssertEqual(mockNativeRUM.calledMethods.count, 1)
-        XCTAssertEqual(
-            mockNativeRUM.calledMethods.last,
-            .addAction(
-                time: Date(timeIntervalSince1970: randomTimestamp / 1_000),
-                type: .tap,
-                name: "tap action",
-                heatmapAttributes: nil
-            )
-        )
+        guard case let .addAction(time, type, name, heatmapAttributes) = try XCTUnwrap(mockNativeRUM.calledMethods.last) else {
+            return XCTFail("Expected an `addAction` call")
+        }
+
+        XCTAssertTrue((startTime...endTime).contains(time))
+        let lastAttributes = try XCTUnwrap(mockNativeRUM.receivedAttributes.last)
+        XCTAssertEqual(lastAttributes[DdRumImplementation.timestampKey] as? Int64, Int64(randomTimestamp))
+        XCTAssertEqual(type, .tap)
+        XCTAssertEqual(name, "tap action")
+        XCTAssertEqual(heatmapAttributes, nil)
     }
 
     func testStartResource() throws {

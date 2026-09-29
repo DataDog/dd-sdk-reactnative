@@ -165,13 +165,13 @@ public class DdRumImplementation: NSObject {
             let pageY = touch["pageY"] as? NSNumber
         {
             addAction(
-                at: Date(timeIntervalSince1970: timestampMs / 1_000),
+                at: Date(),
                 type: RUMActionType(from: type),
                 name: name,
                 reactTag: reactTag,
                 location: .init(x: CGFloat(truncating: x), y: CGFloat(truncating: y)),
                 pageLocation: .init(x: CGFloat(truncating: pageX), y: CGFloat(truncating: pageY)),
-                attributes: castAttributesToSwift(context)
+                attributes: attributes(from: context, with: timestampMs)
             )
         } else {
             nativeRUM.addAction(type: RUMActionType(from: type), name: name, attributes: attributes(from: context, with: timestampMs))
