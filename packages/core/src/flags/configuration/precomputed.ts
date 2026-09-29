@@ -40,11 +40,9 @@ export class UnsupportedConfigurationError extends Error {
  * structurally malformed (missing/non-object `data.attributes.flags`).
  */
 export const decodePrecomputedFlags = (
-    response: unknown
+    response: PrecomputedConfigurationResponse
 ): Map<string, FlagCacheEntry> => {
-    const attributes = (response as
-        | PrecomputedConfigurationResponse
-        | undefined)?.data?.attributes;
+    const attributes = response?.data?.attributes;
 
     // `obfuscated` is not part of flagging-core's response type, but the CDN payload
     // carries it. Read it defensively so obfuscated payloads are still rejected:

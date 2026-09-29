@@ -63,7 +63,9 @@ export class OfflineEvaluation implements OfflineEvaluator {
         if (precomputed) {
             try {
                 this.precomputedFlags = helpers.decodePrecomputedFlags(
-                    precomputed.response
+                    precomputed.response as Parameters<
+                        CompatibilityHelpers['decodePrecomputedFlags']
+                    >[0]
                 );
                 const flags: Record<
                     string,
