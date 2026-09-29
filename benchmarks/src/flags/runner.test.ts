@@ -8,6 +8,7 @@ import {fromBinary, fromJsonString, toJsonString} from '@bufbuild/protobuf';
 import {base64Decode} from '@bufbuild/protobuf/wire';
 import {evaluateRulesBasedConfiguration} from '@datadog/flagging-core';
 import NativeFlagsBenchmark from '../specs/NativeFlagsBenchmark';
+import {Platform} from 'react-native';
 import {runBenchmarks} from './runner';
 import {FlagsConfigurationSchema} from './ufc_pb';
 
@@ -25,6 +26,7 @@ jest.mock('../specs/NativeFlagsBenchmark', () => ({
 const logger = {debug() {}, info() {}, warn() {}, error() {}};
 
 beforeEach(() => {
+  (Platform as any).OS = 'ios';
   (globalThis as any).__DEV__ = false;
   let bytes: Uint8Array;
   let configuration: any;
@@ -67,7 +69,7 @@ beforeEach(() => {
           ).filter(result => result.value === true).length,
         };
       case 'metadata':
-        return {mock: true};
+        return {mock: true, simulator: true, nativeDebug: false};
       default:
         throw new Error(`Unexpected operation ${request.op}`);
     }
@@ -111,4 +113,25 @@ test('surfaces native setup errors instead of timing a no-op', async () => {
   await expect(runBenchmarks(() => {}, true)).rejects.toThrow(
     'Prototype unavailable',
   );
+});
+
+test('Android orchestration uses the same placements and correctness gates', async () => {
+  (Platform as any).OS = 'android';
+  const report = await runBenchmarks(() => {}, true);
+  expect(report.rows).toHaveLength(9);
+  expect(report.metadata.platform).toBe('android');
+  expect(report.correctness).toBe('passed');
+});
+
+test('Android refuses physical devices before running any workload', async () => {
+  (Platform as any).OS = 'android';
+  (NativeFlagsBenchmark!.runSync as jest.Mock).mockReturnValue({
+    simulator: false,
+  });
+  await expect(runBenchmarks(() => {}, true)).rejects.toThrow('emulator-only');
+});
+
+test('performance runs reject debug builds', async () => {
+  (globalThis as any).__DEV__ = true;
+  await expect(runBenchmarks(() => {}, false)).rejects.toThrow('Release build');
 });

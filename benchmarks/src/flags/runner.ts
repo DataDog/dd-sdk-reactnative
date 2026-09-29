@@ -18,14 +18,14 @@ const logger = {debug() {}, info() {}, warn() {}, error() {}};
 type Request = Record<string, any>;
 export const sync = (request: Request): any => {
   if (!NativeFlagsBenchmark)
-    throw new Error('Build the iOS benchmark module first');
+    throw new Error('Build the native benchmark module first');
   const result: any = NativeFlagsBenchmark.runSync(request);
   if (result.benchmarkError) throw new Error(result.benchmarkError);
   return result;
 };
 export const asyncCall = async (request: Request): Promise<any> => {
   if (!NativeFlagsBenchmark)
-    throw new Error('Build the iOS benchmark module first');
+    throw new Error('Build the native benchmark module first');
   const result: any = await NativeFlagsBenchmark.runAsync(request);
   if (result.benchmarkError) throw new Error(result.benchmarkError);
   return result;
@@ -36,8 +36,13 @@ export async function runBenchmarks(
   progress: (text: string) => void,
   smoke = false,
 ) {
-  if (Platform.OS !== 'ios')
-    throw new Error('This prototype implements the iOS comparison only');
+  if (!['ios', 'android'].includes(Platform.OS))
+    throw new Error('Use the iOS or Android benchmark app');
+  const nativeMetadata = sync({op: 'metadata'});
+  if (Platform.OS === 'android' && nativeMetadata.simulator !== true)
+    throw new Error('Android benchmarks are emulator-only');
+  if (!smoke && (__DEV__ || nativeMetadata.nativeDebug))
+    throw new Error('Performance measurements require a Release build');
   const samples = smoke ? 100 : 10000;
   const warmup = smoke ? 20 : 1000;
   const setupSamples = smoke ? 3 : 100;
@@ -292,6 +297,7 @@ export async function runBenchmarks(
     checksum,
     metadata: {
       ...sync({op: 'metadata'}),
+      platform: Platform.OS,
       debug: __DEV__,
       hermes: !!(globalThis as any).HermesInternal,
       turboModuleProxy: !!(globalThis as any).__turboModuleProxy,

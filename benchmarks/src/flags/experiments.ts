@@ -318,9 +318,18 @@ async function hydration(progress: (text: string) => void) {
 export async function runExperiment(progress: (text: string) => void) {
   const native = sync({op: 'metadata'});
   // These follow-ups deliberately run only on a simulator, never automatically on a personal phone.
-  if (__DEV__ || !native.simulator || Platform.OS !== 'ios')
-    throw new Error('Use an iOS Release simulator build');
+  if (
+    __DEV__ ||
+    native.nativeDebug ||
+    !native.simulator ||
+    !['ios', 'android'].includes(Platform.OS)
+  )
+    throw new Error('Use a Release simulator or emulator build');
   const mode = experimentMode();
+  if (Platform.OS === 'android' && mode !== 'hydration')
+    throw new Error(
+      'Android tracking follow-ups require native tracking setup; only hydration is enabled',
+    );
   const settings = sync({op: 'experimentSettings'});
   if (
     mode !== 'hydration' &&
@@ -354,6 +363,7 @@ export async function runExperiment(progress: (text: string) => void) {
     correctness: 'passed',
     metadata: {
       ...native,
+      platform: Platform.OS,
       final: sync({op: 'metadata'}),
       debug: __DEV__,
       hermes: !!(globalThis as any).HermesInternal,

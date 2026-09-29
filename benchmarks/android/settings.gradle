@@ -4,3 +4,8 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 rootProject.name = 'BenchmarkRunner'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+
+def flagsPrototype = System.getenv('DD_FLAGS_KOTLIN_PROTOTYPE_PATH')
+if (flagsPrototype) {
+    includeBuild(flagsPrototype)
+}

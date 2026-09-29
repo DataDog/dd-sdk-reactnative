@@ -7,6 +7,7 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   Button,
+  Platform,
   SafeAreaView,
   ScrollView,
   Share,
@@ -15,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import Config from 'react-native-config';
-import {runBenchmarks, saveReport} from './runner';
+import {runBenchmarks, saveReport, sync} from './runner';
 import {experimentMode, runExperiment} from './experiments';
 
 export default function FlagsScenario() {
@@ -62,7 +63,13 @@ export default function FlagsScenario() {
     }
   }, []);
   useEffect(() => {
-    if (Config.BENCH_FLAGS_AUTORUN === 'smoke') void run(true);
+    const androidRun =
+      Platform.OS === 'android'
+        ? sync({op: 'experimentSettings'}).autorun
+        : undefined;
+    if (androidRun === 'full') void run(false);
+    else if (Config.BENCH_FLAGS_AUTORUN === 'smoke' || androidRun === 'smoke')
+      void run(true);
   }, [run]);
   return (
     <SafeAreaView style={styles.page}>

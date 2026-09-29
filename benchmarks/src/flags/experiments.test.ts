@@ -6,12 +6,19 @@
 
 import {measureTrackingBurst, runExperiment} from './experiments';
 import {sync} from './runner';
+import {Platform} from 'react-native';
 
 jest.mock('react-native', () => ({
   Platform: {OS: 'ios'},
   TurboModuleRegistry: {get: jest.fn()},
 }));
 jest.mock('./runner', () => ({sync: jest.fn(), asyncCall: jest.fn()}));
+
+beforeEach(() => {
+  (Platform as any).OS = 'ios';
+  (globalThis as any).__DEV__ = false;
+  (sync as jest.Mock).mockReset();
+});
 
 test('no-tracking baseline does not enqueue native work', async () => {
   const result = await measureTrackingBurst(
@@ -57,4 +64,24 @@ test('follow-ups cannot run on a physical phone', async () => {
   (globalThis as any).__DEV__ = false;
   (sync as jest.Mock).mockReturnValue({simulator: false});
   await expect(runExperiment(() => {})).rejects.toThrow('Release simulator');
+});
+
+test('Android follow-ups reject a physical device', async () => {
+  (Platform as any).OS = 'android';
+  (sync as jest.Mock).mockReturnValue({simulator: false, nativeDebug: false});
+  await expect(runExperiment(() => {})).rejects.toThrow(
+    'Release simulator or emulator',
+  );
+});
+
+test('Android tracking cannot silently run without its native setup', async () => {
+  (Platform as any).OS = 'android';
+  (sync as jest.Mock).mockImplementation(request =>
+    request.op === 'metadata'
+      ? {simulator: true, nativeDebug: false}
+      : {mode: 'both'},
+  );
+  await expect(runExperiment(() => {})).rejects.toThrow(
+    'only hydration is enabled',
+  );
 });

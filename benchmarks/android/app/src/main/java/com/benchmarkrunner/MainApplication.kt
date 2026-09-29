@@ -27,6 +27,11 @@ class MainApplication : Application(), ReactApplication {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
               add(BenchmarkVitalsPackage()) 
+              if (BuildConfig.DD_FLAGS_PROTOTYPE_ENABLED) {
+                // Optional local prototype; reflection happens once, never on the evaluation path.
+                add(Class.forName("com.flagsbenchmark.FlagsBenchmarkPackage")
+                  .getDeclaredConstructor().newInstance() as ReactPackage)
+              }
             }
 
         override fun getJSMainModuleName(): String = "index"

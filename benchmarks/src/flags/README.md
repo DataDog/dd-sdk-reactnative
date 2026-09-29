@@ -170,9 +170,68 @@ blocking and synchronous API requirements alongside latency. A faster native
 engine does not imply a faster RN call; a faster JS read does not imply a faster
 decoder. Tracking/telemetry transport is a separate measurement and decision.
 
-These two PRs can support an **RN-on-iOS** decision. They cannot establish Android
-performance; repeat with a Kotlin/native adapter before making a cross-platform
-mobile claim.
+The original results support an **RN-on-iOS** decision. The Kotlin/Android
+extension below has now been built and measured on an ARM64 Android emulator;
+see [Android results](ANDROID_RESULTS.md). Keep the Android, iOS simulator, and
+iPhone measurements separate; they are not cross-device performance guarantees.
+
+## Android Emulator Extension
+
+The optional Kotlin prototype lives in `dd-sdk-android/prototypes/rules-evaluation`
+on `sameerank/FFL-3347-kotlin-rules-evaluator-prototype`. It is included as an
+isolated Gradle composite build only when `DD_FLAGS_KOTLIN_PROTOTYPE_PATH` is set.
+The shipping Android and RN SDKs are unchanged.
+
+It uses the same client schema and 128 JS-generated reference cases as Swift.
+The shared JS runner exercises the same six decoding/evaluation placements,
+native-direct controls, echo calls, context changes, and configuration replacement.
+Kotlin uses generated protobuf-java 3.25.5 models and its ProtoJSON utility;
+the library choice is experimental and does not establish production APK size.
+
+Use a hardware-accelerated Android emulator, not a physical phone. A Linux
+workspace needs usable KVM access. A workspace without `/dev/kvm` can build and
+unit-test the prototype, but is not configured for these emulator performance
+runs. Keep all Android timings separate from iOS and desktop JVM tests.
+
+After installing the Android toolchain required by the existing benchmark app
+(API 35, build-tools 35.0.0, NDK 27.1.12297006, and JDK 17), from the RN root:
+
+```sh
+export DD_FLAGS_KOTLIN_PROTOTYPE_PATH="/absolute/dd-sdk-android/prototypes/rules-evaluation"
+export ENVFILE="$PWD/benchmarks/flags-smoke.env"
+yarn workspace @datadog/mobile-react-native-babel-plugin prepare
+cd benchmarks/android
+./gradlew :app:assembleRelease -PreactNativeArchitectures=x86_64 --max-workers=2
+```
+
+Use `arm64-v8a` instead on an Apple Silicon emulator. Keep
+`newArchEnabled=true` and `hermesEnabled=true`. Minification currently remains
+disabled, matching this benchmark app's existing Release configuration; record
+that limitation when interpreting Kotlin/ART measurements.
+
+With the emulator already booted, from `benchmarks`:
+
+```sh
+node scripts/run-flags-android.cjs emulator-5554 \
+  android/app/build/outputs/apk/release/app-release.apk \
+  /absolute/new-android-smoke-results /absolute/dd-sdk-android smoke
+```
+
+Only after the smoke report passes, repeat with `full` and a new output directory.
+`hydration` runs the existing three saved-file paths, 810 samples total, on Android.
+Every invocation starts a fresh app process and rejects physical devices,
+Debug builds, missing Hermes/New Architecture, failed parity, and stale reports.
+It retains the APK hash, lockfile hash, source snapshots, device properties,
+report, and logs. The emulator's clock must be synchronized with the host.
+
+Android native tracking follow-ups are not enabled yet. They require Android
+tracking initialization and captured-intake validation; the harness fails
+explicitly instead of reporting an uninitialized or mocked tracking path.
+Validation on 2026-09-29: the Release ARM64 APK, real bridge smoke test, full
+placement benchmark, and 810-sample hydration experiment passed on Android 15 /
+API 35. Eight Kotlin tests and 28 RN harness tests also passed. Unit tests alone
+are not Android performance evidence; use the recorded emulator reports and
+their source/APK hashes described in [Android results](ANDROID_RESULTS.md).
 
 ## Simulator-First Follow-Ups
 
@@ -231,6 +290,7 @@ executable, JS bundle and lockfile hashes. Changed source files are copied next
 to the manifest, so an uncommitted prototype can still be reconstructed from its
 base commit plus saved sources. Keep failed diagnostic runs out of RFC tables.
 
-Android, cold app launch, incremental shipping package size, device energy and
-memory pressure remain separate experiments. These results do not establish
-cross-platform performance or a fastest possible native/JSI implementation.
+Android native tracking, cold app launch, incremental shipping package size,
+device energy and memory pressure remain separate experiments. These results do
+not establish cross-platform performance or a fastest possible native/JSI
+implementation.
