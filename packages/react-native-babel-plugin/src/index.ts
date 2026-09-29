@@ -153,7 +153,22 @@ export default declare(
                         options
                     );
 
-                    pluginState.reactNativeSVG?.processItem(path, name);
+                    // `currentFile` only matters for disambiguating a
+                    // local/aliased SVG lookup (see `getLocalSvgEntry`) --
+                    // the built-in `<Svg>` tag (`RNSvgHandler`) needs no
+                    // file context at all, so `processItem` must still run
+                    // when `state.filename` is unset (e.g. an in-memory
+                    // `transform()` call with no `filename` option) rather
+                    // than skipping SVG processing for the whole file. An
+                    // empty string can never match a real file's
+                    // `nodeKey`, so this just falls through to the flat,
+                    // name-only `localSvgMap` lookup -- the same behavior
+                    // this file had before `currentFile` existed.
+                    pluginState.reactNativeSVG?.processItem(
+                        path,
+                        name,
+                        state.filename ?? ''
+                    );
                 }
             }
         };
