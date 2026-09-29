@@ -16,14 +16,14 @@ import {FlagsConfigurationSchema} from './ufc_pb';
 
 const logger = {debug() {}, info() {}, warn() {}, error() {}};
 type Request = Record<string, any>;
-const sync = (request: Request): any => {
+export const sync = (request: Request): any => {
   if (!NativeFlagsBenchmark)
     throw new Error('Build the iOS benchmark module first');
   const result: any = NativeFlagsBenchmark.runSync(request);
   if (result.benchmarkError) throw new Error(result.benchmarkError);
   return result;
 };
-const asyncCall = async (request: Request): Promise<any> => {
+export const asyncCall = async (request: Request): Promise<any> => {
   if (!NativeFlagsBenchmark)
     throw new Error('Build the iOS benchmark module first');
   const result: any = await NativeFlagsBenchmark.runAsync(request);

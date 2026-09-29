@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import Config from 'react-native-config';
 import {runBenchmarks, saveReport} from './runner';
+import {experimentMode, runExperiment} from './experiments';
 
 export default function FlagsScenario() {
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,9 @@ export default function FlagsScenario() {
           startedAt: new Date().toISOString(),
         }),
       );
-      const result = await runBenchmarks(setStatus, smoke);
+      const result = experimentMode()
+        ? await runExperiment(setStatus)
+        : await runBenchmarks(setStatus, smoke);
       const json = JSON.stringify(result, null, 2);
       saveReport(json);
       setReport(json);
@@ -44,6 +47,7 @@ export default function FlagsScenario() {
       setStatus(`Failed: ${String(error)}`);
       const failure = JSON.stringify({
         correctness: 'failed',
+        completedAt: new Date().toISOString(),
         error: String(error),
         stack: error instanceof Error ? error.stack : undefined,
       });

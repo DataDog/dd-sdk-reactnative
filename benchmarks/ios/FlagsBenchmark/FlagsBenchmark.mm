@@ -5,6 +5,7 @@
  */
 
 #import "FlagsBenchmark.h"
+#import "BenchmarkRunner-Swift.h"
 #ifdef DD_FLAGS_PROTOTYPE_ENABLED
 @import RulesEvaluationPrototype;
 #endif
@@ -33,6 +34,9 @@ RCT_EXPORT_MODULE()
 }
 
 - (NSDictionary *)execute:(NSDictionary *)request {
+  if ([request[@"op"] isEqual:@"experimentSettings"]) return [FlagsExperimentSupport settings];
+  if ([request[@"op"] isEqual:@"experimentSnapshot"]) return [FlagsExperimentSupport snapshot];
+  if ([request[@"op"] isEqual:@"experimentFlush"]) return [FlagsExperimentSupport flush];
 #ifdef DD_FLAGS_PROTOTYPE_ENABLED
   [_lock lock];
   NSDictionary *result = [_engine run:request];

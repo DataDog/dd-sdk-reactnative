@@ -18,6 +18,7 @@
 		04576C962DCBAF900078DCAB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 04576C952DCBAF900078DCAB /* main.m */; };
 		04726DD72F46402A008D1A48 /* TracerProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04726DD62F46402A008D1A48 /* TracerProvider.swift */; };
 		0BFD883AEE0A41CC521C5662 /* FlagsBenchmark.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2FED7A81171836D1D57F12AB /* FlagsBenchmark.mm */; settings = {COMPILER_FLAGS = "-fmodules -fcxx-modules"; }; };
+		B7A222C1BA8C487EA3BD6001 /* FlagsExperimentSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A222C1BA8C487EA3BD6002 /* FlagsExperimentSupport.swift */; };
 		0C80B921A6F3F58F76C31292 /* libPods-BenchmarkRunner.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5DCACB8F33CDC322A6C60F78 /* libPods-BenchmarkRunner.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		20A397FC280595A8A9851556 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
@@ -42,6 +43,7 @@
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BenchmarkRunner/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = BenchmarkRunner/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2FED7A81171836D1D57F12AB /* FlagsBenchmark.mm */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.objcpp; path = FlagsBenchmark.mm; sourceTree = "<group>"; };
+		B7A222C1BA8C487EA3BD6002 /* FlagsExperimentSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagsExperimentSupport.swift; sourceTree = "<group>"; };
 		3B4392A12AC88292D35C810B /* Pods-BenchmarkRunner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BenchmarkRunner.debug.xcconfig"; path = "Target Support Files/Pods-BenchmarkRunner/Pods-BenchmarkRunner.debug.xcconfig"; sourceTree = "<group>"; };
 		5709B34CF0A7D63546082F79 /* Pods-BenchmarkRunner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BenchmarkRunner.release.xcconfig"; path = "Target Support Files/Pods-BenchmarkRunner/Pods-BenchmarkRunner.release.xcconfig"; sourceTree = "<group>"; };
 		5DCACB8F33CDC322A6C60F78 /* libPods-BenchmarkRunner.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BenchmarkRunner.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -163,6 +165,7 @@
 			children = (
 				A3B9C892D474AFE597364EE6 /* FlagsBenchmark.h */,
 				2FED7A81171836D1D57F12AB /* FlagsBenchmark.mm */,
+				B7A222C1BA8C487EA3BD6002 /* FlagsExperimentSupport.swift */,
 			);
 			name = FlagsBenchmark;
 			path = FlagsBenchmark;
@@ -328,6 +331,7 @@
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
 				04726DD72F46402A008D1A48 /* TracerProvider.swift in Sources */,
 				0BFD883AEE0A41CC521C5662 /* FlagsBenchmark.mm in Sources */,
+				B7A222C1BA8C487EA3BD6001 /* FlagsExperimentSupport.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
