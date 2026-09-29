@@ -335,15 +335,6 @@ precomputed-only `configurationFromString` helper.
 - Replacing a usable configuration emits `ConfigurationChanged`. An unusable replacement emits
   `Error`; loading a usable configuration after an error emits `Ready` then `ConfigurationChanged`.
 
-#### Evaluator version policy
-
-The OpenFeature package depends on **exactly `@datadog/flagging-core@3.1.1`**, without a `^` or `~`
-range. Keep this dependency exact when upgrading. Upstream React Native package tests do not
-replace system tests in React Native JavaScript runtimes such as JSC. Even patch upgrades must be
-explicitly tested with this repository's runtime coverage, such as
-[dd-react-native-nightly-tests](https://github.com/ddoghq/dd-react-native-nightly-tests), before
-changing the pin.
-
 ### Offline initialization
 
 If you fetch a flag configuration yourself (cached on disk, delivered via your own service,
