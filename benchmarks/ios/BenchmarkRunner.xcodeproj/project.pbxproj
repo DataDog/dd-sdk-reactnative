@@ -178,6 +178,10 @@
 			dependencies = (
 			);
 			name = BenchmarkRunner;
+			packageProductDependencies = (
+				10520E8B306BAEDB00BBFBFF /* OpenTelemetryApi */,
+				10520E8D306BAEDB00BBFBFF /* OpenTelemetrySdk */,
+			);
 			productName = BenchmarkRunner;
 			productReference = 13B07F961A680F5B00A75B9A /* BenchmarkRunner.app */;
 			productType = "com.apple.product-type.application";
