@@ -22,6 +22,15 @@ RCT_EXPORT_MODULE()
 
 + (BOOL)requiresMainQueueSetup { return NO; }
 
+- (dispatch_queue_t)methodQueue { return [FlagsExperimentSupport trackingQueue]; }
+
+RCT_REMAP_METHOD(trackBatch, trackBatch:(NSArray *)records
+                 resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject) {
+  NSString *error = [FlagsExperimentSupport trackRecords:records];
+  if (error) reject(@"BATCH_TRACKING_FAILED", error, nil);
+  else resolve(nil);
+}
+
 - (instancetype)init {
   if ((self = [super init])) {
     _queue = dispatch_queue_create("com.datadog.flags.benchmark", DISPATCH_QUEUE_SERIAL);

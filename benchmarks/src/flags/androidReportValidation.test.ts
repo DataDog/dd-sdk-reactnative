@@ -61,3 +61,92 @@ test('rejects incomplete placements, failed parity and iOS reports', () => {
   ios.metadata.platform = 'ios';
   expect(() => validateReport(ios, 'smoke')).toThrow();
 });
+
+function trackingReport(mode: string) {
+  const exposures = ['exposures', 'both'].includes(mode) ? 3006 : 0;
+  const evaluationCount = ['evaluations', 'both'].includes(mode) ? 6012 : 0;
+  const request = (endpoint: string, body: string) => ({
+    url: `http://127.0.0.1:1234/${endpoint}`,
+    bodyBase64: Buffer.from(body).toString('base64'),
+  });
+  return {
+    ...androidReport(),
+    mode,
+    rows: Array.from({length: 12}, () => ({
+      caller: {count: 500},
+      checksum: 500,
+      pendingAtEnd: 0,
+      bridgeCalls: mode === 'none' ? 0 : 500,
+    })),
+    expected: {exposures, evaluationCount},
+    sink: {
+      initialization: {clientType: 'DatadogFlagsClient'},
+      requests: [
+        ...(exposures
+          ? [
+              request(
+                'exposures',
+                '{"flag":{"key":"flag-0"}}\n'.repeat(exposures),
+              ),
+            ]
+          : []),
+        ...(evaluationCount
+          ? [
+              request(
+                'evaluations',
+                JSON.stringify({
+                  flag: {key: 'flag-0'},
+                  evaluation_count: evaluationCount,
+                }) + '\n',
+              ),
+            ]
+          : []),
+      ],
+    },
+  };
+}
+
+test.each(['none', 'bridge-only', 'exposures', 'evaluations', 'both'])(
+  'checks real native event totals for Android %s mode',
+  mode => {
+    const report = trackingReport(mode);
+    expect(validateReport(report, mode)).toMatchObject(report.expected);
+  },
+);
+
+test('rejects missing Android tracking initialization, incorrect mode and missing uploads', () => {
+  const report = trackingReport('both');
+  report.sink.initialization.clientType = 'NoOpFlagsClient';
+  expect(() => validateReport(report, 'both')).toThrow();
+  expect(() => validateReport(trackingReport('both'), 'exposures')).toThrow();
+  const missing = trackingReport('both');
+  missing.sink.requests.pop();
+  expect(() => validateReport(missing, 'both')).toThrow('native aggregation');
+});
+
+test('rejects self-reported totals that hide missing native events', () => {
+  const report = trackingReport('none');
+  report.mode = 'both';
+  expect(() => validateReport(report, 'both')).toThrow();
+});
+
+test('accepts compressed Android NDJSON without losing records', () => {
+  const {gzipSync} = require('node:zlib');
+  const report = trackingReport('evaluations');
+  report.sink.requests[0] = {
+    ...report.sink.requests[0],
+    contentEncoding: 'gzip',
+    bodyBase64: gzipSync(
+      Array.from({length: 2}, () =>
+        JSON.stringify({
+          flag: {key: 'flag-0'},
+          evaluation_count: 3006,
+        }),
+      ).join('\n'),
+    ).toString('base64'),
+  } as any;
+  expect(validateReport(report, 'evaluations')).toMatchObject({
+    evaluationCount: 6012,
+    evaluationRecords: 2,
+  });
+});

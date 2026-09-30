@@ -16,8 +16,11 @@ Keep them separate from the [iOS results](RESULTS.md).
   bytes and decoding in JS. Parsing and repeated evaluation are separate choices.
 - This supports the proposed JS-local repeated RN evaluation path, while retaining
   native evaluation for native SDK clients and considering startup requirements
-  separately. It does not establish where Android tracking should run; that
-  experiment has not been implemented or measured yet.
+  separately.
+- Native tracking now passes the same experiments as iOS, including captured
+  exposure/evaluation totals in both mode orders. Each native tracking call still
+  costs JS time. These tests support separating tracking from evaluation, not a
+  claim that tracking is free or that native logging is faster than JS logging.
 
 ## Environment and Validation
 
@@ -93,6 +96,67 @@ Returning the first result sooner does not eliminate the cost of later bridged
 evaluations. Conversely, an async native file read does not make subsequent JS
 parsing nonblocking. Thirty samples per row are insufficient for a stable p99.
 
+## Native Tracking
+
+The tracking extension uses the same JS workload as the iOS simulator: five
+modes, repeated and changing contexts, 500-call uninterrupted bursts, yields
+every 25 calls, and three rotated repetitions. Each mode has 6,000 timed
+evaluations plus 12 native-client warmups when the bridge is enabled. A second
+pass reverses the mode order. All 60,000 timed evaluations passed.
+
+The real `DdFlags.trackEvaluation` bridge calls native Datadog Flags 3.13.1.
+Initialization is outside timing. RUM is disabled; uploads are small/frequent,
+and evaluation aggregation runs every second. An `adb reverse` tunnel connects
+emulator loopback to a collector bound to host `127.0.0.1`. The test-only final
+drain runs on a worker thread. Each mode starts a fresh process with cleared
+synthetic app data. No Datadog credentials, external intake, or phone is used.
+
+Verified totals in each pass:
+
+| Mode                     | Exposures | Evaluation count represented | Evaluation records | HTTP requests |
+| ------------------------ | --------: | ---------------------------: | -----------------: | ------------: |
+| No tracking              |         0 |                            0 |                  0 |             0 |
+| Bridge, loggers disabled |         0 |                            0 |                  0 |             0 |
+| Exposures                |     3,006 |                            0 |                  0 |             4 |
+| Evaluations              |         0 |                        6,012 |              3,018 |             4 |
+| Both                     |     3,006 |                        6,012 |              3,018 |             8 |
+
+These exposure and evaluation totals match iOS. Android sends gzip-compressed
+newline-delimited evaluation records; iOS uses a JSON envelope. Native batching
+produces different request counts. Neither request count nor payload encoding
+is a performance ranking between SDKs.
+
+Changing-context uninterrupted bursts, caller p50 / p99 in microseconds. Each
+cell is the median of three per-repetition percentiles, not a pooled percentile:
+
+| Mode                     |          Forward |    Reverse order |
+| ------------------------ | ---------------: | ---------------: |
+| No tracking              |    4.458 / 5.958 |    4.583 / 6.166 |
+| Bridge, loggers disabled | 19.125 / 243.916 | 24.708 / 261.583 |
+| Exposures                | 17.041 / 314.584 | 20.834 / 253.625 |
+| Evaluations              | 16.625 / 240.917 | 20.500 / 199.584 |
+| Both                     | 20.875 / 280.209 | 21.750 / 424.292 |
+
+Caller time includes JS evaluation, argument construction, bridge submission,
+and measurement bookkeeping. It does not include waiting for native storage or
+upload. Both passes show a cost for per-evaluation bridge submission. Variation
+between modes and passes prevents ranking individual logger costs. These are
+stress tests, not typical application rates or device latency guarantees.
+
+Uninterrupted tracking bursts reached 500 outstanding acknowledgements; yielding
+every 25 calls limited that count to 25. No promises failed or remained pending.
+This is not native queue depth or proof of a production backlog. We did not
+compare native logging with a JS-only logger or measure RUM attribution.
+
+The tracking APK also passed the 600-read smoke test and all 810 hydration
+samples. The RN harness now has 38 passing tests. Tracking evidence is retained
+under `android-tracking-2026-09-29/forward/` and `reverse/`, with reports, captured
+HTTP bodies, manifests, source snapshots, and hashes for all ten runs. The
+summary is `android-tracking-2026-09-29/summary-statistics.json`. The APK SHA-256 is
+`7f465cded748f0037ed538ff6d1c35cf7846ff0d453c54eff80a3ace2384f256`.
+The earlier `diagnostic-both` run is excluded from timing tables: its initial
+validator expected the iOS envelope and rejected Android's NDJSON.
+
 ## Reproduction and Evidence
 
 Use the build and runner commands in [the README](README.md#android-emulator-extension).
@@ -103,8 +167,10 @@ The measured emulator command was:
   -memory 4096 -cores 4 -no-snapshot -no-boot-anim -no-audio -no-window -gpu auto
 ```
 
-Raw evidence is retained locally in
-`mobile-flags-benchmark-results/android-emulator-2026-09-29/`:
+The original evidence is retained under
+`mobile-flags-benchmark-results/android-emulator-2026-09-29/`. Successful reports,
+filtered manifests, source snapshots, and summary JSON are also available in the
+[recorded evidence archive](evidence/README.md). The original collection contains:
 
 - `smoke/`, `full/`, `full-repeat/`, and `hydration/`: reports, manifests,
   changed-source copies/hashes, APK and lockfile hashes, device properties, logs.
@@ -118,14 +184,18 @@ Raw evidence is retained locally in
   measured operations were not changed during the runs.
 
 Placement reports retain per-repetition summaries, not every individual sample.
-Hydration reports also retain individual samples. Raw artifacts have not been
-uploaded or committed. The shared hydration metadata contains a generic loopback
+Hydration reports also retain individual samples. The archive excludes build
+logs, binaries, and full system-property dumps. The shared hydration metadata contains a generic loopback
 sink label from the iOS tracking harness; Android hydration used no collector,
 tracking, or network. This labeling limitation does not change its timed work.
 
 ## Limits
 
-No physical Android, Android native tracking, full evaluator conformance, cold
+See the later [batching comparison](BATCHING_RESULTS.md) for matching iOS and
+Android tests of per-evaluation delivery, a one-record wrapper control and a
+25-record/50 ms JS buffer. Native tracking stays unchanged in that experiment.
+
+No physical Android, full evaluator conformance, cold
 launch, shipping package size, or device energy conclusions are established.
 Host/guest thermal state was not sampled. Process RSS is not isolated evaluator
 heap or a true peak. ProtoJSON is only one possible transfer format, not a lower

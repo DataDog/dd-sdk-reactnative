@@ -1,4 +1,4 @@
-# Mobile Flags Benchmark Results
+# iOS Simulator Benchmark Results
 
 These are architecture experiments for [FFL-3347](https://datadoghq.atlassian.net/browse/FFL-3347),
 not shipping SDK performance guarantees. The proposed direction is JS-local
@@ -11,9 +11,8 @@ path, so the results do not identify a universally fastest placement.
 - RN 0.78.2, New Architecture, Release/Hermes, core evaluator 3.1.1,
   Protobuf-ES 2.15.0, and SwiftProtobuf 1.38.1.
 - Simulator: iPhone 17 Pro, iOS 26.2, Apple M3 Max host with 64 GB RAM, Xcode 26.2.
-- Device: iPhone 16 Pro, iOS 26.6.1. Its ending thermal state was 2 (serious).
-  Only the ending state was captured; affected rows cannot be identified.
-  Treat this as exploratory evidence, not a nominal-temperature baseline.
+- The primary comparison uses the simulator, matching the experiment coverage
+  in [Android results](ANDROID_RESULTS.md). A separate iPhone check is noted below.
 - Baseline source: RN `dcf80287531e42f60c223598dd78d136a5a9ac0d` and
   iOS `64d4dee6bc4675727e1a77fc2bd405a24e857496`.
 - Follow-up sources were captured as changed-file snapshots and SHA-256 hashes
@@ -26,8 +25,8 @@ path, so the results do not identify a universally fastest placement.
 
 Tables use the median of each repetition's percentile, not pooled percentiles.
 Do not combine device and simulator samples or subtract control percentiles from
-end-to-end percentiles. Raw reports, manifests, and source snapshots are retained
-locally under `mobile-flags-benchmark-results/`; they are not committed here.
+end-to-end percentiles. Successful reports, filtered manifests, and source
+snapshots are included in the [recorded evidence](evidence/README.md).
 
 ## Repeated Evaluation
 
@@ -40,14 +39,14 @@ subset, not full production evaluator conformance.
 
 100-flag configuration; times in microseconds:
 
-| Path                              | Simulator p50 | iPhone p50 | iPhone p99 |
-| --------------------------------- | ------------: | ---------: | ---------: |
-| JS decode / local JS read         |         6.625 |      6.791 |     19.000 |
-| Native decode / sync native read  |        18.291 |     17.667 |     22.667 |
-| Native decode / async native read |        46.083 |     33.666 |     37.000 |
+| Path                              | Simulator p50 | Simulator p99 |
+| --------------------------------- | ------------: | ------------: |
+| JS decode / local JS read         |         6.625 |        21.542 |
+| Native decode / sync native read  |        18.291 |        26.958 |
+| Native decode / async native read |        46.083 |        60.667 |
 
-The native-direct control measured 1.125 us at p50 on the iPhone, with
-preconverted inputs and no RN transport. Local JS reads being faster for the RN
+The native-direct control uses preconverted inputs and no RN transport.
+Local JS reads being faster for the RN
 caller does **not** mean the JS evaluator itself is faster than native.
 
 Installation timers in these baseline runs exclude preloading/base64 transport,
@@ -125,6 +124,10 @@ does not avoid the per-read bridge submission. Bounded/batched handoff deserves
 investigation, but these stress tests establish neither a production backlog nor
 an optimal batch size.
 
+The subsequent [batching comparison](BATCHING_RESULTS.md) tests per-evaluation
+and grouped delivery on both platforms at paced rates and in bursts. It finds
+real burst savings, but also delayed submission and lifecycle requirements.
+
 ## Saved Evidence and Remaining Work
 
 Baseline reports retain per-repetition summaries. Follow-ups additionally retain
@@ -143,6 +146,16 @@ Rejected diagnostic runs are retained locally but excluded from all tables.
 
 Whole-process RSS includes RN, Hermes, native SDK state, and temporary buffers.
 It is not isolated heap/cache size, a true allocation peak, or proof of a leak.
-No additional physical-phone runs were used for these follow-ups. Android,
-broader rule coverage, true cold startup, incremental shipping package size,
+No additional physical-phone runs were used for these follow-ups. Android now
+has the same placement, hydration, and tracking experiments, with verified
+event totals in both mode orders. Broader rule coverage, true cold startup, incremental shipping package size,
 native queue depth, and device energy/flash/memory-pressure behavior remain open.
+
+## Supplementary iPhone Check
+
+An earlier iPhone 16 Pro / iOS 26.6.1 run showed the same ordering for repeated
+reads: JS-local p50 6.791 us, native sync 17.667 us, and native async 33.666 us
+at 100 flags. The device ended at thermal state 2 (serious); only the ending
+state was recorded. This is a side check, not the baseline for the simulator
+comparison or a nominal-temperature device performance claim. Its raw evidence
+is retained separately and is not pooled with simulator samples.

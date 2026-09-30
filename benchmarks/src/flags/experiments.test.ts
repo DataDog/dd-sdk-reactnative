@@ -82,6 +82,24 @@ test('Android tracking cannot silently run without its native setup', async () =
       : {mode: 'both'},
   );
   await expect(runExperiment(() => {})).rejects.toThrow(
-    'only hydration is enabled',
+    'Native tracking not initialized',
   );
 });
+
+test.each([
+  ['ios', 'FlagsClient'],
+  ['android', 'DatadogFlagsClient'],
+])(
+  'initialized %s tracking still requires the real bridge',
+  async (platform, clientType) => {
+    (Platform as any).OS = platform;
+    (sync as jest.Mock).mockImplementation(request =>
+      request.op === 'metadata'
+        ? {simulator: true, nativeDebug: false}
+        : {mode: 'both', initialization: {clientType}},
+    );
+    await expect(runExperiment(() => {})).rejects.toThrow(
+      'Missing production DdFlags bridge',
+    );
+  },
+);

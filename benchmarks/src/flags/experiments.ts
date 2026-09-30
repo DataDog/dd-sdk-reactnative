@@ -14,6 +14,7 @@ import {comparable, makeFixture, requests} from './fixtures';
 import {asyncCall, sync} from './runner';
 import {assertEquivalent, summarize} from './statistics';
 import {FlagsConfigurationSchema} from './ufc_pb';
+import {batchingModes, runBatchingExperiment} from './batching';
 
 const logger = {debug() {}, info() {}, warn() {}, error() {}};
 const pause = (ms = 0) => new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -326,14 +327,11 @@ export async function runExperiment(progress: (text: string) => void) {
   )
     throw new Error('Use a Release simulator or emulator build');
   const mode = experimentMode();
-  if (Platform.OS === 'android' && mode !== 'hydration')
-    throw new Error(
-      'Android tracking follow-ups require native tracking setup; only hydration is enabled',
-    );
   const settings = sync({op: 'experimentSettings'});
   if (
     mode !== 'hydration' &&
-    settings.initialization?.clientType !== 'FlagsClient'
+    settings.initialization?.clientType !==
+      (Platform.OS === 'android' ? 'DatadogFlagsClient' : 'FlagsClient')
   ) {
     throw new Error(
       `Native tracking not initialized: ${JSON.stringify(settings)}`,
@@ -347,14 +345,16 @@ export async function runExperiment(progress: (text: string) => void) {
       'exposures',
       'evaluations',
       'both',
+      ...batchingModes,
     ].includes(mode)
   )
     throw new Error('Unknown experiment');
   const startedAt = new Date().toISOString();
-  const result =
-    mode === 'hydration'
-      ? await hydration(progress)
-      : await tracking(mode, progress);
+  const result = batchingModes.includes(mode)
+    ? await runBatchingExperiment(mode, progress)
+    : mode === 'hydration'
+    ? await hydration(progress)
+    : await tracking(mode, progress);
   return {
     suite: 'mobile-flags-followups-v1',
     mode,

@@ -11,6 +11,7 @@ import {TurboModuleRegistry} from 'react-native';
 export interface Spec extends TurboModule {
   runSync(request: Object): Object;
   runAsync(request: Object): Promise<Object>;
+  trackBatch(records: Array<Object>): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('FlagsBenchmark');

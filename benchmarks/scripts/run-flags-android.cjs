@@ -9,6 +9,21 @@ const path = require('node:path');
 const assert = require('node:assert/strict');
 const {execFileSync} = require('node:child_process');
 const {createHash} = require('node:crypto');
+const {
+  validateReport: validateFollowup,
+  createCollector,
+} = require('./run-flags-followups.cjs');
+const trackingModes = [
+  'none',
+  'bridge-only',
+  'exposures',
+  'evaluations',
+  'both',
+  'batching-none',
+  'batching-current',
+  'batching-control',
+  'batching-buffered',
+];
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -20,6 +35,21 @@ function validateReport(report, mode) {
   assert.equal(report.metadata.nativeDebug, false);
   assert.equal(report.metadata.hermes, true);
   assert.equal(report.metadata.newArchitecture, true);
+  if (trackingModes.includes(mode)) {
+    assert.equal(report.mode, mode);
+    assert.equal(report.sink.initialization?.clientType, 'DatadogFlagsClient');
+    if (!mode.startsWith('batching-')) {
+      assert.equal(
+        report.expected.exposures,
+        ['exposures', 'both'].includes(mode) ? 3006 : 0,
+      );
+      assert.equal(
+        report.expected.evaluationCount,
+        ['evaluations', 'both'].includes(mode) ? 6012 : 0,
+      );
+    }
+    return validateFollowup(report);
+  }
   if (mode === 'hydration') {
     assert.equal(report.mode, mode);
     assert.equal(report.rows.length, 27);
@@ -73,10 +103,10 @@ async function main() {
     process.argv.slice(2);
   assert(
     serial && apk && output && androidRoot,
-    'Usage: node scripts/run-flags-android.cjs <emulator-serial> <Release.apk> <new-results-directory> <android-repo> [smoke|full|hydration]',
+    'Usage: node scripts/run-flags-android.cjs <emulator-serial> <Release.apk> <new-results-directory> <android-repo> [smoke|full|hydration|none|bridge-only|exposures|evaluations|both|batching-none|batching-current|batching-control|batching-buffered]',
   );
   assert(
-    ['smoke', 'full', 'hydration'].includes(mode),
+    ['smoke', 'full', 'hydration', ...trackingModes].includes(mode),
     'Unsupported experiment',
   );
   assert.match(serial, /^emulator-\d+$/, 'Physical devices are not allowed');
@@ -114,9 +144,17 @@ async function main() {
   };
   const bundle = 'com.benchmarkrunner';
   const reportPath = `/sdcard/Android/data/${bundle}/files/flags-benchmark-result.json`;
+  const collector = trackingModes.includes(mode)
+    ? await createCollector()
+    : null;
   try {
     adb(['install', '-r', apk]);
     adb(['shell', 'am', 'force-stop', bundle]);
+    // The dedicated benchmark app contains only synthetic data. Start each tracking mode clean.
+    if (collector) {
+      adb(['shell', 'pm', 'clear', bundle]);
+      adb(['reverse', `tcp:${collector.port}`, `tcp:${collector.port}`]);
+    }
     adb(['shell', 'rm', '-f', reportPath]);
     const launchedAt = Date.now();
     adb([
@@ -129,7 +167,10 @@ async function main() {
       '--es',
       'flagsRun',
       mode === 'full' ? 'full' : 'smoke',
-      ...(mode === 'hydration' ? ['--es', 'flagsExperiment', 'hydration'] : []),
+      ...(mode === 'hydration' || collector
+        ? ['--es', 'flagsExperiment', mode]
+        : []),
+      ...(collector ? ['--ei', 'flagsSinkPort', String(collector.port)] : []),
     ]);
     let report;
     while (Date.now() - launchedAt < 15 * 60 * 1000) {
@@ -152,6 +193,7 @@ async function main() {
       break;
     }
     assert(report, 'Timed out waiting for benchmark report');
+    if (collector && report.sink) report.sink.requests = collector.requests;
     const json = JSON.stringify(report, null, 2);
     fs.writeFileSync(path.join(output, `${mode}.json`), json);
     manifest.reportSha256 = sha256(json);
@@ -168,7 +210,12 @@ async function main() {
         adb(['logcat', '-d', '-t', '1500']),
       );
     } finally {
-      adb(['shell', 'am', 'force-stop', bundle]);
+      try {
+        adb(['shell', 'am', 'force-stop', bundle]);
+        if (collector) adb(['reverse', '--remove', `tcp:${collector.port}`]);
+      } finally {
+        if (collector) await collector.close();
+      }
     }
   }
 }

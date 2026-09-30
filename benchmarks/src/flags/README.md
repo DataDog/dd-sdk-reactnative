@@ -10,6 +10,9 @@ the follow-up experiments below cover storage hydration and native tracking.
 See [recorded results](RESULTS.md) for the comparisons, source provenance, and
 remaining limitations. Baseline and follow-up evidence remain separate.
 
+The [recorded evidence](evidence/README.md) includes successful reports, source
+snapshots, checksums, and instructions to verify the saved results without a device.
+
 This experiment changes only the benchmark app. It does not change the shipping
 React Native package, OpenFeature provider API, or tracking behavior.
 
@@ -138,7 +141,8 @@ ENVFILE="$PWD/../flags-smoke.env" xcodebuild \
   -workspace BenchmarkRunner.xcworkspace -scheme BenchmarkRunner \
   -configuration Release -sdk iphonesimulator \
   -destination 'platform=iOS Simulator,id=<simulator-udid>' \
-  -derivedDataPath /tmp/flags-benchmark CODE_SIGNING_ALLOWED=NO build
+  -derivedDataPath "$HOME/dd-sdks/dd-sdk-ios/.build/flags-rn-simulator" \
+  CODE_SIGNING_ALLOWED=NO ONLY_ACTIVE_ARCH=YES ARCHS=arm64 build
 ```
 
 Install and launch the resulting app with `xcrun simctl`, or run it from Xcode.
@@ -224,9 +228,33 @@ Debug builds, missing Hermes/New Architecture, failed parity, and stale reports.
 It retains the APK hash, lockfile hash, source snapshots, device properties,
 report, and logs. The emulator's clock must be synchronized with the host.
 
-Android native tracking follow-ups are not enabled yet. They require Android
-tracking initialization and captured-intake validation; the harness fails
-explicitly instead of reporting an uninitialized or mocked tracking path.
+Android tracking uses the same JS workload and event-count checks as iOS.
+After building the Release APK, run each mode in a fresh output directory:
+
+```sh
+for mode in none bridge-only exposures evaluations both; do
+  node scripts/run-flags-android.cjs emulator-5554 \
+    android/app/build/outputs/apk/release/app-release.apk \
+    "/absolute/new-tracking-results/forward/$mode" /absolute/dd-sdk-android "$mode"
+done
+```
+
+Repeat with `both evaluations exposures bridge-only none` and a separate
+`reverse` directory. The runner clears only the synthetic benchmark app's data
+before each tracking mode. It forwards an emulator loopback port to a collector
+bound to host `127.0.0.1` using `adb reverse`, then removes that forwarding rule.
+No credentials, external intake, or physical phone are used. Cleartext HTTP is
+allowed only for loopback in the optional prototype's Release manifest.
+
+Native Datadog Flags 3.13.1 initializes outside the timed loop, with RUM disabled,
+small/frequent uploads, and a one-second evaluation aggregation interval. The
+test-only native drain runs on a worker after that timer has fired. The validator
+reads Android's compressed newline-delimited JSON and iOS's evaluation envelope;
+both must represent the same expected exposures and evaluation counts. It does
+not require identical request counts or evaluation record counts because native
+batching and aggregation windows can differ. A resolved bridge promise alone
+does not count as delivered telemetry.
+
 Validation on 2026-09-29: the Release ARM64 APK, real bridge smoke test, full
 placement benchmark, and 810-sample hydration experiment passed on Android 15 /
 API 35. Eight Kotlin tests and 28 RN harness tests also passed. Unit tests alone
@@ -240,7 +268,7 @@ Build the Release simulator app with `flags-smoke.env` as above, then run:
 ```sh
 node scripts/run-flags-followups.cjs \
   <booted-simulator-udid> \
-  /tmp/flags-benchmark/Build/Products/Release-iphonesimulator/BenchmarkRunner.app \
+  "$HOME/dd-sdks/dd-sdk-ios/.build/flags-rn-simulator/Build/Products/Release-iphonesimulator/BenchmarkRunner.app" \
   <new-results-directory> \
   <absolute-ios-repo-path>
 ```
@@ -290,7 +318,80 @@ executable, JS bundle and lockfile hashes. Changed source files are copied next
 to the manifest, so an uncommitted prototype can still be reconstructed from its
 base commit plus saved sources. Keep failed diagnostic runs out of RFC tables.
 
-Android native tracking, cold app launch, incremental shipping package size,
+Cold app launch, incremental shipping package size,
 device energy and memory pressure remain separate experiments. These results do
 not establish cross-platform performance or a fastest possible native/JSI
 implementation.
+
+## Per-Evaluation Calls Versus JS Batching
+
+The optional `batching-*` modes compare delivery to the native tracking code,
+not native tracking against a JS-only logger. Both exposure and evaluation
+logging are enabled. Native deduplication, aggregation, storage and upload are
+unchanged; the prototype batch bridge calls the same `DdFlagsImplementation`
+for every record. No production API is added.
+
+| Mode | Delivery |
+| --- | --- |
+| `batching-none` | JS evaluation without tracking |
+| `batching-current` | Existing `DdFlags.trackEvaluation` call for each evaluation |
+| `batching-control` | Prototype batch bridge, one record per call |
+| `batching-buffered` | Prototype batch bridge, up to 25 records or a 50 ms wait |
+
+The one-record control separates batching gains from differences in the bridge
+wrapper. Both native wrappers use the normal tracking module queue. Native
+client setup is warmed outside timing. The JS paths use the same measured
+buffer helper; one-record modes submit immediately.
+
+Each mode runs 10 evaluations/second (20 evaluations), 100/second (200),
+20-evaluation bursts every 250 ms (200), and an uninterrupted 500-evaluation
+stress burst. Each workload uses repeated and changing contexts, across three
+rotated repetitions. These synthetic rates illustrate different loads; they
+are not rates measured in customer applications. Repeat all four modes in
+reverse order, using a fresh app process and separate output directory.
+Pacing follows a fixed schedule and catches up after late RN timers. The
+summary reports observed rates; timer scheduling can still group nearby calls.
+
+Reports include evaluation caller times, deferred flush times, native
+acknowledgement times, a 16 ms JS timer-delay probe, batch sizes, and maximum
+buffered/retained record counts. Deferred timer work is outside caller timing;
+report it separately rather than treating moved work as eliminated work.
+Acknowledgement means the native API accepted a record, not durable storage or
+upload. Retained records include pending acknowledgements, not native queue
+depth. Process RSS is not isolated JS heap usage. Timer delay is not frame rate,
+and short bursts have too few timer samples for stable tail percentiles.
+
+The runner drains any partial batch at the end of each case, then drains native
+uploads at the end of the run. Validation requires 5,520 correct evaluations,
+2,772 distinct exposures and 5,544 represented evaluations per tracking mode,
+including 24 exposure-disabled warmups. It verifies every targeting key, not
+only totals. The no-tracking baseline must send zero events. Captured bodies
+stay on the host's loopback collector and contain synthetic data only.
+
+For iOS, append the following mode arguments to `run-flags-followups.cjs`:
+
+```sh
+batching-none batching-current batching-control batching-buffered
+```
+
+For Android, call `run-flags-android.cjs` once per mode, as for the earlier
+tracking experiment. Reverse the order for the second pass. Stop builds and
+the other platform's simulator before collecting timings. Both runners reject
+physical devices and Debug builds.
+
+Generate a JSON summary from a directory containing the forward/reverse
+reports and their manifests:
+
+```sh
+node scripts/summarize-flags-batching.cjs <results-directory>
+```
+
+This command rechecks event output and report hashes. It excludes directories
+whose names start with `diagnostic`, and keeps platform and run order separate.
+
+This buffer is not a reliable delivery design. It has no background, crash,
+bridge-teardown, or consent-change handling. Its 50 ms timer is a scheduling
+target, not a deadline when JS is busy. Native tracking currently assigns event
+times when records arrive; delaying that call can also delay those timestamps.
+Those contracts need design and tests before shipping batching. See
+[BATCHING_RESULTS.md](./BATCHING_RESULTS.md) for measured results and limitations.

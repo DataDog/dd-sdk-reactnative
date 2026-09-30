@@ -115,6 +115,8 @@ android {
     }
     if (flagsPrototypeEnabled) {
         sourceSets.main.java.srcDir('src/flagsPrototype/java')
+        sourceSets.main.res.srcDir('src/flagsPrototype/res')
+        sourceSets.release.manifest.srcFile('src/flagsPrototype/AndroidManifest.xml')
     }
 }
 
@@ -125,6 +127,7 @@ repositories {
 dependencies {
     if (flagsPrototypeEnabled) {
         implementation 'com.datadog.flags.benchmark:rules-evaluation-prototype:0.0.1-prototype'
+        implementation 'com.datadoghq:dd-sdk-android-flags:3.13.1'
     }
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
