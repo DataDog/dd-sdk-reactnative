@@ -38,9 +38,13 @@ Pod::Spec.new do |s|
   s.dependency "react-native-webview"
 
   # DatadogInternal was previously declared explicitly here, but it is an internal target of
-  # dd-sdk-ios rather than an exported SPM product, so it cannot be requested. It is expected
-  # to stay importable via the SWIFT_INCLUDE_PATHS entry that React Native's `spm_dependency`
-  # helper adds to this target.
+  # dd-sdk-ios rather than an exported SPM product, so it cannot be requested. Making it
+  # importable takes an extra search path -- see the FRAMEWORK_SEARCH_PATHS note below. Compiling
+  # is not enough to link it, though: unlike DatadogCore and DatadogSessionReplay, the
+  # DatadogWebViewTracking product's own autolink metadata does not pull DatadogInternal onto this
+  # target's link line, so RCTDatadogWebViewTracking.swift's direct references to
+  # DatadogInternal.CoreRegistry and DatadogCoreProtocol are left unresolved at link time
+  # ("Undefined symbols ... DatadogInternal.CoreRegistry...") unless we link it explicitly too.
   spm_dependency(s,
     url: datadog_ios_spm_url,
     requirement: { kind: 'exactVersion', version: datadog_ios_version },
@@ -79,7 +83,8 @@ Pod::Spec.new do |s|
   }
 
   xcconfig = {
-    "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/react-native-webview/**"
+    "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/react-native-webview/**",
+    "OTHER_LDFLAGS" => "$(inherited) -framework DatadogInternal"
   }
 
   xcconfig.merge!(datadog_spm_xcconfig)

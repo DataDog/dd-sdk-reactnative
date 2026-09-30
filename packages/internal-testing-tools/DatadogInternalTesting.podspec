@@ -41,10 +41,20 @@ Pod::Spec.new do |s|
     products: ['DatadogCore']
   )
 
-  # The test spec in ios/Tests does not `@testable import` anything from dd-sdk-ios, but it does
-  # plainly import DatadogCore and DatadogInternal. Test spec targets are separate from the main
-  # pod target and so do not receive the SWIFT_INCLUDE_PATHS entry above, which leaves those
-  # modules unresolvable, so no test spec is declared.
+  s.test_spec 'Tests' do |test_spec|
+    test_spec.source_files = 'ios/Tests/*.swift'
+
+    # DatadogCore resolves the same way it does for DatadogSDKReactNative's own test spec: as a
+    # declared SPM product, its .framework sits at the top-level SYMROOT/CONFIGURATION directory,
+    # which Xcode searches implicitly for any target with no CONFIGURATION_BUILD_DIR override of
+    # its own -- true here since test specs don't get the per-pod-target override main pod targets
+    # do. DatadogInternal needs the explicit help below because it is not a product: it lives one
+    # level down, in PackageFrameworks/.
+    test_spec.pod_target_xcconfig = {
+      'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
+      'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
+    }
+  end
 
   # This guard prevents installing the dependencies when we run `pod install` in the old architecture.
   # The `install_modules_dependencies` function is only available from RN 0.71, the new architecture is not

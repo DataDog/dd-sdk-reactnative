@@ -1907,7 +1907,7 @@ SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
   DatadogSDKReactNative: 0436a25ca50eb0feb28a69db28cb537ac518bf3e
   DatadogSDKReactNativeSessionReplay: 7ed882cd305f191988d9d8eff2ad57c9d736b21b
-  DatadogSDKReactNativeWebView: 34a534d31fef518cd26c205ea5679123f666a836
+  DatadogSDKReactNativeWebView: 704642ca731507fdeb60ad31d8f29fe91460ca52
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45
