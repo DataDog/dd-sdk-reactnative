@@ -598,6 +598,54 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
     });
 
+    it('tracks the rules result, not a same-key precomputed entry, when the snapshot does not match', async () => {
+        const configuration = {
+            ...rulesConfiguration(),
+            ...precomputedConfiguration()
+        };
+        configuration.precomputed.response.data.attributes.flags[
+            'test-flag'
+        ] = {
+            allocationKey: 'snapshot-allocation',
+            variationKey: 'snapshot-off',
+            variationType: 'boolean',
+            variationValue: false,
+            reason: 'STATIC',
+            doLog: true
+        };
+        const { provider, name } = setup(configuration);
+        await OpenFeature.setProviderAndWait(provider, {
+            targetingKey: 'other-user',
+            country: 'US'
+        });
+        const client = OpenFeature.getClient();
+        expect(client.getBooleanValue('test-flag', false)).toBe(true);
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+            name,
+            'test-flag',
+            expect.objectContaining({
+                value: true,
+                allocationKey: 'allocation',
+                variationKey: 'on',
+                serialId: '7'
+            }),
+            'other-user',
+            { country: 'US' }
+        );
+        await OpenFeature.clearContext();
+        expect(client.getBooleanValue('test-flag', true)).toBe(false);
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+            name,
+            'test-flag',
+            expect.objectContaining({
+                value: false,
+                allocationKey: 'snapshot-allocation'
+            }),
+            'user-1',
+            { country: 'US' }
+        );
+    });
+
     it('sends the precomputed split serial ID to native tracking', async () => {
         const configuration = precomputedConfiguration();
         Object.assign(

@@ -168,6 +168,58 @@ describe('FlagsClient', () => {
         });
     });
 
+    describe('offline evaluator tracking', () => {
+        it('tracks only successful delegate results, using the flag and context the delegate selected', () => {
+            const client = DdFlags.getClient('delegate-tracking');
+            const flag = {
+                key: 'flag',
+                value: true,
+                allocationKey: 'allocation',
+                variationKey: 'on',
+                variationType: 'boolean',
+                variationValue: 'true',
+                reason: 'TARGETING_MATCH',
+                doLog: true,
+                extraLogging: {},
+                serialId: '7'
+            };
+            const context = {
+                targetingKey: 'user',
+                attributes: { country: 'US' }
+            };
+            let errorCode: 'TYPE_MISMATCH' | undefined = 'TYPE_MISMATCH';
+            client.__ddSetOfflineEvaluator(() => ({
+                reconcile: () => ({ status: 'ready' as const }),
+                evaluate: <T>(key: string, defaultValue: T) => ({
+                    details: {
+                        key,
+                        value: defaultValue,
+                        reason: errorCode ? 'ERROR' : 'TARGETING_MATCH',
+                        errorCode
+                    },
+                    exposure: { flag, context }
+                })
+            }));
+            expect(client.getBooleanDetails('flag', false).errorCode).toBe(
+                'TYPE_MISMATCH'
+            );
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+            errorCode = undefined;
+            client.getBooleanDetails('flag', false);
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                'delegate-tracking',
+                'flag',
+                flag,
+                'user',
+                {
+                    country: 'US'
+                }
+            );
+        });
+    });
+
     describe('setEvaluationContext', () => {
         it('should set the evaluation context', async () => {
             const flagsClient = DdFlags.getClient();
