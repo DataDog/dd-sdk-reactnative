@@ -291,10 +291,9 @@ export default AppWithProviders;
 
 ### JavaScript evaluation with manual configuration
 
-Use `DatadogCoreProvider` to evaluate precomputed or rules-based configurations entirely in
-JavaScript with `@datadog/flagging-core`. This is a port of the browser `DatadogCoreProvider`;
-it does not use the native `FlagsClient`, fetch configuration, or send exposure or RUM events.
-Your application owns configuration delivery, storage, and updates.
+Use `DatadogCoreProvider` to evaluate manually supplied precomputed or rules-based configurations in
+JavaScript. The provider does not fetch configuration or send exposure or RUM events. Your
+application manages configuration delivery, storage, and updates.
 
 ```tsx
 import {
@@ -320,44 +319,45 @@ const enabled = client.getBooleanValue('new-feature', false);
 provider.setConfiguration(coreConfigurationFromString(updatedWire));
 ```
 
-You can also supply a parsed `FlagsConfiguration` directly; the type is exported by both entry points.
-`getConfiguration()` returns the currently supplied configuration, or `undefined` before one is set.
+You can also supply a parsed `FlagsConfiguration` directly. Both entry points export this type.
+`getConfiguration()` returns the supplied configuration, or `undefined` if no configuration is set.
 Use `coreConfigurationFromString` for this provider, rather than the native offline provider's
 precomputed-only `configurationFromString` helper.
 
 - Matching precomputed data takes precedence over rules. If the context does not match, the
-  evaluator uses rules when available; otherwise evaluation returns your coded default with
-  `INVALID_CONTEXT` (or `PARSE_ERROR` if the fallback capability could not be parsed).
+  evaluator uses rules when available. Otherwise, evaluation returns your coded default with
+  `INVALID_CONTEXT`, or `PARSE_ERROR` if the rules could not be parsed.
 - **Unlike `DatadogOfflineOpenFeatureProvider`, an empty OpenFeature context is literal.** It does
   not adopt the precomputed configuration's embedded context. Clearing a context can therefore
   make a precomputed-only provider enter `ERROR`. Use the same domain for registration,
   evaluations, and subsequent `OpenFeature.setContext('datadog-core', context)` calls.
-- Load configuration **before** registration. Missing configuration rejects initialization with
-  `PROVIDER_NOT_READY`; unusable configuration produces `PARSE_ERROR`. If registration fails,
-  wait for that initialization to settle before loading a valid configuration to recover.
+- Load configuration before registering the provider. Missing configuration causes initialization to
+  fail with `PROVIDER_NOT_READY`. Unusable configuration produces `PARSE_ERROR`. If initialization
+  fails, wait for it to finish before loading a valid configuration.
 - Replacing a usable configuration emits `ConfigurationChanged`. An unusable replacement emits
-  `Error`; loading a usable configuration after an error emits `Ready` then `ConfigurationChanged`.
+  `Error`. Loading a usable configuration after an error emits `Ready`, followed by
+  `ConfigurationChanged`.
 
 ### Offline initialization
 
-If you fetch a flag configuration yourself (cached on disk, delivered via your own service,
-or bundled with the app), use `DatadogOfflineOpenFeatureProvider` instead of
-`DatadogOpenFeatureProvider`. It delegates **precomputed and rules-based evaluation** to
-`DatadogCoreProvider` using the pinned `@datadog/flagging-core` evaluator, but keeps the offline
-provider's context normalization, `clientName`, and native exposure/RUM tracking. It **never fetches
-configuration from the network** — you supply it with `setConfiguration`.
+Use `DatadogOfflineOpenFeatureProvider` to evaluate manually supplied precomputed or rules-based
+configurations with native exposure or RUM tracking. The provider does not fetch configuration;
+supply it with `setConfiguration`. For evaluation without tracking, use `DatadogCoreProvider`.
 
-Update `@datadog/mobile-react-native` and this package together to use the native tracking/evaluator
-bridge. With an older core SDK that lacks the bridge, precomputed configurations retain their
-previous behavior, but rules configurations produce a warning and `GENERAL` error rather than
-being silently ignored. A configuration that cannot be parsed reports `PARSE_ERROR`, as
-`DatadogCoreProvider` does.
+Rules-based evaluation requires `@datadog/mobile-react-native` and
+`@datadog/mobile-react-native-openfeature` 3.10.0 or later. Update both packages together to use the
+native tracking/evaluator bridge. With an older core SDK that lacks the bridge, precomputed
+configurations retain their previous behavior, but rules configurations produce a warning and
+`GENERAL` error rather than being silently ignored. A configuration that cannot be parsed reports
+`PARSE_ERROR`, as `DatadogCoreProvider` does.
 
 #### Rules-based configuration
 
-Use `coreConfigurationFromString` from the `/rules-based` entry point for rules or combined
-precomputed/rules payloads. The legacy `configurationFromString` helper remains precomputed-only. Rules are evaluated locally for the
-current context, so you can change users or targeting attributes without fetching a new configuration:
+Use `coreConfigurationFromString` from the `/rules-based` entry point to parse rules-based
+configurations or configurations containing both precomputed data and rules.
+`configurationFromString` supports only precomputed configurations. Rules are evaluated locally for
+the current context, so you can change users or targeting attributes without fetching another
+configuration:
 
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
@@ -387,8 +387,9 @@ on Android). Replacing a configuration does not reset this deduplication.
 Native `trackExposures` and `rumIntegrationEnabled` settings still apply. The named `FlagsClient`
 shares the same evaluator, including when accessed directly with `DdFlags.getClient(domain)`.
 
-For combined configurations, matching precomputed data takes precedence; rules are used when the
-precomputed context does not match. A valid capability can still be used if the other is malformed.
+For configurations containing both precomputed data and rules, matching precomputed data takes
+precedence. The provider uses rules when the precomputed context does not match. If either part is
+malformed, the provider can still use the valid part.
 An empty effective context adopts the precomputed context when present. Without a context, rules have
 no targeting key: an evaluation that reaches a shard on the targeting key returns
 `TARGETING_KEY_MISSING`. Pass `targetingKey: ''` for an anonymous subject.
