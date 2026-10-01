@@ -1,0 +1,7 @@
+{
+    "main": "../lib/commonjs/rules-based",
+    "module": "../lib/module/rules-based",
+    "types": "../lib/typescript/react-native-openfeature/src/rules-based.d.ts",
+    "react-native": "../src/rules-based",
+    "source": "../src/rules-based"
+}

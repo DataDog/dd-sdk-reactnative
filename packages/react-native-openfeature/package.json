@@ -23,7 +23,8 @@
     "main": "lib/commonjs/index",
     "files": [
         "src/**",
-        "lib/**"
+        "lib/**",
+        "rules-based/package.json"
     ],
     "types": "lib/typescript/react-native-openfeature/src/index.d.ts",
     "react-native": "src/index",
@@ -36,6 +37,9 @@
         "test": "jest",
         "lint": "eslint .",
         "prepare": "rm -rf lib && yarn bob build"
+    },
+    "dependencies": {
+        "@datadog/flagging-core": "3.1.1"
     },
     "devDependencies": {
         "@datadog/mobile-react-native": "^3.9.0",

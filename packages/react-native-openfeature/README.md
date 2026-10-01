@@ -4,11 +4,16 @@ Use [OpenFeature][1] with [Datadog Feature Flags][2] to evaluate feature flags a
 
 OpenFeature is a vendor-neutral, community-driven specification and SDK for feature flagging. It provides a unified API for feature flag evaluation that works across different providers. This enables you to switch vendors or integrate multiple feature flag systems.
 
-This package provides an OpenFeature-compatible provider that wraps Datadog's Feature Flags SDK.
+This package provides an online provider backed by Datadog's Feature Flags SDK, a
+`DatadogCoreProvider` for manually supplied JavaScript-evaluated configurations, and an offline
+compatibility provider that delegates to `DatadogCoreProvider` while retaining native tracking.
+`DatadogCoreProvider` and the rules-based parser are exported from the
+`@datadog/mobile-react-native-openfeature/rules-based` entry point, which keeps the protobuf rules
+parser out of apps that do not use it.
 
 ## Setup
 
-**Note**: This package is an integration for the [OpenFeature React SDK][1]. Install and set up the core [`@datadog/mobile-react-native`][3] SDK to start using Datadog Feature Flags.
+**Note**: This package is an integration for the [OpenFeature React SDK][1]. Install and set up the core [`@datadog/mobile-react-native`][3] SDK to use the native-backed providers. `DatadogCoreProvider` uses the same package dependencies but does not require Datadog SDK initialization or `DdFlags.enable()`.
 
 To install with NPM, run:
 
@@ -70,7 +75,7 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 ### RUM user context
 
 Use `enrichWithRumUser()` when you explicitly want to use the current RUM user as part of an
-OpenFeature evaluation context. Neither Datadog OpenFeature provider enriches context automatically.
+OpenFeature evaluation context. None of the Datadog OpenFeature providers enrich context automatically.
 This keeps context changes visible through OpenFeature and avoids changing flag assignments unless
 your application opts in.
 
@@ -284,13 +289,113 @@ function App() {
 export default AppWithProviders;
 ```
 
+### JavaScript evaluation with manual configuration
+
+Use `DatadogCoreProvider` to evaluate precomputed or rules-based configurations entirely in
+JavaScript with `@datadog/flagging-core`. This is a port of the browser `DatadogCoreProvider`;
+it does not use the native `FlagsClient`, fetch configuration, or send exposure or RUM events.
+Your application owns configuration delivery, storage, and updates.
+
+```tsx
+import {
+    DatadogCoreProvider,
+    coreConfigurationFromString
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+const provider = new DatadogCoreProvider();
+// `wire` is a ConfigurationWire string delivered by your application.
+// This parser supports both precomputed and rules-based configurations.
+provider.setConfiguration(coreConfigurationFromString(wire));
+
+// For precomputed data, supply the exact context the configuration was computed for.
+// For rules, supply the context you want to evaluate locally.
+const context = { targetingKey: 'user-123', country: 'US' };
+await OpenFeature.setProviderAndWait('datadog-core', provider, context);
+
+const client = OpenFeature.getClient('datadog-core');
+const enabled = client.getBooleanValue('new-feature', false);
+
+// Replace configuration whenever your application receives an update.
+provider.setConfiguration(coreConfigurationFromString(updatedWire));
+```
+
+You can also supply a parsed `FlagsConfiguration` directly; the type is exported by both entry points.
+`getConfiguration()` returns the currently supplied configuration, or `undefined` before one is set.
+Use `coreConfigurationFromString` for this provider, rather than the native offline provider's
+precomputed-only `configurationFromString` helper.
+
+- Matching precomputed data takes precedence over rules. If the context does not match, the
+  evaluator uses rules when available; otherwise evaluation returns your coded default with
+  `INVALID_CONTEXT` (or `PARSE_ERROR` if the fallback capability could not be parsed).
+- **Unlike `DatadogOfflineOpenFeatureProvider`, an empty OpenFeature context is literal.** It does
+  not adopt the precomputed configuration's embedded context. Clearing a context can therefore
+  make a precomputed-only provider enter `ERROR`. Use the same domain for registration,
+  evaluations, and subsequent `OpenFeature.setContext('datadog-core', context)` calls.
+- Load configuration **before** registration. Missing configuration rejects initialization with
+  `PROVIDER_NOT_READY`; unusable configuration produces `PARSE_ERROR`. If registration fails,
+  wait for that initialization to settle before loading a valid configuration to recover.
+- Replacing a usable configuration emits `ConfigurationChanged`. An unusable replacement emits
+  `Error`; loading a usable configuration after an error emits `Ready` then `ConfigurationChanged`.
+
 ### Offline initialization
 
-If you fetch a flag configuration yourself (for example a precomputed-assignments payload
-cached on disk, delivered via your own service, or bundled with the app), use
-`DatadogOfflineOpenFeatureProvider` instead of `DatadogOpenFeatureProvider`. It evaluates flags
-and reports exposures exactly like the online provider, but **never fetches configuration from
-the network** — you supply it with `setConfiguration`.
+If you fetch a flag configuration yourself (cached on disk, delivered via your own service,
+or bundled with the app), use `DatadogOfflineOpenFeatureProvider` instead of
+`DatadogOpenFeatureProvider`. It delegates **precomputed and rules-based evaluation** to
+`DatadogCoreProvider` using the pinned `@datadog/flagging-core` evaluator, but keeps the offline
+provider's context normalization, `clientName`, and native exposure/RUM tracking. It **never fetches
+configuration from the network** — you supply it with `setConfiguration`.
+
+Update `@datadog/mobile-react-native` and this package together to use the native tracking/evaluator
+bridge. With an older core SDK that lacks the bridge, precomputed configurations retain their
+previous behavior, but rules configurations produce a warning and `GENERAL` error rather than
+being silently ignored. A configuration that cannot be parsed reports `PARSE_ERROR`, as
+`DatadogCoreProvider` does.
+
+#### Rules-based configuration
+
+Use `coreConfigurationFromString` from the `/rules-based` entry point for rules or combined
+precomputed/rules payloads. The legacy `configurationFromString` helper remains precomputed-only. Rules are evaluated locally for the
+current context, so you can change users or targeting attributes without fetching a new configuration:
+
+```tsx
+import { DdFlags } from '@datadog/mobile-react-native';
+import { DatadogOfflineOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
+import { coreConfigurationFromString } from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+await DdFlags.enable();
+const domain = 'offline-rules';
+const provider = new DatadogOfflineOpenFeatureProvider({ clientName: domain });
+provider.setConfiguration(coreConfigurationFromString(rulesWire));
+await OpenFeature.setProviderAndWait(domain, provider, {
+    targetingKey: 'user-123',
+    country: 'CA'
+});
+const client = OpenFeature.getClient(domain);
+const initialValue = client.getBooleanValue('new-feature', false);
+
+await OpenFeature.setContext(domain, { targetingKey: 'user-123', country: 'US' });
+const updatedValue = client.getBooleanValue('new-feature', false);
+```
+
+Changing context can select a different rule and value. Successful evaluations are sent to the
+native tracking path once, with the evaluated value, variant, allocation, and effective context.
+The native SDK deduplicates exposures by subject, flag, allocation, and variant (and split serial ID
+on Android). Replacing a configuration does not reset this deduplication.
+Native `trackExposures` and `rumIntegrationEnabled` settings still apply. The named `FlagsClient`
+shares the same evaluator, including when accessed directly with `DdFlags.getClient(domain)`.
+
+For combined configurations, matching precomputed data takes precedence; rules are used when the
+precomputed context does not match. A valid capability can still be used if the other is malformed.
+An empty effective context adopts the precomputed context when present. Without a context, rules have
+no targeting key: an evaluation that reaches a shard on the targeting key returns
+`TARGETING_KEY_MISSING`. Pass `targetingKey: ''` for an anonymous subject.
+
+#### Precomputed configuration
+
+The released precomputed-only setup remains supported:
 
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
@@ -317,7 +422,8 @@ const isNewFeatureEnabled = client.getBooleanValue('new-feature-enabled', false)
 
 The configuration carries the evaluation context it was computed for, and the provider adopts it
 automatically. A precomputed configuration is a **single-subject snapshot**: it can only be served
-against the context it was computed for. Per-context evaluation is a future (rules-based) capability.
+against the context it was computed for. Use rules-based configuration, as shown above, for
+per-context evaluation.
 
 > **Warning:** Do **not** call `OpenFeature.setContext` with a _different_ context for the offline
 > precomputed flow. A runtime context that does not match the configuration's embedded context
@@ -329,7 +435,8 @@ against the context it was computed for. Per-context evaluation is a future (rul
 > distinct subject that must match the snapshot; use `clearContext()` (or omit context) to fall back
 > to the embedded context.
 
-Recommended setup for a hybrid app that also uses other OpenFeature providers, hooks, or domains:
+Recommended precomputed-only setup for a hybrid app that also uses other OpenFeature providers,
+hooks, or domains:
 
 - **Bind the offline provider to a dedicated OpenFeature domain, and give that domain an explicit
   empty context** at registration (`OpenFeature.setContext(domain, {})`) — which this provider reads

@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { FlagsConfiguration } from '@datadog/flagging-core';
+import { InternalLog, SdkVerbosity } from '@datadog/mobile-react-native';
 import type {
     FlagsClient,
     ParsedFlagsConfiguration
@@ -12,6 +14,7 @@ import {
     ErrorCode,
     GeneralError,
     InvalidContextError,
+    ParseError,
     ProviderEvents,
     ProviderNotReadyError
 } from '@openfeature/web-sdk';
@@ -23,6 +26,7 @@ import type {
 
 import { DatadogCoreOpenFeatureProvider } from './coreProvider';
 import { isEmptyContext, toDdContext } from './mappers';
+import { OfflineEvaluation } from './offlineEvaluation';
 
 // The outcome of a `FlagsClient` reconcile. Derived from the client so the provider maps it to
 // OpenFeature transitions; not part of the package's public API.
@@ -40,21 +44,26 @@ type ProviderErrorEvent = { message: string; errorCode: ErrorCode };
 const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
     INVALID_CONTEXT: ErrorCode.INVALID_CONTEXT,
     PROVIDER_NOT_READY: ErrorCode.PROVIDER_NOT_READY,
+    PARSE_ERROR: ErrorCode.PARSE_ERROR,
     GENERAL: ErrorCode.GENERAL
 };
 
 /**
  * An offline Datadog OpenFeature provider.
  *
- * It behaves like the online `DatadogOpenFeatureProvider` — same flag evaluation and
- * exposure/RUM tracking — **except it never fetches configuration from the network**.
+ * Delegates precomputed and rules-based evaluation to `DatadogCoreProvider`, while preserving
+ * named native clients and exposure/RUM tracking. It never fetches configuration from the network.
  * Instead of fetching on `initialize`/`onContextChange`, it evaluates against a configuration
  * supplied via {@link DatadogOfflineOpenFeatureProvider.setConfiguration}. A precomputed
  * configuration carries the evaluation context it was computed for, so you should **not** call
  * `OpenFeature.setContext` for the offline precomputed flow — see the class remarks.
  *
- * A runtime context that does not match the configuration's embedded context (compared after
- * normalization) cannot be served (offline never fetches), so it puts the provider into the
+ * Rules are evaluated locally for the supplied context. A missing/null targeting key is not an
+ * anonymous subject: an evaluation that reaches a shard on the targeting key returns
+ * TARGETING_KEY_MISSING, while an explicit empty string remains a valid targeting key.
+ * Precomputed context normalization/adoption is unchanged.
+ * Without usable rules, a runtime context that does not match the precomputed configuration's embedded context (after normalization)
+ * cannot be served (offline never fetches), so it puts the provider into the
  * OpenFeature `ERROR` state and evaluations fall back to your coded defaults (`INVALID_CONTEXT`).
  * An empty *effective* context re-adopts the embedded context and recovers — but note that
  * `clearContext(domain)` falls back to the global context, which may itself be non-empty and
@@ -118,11 +127,12 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     /**
      * Load a configuration into the provider for offline evaluation.
      *
-     * @param configuration A configuration parsed from a `ConfigurationWire` string via
-     * `configurationFromString`.
+     * @param configuration A precomputed or rules-based configuration parsed with
+     * `coreConfigurationFromString` from the `/rules-based` entry point. The existing precomputed-only `configurationFromString`
+     * output remains supported.
      */
-    setConfiguration(configuration: ParsedFlagsConfiguration): void {
-        const result = this.flagsClient.setConfiguration(configuration);
+    setConfiguration(configuration: FlagsConfiguration): void {
+        const result = this.installConfiguration(configuration);
 
         if (result.status === 'ready') {
             if (this.configurationInError) {
@@ -144,16 +154,53 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         }
     }
 
+    private installConfiguration(
+        configuration: FlagsConfiguration
+    ): ConfigurationResult {
+        if (typeof this.flagsClient.__ddSetOfflineEvaluator === 'function') {
+            return this.flagsClient.__ddSetOfflineEvaluator(
+                helpers => new OfflineEvaluation(configuration, helpers)
+            );
+        }
+
+        // Older core SDKs predate the evaluator bridge. Keep their released precomputed behavior,
+        // but never silently ignore usable rules or keep serving a stale configuration when they
+        // are supplied. A rules parse error has no rules to ignore, so precomputed data still loads.
+        if (configuration?.rules) {
+            InternalLog.log(
+                'DatadogOfflineOpenFeatureProvider rules-based evaluation requires an updated @datadog/mobile-react-native SDK. Update both Datadog packages together.',
+                SdkVerbosity.WARN
+            );
+            this.flagsClient.setConfiguration({});
+            return { status: 'error', errorCode: 'GENERAL' };
+        }
+        return this.flagsClient.setConfiguration(
+            configuration as ParsedFlagsConfiguration
+        );
+    }
+
     private applyContext(context: OFEvaluationContext): ConfigurationResult {
         // An empty context means "no external override": clear it so a loaded precomputed
         // configuration is served against its embedded context. Order-independent — the synthetic
         // `initialize({})`, `setContext({})`, and `clearContext()` all re-adopt the embedded
         // context rather than being treated as a mismatch.
-        const result = isEmptyContext(context)
-            ? this.flagsClient.resetEvaluationContextWithoutFetching()
-            : this.flagsClient.setEvaluationContextWithoutFetching(
-                  toDdContext(context)
-              );
+        let result: ConfigurationResult;
+        if (isEmptyContext(context)) {
+            result = this.flagsClient.resetEvaluationContextWithoutFetching();
+        } else if (
+            typeof this.flagsClient.__ddSetOfflineEvaluationContext ===
+            'function'
+        ) {
+            result = this.flagsClient.__ddSetOfflineEvaluationContext(
+                toDdContext(context),
+                typeof context.targetingKey === 'string'
+            );
+        } else {
+            // Older core SDKs retain their precomputed-only context behavior.
+            result = this.flagsClient.setEvaluationContextWithoutFetching(
+                toDdContext(context)
+            );
+        }
 
         this.configurationInError = result.status === 'error';
 
@@ -175,6 +222,10 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
             case 'PROVIDER_NOT_READY':
                 return new ProviderNotReadyError(
                     'The Datadog offline provider has no configuration loaded. Provide one via setConfiguration.'
+                );
+            case 'PARSE_ERROR':
+                return new ParseError(
+                    'The Datadog offline provider cannot parse the loaded configuration.'
                 );
             default:
                 return new GeneralError(
