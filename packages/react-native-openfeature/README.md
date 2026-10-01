@@ -382,6 +382,8 @@ const updatedValue = client.getBooleanValue('new-feature', false);
 
 Changing context can select a different rule and value. Successful evaluations are sent to the
 native tracking path once, with the evaluated value, variant, allocation, and effective context.
+The native SDK deduplicates exposures by subject, flag, allocation, and variant (and split serial ID
+on Android). Replacing a configuration does not reset this deduplication.
 Native `trackExposures` and `rumIntegrationEnabled` settings still apply. The named `FlagsClient`
 shares the same evaluator, including when accessed directly with `DdFlags.getClient(domain)`.
 
