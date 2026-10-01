@@ -8,6 +8,7 @@ import { NativeModules } from 'react-native';
 
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types/SdkVerbosity';
+import { version } from '../../version';
 import { DdFlags } from '../DdFlags';
 
 jest.mock('../../InternalLog', () => {
@@ -33,7 +34,8 @@ describe('DdFlags', () => {
         await DdFlags.enable();
 
         expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
-            enabled: true
+            enabled: true,
+            _ddFlagsSdkVersion: version
         });
     });
 
@@ -42,7 +44,9 @@ describe('DdFlags', () => {
             customExposureEndpoint: 'https://example.com',
             customFlagsEndpoint: 'https://example.com',
             trackExposures: false,
-            rumIntegrationEnabled: false
+            rumIntegrationEnabled: false,
+            // An application value must not replace package identity.
+            ...{ _ddFlagsSdkVersion: '99.99.99-application' }
         });
 
         expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
@@ -50,7 +54,8 @@ describe('DdFlags', () => {
             customExposureEndpoint: 'https://example.com',
             customFlagsEndpoint: 'https://example.com',
             trackExposures: false,
-            rumIntegrationEnabled: false
+            rumIntegrationEnabled: false,
+            _ddFlagsSdkVersion: version
         });
     });
 
