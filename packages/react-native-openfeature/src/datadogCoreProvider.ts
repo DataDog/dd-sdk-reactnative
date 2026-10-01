@@ -53,15 +53,27 @@ export class DatadogCoreEvaluationProvider implements Provider {
 
     setConfiguration(configuration: FlagsConfiguration): void {
         const hadEvaluatableConfiguration = this.canEvaluateCurrentContext();
-        this.flagsConfiguration = configuration;
-        this.flagsConfigurationId = this.computeConfigurationId(configuration);
+        // Untyped callers can pass a non-object (e.g. `null`), which flagging-core cannot read.
+        // Like any other unusable configuration, it replaces the previous one and surfaces
+        // PARSE_ERROR until a valid configuration is set.
+        if (typeof configuration !== 'object' || configuration === null) {
+            this.flagsConfiguration = {
+                configurationError: 'Flags configuration must be an object'
+            };
+            this.flagsConfigurationId = undefined;
+        } else {
+            this.flagsConfiguration = configuration;
+            this.flagsConfigurationId = this.computeConfigurationId(
+                configuration
+            );
+        }
 
         if (this.context === undefined) {
             return;
         }
 
         const error = toOpenFeatureError(
-            getFlagsConfigurationError(configuration, this.context)
+            getFlagsConfigurationError(this.flagsConfiguration, this.context)
         );
         if (error) {
             // The web-sdk's ErrorEvent type omits errorCode, but its provider wrapper reads it.

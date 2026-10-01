@@ -384,6 +384,56 @@ describe('DatadogCoreProvider', () => {
         }
     );
 
+    it.each([null, undefined, 'not a configuration', 42])(
+        'rejects a non-object runtime configuration (%p) with a parse error',
+        async configuration => {
+            const provider = configuredProvider(
+                (configuration as unknown) as FlagsConfiguration
+            );
+            await expect(provider.initialize()).rejects.toBeInstanceOf(
+                ParseError
+            );
+            expect(
+                provider.resolveBooleanEvaluation('missing', true, {}, logger)
+            ).toEqual({
+                value: true,
+                reason: 'ERROR',
+                errorCode: ErrorCode.PARSE_ERROR,
+                errorMessage: 'Flags configuration must be an object'
+            });
+        }
+    );
+
+    it('replaces a usable configuration with a parse error when given null after initialization', async () => {
+        const provider = configuredProvider(rulesConfiguration());
+        await provider.initialize({});
+        const errorHandler = jest.fn();
+        provider.events.addHandler(ProviderEvents.Error, errorHandler);
+
+        expect(() =>
+            provider.setConfiguration((null as unknown) as FlagsConfiguration)
+        ).not.toThrow();
+        expect(errorHandler).toHaveBeenLastCalledWith({
+            error: expect.any(ParseError),
+            message: 'Flags configuration must be an object',
+            errorCode: ErrorCode.PARSE_ERROR
+        });
+        expect(
+            provider.resolveBooleanEvaluation('test-flag', false, {}, logger)
+        ).toMatchObject({
+            value: false,
+            reason: 'ERROR',
+            errorCode: ErrorCode.PARSE_ERROR
+        });
+        expect(rulesConfigurationId(provider)).toBeUndefined();
+
+        // A later valid configuration recovers.
+        const readyHandler = jest.fn();
+        provider.events.addHandler(ProviderEvents.Ready, readyHandler);
+        provider.setConfiguration(rulesConfiguration());
+        expect(readyHandler).toHaveBeenCalledTimes(1);
+    });
+
     it('defers configuration events and validation until initialization supplies the context', async () => {
         const provider = new DatadogCoreProvider();
         const handler = jest.fn();
