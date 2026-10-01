@@ -541,6 +541,52 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(changed).toHaveBeenCalledTimes(2);
     });
 
+    it('reports PARSE_ERROR for a malformed precomputed flag parsed by coreConfigurationFromString', async () => {
+        const configuration = precomputedConfiguration();
+        Object.assign(
+            configuration.precomputed.response.data.attributes.flags[
+                'boolean-flag'
+            ],
+            { doLog: 'invalid' }
+        );
+        const parsed = coreConfigurationFromString(
+            configurationToString(configuration)
+        );
+        expect(parsed.precomputed?.flagErrors).toHaveProperty('boolean-flag');
+        const { provider } = setup(parsed);
+        await OpenFeature.setProviderAndWait(provider);
+        const client = OpenFeature.getClient();
+        expect(client.getBooleanDetails('boolean-flag', false)).toMatchObject({
+            value: false,
+            errorCode: ErrorCode.PARSE_ERROR
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getStringValue('string-flag', 'default')).toBe('hello');
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports PARSE_ERROR for a rules flag with an unsafe int64 value while the provider stays ready', async () => {
+        // A protobuf rules flag whose integer variation exceeds Number.MAX_SAFE_INTEGER.
+        const unsafeIntegerWire = JSON.stringify({
+            version: 1,
+            rules: {
+                response:
+                    'EgR0ZXN0GjIKD2ludmFsaWQtZmVhdHVyZRIfEAIaCRiBgICAgICAECIQCgphbGxvY2F0aW9uIgIgAyoGdW5zYWZl'
+            }
+        });
+        const { provider } = setup(
+            coreConfigurationFromString(unsafeIntegerWire)
+        );
+        await OpenFeature.setProviderAndWait(provider, matchingContext);
+        const client = OpenFeature.getClient();
+        expect(client.getNumberDetails('invalid-feature', 0)).toMatchObject({
+            value: 0,
+            errorCode: ErrorCode.PARSE_ERROR
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
+    });
+
     it('reports PARSE_ERROR on the error event when a running provider loads malformed rules', async () => {
         const { provider } = setup(rulesConfiguration());
         await OpenFeature.setProviderAndWait(provider, matchingContext);

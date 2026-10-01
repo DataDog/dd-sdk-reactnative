@@ -92,8 +92,8 @@ export class OfflineEvaluation implements OfflineEvaluator {
                               helpers.normalizeWireContext(precomputed.context)
                           )
                         : undefined,
-                    // Malformed individual entries are omitted by the native decoder, as before.
-                    flagErrors: undefined,
+                    // The native decoder omits malformed entries; flagging-core's parser reports them.
+                    flagErrors: precomputed.flagErrors,
                     response: {
                         data: {
                             attributes: {
