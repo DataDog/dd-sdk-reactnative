@@ -22,6 +22,7 @@
             "nativeLongTaskThresholdMs": 333,
             "nativeInteractionTracking": true,
             "nativeIosResourceTracking": true,
+            "nativeIosResourceTrackingDisallowList": ["https://3p.example.com/*"],
             "actionNameAttribute": "action-name-attr",
             "customEndpoint": "https://rum.example.com",
             "vitalsUpdateFrequency": "NEVER",

@@ -29,6 +29,7 @@ export type AutoInstrumentationConfiguration = {
         readonly nativeLongTaskThresholdMs?: number;
         readonly nativeViewTracking?: boolean;
         readonly nativeIosResourceTracking?: boolean;
+        readonly nativeIosResourceTrackingDisallowList?: string[];
         readonly actionEventMapper?: ActionEventMapper | null;
         readonly errorEventMapper?: ErrorEventMapper | null;
         readonly resourceEventMapper?: ResourceEventMapper | null;
@@ -55,6 +56,7 @@ export type AutoInstrumentationParameters = {
         readonly nativeLongTaskThresholdMs?: number;
         readonly nativeViewTracking?: boolean;
         readonly nativeIosResourceTracking?: boolean;
+        readonly nativeIosResourceTrackingDisallowList?: string[];
         readonly actionEventMapper: ActionEventMapper | null;
         readonly errorEventMapper: ErrorEventMapper | null;
         readonly resourceEventMapper: ResourceEventMapper | null;
@@ -122,6 +124,8 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
             // No default on purpose: undefined means legacy iOS behavior
             nativeIosResourceTracking:
                 features.rumConfiguration.nativeIosResourceTracking,
+            nativeIosResourceTrackingDisallowList:
+                features.rumConfiguration.nativeIosResourceTrackingDisallowList,
             firstPartyHosts:
                 features.rumConfiguration.firstPartyHosts ||
                 RUM_DEFAULTS.getFirstPartyHosts()

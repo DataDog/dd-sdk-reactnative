@@ -471,6 +471,51 @@ describe('DdSdkReactNative', () => {
             }
         );
 
+        it('initializes with nativeIosResourceTrackingDisallowList undefined when not specified', async () => {
+            // GIVEN
+            const configuration = new CoreConfiguration('2', 'env');
+            configuration.rumConfiguration = new RumConfiguration('1');
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkNativeConfiguration;
+            expect(ddSdkConfiguration.rumConfiguration).toBeDefined();
+            expect(
+                ddSdkConfiguration.rumConfiguration
+                    ?.nativeIosResourceTrackingDisallowList
+            ).toBeUndefined();
+        });
+
+        it('initializes with nativeIosResourceTrackingDisallowList when it is specified', async () => {
+            // GIVEN
+            const disallowList = [
+                'https://3p.example.com/*',
+                'https://cdn.example.com/a'
+            ];
+            const configuration = new CoreConfiguration('2', 'env');
+            configuration.rumConfiguration = new RumConfiguration(
+                '1',
+                false,
+                false,
+                false,
+                { nativeIosResourceTrackingDisallowList: disallowList }
+            );
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            const ddSdkConfiguration = NativeModules.DdSdk.initialize.mock
+                .calls[0][0] as DdSdkNativeConfiguration;
+            expect(
+                ddSdkConfiguration.rumConfiguration
+                    ?.nativeIosResourceTrackingDisallowList
+            ).toEqual(disallowList);
+        });
+
         it('initializes with bundleLogsWithTraces false when it is specified', async () => {
             // GIVEN
             const fakeAppId = '1';

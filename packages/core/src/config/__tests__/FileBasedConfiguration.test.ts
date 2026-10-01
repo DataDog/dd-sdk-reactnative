@@ -60,6 +60,9 @@ describe('FileBasedConfiguration', () => {
                     "nativeCrashReportEnabled": true,
                     "nativeInteractionTracking": true,
                     "nativeIosResourceTracking": true,
+                    "nativeIosResourceTrackingDisallowList": [
+                      "https://3p.example.com/*",
+                    ],
                     "nativeLongTaskThresholdMs": 789,
                     "nativeViewTracking": true,
                     "resourceEventMapper": null,
@@ -174,6 +177,7 @@ describe('FileBasedConfiguration', () => {
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
                     "nativeIosResourceTracking": undefined,
+                    "nativeIosResourceTrackingDisallowList": undefined,
                     "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
@@ -240,6 +244,7 @@ describe('FileBasedConfiguration', () => {
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
                     "nativeIosResourceTracking": undefined,
+                    "nativeIosResourceTrackingDisallowList": undefined,
                     "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
@@ -304,6 +309,42 @@ describe('FileBasedConfiguration', () => {
                 );
             }
         );
+
+        it('leaves nativeIosResourceTrackingDisallowList undefined when not set', () => {
+            const config = new FileBasedConfiguration({
+                configuration: {
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id'
+                    }
+                }
+            });
+            expect(config.rumConfiguration).toHaveProperty(
+                'nativeIosResourceTrackingDisallowList',
+                undefined
+            );
+        });
+
+        it('passes nativeIosResourceTrackingDisallowList through when set', () => {
+            const disallowList = [
+                'https://3p.example.com/*',
+                'https://cdn.example.com/a'
+            ];
+            const config = new FileBasedConfiguration({
+                configuration: {
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id',
+                        nativeIosResourceTrackingDisallowList: disallowList
+                    }
+                }
+            });
+            expect(
+                config.rumConfiguration?.nativeIosResourceTrackingDisallowList
+            ).toEqual(disallowList);
+        });
 
         it('applies event mappers to configuration when provided', () => {
             const actionEventMapper = () => null;
