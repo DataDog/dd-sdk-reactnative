@@ -20,7 +20,7 @@ import {
 } from '@openfeature/web-sdk';
 
 import NativeDdFlagsModule from '../../../core/src/specs/NativeDdFlags';
-import { DatadogCoreProvider } from '../datadogCoreProvider';
+import { DatadogCoreEvaluationProvider } from '../datadogCoreProvider';
 import { DatadogOfflineOpenFeatureProvider } from '../index';
 import { coreConfigurationFromString } from '../rules-based';
 
@@ -75,19 +75,19 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
 
     it('delegates all precomputed types and tracks each result once with the embedded context', async () => {
         const boolean = jest.spyOn(
-            DatadogCoreProvider.prototype,
+            DatadogCoreEvaluationProvider.prototype,
             'resolveBooleanEvaluation'
         );
         const string = jest.spyOn(
-            DatadogCoreProvider.prototype,
+            DatadogCoreEvaluationProvider.prototype,
             'resolveStringEvaluation'
         );
         const number = jest.spyOn(
-            DatadogCoreProvider.prototype,
+            DatadogCoreEvaluationProvider.prototype,
             'resolveNumberEvaluation'
         );
         const object = jest.spyOn(
-            DatadogCoreProvider.prototype,
+            DatadogCoreEvaluationProvider.prototype,
             'resolveObjectEvaluation'
         );
         const { provider, name } = setup(precomputedConfiguration());
@@ -127,7 +127,7 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
 
     it('changes a rules-based value through real OpenFeature context changes and tracks the selected allocation', async () => {
         const resolve = jest.spyOn(
-            DatadogCoreProvider.prototype,
+            DatadogCoreEvaluationProvider.prototype,
             'resolveBooleanEvaluation'
         );
         const { provider, name } = setup(

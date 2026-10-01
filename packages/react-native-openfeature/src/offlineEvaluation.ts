@@ -24,7 +24,7 @@ import type {
     ResolutionDetails
 } from '@openfeature/web-sdk';
 
-import { DatadogCoreProvider } from './datadogCoreProvider';
+import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
 
 // Keep the bridge contract owned by FlagsClient; no OpenFeature dependency enters the core SDK.
 type CreateEvaluator = Parameters<FlagsClient['__ddSetOfflineEvaluator']>[0];
@@ -48,7 +48,7 @@ const logger: Logger = {
  * precomputed input/context normalization and native tracking representation are adapted here.
  */
 export class OfflineEvaluation implements OfflineEvaluator {
-    private readonly core = new DatadogCoreProvider();
+    private readonly core = new DatadogCoreEvaluationProvider();
     private readonly configuration: FlagsConfiguration;
     private precomputedFlags: FlagCache = new Map();
     private context: EvaluationContext = { targetingKey: '', attributes: {} };

@@ -38,7 +38,7 @@ import type {
  * or send exposure/RUM events. Load a configuration before registering it with OpenFeature.
  * Precomputed configurations require a matching OpenFeature context, including when it is empty.
  */
-export class DatadogCoreProvider implements Provider {
+export class DatadogCoreEvaluationProvider implements Provider {
     readonly metadata: ProviderMetadata = { name: 'datadog-core' };
     readonly runsOn: Paradigm = 'client';
     readonly events: ProviderEventEmitter<ProviderEvents> = new OpenFeatureEventEmitter();

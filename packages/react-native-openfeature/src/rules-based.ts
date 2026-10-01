@@ -8,7 +8,7 @@ import { configurationToString } from '@datadog/flagging-core/rules-based';
 import { getMD5Hash } from '@datadog/flagging-core';
 import type { FlagsConfiguration } from '@datadog/flagging-core';
 
-import { DatadogCoreProvider as DatadogCoreEvaluationProvider } from './datadogCoreProvider';
+import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
 
 // Rules parsing loads Protobuf-ES. Keep it behind this entry, as the browser SDK does.
 export { configurationFromString as coreConfigurationFromString } from '@datadog/flagging-core/rules-based';
