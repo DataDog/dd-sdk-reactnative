@@ -387,8 +387,9 @@ shares the same evaluator, including when accessed directly with `DdFlags.getCli
 
 For combined configurations, matching precomputed data takes precedence; rules are used when the
 precomputed context does not match. A valid capability can still be used if the other is malformed.
-An empty effective context adopts the precomputed context when present; rules-only configurations
-use the anonymous targeting key (`''`) until the app supplies a context.
+An empty effective context adopts the precomputed context when present. Without a context, rules have
+no targeting key: an evaluation that reaches a shard on the targeting key returns
+`TARGETING_KEY_MISSING`. Pass `targetingKey: ''` for an anonymous subject.
 
 #### Precomputed configuration
 

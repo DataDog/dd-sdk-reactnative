@@ -58,8 +58,9 @@ const OF_ERROR_CODE: Record<ConfigurationErrorCode, ErrorCode> = {
  * `OpenFeature.setContext` for the offline precomputed flow — see the class remarks.
  *
  * Rules are evaluated locally for the supplied context. A missing/null targeting key is not an
- * anonymous subject: shard-dependent rules return TARGETING_KEY_MISSING, while an explicit empty
- * string remains a valid targeting key. Precomputed context normalization/adoption is unchanged.
+ * anonymous subject: an evaluation that reaches a shard on the targeting key returns
+ * TARGETING_KEY_MISSING, while an explicit empty string remains a valid targeting key.
+ * Precomputed context normalization/adoption is unchanged.
  * Without usable rules, a runtime context that does not match the precomputed configuration's embedded context (after normalization)
  * cannot be served (offline never fetches), so it puts the provider into the
  * OpenFeature `ERROR` state and evaluations fall back to your coded defaults (`INVALID_CONTEXT`).
