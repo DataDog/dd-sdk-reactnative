@@ -4,17 +4,12 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { configurationToString } from '@datadog/flagging-core/rules-based';
 import type {
     FlagsConfiguration,
     FlagsConfigurationError,
     FlagTypeToValue
 } from '@datadog/flagging-core';
-import {
-    evaluate,
-    getFlagsConfigurationError,
-    getMD5Hash
-} from '@datadog/flagging-core';
+import { evaluate, getFlagsConfigurationError } from '@datadog/flagging-core';
 import {
     InvalidContextError,
     OpenFeatureEventEmitter,
@@ -50,7 +45,6 @@ export class DatadogCoreProvider implements Provider {
 
     private flagsConfiguration: FlagsConfiguration | undefined;
     private flagsConfigurationId: string | undefined;
-    private fallbackConfigurationSequence = 0;
     private context: EvaluationContext | undefined;
 
     getConfiguration(): FlagsConfiguration | undefined {
@@ -192,33 +186,12 @@ export class DatadogCoreProvider implements Provider {
         );
     }
 
-    private computeConfigurationId(configuration: FlagsConfiguration): string {
-        try {
-            // Retrieval metadata and the UFC build timestamp can change without changing rules.
-            // The backend's semantic Fingerprint() also excludes the rules' CreatedAt.
-            return getMD5Hash(
-                configurationToString({
-                    ...configuration,
-                    precomputed: configuration.precomputed && {
-                        ...configuration.precomputed,
-                        fetchedAt: undefined,
-                        etag: undefined
-                    },
-                    rules: configuration.rules && {
-                        ...configuration.rules,
-                        response: {
-                            ...configuration.rules.response,
-                            createdAt: undefined
-                        },
-                        fetchedAt: undefined,
-                        etag: undefined
-                    }
-                })
-            );
-        } catch {
-            this.fallbackConfigurationSequence += 1;
-            return `core-configuration-${this.fallbackConfigurationSequence}`;
-        }
+    // The `/rules-based` entry adds the browser's configuration identity. Hashing a rules
+    // configuration needs the protobuf encoder, which the main entry must not load.
+    protected computeConfigurationId(
+        _configuration: FlagsConfiguration
+    ): string | undefined {
+        return undefined;
     }
 }
 

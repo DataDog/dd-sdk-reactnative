@@ -17,7 +17,7 @@ import {
 import type { EvaluationContext, Logger } from '@openfeature/web-sdk';
 
 import packageJson from '../../package.json';
-import { DatadogCoreProvider } from '../datadogCoreProvider';
+import { DatadogCoreProvider } from '../rules-based';
 
 import {
     matchingContext,

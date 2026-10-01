@@ -23,7 +23,8 @@
     "main": "lib/commonjs/index",
     "files": [
         "src/**",
-        "lib/**"
+        "lib/**",
+        "rules-based/package.json"
     ],
     "types": "lib/typescript/react-native-openfeature/src/index.d.ts",
     "react-native": "src/index",

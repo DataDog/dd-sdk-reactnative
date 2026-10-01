@@ -13,6 +13,8 @@ package/lib/commonjs/offlineProvider.js
 package/lib/commonjs/offlineProvider.js.map
 package/lib/commonjs/provider.js
 package/lib/commonjs/provider.js.map
+package/lib/commonjs/rules-based.js
+package/lib/commonjs/rules-based.js.map
 package/lib/commonjs/rumContext.js
 package/lib/commonjs/rumContext.js.map
 package/lib/module/coreProvider.js
@@ -29,6 +31,8 @@ package/lib/module/offlineProvider.js
 package/lib/module/offlineProvider.js.map
 package/lib/module/provider.js
 package/lib/module/provider.js.map
+package/lib/module/rules-based.js
+package/lib/module/rules-based.js.map
 package/lib/module/rumContext.js
 package/lib/module/rumContext.js.map
 package/lib/typescript/core/src/DdAttributes.d.ts
@@ -313,14 +317,18 @@ package/lib/typescript/react-native-openfeature/src/offlineProvider.d.ts
 package/lib/typescript/react-native-openfeature/src/offlineProvider.d.ts.map
 package/lib/typescript/react-native-openfeature/src/provider.d.ts
 package/lib/typescript/react-native-openfeature/src/provider.d.ts.map
+package/lib/typescript/react-native-openfeature/src/rules-based.d.ts
+package/lib/typescript/react-native-openfeature/src/rules-based.d.ts.map
 package/lib/typescript/react-native-openfeature/src/rumContext.d.ts
 package/lib/typescript/react-native-openfeature/src/rumContext.d.ts.map
 package/package.json
+package/rules-based/package.json
 package/src/__tests__/__utils__/coreConfiguration.ts
 package/src/__tests__/__utils__/rumContext.types.ts
 package/src/__tests__/__utils__/tsconfig.json
 package/src/__tests__/datadogCoreProvider.integration.test.ts
 package/src/__tests__/datadogCoreProvider.test.ts
+package/src/__tests__/entrypoints.test.ts
 package/src/__tests__/offlineProvider.delegation.test.ts
 package/src/__tests__/offlineProvider.integration.test.ts
 package/src/__tests__/offlineProvider.test.ts
@@ -336,4 +344,5 @@ package/src/mappers.ts
 package/src/offlineEvaluation.ts
 package/src/offlineProvider.ts
 package/src/provider.ts
+package/src/rules-based.ts
 package/src/rumContext.ts

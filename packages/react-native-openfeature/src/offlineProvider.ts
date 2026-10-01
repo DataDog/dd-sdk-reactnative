@@ -124,7 +124,7 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
      * Load a configuration into the provider for offline evaluation.
      *
      * @param configuration A precomputed or rules-based configuration parsed with
-     * `coreConfigurationFromString`. The existing precomputed-only `configurationFromString`
+     * `coreConfigurationFromString` from the `/rules-based` entry point. The existing precomputed-only `configurationFromString`
      * output remains supported.
      */
     setConfiguration(configuration: FlagsConfiguration): void {

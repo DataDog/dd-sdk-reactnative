@@ -21,10 +21,8 @@ import {
 
 import NativeDdFlagsModule from '../../../core/src/specs/NativeDdFlags';
 import { DatadogCoreProvider } from '../datadogCoreProvider';
-import {
-    coreConfigurationFromString,
-    DatadogOfflineOpenFeatureProvider
-} from '../index';
+import { DatadogOfflineOpenFeatureProvider } from '../index';
+import { coreConfigurationFromString } from '../rules-based';
 
 import {
     matchingContext,

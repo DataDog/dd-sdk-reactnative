@@ -7,6 +7,9 @@ OpenFeature is a vendor-neutral, community-driven specification and SDK for feat
 This package provides an online provider backed by Datadog's Feature Flags SDK, a
 `DatadogCoreProvider` for manually supplied JavaScript-evaluated configurations, and an offline
 compatibility provider that delegates to `DatadogCoreProvider` while retaining native tracking.
+`DatadogCoreProvider` and the rules-based parser are exported from the
+`@datadog/mobile-react-native-openfeature/rules-based` entry point, which keeps the protobuf rules
+parser out of apps that do not use it.
 
 ## Setup
 
@@ -297,7 +300,7 @@ Your application owns configuration delivery, storage, and updates.
 import {
     DatadogCoreProvider,
     coreConfigurationFromString
-} from '@datadog/mobile-react-native-openfeature';
+} from '@datadog/mobile-react-native-openfeature/rules-based';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 const provider = new DatadogCoreProvider();
@@ -317,7 +320,7 @@ const enabled = client.getBooleanValue('new-feature', false);
 provider.setConfiguration(coreConfigurationFromString(updatedWire));
 ```
 
-You can also supply a parsed `FlagsConfiguration` directly; the type is exported by this package.
+You can also supply a parsed `FlagsConfiguration` directly; the type is exported by both entry points.
 `getConfiguration()` returns the currently supplied configuration, or `undefined` before one is set.
 Use `coreConfigurationFromString` for this provider, rather than the native offline provider's
 precomputed-only `configurationFromString` helper.
@@ -352,16 +355,14 @@ contract; the standalone `DatadogCoreProvider` uses `PARSE_ERROR` instead.
 
 #### Rules-based configuration
 
-Use `coreConfigurationFromString` for rules or combined precomputed/rules payloads. The legacy
-`configurationFromString` helper remains precomputed-only. Rules are evaluated locally for the
+Use `coreConfigurationFromString` from the `/rules-based` entry point for rules or combined
+precomputed/rules payloads. The legacy `configurationFromString` helper remains precomputed-only. Rules are evaluated locally for the
 current context, so you can change users or targeting attributes without fetching a new configuration:
 
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
-import {
-    DatadogOfflineOpenFeatureProvider,
-    coreConfigurationFromString
-} from '@datadog/mobile-react-native-openfeature';
+import { DatadogOfflineOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
+import { coreConfigurationFromString } from '@datadog/mobile-react-native-openfeature/rules-based';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 await DdFlags.enable();

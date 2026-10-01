@@ -14,7 +14,10 @@ import {
 } from '@openfeature/web-sdk';
 
 // Exercise the public exports, the real pinned evaluator, and the real OpenFeature lifecycle.
-import { coreConfigurationFromString, DatadogCoreProvider } from '../index';
+import {
+    coreConfigurationFromString,
+    DatadogCoreProvider
+} from '../rules-based';
 
 import {
     matchingContext,
