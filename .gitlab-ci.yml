@@ -65,6 +65,8 @@ test:js:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
+        - node packages/core/scripts/generate-sdk-version.cjs --check
+        - node --test packages/core/scripts/generate-sdk-version.test.cjs
         - yarn
         - cp jestSetup.js.override node_modules/react-native-gesture-handler/jestSetup.js
         - NODE_OPTIONS='-r dd-trace/ci/init' DD_ENV=ci DD_SERVICE=dd-sdk-reactnative yarn test

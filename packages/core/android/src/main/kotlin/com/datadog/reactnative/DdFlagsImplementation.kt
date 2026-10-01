@@ -10,7 +10,6 @@ import com.datadog.android.Datadog
 import com.datadog.android.api.InternalLogger
 import com.datadog.android.api.SdkCore
 import com.datadog.android.flags.EvaluationContextCallback
-import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsClient
 import com.datadog.android.flags.FlagsConfiguration
 import com.datadog.android.flags._FlagsInternalProxy
@@ -41,9 +40,16 @@ class DdFlagsImplementation(
         configuration: ReadableMap,
         promise: Promise,
     ) {
-        val flagsConfig = buildFlagsConfiguration(configuration.toMap())
+        val configMap = configuration.toMap()
+        val flagsConfig = buildFlagsConfiguration(configMap)
         if (flagsConfig != null) {
-            Flags.enable(flagsConfig, sdkCore)
+            _FlagsInternalProxy.enable(
+                flagsConfig,
+                sdkCore,
+                "dd-sdk-reactnative",
+                configMap["_ddFlagsSdkVersion"] as? String ?: "unknown",
+                SDK_VERSION,
+            )
         } else {
             InternalLogger.UNBOUND.log(
                 InternalLogger.Level.ERROR,

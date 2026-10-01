@@ -61,7 +61,8 @@
     "scripts": {
         "test": "jest",
         "lint": "eslint .",
-        "prepare": "rm -rf lib && yarn bob build",
+        "prepare": "node scripts/generate-sdk-version.cjs && rm -rf lib && yarn bob build",
+        "prepack": "node scripts/generate-sdk-version.cjs --check && yarn bob build",
         "postinstall": "node scripts/replace-react-require.js # Use node to execute the script for Windows, see https://github.com/DataDog/dd-sdk-reactnative/issues/358"
     },
     "peerDependencies": {
