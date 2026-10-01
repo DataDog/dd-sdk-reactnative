@@ -16,6 +16,7 @@ export type RumNativeConfiguration = {
     readonly nativeViewTracking: boolean;
     readonly nativeInteractionTracking: boolean;
     readonly nativeIosResourceTracking: boolean | undefined;
+    readonly nativeIosResourceTrackingDisallowList: string[] | undefined;
     readonly trackNonFatalAnrs: boolean | undefined;
     readonly appHangThreshold: number | undefined;
     readonly trackWatchdogTerminations: boolean | undefined;

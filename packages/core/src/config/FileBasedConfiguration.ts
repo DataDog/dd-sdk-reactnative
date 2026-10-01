@@ -210,7 +210,10 @@ export const getJSONConfiguration = (
                 nativeInteractionTracking:
                     configuration.rumConfiguration.nativeInteractionTracking,
                 nativeIosResourceTracking:
-                    configuration.rumConfiguration.nativeIosResourceTracking
+                    configuration.rumConfiguration.nativeIosResourceTracking,
+                nativeIosResourceTrackingDisallowList:
+                    configuration.rumConfiguration
+                        .nativeIosResourceTrackingDisallowList
             }
         }),
         ...(configuration.traceConfiguration !== undefined && {

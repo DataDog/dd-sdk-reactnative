@@ -57,6 +57,8 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.rumConfiguration?.nativeViewTracking, true)
         XCTAssertEqual(configuration?.rumConfiguration?.nativeInteractionTracking, true)
         XCTAssertEqual(configuration?.rumConfiguration?.nativeIosResourceTracking, true)
+        XCTAssertEqual(
+            configuration?.rumConfiguration?.nativeIosResourceTrackingDisallowList, ["https://3p.example.com/*"])
         XCTAssertEqual(configuration?.verbosity, "WARN")
         XCTAssertEqual(configuration?.service, "my.app")
         XCTAssertEqual(configuration?.proxyConfiguration?["HTTPEnable"] as? Int, 1)
@@ -100,6 +102,7 @@ class DdSdkNativeInitializationTests: XCTestCase {
         XCTAssertEqual(configuration?.rumConfiguration?.nativeViewTracking, false)
         XCTAssertEqual(configuration?.rumConfiguration?.nativeInteractionTracking, false)
         XCTAssertNil(configuration?.rumConfiguration?.nativeIosResourceTracking)
+        XCTAssertEqual(configuration?.rumConfiguration?.nativeIosResourceTrackingDisallowList, [])
         XCTAssertEqual(configuration?.verbosity, nil)
         XCTAssertEqual(configuration?.service, nil)
         XCTAssertNil(configuration?.proxyConfiguration)

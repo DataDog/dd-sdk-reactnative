@@ -172,6 +172,7 @@ public class DdSdkNativeInitialization: NSObject {
         // - nil (default): legacy behavior, tracking enabled iff `firstPartyHosts` is non-nil.
         // - true: tracking always enabled (trace headers only if `firstPartyHosts` is non-nil).
         // - false: tracking disabled.
+        // `nativeIosResourceTrackingDisallowList` is applied only when tracking is enabled; it never enables it.
         var firstPartyHostsTracing: RUM.Configuration.URLSessionTracking.FirstPartyHostsTracing? = nil
         if let firstPartyHosts = rumConfig.firstPartyHosts {
             firstPartyHostsTracing = .traceWithHeaders(
@@ -193,7 +194,14 @@ public class DdSdkNativeInitialization: NSObject {
                         return [InternalConfigurationAttributes.dropResource: true]
                     }
                     return nil
-                }
+                },
+                disallowList: rumConfig.nativeIosResourceTrackingDisallowList
+            )
+        } else if !rumConfig.nativeIosResourceTrackingDisallowList.isEmpty {
+            DD.logger.warn(
+                "nativeIosResourceTrackingDisallowList is set but native iOS resource tracking is disabled "
+                    + "(nativeIosResourceTracking is false, or unset with no firstPartyHosts). "
+                    + "The disallow list will be ignored."
             )
         }
 

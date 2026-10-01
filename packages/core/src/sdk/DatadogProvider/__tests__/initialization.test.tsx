@@ -97,6 +97,7 @@ describe('DatadogProvider', () => {
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
                     "nativeIosResourceTracking": undefined,
+                    "nativeIosResourceTrackingDisallowList": undefined,
                     "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
@@ -256,6 +257,88 @@ describe('DatadogProvider', () => {
                     receivedConfiguration.rumConfiguration
                         .nativeIosResourceTracking
                 ).toBe(expected);
+            }
+        );
+    });
+
+    describe('nativeIosResourceTrackingDisallowList', () => {
+        const disallowList = [
+            'https://3p.example.com/*',
+            'https://cdn.example.com/a'
+        ];
+
+        it('sends nativeIosResourceTrackingDisallowList undefined to native by default', async () => {
+            renderWithProvider();
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            const receivedConfiguration =
+                NativeModules.DdSdk.initialize.mock.calls[0][0];
+            expect(receivedConfiguration.rumConfiguration).toBeDefined();
+            expect(
+                receivedConfiguration.rumConfiguration
+                    .nativeIosResourceTrackingDisallowList
+            ).toBeUndefined();
+        });
+
+        it('sends nativeIosResourceTrackingDisallowList to native when set', async () => {
+            const configuration = getDefaultConfiguration();
+            const rumConfiguration = configuration.rumConfiguration;
+            if (rumConfiguration) {
+                rumConfiguration.nativeIosResourceTrackingDisallowList = disallowList;
+            }
+            renderWithProvider({ configuration });
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            const receivedConfiguration =
+                NativeModules.DdSdk.initialize.mock.calls[0][0];
+            expect(
+                receivedConfiguration.rumConfiguration
+                    .nativeIosResourceTrackingDisallowList
+            ).toEqual(disallowList);
+        });
+
+        it.each([
+            ['unset', 'unset', undefined],
+            ['list', 'unset', disallowList],
+            ['unset', 'list', disallowList]
+        ])(
+            'partial initialization: features %s, initialize %s => native %p',
+            async (featuresValue, initializeValue, expected) => {
+                renderWithProvider({
+                    configuration: {
+                        rumConfiguration: {
+                            trackErrors: false,
+                            trackResources: false,
+                            trackInteractions: false,
+                            ...(featuresValue === 'list' && {
+                                nativeIosResourceTrackingDisallowList: disallowList
+                            })
+                        },
+                        traceConfiguration: {},
+                        logsConfiguration: {}
+                    }
+                });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).not.toHaveBeenCalled();
+
+                await DatadogProvider.initialize({
+                    clientToken: 'fake-client-token',
+                    env: 'fake-env',
+                    rumConfiguration: {
+                        applicationId: 'fake-application-id',
+                        ...(initializeValue === 'list' && {
+                            nativeIosResourceTrackingDisallowList: disallowList
+                        })
+                    }
+                });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+                const receivedConfiguration =
+                    NativeModules.DdSdk.initialize.mock.calls[0][0];
+                expect(
+                    receivedConfiguration.rumConfiguration
+                        .nativeIosResourceTrackingDisallowList
+                ).toEqual(expected);
             }
         );
     });

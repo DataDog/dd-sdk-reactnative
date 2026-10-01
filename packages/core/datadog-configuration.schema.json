@@ -215,6 +215,13 @@
                             "description": "Controls automatic native network (URLSession) resource tracking. iOS only: has no effect on Android. If not set (default): legacy behavior, enables iOS network tracking if `firstPartyHosts` is defined. `true`: enables iOS network tracking (with trace headers for `firstPartyHosts`, if defined). `false`: disables iOS network tracking.",
                             "type": "boolean"
                         },
+                        "nativeIosResourceTrackingDisallowList": {
+                            "description": "URL patterns excluded from automatic native iOS network (URLSession) resource tracking. Patterns are matched against the full URL: plain strings match exactly, `*` matches any characters. Patterns without any literal characters (e.g. `\"*\"`) are ignored. Matching requests also get no trace headers injected and no APM span. Only takes effect when native iOS resource tracking is enabled (see `nativeIosResourceTracking`); it never enables tracking by itself. If set while tracking is disabled, the native SDK logs a warning (subject to `verbosity`). iOS only: has no effect on Android. Default: []",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
                         "nativeCrashReportEnabled": {
                             "description": "Enables crash reporting for native platforms (iOS, Android). Default `false`.",
                             "type": "boolean"

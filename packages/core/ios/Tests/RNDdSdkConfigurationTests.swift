@@ -59,10 +59,13 @@ class RNDdSdkConfigurationTests: XCTestCase {
         XCTAssertEqual(proxy?["SOCKSPort"] as? NSNumber, 99)
     }
 
-    private func makeConfigurationDict(nativeIosResourceTracking: Any?) -> NSDictionary {
+    private func makeConfigurationDict(nativeIosResourceTracking: Any?, disallowList: Any? = nil) -> NSDictionary {
         var rumDict: [String: Any] = ["applicationId": "app-id"]
         if let value = nativeIosResourceTracking {
             rumDict["nativeIosResourceTracking"] = value
+        }
+        if let value = disallowList {
+            rumDict["nativeIosResourceTrackingDisallowList"] = value
         }
         return [
             "clientToken": "client-token",
@@ -90,6 +93,29 @@ class RNDdSdkConfigurationTests: XCTestCase {
     func testBuildNativeIosResourceTrackingFalse() {
         let configuration = makeConfigurationDict(nativeIosResourceTracking: false).asDdSdkConfiguration()
         XCTAssertEqual(configuration.rumConfiguration?.nativeIosResourceTracking, false)
+    }
+
+    func testBuildNativeIosResourceTrackingDisallowListAbsentIsEmpty() {
+        let configuration = makeConfigurationDict(nativeIosResourceTracking: nil).asDdSdkConfiguration()
+        XCTAssertEqual(configuration.rumConfiguration?.nativeIosResourceTrackingDisallowList, [])
+    }
+
+    func testBuildNativeIosResourceTrackingDisallowListNullIsEmpty() {
+        let configuration = makeConfigurationDict(
+            nativeIosResourceTracking: nil, disallowList: NSNull()).asDdSdkConfiguration()
+        XCTAssertEqual(configuration.rumConfiguration?.nativeIosResourceTrackingDisallowList, [])
+    }
+
+    func testBuildNativeIosResourceTrackingDisallowList() {
+        let configuration = makeConfigurationDict(
+            nativeIosResourceTracking: nil, disallowList: ["a/*", "b"] as NSArray).asDdSdkConfiguration()
+        XCTAssertEqual(configuration.rumConfiguration?.nativeIosResourceTrackingDisallowList, ["a/*", "b"])
+    }
+
+    func testBuildNativeIosResourceTrackingDisallowListWrongTypeIsEmpty() {
+        let configuration = makeConfigurationDict(
+            nativeIosResourceTracking: nil, disallowList: "a").asDdSdkConfiguration()
+        XCTAssertEqual(configuration.rumConfiguration?.nativeIosResourceTrackingDisallowList, [])
     }
 
     func testBuildFirstPartyHosts() {

@@ -66,6 +66,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
                     "nativeIosResourceTracking": undefined,
+                    "nativeIosResourceTrackingDisallowList": undefined,
                     "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
@@ -136,6 +137,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                             nativeViewTracking: true,
                             nativeInteractionTracking: true,
                             nativeIosResourceTracking: true,
+                            nativeIosResourceTrackingDisallowList: [
+                                'https://3p.example.com/*'
+                            ],
                             longTaskThresholdMs: 567,
                             trackFrustrations: true,
                             trackNonFatalAnrs: true,
@@ -213,6 +217,9 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "nativeCrashReportEnabled": true,
                     "nativeInteractionTracking": true,
                     "nativeIosResourceTracking": true,
+                    "nativeIosResourceTrackingDisallowList": [
+                      "https://3p.example.com/*",
+                    ],
                     "nativeLongTaskThresholdMs": 345,
                     "nativeViewTracking": true,
                     "resourceEventMapper": [Function],
@@ -318,6 +325,7 @@ describe('DdSdkReactNativeConfiguration', () => {
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
                     "nativeIosResourceTracking": undefined,
+                    "nativeIosResourceTrackingDisallowList": undefined,
                     "nativeLongTaskThresholdMs": 0,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,

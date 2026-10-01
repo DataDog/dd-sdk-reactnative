@@ -27,6 +27,7 @@ const DEFAULTS = {
     nativeInteractionTracking: false,
     nativeLongTaskThresholdMs: 200,
     nativeIosResourceTracking: undefined,
+    nativeIosResourceTrackingDisallowList: undefined,
     nativeViewTracking: false,
     resourceEventMapper: null,
     resourceTraceSampleRate: 100.0,
@@ -89,6 +90,10 @@ export class RumConfiguration implements RumConfigurationType {
     // Native Resource Tracking (iOS only); undefined means legacy behavior
     public nativeIosResourceTracking?: boolean =
         DEFAULTS.nativeIosResourceTracking;
+
+    // URL patterns excluded from native iOS resource tracking; undefined means [] on iOS
+    public nativeIosResourceTrackingDisallowList?: string[] =
+        DEFAULTS.nativeIosResourceTrackingDisallowList;
 
     // Native View Tracking enabled
     public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;
