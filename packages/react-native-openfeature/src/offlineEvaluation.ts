@@ -59,7 +59,7 @@ export class OfflineEvaluation implements OfflineEvaluator {
         helpers: CompatibilityHelpers
     ) {
         this.configuration = { ...configuration };
-        const precomputed = configuration.precomputed;
+        const precomputed = configuration?.precomputed;
         if (precomputed) {
             try {
                 this.precomputedFlags = helpers.decodePrecomputedFlags(

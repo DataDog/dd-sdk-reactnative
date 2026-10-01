@@ -598,6 +598,20 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
     });
 
+    it('reports PARSE_ERROR instead of throwing for a missing configuration', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider({
+            clientName: `offline-delegation-${sequence++}`
+        });
+        const emit = jest.spyOn(provider.events, 'emit');
+        expect(() =>
+            provider.setConfiguration((null as unknown) as FlagsConfiguration)
+        ).not.toThrow();
+        expect(emit).toHaveBeenCalledWith(
+            ProviderEvents.Error,
+            expect.objectContaining({ errorCode: ErrorCode.PARSE_ERROR })
+        );
+    });
+
     it('keeps usable rules when the precomputed branch is unsupported or malformed', async () => {
         const configuration = {
             ...rulesConfiguration(),
