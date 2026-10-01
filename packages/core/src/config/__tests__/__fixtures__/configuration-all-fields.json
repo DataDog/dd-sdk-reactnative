@@ -33,7 +33,12 @@
             "trackBackgroundEvents": true,
             "trackMemoryWarnings": false,
             "trackWatchdogTerminations": true,
-            "vitalsUpdateFrequency": "NEVER"
+            "vitalsUpdateFrequency": "NEVER",
+            "unstable_timeseries": {
+                "collectTypes": [
+                    "cpu"
+                ]
+            }
         },
         "traceConfiguration": {
             "customEndpoint": "https://example.com/trace"

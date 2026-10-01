@@ -30,6 +30,11 @@
             "resourceTraceSampleRate": 33,
             "trackBackgroundEvents": true,
             "trackFrustrations": false,
+            "unstable_timeseries": {
+                "collectTypes": [
+                    "cpu"
+                ]
+            },
             "firstPartyHosts": [
               {
                 "match": "example.com",
