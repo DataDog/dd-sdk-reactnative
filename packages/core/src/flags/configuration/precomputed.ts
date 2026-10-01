@@ -152,8 +152,8 @@ const toFlagCacheEntry = (
         return null;
     }
 
-    // Keep the released precomputed decoder's tracking payload unchanged: it does not propagate
-    // serialId. The delegated rules path supplies the serial ID from its evaluation metadata.
+    // The released decoder's payload omits serialId. The OpenFeature offline adapter adds it from
+    // the evaluator's metadata, for both precomputed and rules flags.
     return {
         key,
         value: variationValue,

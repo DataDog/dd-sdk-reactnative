@@ -598,6 +598,29 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
     });
 
+    it('sends the precomputed split serial ID to native tracking', async () => {
+        const configuration = precomputedConfiguration();
+        Object.assign(
+            configuration.precomputed.response.data.attributes.flags[
+                'boolean-flag'
+            ],
+            { serialId: 42 }
+        );
+        const { provider, name } = setup(configuration);
+        await OpenFeature.setProviderAndWait(provider);
+        OpenFeature.getClient().getBooleanValue('boolean-flag', false);
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+            name,
+            'boolean-flag',
+            expect.objectContaining({
+                allocationKey: 'allocation',
+                serialId: '42'
+            }),
+            'user-1',
+            { country: 'US' }
+        );
+    });
+
     it('reports PARSE_ERROR instead of throwing for a missing configuration', () => {
         const provider = new DatadogOfflineOpenFeatureProvider({
             clientName: `offline-delegation-${sequence++}`

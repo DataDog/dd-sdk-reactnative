@@ -81,7 +81,11 @@ export class OfflineEvaluation implements OfflineEvaluator {
                             variationType: typeof flag.value as FlagValueType,
                             variationValue: flag.value as JsonValue,
                             reason: flag.reason,
-                            doLog: flag.doLog
+                            doLog: flag.doLog,
+                            // The native decoder does not keep the split serial ID; read it from the wire.
+                            serialId:
+                                precomputed.response.data.attributes.flags[key]
+                                    ?.serialId
                         }
                     ])
                 );
@@ -195,23 +199,25 @@ export class OfflineEvaluation implements OfflineEvaluator {
             ? this.precomputedFlags.get(key)
             : undefined;
         const serialId = result.flagMetadata?.__dd_split_serial_id;
-        const flag: FlagCacheEntry = precomputed ?? {
-            key,
-            value: result.value,
-            allocationKey,
-            variationKey: result.variant,
-            variationType: type,
-            variationValue:
-                typeof result.value === 'object'
-                    ? JSON.stringify(result.value)
-                    : String(result.value),
-            reason: result.reason ?? 'UNKNOWN',
-            doLog: result.flagMetadata?.doLog === true,
-            extraLogging: {},
-            ...(typeof serialId === 'number'
-                ? { serialId: String(serialId) }
-                : {})
-        };
+        const serial =
+            typeof serialId === 'number' ? { serialId: String(serialId) } : {};
+        const flag: FlagCacheEntry = precomputed
+            ? { ...precomputed, ...serial }
+            : {
+                  key,
+                  value: result.value,
+                  allocationKey,
+                  variationKey: result.variant,
+                  variationType: type,
+                  variationValue:
+                      typeof result.value === 'object'
+                          ? JSON.stringify(result.value)
+                          : String(result.value),
+                  reason: result.reason ?? 'UNKNOWN',
+                  doLog: result.flagMetadata?.doLog === true,
+                  extraLogging: {},
+                  ...serial
+              };
         // Even doLog=false evaluations reach native code: RUM tracking is independent of exposures.
         return { details, exposure: { flag, context: this.context } };
     }
