@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+const MAX_DRIFT_MS = 1000;
+
 /**
  * A Timestamp structure holding the
  */
@@ -37,7 +39,14 @@ export abstract class TimeProvider {
     now(): number {
         const timestamp = this.getTimestamp();
 
-        if (timestamp.reactNative != null && this.baseOffset === 0) {
+        if (
+            timestamp.reactNative != null &&
+            (this.baseOffset === 0 ||
+                Math.abs(
+                    timestamp.unix - (this.baseOffset + timestamp.reactNative)
+                ) > MAX_DRIFT_MS)
+        ) {
+            // sync the offset on first use, or when the device clock changed since the last sync
             this.baseOffset = timestamp.unix - timestamp.reactNative;
         }
 
