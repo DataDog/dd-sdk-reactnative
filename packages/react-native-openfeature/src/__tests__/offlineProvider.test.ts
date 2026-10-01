@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { InternalLog, SdkVerbosity } from '@datadog/mobile-react-native';
 import type { FlagsClient } from '@datadog/mobile-react-native';
 import type { EvaluationContext } from '@openfeature/web-sdk';
 import {
@@ -56,7 +57,9 @@ const mockFlagsClient = {
 jest.mock('@datadog/mobile-react-native', () => {
     return {
         DdFlags: { getClient: jest.fn(() => mockFlagsClient) },
-        configurationFromString: jest.fn()
+        configurationFromString: jest.fn(),
+        InternalLog: { log: jest.fn() },
+        SdkVerbosity: { WARN: 'warn' }
     };
 });
 
@@ -77,9 +80,7 @@ describe('DatadogOfflineOpenFeatureProvider (legacy core SDK without the evaluat
     });
 
     it('rejects rules on an older core SDK instead of silently ignoring them or serving stale flags', () => {
-        const warning = jest
-            .spyOn(console, 'warn')
-            .mockImplementation(() => {});
+        const warning = jest.mocked(InternalLog.log);
         const provider = new DatadogOfflineOpenFeatureProvider();
         const emit = jest.spyOn(provider.events, 'emit');
 
@@ -91,14 +92,13 @@ describe('DatadogOfflineOpenFeatureProvider (legacy core SDK without the evaluat
             expect.objectContaining({ errorCode: ErrorCode.GENERAL })
         );
         expect(warning).toHaveBeenCalledWith(
-            expect.stringContaining('Update both Datadog packages together')
+            expect.stringContaining('Update both Datadog packages together'),
+            SdkVerbosity.WARN
         );
     });
 
     it('keeps usable precomputed data on an older core SDK when only the rules branch failed to parse', () => {
-        const warning = jest
-            .spyOn(console, 'warn')
-            .mockImplementation(() => {});
+        const warning = jest.mocked(InternalLog.log);
         const provider = new DatadogOfflineOpenFeatureProvider();
         const configuration = {
             ...precomputedConfiguration(),

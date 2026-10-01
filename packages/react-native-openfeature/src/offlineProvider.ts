@@ -5,6 +5,7 @@
  */
 
 import type { FlagsConfiguration } from '@datadog/flagging-core';
+import { InternalLog, SdkVerbosity } from '@datadog/mobile-react-native';
 import type {
     FlagsClient,
     ParsedFlagsConfiguration
@@ -166,8 +167,9 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         // but never silently ignore usable rules or keep serving a stale configuration when they
         // are supplied. A rules parse error has no rules to ignore, so precomputed data still loads.
         if (configuration?.rules) {
-            console.warn(
-                'DatadogOfflineOpenFeatureProvider rules-based evaluation requires an updated @datadog/mobile-react-native SDK. Update both Datadog packages together.'
+            InternalLog.log(
+                'DatadogOfflineOpenFeatureProvider rules-based evaluation requires an updated @datadog/mobile-react-native SDK. Update both Datadog packages together.',
+                SdkVerbosity.WARN
             );
             this.flagsClient.setConfiguration({});
             return { status: 'error', errorCode: 'GENERAL' };
