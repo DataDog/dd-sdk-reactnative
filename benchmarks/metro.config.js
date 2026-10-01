@@ -34,6 +34,20 @@ const config = {
     // while it should be only one React instance in the runtime. exclusionList relies on the modules which are
     // declared as peer dependencies in the core package.
     resolver: {
+        // The optional flags benchmark uses Protobuf-ES package subpath exports.
+        unstable_enablePackageExports: true,
+        resolveRequest: (context, moduleName, platform) => {
+            // Keep the benchmark adapter and core on the same decoder instance.
+            // Metro 0.81 otherwise selects core's bundled legacy sub-entrypoint.
+            if (moduleName === '@datadog/flagging-core/rules-based' ||
+                /^@bufbuild\/protobuf(?:\/|$)/.test(moduleName)) {
+                return {
+                    type: 'sourceFile',
+                    filePath: require.resolve(moduleName, { paths: [path.dirname(context.originModulePath)] })
+                };
+            }
+            return context.resolveRequest(context, moduleName, platform);
+        },
         // Remove svg from asset extensions and add it to source extensions so Metro
         // sends it through the transformer rather than copying it as a static asset.
         assetExts: defaultConfig.resolver.assetExts.filter(ext => ext !== 'svg'),

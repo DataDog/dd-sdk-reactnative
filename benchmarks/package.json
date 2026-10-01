@@ -7,7 +7,9 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "test:flags": "jest --config flags.jest.config.js --runInBand",
+    "flags:compile-fixture": "tsc --outDir build/flags --target es2020 --module commonjs --moduleResolution node --skipLibCheck src/flags/fixtures.ts"
   },
   "codegenConfig": {
     "name": "BenchmarkVitalsSpec",
@@ -19,6 +21,8 @@
     "library": "BenchmarkRunner"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "2.15.0",
+    "@datadog/flagging-core": "3.1.1",
     "@datadog/mobile-react-native": "workspace:packages/core",
     "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay",
     "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview",

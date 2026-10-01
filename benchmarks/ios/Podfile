@@ -29,6 +29,11 @@ target 'BenchmarkRunner' do
   # OpenTelemetryApi is already pulled in transitively via DatadogTrace, but OpenTelemetrySdk is not.
   pod 'OpenTelemetry-Swift-Sdk', '~> 2.5.0'
 
+  # Opt-in experiment only; does not alter any shipping SDK podspec.
+  if ENV['DD_FLAGS_PROTOTYPE_PATH']
+    pod 'RulesEvaluationPrototype', :path => ENV.fetch('DD_FLAGS_PROTOTYPE_PATH')
+  end
+
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(

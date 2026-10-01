@@ -1753,6 +1753,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bufbuild/protobuf@npm:2.15.0, @bufbuild/protobuf@npm:^2.13.0":
+  version: 2.15.0
+  resolution: "@bufbuild/protobuf@npm:2.15.0"
+  checksum: 38874541154bfe2e32c1edb704420dabec87f0965589928b50a2112f8ce39ca0a50a0159fcaa3562bc1ce0ea6d1018b40e279ec3238844f94f4a7cca1784a840
+  languageName: node
+  linkType: hard
+
 "@datadog/datadog-ci-base@npm:5.11.0":
   version: 5.11.0
   resolution: "@datadog/datadog-ci-base@npm:5.11.0"
@@ -1953,6 +1960,16 @@ __metadata:
   bin:
     datadog-ci: dist/bundle.js
   checksum: 894e2eebecea02d659344a4d30080fb15f361cdf3697b9773db41996910a5275a9b5900e1386e1542a7686cb042184d5085c91b8661bdd1b18094c65d53bddc0
+  languageName: node
+  linkType: hard
+
+"@datadog/flagging-core@npm:3.1.1":
+  version: 3.1.1
+  resolution: "@datadog/flagging-core@npm:3.1.1"
+  dependencies:
+    "@bufbuild/protobuf": ^2.13.0
+    spark-md5: ^3.0.2
+  checksum: e5ff0c5959366d278a2e07ec2c0851bbab3e8b514a02bf79f790e730145f5fd8ae52a14068e51a844142643140563a2f34d1b56a4c8e32c85fef2a14cfe21eb6
   languageName: node
   linkType: hard
 
@@ -6728,7 +6745,9 @@ __metadata:
     "@babel/core": 7.29.6
     "@babel/preset-env": 7.25.3
     "@babel/runtime": ^7.26.10
+    "@bufbuild/protobuf": 2.15.0
     "@datadog/datadog-ci": 5.11.0
+    "@datadog/flagging-core": 3.1.1
     "@datadog/mobile-react-native": "workspace:packages/core"
     "@datadog/mobile-react-native-babel-plugin": "workspace:packages/react-native-babel-plugin"
     "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay"
