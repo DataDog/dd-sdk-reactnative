@@ -12,6 +12,7 @@ package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/SessionRep
 package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/SessionReplaySDKWrapper.kt
 package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/SessionReplayWrapper.kt
 package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/TextPropertiesResolver.kt
+package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/extensions/BitmapExt.kt
 package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/extensions/ReactDrawablesExt.kt
 package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/mappers/DefaultMapper.kt
 package/android/src/main/kotlin/com/datadog/reactnative/sessionreplay/mappers/ReactEditTextMapper.kt
@@ -49,8 +50,10 @@ package/android/src/rnpost74/kotlin/com/datadog/reactnative/sessionreplay/DdSDKR
 package/android/src/rnpre74/kotlin/com/datadog/reactnative/sessionreplay/DdSDKReactNativeSessionReplayPackage.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/DdSessionReplayImplementationTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/ReactNativeSessionReplayExtensionSupportTest.kt
+package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/extensions/ReactDrawablesExtTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/mappers/ReactViewGroupMapperTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/mappers/SvgViewMapperTest.kt
+package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/resources/ReactDrawableCopierTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/utils/ColorUtilsTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/utils/DrawableUtilsTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/utils/text/TextViewUtilsTest.kt
