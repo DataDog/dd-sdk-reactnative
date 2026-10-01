@@ -621,6 +621,27 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
     });
 
+    it('names the precomputed-only parser when a rules wire yields no configuration', () => {
+        const log = jest.spyOn(InternalLog, 'log');
+        const { provider } = setup(configurationFromString(rulesWire));
+        expect(provider).toBeDefined();
+        expect(log).toHaveBeenCalledWith(
+            expect.stringContaining(
+                'configurationFromString is precomputed-only'
+            ),
+            expect.anything()
+        );
+    });
+
+    it('does not warn about a missing configuration when one is loaded', () => {
+        const log = jest.spyOn(InternalLog, 'log');
+        setup(rulesConfiguration());
+        expect(log).not.toHaveBeenCalledWith(
+            expect.stringContaining('received no precomputed or rules'),
+            expect.anything()
+        );
+    });
+
     it('reports PARSE_ERROR instead of throwing for a missing configuration', () => {
         const provider = new DatadogOfflineOpenFeatureProvider({
             clientName: `offline-delegation-${sequence++}`

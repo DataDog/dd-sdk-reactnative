@@ -60,6 +60,19 @@ export class OfflineEvaluation implements OfflineEvaluator {
     ) {
         this.configuration = { ...configuration };
         const precomputed = configuration?.precomputed;
+        if (
+            !precomputed &&
+            !this.configuration.rules &&
+            this.configuration.configurationError === undefined &&
+            this.configuration.precomputedError === undefined &&
+            this.configuration.rulesError === undefined
+        ) {
+            // A bare {} has no capability. The precomputed-only parser returns it for a rules-only wire.
+            InternalLog.log(
+                'DatadogOfflineOpenFeatureProvider received no precomputed or rules configuration. configurationFromString is precomputed-only; parse rules-based wires with coreConfigurationFromString from the /rules-based entry point.',
+                SdkVerbosity.WARN
+            );
+        }
         if (precomputed) {
             try {
                 this.precomputedFlags = helpers.decodePrecomputedFlags(
