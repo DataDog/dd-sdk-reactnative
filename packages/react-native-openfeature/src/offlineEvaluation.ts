@@ -53,6 +53,8 @@ export class OfflineEvaluation implements OfflineEvaluator {
     private precomputedFlags: FlagCache = new Map();
     private context: EvaluationContext = { targetingKey: '', attributes: {} };
     private coreContext: OFEvaluationContext = {};
+    // Whether the active context selects the precomputed snapshot. Fixed until the next reconcile.
+    private servesPrecomputed = false;
 
     constructor(
         configuration: FlagsConfiguration,
@@ -155,6 +157,10 @@ export class OfflineEvaluation implements OfflineEvaluator {
             hasTargetingKey === true
                 ? normalizedContext
                 : withoutTargetingKey(normalizedContext);
+        this.servesPrecomputed = configMatchesContext(
+            this.configuration,
+            this.coreContext
+        );
         try {
             // Synchronous validation preserves the offline provider's context-change lifecycle.
             this.core.onContextChange({}, this.coreContext);
@@ -208,7 +214,7 @@ export class OfflineEvaluation implements OfflineEvaluator {
         // Reuse original precomputed tracking metadata (including extraLogging and variationType).
         // A rules result has no native cache entry, so build the same native tracking shape from
         // the actual evaluated result, never from the fallback/default value.
-        const precomputed = configMatchesContext(this.configuration, context)
+        const precomputed = this.servesPrecomputed
             ? this.precomputedFlags.get(key)
             : undefined;
         const serialId = result.flagMetadata?.__dd_split_serial_id;
