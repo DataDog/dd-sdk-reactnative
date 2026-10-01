@@ -16,7 +16,10 @@ import {
 
 import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
 
-import { rulesConfiguration } from './__utils__/coreConfiguration';
+import {
+    precomputedConfiguration,
+    rulesConfiguration
+} from './__utils__/coreConfiguration';
 
 type ConfigurationResult = ReturnType<FlagsClient['setConfiguration']>;
 const READY: ConfigurationResult = { status: 'ready' };
@@ -90,6 +93,24 @@ describe('DatadogOfflineOpenFeatureProvider (legacy core SDK without the evaluat
         expect(warning).toHaveBeenCalledWith(
             expect.stringContaining('Update both Datadog packages together')
         );
+    });
+
+    it('keeps usable precomputed data on an older core SDK when only the rules branch failed to parse', () => {
+        const warning = jest
+            .spyOn(console, 'warn')
+            .mockImplementation(() => {});
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        const configuration = {
+            ...precomputedConfiguration(),
+            rulesError: 'Malformed rules'
+        };
+
+        provider.setConfiguration(configuration);
+
+        expect(mockFlagsClient.setConfiguration).toHaveBeenCalledWith(
+            configuration
+        );
+        expect(warning).not.toHaveBeenCalled();
     });
 
     it('advertises the offline provider name', () => {
