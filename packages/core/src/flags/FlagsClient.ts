@@ -24,11 +24,13 @@ import type { JsonValue, EvaluationContext, FlagDetails } from './types';
  * Error codes an offline configuration result can carry:
  * - `INVALID_CONTEXT`: the active context does not match the precomputed snapshot.
  * - `PROVIDER_NOT_READY`: an offline operation ran with no configuration loaded.
+ * - `PARSE_ERROR`: the offline evaluator cannot parse the supplied configuration.
  * - `GENERAL`: the loaded configuration is unusable (malformed/unsupported/undecodable).
  */
 export type ConfigurationErrorCode =
     | 'INVALID_CONTEXT'
     | 'PROVIDER_NOT_READY'
+    | 'PARSE_ERROR'
     | 'GENERAL';
 
 /**
@@ -372,7 +374,9 @@ export class FlagsClient {
             if (result.status === 'error') {
                 return this.enterError(
                     result.errorCode,
-                    `The offline configuration for '${this.clientName}' cannot serve the current context.`
+                    result.errorCode === 'PARSE_ERROR'
+                        ? `The offline configuration for '${this.clientName}' cannot be parsed.`
+                        : `The offline configuration for '${this.clientName}' cannot serve the current context.`
                 );
             }
             this.configurationStatus = 'ready';
@@ -490,7 +494,7 @@ export class FlagsClient {
         }
 
         // An offline configuration that cannot be served against the active context surfaces the
-        // precise error code (INVALID_CONTEXT / GENERAL / PROVIDER_NOT_READY) with the coded
+        // precise error code (INVALID_CONTEXT / PARSE_ERROR / GENERAL / PROVIDER_NOT_READY) with the coded
         // default. The OpenFeature provider maps this to a PROVIDER_ERROR / ERROR state.
         if (this.configurationStatus === 'error' && this.configurationError) {
             return {

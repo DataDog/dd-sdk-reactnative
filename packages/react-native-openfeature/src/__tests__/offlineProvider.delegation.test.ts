@@ -496,7 +496,7 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
     });
 
-    it('does not track defaults or type mismatches and retains GENERAL for invalid precomputed input', async () => {
+    it('does not track defaults or type mismatches and reports PARSE_ERROR for invalid precomputed input', async () => {
         const { provider } = setup(precomputedConfiguration());
         await OpenFeature.setProviderAndWait(provider);
         const client = OpenFeature.getClient();
@@ -509,7 +509,7 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         provider.setConfiguration({});
         expect(client.providerStatus).toBe(ProviderStatus.ERROR);
         expect(client.getBooleanDetails('boolean-flag', false).errorCode).toBe(
-            ErrorCode.GENERAL
+            ErrorCode.PARSE_ERROR
         );
         expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
     });
@@ -518,7 +518,7 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         const { provider } = setup({ rulesError: 'Malformed rules' });
         await expect(
             OpenFeature.setProviderAndWait(provider, matchingContext)
-        ).rejects.toMatchObject({ code: ErrorCode.GENERAL });
+        ).rejects.toMatchObject({ code: ErrorCode.PARSE_ERROR });
         const changed = jest.fn();
         provider.events.addHandler(
             ProviderEvents.ConfigurationChanged,
@@ -539,6 +539,17 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
         expect(client.getBooleanValue('test-flag', true)).toBe(false);
         expect(changed).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports PARSE_ERROR on the error event when a running provider loads malformed rules', async () => {
+        const { provider } = setup(rulesConfiguration());
+        await OpenFeature.setProviderAndWait(provider, matchingContext);
+        const emit = jest.spyOn(provider.events, 'emit');
+        provider.setConfiguration({ rulesError: 'Malformed rules' });
+        expect(emit).toHaveBeenCalledWith(
+            ProviderEvents.Error,
+            expect.objectContaining({ errorCode: ErrorCode.PARSE_ERROR })
+        );
     });
 
     it('keeps usable rules when the precomputed branch is unsupported or malformed', async () => {
@@ -576,7 +587,7 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(
             provider.resolveBooleanEvaluation('test-flag', false, {}, logger)
                 .errorCode
-        ).toBe(ErrorCode.GENERAL);
+        ).toBe(ErrorCode.PARSE_ERROR);
         expect(other.flagsClient.getBooleanValue('boolean-flag', false)).toBe(
             true
         );

@@ -350,8 +350,8 @@ configuration from the network** — you supply it with `setConfiguration`.
 Update `@datadog/mobile-react-native` and this package together to use the native tracking/evaluator
 bridge. With an older core SDK that lacks the bridge, precomputed configurations retain their
 previous behavior, but rules configurations produce a warning and `GENERAL` error rather than
-being silently ignored. Invalid configurations also retain the offline provider's `GENERAL` error
-contract; the standalone `DatadogCoreProvider` uses `PARSE_ERROR` instead.
+being silently ignored. A configuration that cannot be parsed reports `PARSE_ERROR`, as
+`DatadogCoreProvider` does.
 
 #### Rules-based configuration
 

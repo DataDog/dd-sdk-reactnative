@@ -151,7 +151,8 @@ export class OfflineEvaluation implements OfflineEvaluator {
                 status: 'error',
                 errorCode:
                     code === ErrorCode.INVALID_CONTEXT ||
-                    code === ErrorCode.PROVIDER_NOT_READY
+                    code === ErrorCode.PROVIDER_NOT_READY ||
+                    code === ErrorCode.PARSE_ERROR
                         ? code
                         : ErrorCode.GENERAL
             };
@@ -176,10 +177,7 @@ export class OfflineEvaluation implements OfflineEvaluator {
             variant: result.variant,
             allocationKey:
                 typeof allocationKey === 'string' ? allocationKey : undefined,
-            errorCode:
-                result.errorCode === ErrorCode.PARSE_ERROR
-                    ? ErrorCode.GENERAL
-                    : result.errorCode,
+            errorCode: result.errorCode,
             errorMessage: result.errorMessage
         };
         if (
