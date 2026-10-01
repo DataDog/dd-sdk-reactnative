@@ -49,6 +49,7 @@ function build_ios_app {
                -scheme BenchmarkRunner clean archive \
                -configuration release \
                -sdk iphoneos \
+               -derivedDataPath DerivedData \
                -archivePath BenchmarkRunner.xcarchive \
                CODE_SIGN_STYLE="$CODE_SIGN_STYLE" \
                CODE_SIGN_IDENTITY="$CODE_SIGN_IDENTITY" \
