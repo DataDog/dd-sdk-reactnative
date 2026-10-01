@@ -36,6 +36,7 @@ export type PartialInitializationConfiguration = {
         readonly nativeCrashReportEnabled?: boolean;
         readonly nativeViewTracking?: boolean;
         readonly nativeInteractionTracking?: boolean;
+        readonly nativeIosResourceTracking?: boolean;
         readonly longTaskThresholdMs?: number | false;
         readonly vitalsUpdateFrequency?: VitalsUpdateFrequency;
         readonly trackFrustrations?: boolean;

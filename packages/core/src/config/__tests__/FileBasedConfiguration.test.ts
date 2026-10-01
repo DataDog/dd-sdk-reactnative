@@ -59,6 +59,7 @@ describe('FileBasedConfiguration', () => {
                     "longTaskThresholdMs": 44,
                     "nativeCrashReportEnabled": true,
                     "nativeInteractionTracking": true,
+                    "nativeIosResourceTracking": true,
                     "nativeLongTaskThresholdMs": 789,
                     "nativeViewTracking": true,
                     "resourceEventMapper": null,
@@ -172,6 +173,7 @@ describe('FileBasedConfiguration', () => {
                     "longTaskThresholdMs": 44,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeIosResourceTracking": undefined,
                     "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
@@ -237,6 +239,7 @@ describe('FileBasedConfiguration', () => {
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeIosResourceTracking": undefined,
                     "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
@@ -266,6 +269,41 @@ describe('FileBasedConfiguration', () => {
                 }
             `);
         });
+
+        it('leaves nativeIosResourceTracking undefined when not set', () => {
+            const config = new FileBasedConfiguration({
+                configuration: {
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id'
+                    }
+                }
+            });
+            expect(config.rumConfiguration).toHaveProperty(
+                'nativeIosResourceTracking',
+                undefined
+            );
+        });
+
+        it.each([true, false])(
+            'passes nativeIosResourceTracking through when set to %s',
+            value => {
+                const config = new FileBasedConfiguration({
+                    configuration: {
+                        env: 'fake-env',
+                        clientToken: 'fake-client-token',
+                        rumConfiguration: {
+                            applicationId: 'fake-app-id',
+                            nativeIosResourceTracking: value
+                        }
+                    }
+                });
+                expect(config.rumConfiguration?.nativeIosResourceTracking).toBe(
+                    value
+                );
+            }
+        );
 
         it('applies event mappers to configuration when provided', () => {
             const actionEventMapper = () => null;

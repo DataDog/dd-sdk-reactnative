@@ -211,6 +211,10 @@
                             "description": "Enables native interaction tracking.",
                             "type": "boolean"
                         },
+                        "nativeIosResourceTracking": {
+                            "description": "Controls automatic native network (URLSession) resource tracking. iOS only: has no effect on Android. If not set (default): legacy behavior, enables iOS network tracking if `firstPartyHosts` is defined. `true`: enables iOS network tracking (with trace headers for `firstPartyHosts`, if defined). `false`: disables iOS network tracking.",
+                            "type": "boolean"
+                        },
                         "nativeCrashReportEnabled": {
                             "description": "Enables crash reporting for native platforms (iOS, Android). Default `false`.",
                             "type": "boolean"
