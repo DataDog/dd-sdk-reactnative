@@ -329,6 +329,35 @@ describe('FlagsClient', () => {
             });
         });
 
+        it('returns the flag details when native tracking throws synchronously', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: { country: 'US' }
+            });
+            jest.spyOn(
+                NativeModules.DdFlags,
+                'trackEvaluation'
+            ).mockImplementationOnce(() => {
+                throw new Error('native bridge unavailable');
+            });
+
+            const details = flagsClient.getBooleanDetails(
+                'test-boolean-flag',
+                false
+            );
+
+            expect(details).toMatchObject({
+                value: true,
+                variant: 'true',
+                reason: 'STATIC'
+            });
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'Error tracking flag evaluation: native bridge unavailable',
+                SdkVerbosity.WARN
+            );
+        });
+
         it('should return PROVIDER_NOT_READY if evaluation context is not set', () => {
             const flagsClient = DdFlags.getClient();
             // Skip `setEvaluationContext` call here.

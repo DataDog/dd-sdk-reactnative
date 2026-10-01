@@ -457,23 +457,30 @@ export class FlagsClient {
     };
 
     private track = (flag: FlagCacheEntry, context: EvaluationContext) => {
-        // A non-blocking call; don't await this.
-        this.nativeFlags
-            .trackEvaluation(
-                this.clientName,
-                flag.key,
-                flag,
-                context.targetingKey,
-                context.attributes ?? {}
-            )
-            .catch(error => {
-                if (error instanceof Error) {
-                    InternalLog.log(
-                        `Error tracking flag evaluation: ${error.message}`,
-                        SdkVerbosity.WARN
-                    );
-                }
-            });
+        // A non-blocking call; don't await this. A tracking failure, synchronous or not, must
+        // never change the evaluation result.
+        try {
+            this.nativeFlags
+                .trackEvaluation(
+                    this.clientName,
+                    flag.key,
+                    flag,
+                    context.targetingKey,
+                    context.attributes ?? {}
+                )
+                .catch(this.logTrackingError);
+        } catch (error) {
+            this.logTrackingError(error);
+        }
+    };
+
+    private logTrackingError = (error: unknown) => {
+        if (error instanceof Error) {
+            InternalLog.log(
+                `Error tracking flag evaluation: ${error.message}`,
+                SdkVerbosity.WARN
+            );
+        }
     };
 
     private getDetails = <T>(
