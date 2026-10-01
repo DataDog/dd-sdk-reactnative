@@ -5,20 +5,19 @@
  */
 
 import type * as Babel from '@babel/core';
-import * as parser from '@babel/parser';
-import traverse from '@babel/traverse';
 import { jsxIdentifier, stringLiteral } from '@babel/types';
 import { createHash } from 'crypto';
-import glob from 'fast-glob';
-import fs from 'fs';
 import pathN from 'path';
 import { optimize } from 'svgo';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getNodeName } from '../../utils';
 
+import { scanProjectForSvgs } from './buildSvgMap';
 import { HandlerResolver } from './handlers/HandlerResolver';
+import { PathAliasResolver } from './pathAliasResolver';
 import { writeAssetToDisk } from './processing/fs';
+import { SvgBindingMap } from './svgBindingMap';
 
 // Used when the caller (e.g. the plugin's own pre() hook) doesn't have a more
 // specific set of patterns to pass in -- the generate-sr-assets CLI passes its
@@ -36,16 +35,28 @@ const DEFAULT_SCAN_IGNORE_PATTERNS = [
  * Internal processor responsible for detecting, transforming, and wrapping
  * React Native SVG components for use with Session Replay.
  *
- * This class scans the project for `.svg` imports, builds a mapping between
- * JSX identifiers and SVG files, and transforms JSX SVG nodes into
- * optimized, web-compatible SVG markup. Each transformed element is then
- * wrapped in a `SessionReplayView.Privacy` component with metadata used by
- * the native Session Replay layer.
+ * This class scans the project for `.svg` imports (delegated to
+ * `buildSvgMap.ts`, which populates a `SvgBindingMap`), and transforms JSX
+ * SVG nodes into optimized, web-compatible SVG markup. Each transformed
+ * element is then wrapped in a `SessionReplayView.Privacy` component with
+ * metadata used by the native Session Replay layer.
  */
 export class ReactNativeSVG {
-    localSvgMap: Record<string, { path: string; content?: string }> = {};
+    private svgBindingMap = new SvgBindingMap();
+
+    // Kept as a public property (rather than a getter-only re-export) for
+    // backward compatibility: it's the tested public surface (assertions
+    // read `instance.localSvgMap[...]` directly) and the disk-cache
+    // format. Delegates to `svgBindingMap` so the two-map, per-binding
+    // disambiguation design (see `SvgBindingMap`) stays encapsulated
+    // there rather than leaking into this class.
+    get localSvgMap(): Record<string, { path: string; content?: string }> {
+        return this.svgBindingMap.localSvgMap;
+    }
 
     t: typeof Babel.types | null = null;
+
+    private pathAliasResolver: PathAliasResolver;
 
     constructor(
         private rootDir: string,
@@ -53,161 +64,58 @@ export class ReactNativeSVG {
         private saveSvgMapToDisk: boolean = false,
         private scanIgnorePatterns: string[] = DEFAULT_SCAN_IGNORE_PATTERNS,
         private followSymlinks: boolean = false
-    ) {}
+    ) {
+        this.pathAliasResolver = new PathAliasResolver(rootDir);
+    }
 
     setApiTypes(t: typeof Babel.types) {
         this.t = t;
     }
 
     /**
-     * Scans all source files in the project to detect `.svg` imports and builds a mapping
-     * of JSX identifiers to their corresponding SVG file paths. This is done by parsing each
-     * file's AST and collecting `import` or `export` declarations that reference `.svg` files.
+     * Builds (or loads a cached) mapping of JSX identifiers to their
+     * corresponding SVG file paths, storing the result in `svgBindingMap`.
      *
-     * The collected mappings are stored in `localSvgMap`, keyed by the local/imported variable
-     * names (e.g., `Logo`, `IconSearch`), with their values pointing to the resolved file path.
+     * If `saveSvgMapToDisk` is false, first attempts to load the mapping
+     * from a previously saved `svg-map.json` for better performance; if
+     * that file doesn't exist or can't be read, falls back to scanning
+     * the codebase (see `scanProjectForSvgs` in `buildSvgMap.ts`).
      *
-     * Files matching `scanIgnorePatterns` (defaulted in the constructor) are skipped.
-     *
-     * If `saveSvgMapToDisk` is false, it will first attempt to load the mapping from a previously
-     * saved `svg-map.json` file for better performance. If the file doesn't exist or can't be read,
-     * it falls back to scanning the codebase.
-     *
-     * If `saveSvgMapToDisk` is true, the mapping will be saved to a JSON file in the assets directory
-     * after scanning.
+     * If `saveSvgMapToDisk` is true, the mapping is saved to that JSON
+     * file after scanning.
      */
     buildSvgMap() {
         if (!this.t) {
             return;
         }
 
-        // If not saving to disk, try to load from existing svg-map.json first
-        if (!this.saveSvgMapToDisk) {
-            // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
-            const packageRoot = pathN.resolve(__dirname, '../../../..');
-            const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
-            try {
-                if (fs.existsSync(svgMapPath)) {
-                    const mapContent = fs.readFileSync(svgMapPath, 'utf8');
-                    this.localSvgMap = JSON.parse(mapContent);
-                    return;
-                }
-            } catch (err) {
-                console.warn(
-                    '[buildSvgMap]: Failed to load SVG map from disk, falling back to codebase scan',
-                    err
-                );
-            }
+        // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
+        const packageRoot = pathN.resolve(__dirname, '../../../..');
+        const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
+
+        if (
+            !this.saveSvgMapToDisk &&
+            this.svgBindingMap.loadFromDisk(svgMapPath)
+        ) {
+            return;
         }
 
-        // TODO: Support aliased paths (RUM-12185)
-        const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
-            cwd: this.rootDir,
-            absolute: true,
-            ignore: this.scanIgnorePatterns,
-            followSymbolicLinks: this.followSymlinks
+        // Drop any alias config cached from a previous buildSvgMap() run --
+        // otherwise edits to tsconfig.json/babel.config.js made since then
+        // would be invisible to a reused instance.
+        this.pathAliasResolver.reset();
+
+        scanProjectForSvgs({
+            t: this.t,
+            rootDir: this.rootDir,
+            scanIgnorePatterns: this.scanIgnorePatterns,
+            followSymlinks: this.followSymlinks,
+            pathAliasResolver: this.pathAliasResolver,
+            svgBindingMap: this.svgBindingMap
         });
 
-        for (const file of files) {
-            try {
-                const code = fs.readFileSync(file, 'utf8');
-                if (!code) {
-                    continue;
-                }
-
-                const ast = parser.parse(code, {
-                    sourceType: 'module',
-                    plugins: [
-                        'jsx',
-                        'typescript',
-                        'exportDefaultFrom',
-                        'classProperties',
-                        'dynamicImport'
-                    ]
-                });
-
-                traverse(ast, {
-                    ImportDeclaration: path => {
-                        if (!this.t) {
-                            return;
-                        }
-                        const source = path.node.source.value;
-                        if (!source.endsWith('.svg')) {
-                            return;
-                        }
-
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
-                        for (const spec of path.node.specifiers) {
-                            const name = getNodeName(this.t, spec.local.name);
-                            if (name) {
-                                this.localSvgMap[name] = {
-                                    path: resolved
-                                };
-                            }
-                        }
-                    },
-                    ExportNamedDeclaration: path => {
-                        if (!this.t) {
-                            return;
-                        }
-                        const source = path.node.source?.value;
-                        if (!source?.endsWith('.svg')) {
-                            return;
-                        }
-
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
-                        for (const spec of path.node.specifiers) {
-                            if (spec.type === 'ExportSpecifier') {
-                                // spec.exported is the name consumers import under
-                                // ('default' would be wrong for `export { default as Logo }`)
-                                const exported = spec.exported;
-                                const name = getNodeName(
-                                    this.t,
-                                    this.t.isStringLiteral(exported)
-                                        ? exported.value
-                                        : exported.name
-                                );
-                                if (name) {
-                                    this.localSvgMap[name] = {
-                                        path: resolved
-                                    };
-                                }
-                            } else {
-                                console.warn(
-                                    `[buildSvgMap]: Unhandled export specifier type: ${spec.type}`
-                                );
-                            }
-                        }
-                    }
-                });
-            } catch (err) {
-                console.error(`[buildSvgMap]: \n File: ${file}\n`, err);
-            }
-        }
-
-        // Save the mapping to disk if requested
         if (this.saveSvgMapToDisk) {
-            try {
-                // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
-                const packageRoot = pathN.resolve(__dirname, '../../../..');
-                const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
-                fs.writeFileSync(
-                    svgMapPath,
-                    JSON.stringify(this.localSvgMap, null, 2),
-                    'utf8'
-                );
-            } catch (err) {
-                console.error(
-                    '[buildSvgMap]: Failed to save SVG map to disk',
-                    err
-                );
-            }
+            this.svgBindingMap.saveToDisk(svgMapPath);
         }
     }
 
@@ -220,10 +128,18 @@ export class ReactNativeSVG {
      *
      * @param path - Babel NodePath pointing to the JSXElement to process.
      * @param name - JSX tag name (e.g., 'Svg', 'Logo') used to resolve the appropriate handler.
+     * @param currentFile - Absolute path of the file currently being
+     *   transformed (e.g. Babel's `state.filename`), used to disambiguate
+     *   `name` against the per-binding map when two different files alias
+     *   a different SVG under the same local name.
      * @returns An object containing the original SVG string and its optimized version,
      *          or `undefined` if no transformation could be performed.
      */
-    processItem(path: Babel.NodePath<Babel.types.JSXElement>, name: string) {
+    processItem(
+        path: Babel.NodePath<Babel.types.JSXElement>,
+        name: string,
+        currentFile: string
+    ) {
         if (!this.t) {
             return;
         }
@@ -235,11 +151,23 @@ export class ReactNativeSVG {
                 return;
             }
 
+            // Every `SvgBindingMap` write puts `name` into `localSvgMap`
+            // and its per-binding map together (or into `localSvgMap`
+            // alone), so a miss on this flat, allocation-free check
+            // proves `name` can't be in the per-binding map either --
+            // skips the per-binding lookup for the overwhelming majority
+            // of JSX elements (`View`, `Text`, ...) that are never a
+            // local SVG import at all.
+            const localSvgEntry =
+                name in this.localSvgMap
+                    ? this.svgBindingMap.getLocalSvgEntry(currentFile, name)
+                    : undefined;
+
             HandlerResolver.configure({
                 t: this.t,
                 path,
                 name,
-                localSvgMap: this.localSvgMap
+                localSvgEntry
             });
 
             const handler = HandlerResolver.create();
