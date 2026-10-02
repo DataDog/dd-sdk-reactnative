@@ -28,6 +28,7 @@
             "initialResourceThreshold": 456,
             "nativeViewTracking": true,
             "nativeInteractionTracking": true,
+            "nativeIosResourceTracking": true,
             "nativeLongTaskThresholdMs": 789,
             "nativeCrashReportEnabled": true,
             "trackBackgroundEvents": true,

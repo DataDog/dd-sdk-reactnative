@@ -21,6 +21,7 @@
             "nativeCrashReportEnabled": true,
             "nativeLongTaskThresholdMs": 333,
             "nativeInteractionTracking": true,
+            "nativeIosResourceTracking": true,
             "actionNameAttribute": "action-name-attr",
             "customEndpoint": "https://rum.example.com",
             "vitalsUpdateFrequency": "NEVER",

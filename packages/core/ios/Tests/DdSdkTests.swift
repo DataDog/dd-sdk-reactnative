@@ -993,6 +993,101 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(actualTraceContextInjection, .sampled)
     }
 
+    // MARK: - nativeIosResourceTracking (URLSession tracking tri-state)
+
+    private func buildURLSessionTracking(
+        nativeIosResourceTracking: Bool?,
+        firstPartyHosts: [String: Set<TracingHeaderType>]?
+    ) -> RUM.Configuration.URLSessionTracking? {
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.resourceTraceSampleRate = 66
+        rumConfiguration.nativeIosResourceTracking = nativeIosResourceTracking
+        rumConfiguration.firstPartyHosts = firstPartyHosts
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+        return DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        ).urlSessionTracking
+    }
+
+    /// Returns the hosts of `.traceWithHeaders`, or `nil` when tracing is not configured.
+    private func tracedHosts(
+        _ tracking: RUM.Configuration.URLSessionTracking?
+    ) -> [String: Set<TracingHeaderType>]? {
+        switch tracking?.firstPartyHostsTracing {
+        case let .traceWithHeaders(hostsWithHeaders, samplingRate, _):
+            XCTAssertEqual(samplingRate, 66)
+            return hostsWithHeaders
+        case .trace, .none:
+            return nil
+        }
+    }
+
+    private let nonEmptyFirstPartyHosts: [String: Set<TracingHeaderType>] = [
+        "example.com": [.datadog, .tracecontext]
+    ]
+
+    // Legacy (nil) behavior: must be unchanged
+
+    func testNativeIosResourceTrackingNilWithEmptyFirstPartyHostsEnablesTracking() {
+        // Regression: JS default `firstPartyHosts: []` => URLSession tracking ON
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: nil, firstPartyHosts: [:])
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), [:])
+    }
+
+    func testNativeIosResourceTrackingNilWithNilFirstPartyHostsDisablesTracking() {
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: nil, firstPartyHosts: nil)
+        XCTAssertNil(tracking)
+    }
+
+    func testNativeIosResourceTrackingNilWithFirstPartyHostsTracesHosts() {
+        let tracking = buildURLSessionTracking(
+            nativeIosResourceTracking: nil, firstPartyHosts: nonEmptyFirstPartyHosts)
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), nonEmptyFirstPartyHosts)
+    }
+
+    // Explicit opt-in
+
+    func testNativeIosResourceTrackingTrueWithNilFirstPartyHostsEnablesTrackingWithoutTracing() {
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: true, firstPartyHosts: nil)
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertNil(tracking?.firstPartyHostsTracing)
+    }
+
+    func testNativeIosResourceTrackingTrueWithEmptyFirstPartyHostsEnablesTracking() {
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: true, firstPartyHosts: [:])
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), [:])
+    }
+
+    func testNativeIosResourceTrackingTrueWithFirstPartyHostsTracesHosts() {
+        let tracking = buildURLSessionTracking(
+            nativeIosResourceTracking: true, firstPartyHosts: nonEmptyFirstPartyHosts)
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), nonEmptyFirstPartyHosts)
+    }
+
+    // Explicit opt-out
+
+    func testNativeIosResourceTrackingFalseWithNilFirstPartyHostsDisablesTracking() {
+        XCTAssertNil(buildURLSessionTracking(nativeIosResourceTracking: false, firstPartyHosts: nil))
+    }
+
+    func testNativeIosResourceTrackingFalseWithEmptyFirstPartyHostsDisablesTracking() {
+        XCTAssertNil(buildURLSessionTracking(nativeIosResourceTracking: false, firstPartyHosts: [:]))
+    }
+
+    func testNativeIosResourceTrackingFalseWithFirstPartyHostsDisablesTracking() {
+        XCTAssertNil(buildURLSessionTracking(
+            nativeIosResourceTracking: false, firstPartyHosts: nonEmptyFirstPartyHosts))
+    }
+
     func testBuildTelemetrySampleRate() {
         let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
         rumConfiguration.telemetrySampleRate = 42.0

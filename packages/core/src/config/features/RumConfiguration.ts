@@ -26,6 +26,7 @@ const DEFAULTS = {
     nativeCrashReportEnabled: false,
     nativeInteractionTracking: false,
     nativeLongTaskThresholdMs: 200,
+    nativeIosResourceTracking: undefined,
     nativeViewTracking: false,
     resourceEventMapper: null,
     resourceTraceSampleRate: 100.0,
@@ -84,6 +85,10 @@ export class RumConfiguration implements RumConfigurationType {
     // Native Long Task Threshold in milliseconds
     public nativeLongTaskThresholdMs: number =
         DEFAULTS.nativeLongTaskThresholdMs;
+
+    // Native Resource Tracking (iOS only); undefined means legacy behavior
+    public nativeIosResourceTracking?: boolean =
+        DEFAULTS.nativeIosResourceTracking;
 
     // Native View Tracking enabled
     public nativeViewTracking: boolean = DEFAULTS.nativeViewTracking;

@@ -96,6 +96,7 @@ describe('DatadogProvider', () => {
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,
                     "nativeInteractionTracking": false,
+                    "nativeIosResourceTracking": undefined,
                     "nativeLongTaskThresholdMs": 200,
                     "nativeViewTracking": false,
                     "resourceEventMapper": null,
@@ -176,6 +177,87 @@ describe('DatadogProvider', () => {
                 'good_timestamp'
             );
         });
+    });
+
+    describe('nativeIosResourceTracking', () => {
+        it('sends nativeIosResourceTracking undefined to native by default', async () => {
+            renderWithProvider();
+            await flushPromises();
+            expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+            const receivedConfiguration =
+                NativeModules.DdSdk.initialize.mock.calls[0][0];
+            expect(receivedConfiguration.rumConfiguration).toBeDefined();
+            expect(
+                receivedConfiguration.rumConfiguration.nativeIosResourceTracking
+            ).toBeUndefined();
+        });
+
+        it.each([true, false])(
+            'sends nativeIosResourceTracking %s to native when set',
+            async value => {
+                const configuration = getDefaultConfiguration();
+                const rumConfiguration = configuration.rumConfiguration;
+                if (rumConfiguration) {
+                    rumConfiguration.nativeIosResourceTracking = value;
+                }
+                renderWithProvider({ configuration });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+                const receivedConfiguration =
+                    NativeModules.DdSdk.initialize.mock.calls[0][0];
+                expect(
+                    receivedConfiguration.rumConfiguration
+                        .nativeIosResourceTracking
+                ).toBe(value);
+            }
+        );
+
+        it.each([
+            [undefined, undefined, undefined],
+            [true, undefined, true],
+            [false, undefined, false],
+            [undefined, true, true],
+            [undefined, false, false]
+        ])(
+            'partial initialization: features %s, initialize %s => native %s',
+            async (featuresValue, initializeValue, expected) => {
+                renderWithProvider({
+                    configuration: {
+                        rumConfiguration: {
+                            trackErrors: false,
+                            trackResources: false,
+                            trackInteractions: false,
+                            ...(featuresValue !== undefined && {
+                                nativeIosResourceTracking: featuresValue
+                            })
+                        },
+                        traceConfiguration: {},
+                        logsConfiguration: {}
+                    }
+                });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).not.toHaveBeenCalled();
+
+                await DatadogProvider.initialize({
+                    clientToken: 'fake-client-token',
+                    env: 'fake-env',
+                    rumConfiguration: {
+                        applicationId: 'fake-application-id',
+                        ...(initializeValue !== undefined && {
+                            nativeIosResourceTracking: initializeValue
+                        })
+                    }
+                });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+                const receivedConfiguration =
+                    NativeModules.DdSdk.initialize.mock.calls[0][0];
+                expect(
+                    receivedConfiguration.rumConfiguration
+                        .nativeIosResourceTracking
+                ).toBe(expected);
+            }
+        );
     });
 
     describe('onInitialization callback', () => {

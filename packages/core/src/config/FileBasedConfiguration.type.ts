@@ -46,6 +46,7 @@ export interface JsonConfiguration extends CoreConfigurationOptions {
         nativeLongTaskThresholdMs?: number;
         nativeViewTracking?: boolean;
         nativeInteractionTracking?: boolean;
+        nativeIosResourceTracking?: boolean;
         customEndpoint?: string;
         sessionSampleRate?: number;
         resourceTraceSampleRate?: number;

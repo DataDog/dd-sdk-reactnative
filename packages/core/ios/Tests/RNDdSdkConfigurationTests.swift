@@ -59,6 +59,39 @@ class RNDdSdkConfigurationTests: XCTestCase {
         XCTAssertEqual(proxy?["SOCKSPort"] as? NSNumber, 99)
     }
 
+    private func makeConfigurationDict(nativeIosResourceTracking: Any?) -> NSDictionary {
+        var rumDict: [String: Any] = ["applicationId": "app-id"]
+        if let value = nativeIosResourceTracking {
+            rumDict["nativeIosResourceTracking"] = value
+        }
+        return [
+            "clientToken": "client-token",
+            "env": "env",
+            "rumConfiguration": rumDict as NSDictionary
+        ]
+    }
+
+    func testBuildNativeIosResourceTrackingAbsentIsNil() {
+        let configuration = makeConfigurationDict(nativeIosResourceTracking: nil).asDdSdkConfiguration()
+        XCTAssertNotNil(configuration.rumConfiguration)
+        XCTAssertNil(configuration.rumConfiguration?.nativeIosResourceTracking)
+    }
+
+    func testBuildNativeIosResourceTrackingNullIsNil() {
+        let configuration = makeConfigurationDict(nativeIosResourceTracking: NSNull()).asDdSdkConfiguration()
+        XCTAssertNil(configuration.rumConfiguration?.nativeIosResourceTracking)
+    }
+
+    func testBuildNativeIosResourceTrackingTrue() {
+        let configuration = makeConfigurationDict(nativeIosResourceTracking: true).asDdSdkConfiguration()
+        XCTAssertEqual(configuration.rumConfiguration?.nativeIosResourceTracking, true)
+    }
+
+    func testBuildNativeIosResourceTrackingFalse() {
+        let configuration = makeConfigurationDict(nativeIosResourceTracking: false).asDdSdkConfiguration()
+        XCTAssertEqual(configuration.rumConfiguration?.nativeIosResourceTracking, false)
+    }
+
     func testBuildFirstPartyHosts() {
         let firstPartyHosts = [
             ["match": "example.com", "propagatorTypes": ["datadog", "b3"]],
