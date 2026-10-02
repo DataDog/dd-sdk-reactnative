@@ -5,9 +5,10 @@ Use [OpenFeature][1] with [Datadog Feature Flags][2] to evaluate feature flags a
 OpenFeature is a vendor-neutral, community-driven specification and SDK for feature flagging. It provides a unified API for feature flag evaluation that works across different providers. This enables you to switch vendors or integrate multiple feature flag systems.
 
 This package provides an online provider backed by Datadog's Feature Flags SDK, a
-`DatadogCoreProvider` for manually supplied JavaScript-evaluated configurations, and an offline
-compatibility provider that delegates to `DatadogCoreProvider` while retaining native tracking.
-`DatadogCoreProvider` and the rules-based parser are exported from the
+`DatadogCoreProvider` for manually supplied JavaScript-evaluated configurations, optional
+JavaScript tracking hooks for `DatadogCoreProvider`, and an offline compatibility provider that
+delegates to `DatadogCoreProvider` while retaining native tracking.
+`DatadogCoreProvider`, its tracking hooks, and the rules-based parser are exported from the
 `@datadog/mobile-react-native-openfeature/rules-based` entry point, which keeps the protobuf rules
 parser out of apps that do not use it.
 
@@ -293,7 +294,8 @@ export default AppWithProviders;
 
 Use `DatadogCoreProvider` to evaluate manually supplied precomputed or rules-based configurations in
 JavaScript. The provider does not fetch configuration or send exposure or RUM events. Your
-application manages configuration delivery, storage, and updates.
+application manages configuration delivery, storage, and updates. To send exposures, flag
+evaluations, or RUM feature flag data, add the [tracking hooks](#tracking-with-javascript-hooks).
 
 ```tsx
 import {
@@ -338,11 +340,79 @@ precomputed-only `configurationFromString` helper.
   `Error`. Loading a usable configuration after an error emits `Ready`, followed by
   `ConfigurationChanged`.
 
+#### Tracking with JavaScript hooks
+
+Compose the Datadog tracking hooks you need and register them with the OpenFeature client that uses
+`DatadogCoreProvider`. The hooks run in JavaScript and do not use `DdFlags`:
+
+- `createDatadogExposureLoggingHook(options)` sends exposures for logged allocations to Datadog.
+  Exposures are deduplicated in memory per subject, flag, and assignment.
+- `createDatadogEvaluationLoggingHook(options)` aggregates flag evaluations and sends them to
+  Datadog every `flagEvaluationTrackingInterval` milliseconds (default `10000`, between `1000`
+  and `60000`).
+- `createDatadogRumTrackingHook()` adds evaluated variants to the active RUM view with
+  `DdRum.addFeatureFlagEvaluation`. It requires an initialized Datadog SDK with RUM enabled.
+
+```tsx
+import {
+    DatadogCoreProvider,
+    composeDatadogTrackingHooks,
+    coreConfigurationFromString,
+    createDatadogEvaluationLoggingHook,
+    createDatadogExposureLoggingHook,
+    createDatadogRumTrackingHook
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+const trackingOptions = {
+    clientToken: '<CLIENT_TOKEN>',
+    site: 'datadoghq.com',
+    service: 'my-app',
+    applicationId: '<RUM_APPLICATION_ID>'
+};
+
+const tracking = composeDatadogTrackingHooks(
+    createDatadogExposureLoggingHook(trackingOptions),
+    createDatadogEvaluationLoggingHook(trackingOptions),
+    createDatadogRumTrackingHook()
+);
+await tracking.initialize();
+
+const provider = new DatadogCoreProvider();
+provider.setConfiguration(coreConfigurationFromString(wire));
+await OpenFeature.setProviderAndWait('datadog-core', provider, context);
+
+const client = OpenFeature.getClient('datadog-core');
+client.addHooks(...tracking.hooks);
+
+// When this client no longer needs tracking:
+client.clearHooks();
+await tracking.shutdown();
+```
+
+The exposure and evaluation hooks take their options directly; they do not read the configuration
+given to `DdSdkReactNative`. Pass `proxy` to send events through a proxy, as
+`<proxy>?ddforward=<intake path and parameters>`.
+
+- The exposure and evaluation hooks do not track until `initialize()` resolves. `shutdown()` sends
+  pending events and stops timers. Both methods are idempotent, failures do not interrupt flag
+  evaluation, and initializing again after a shutdown resumes tracking with the same exposure
+  deduplication.
+- Events are sent in batches, and pending events are sent when the app leaves the foreground.
+  Requests that fail are not retried.
+- Replacing the provider configuration lets exposures for the new configuration through.
+- RUM resource tracking ignores these requests. This requires `@datadog/mobile-react-native` from
+  the same release; with an older version, the requests appear as RUM resources.
+- Only add these hooks to clients that use `DatadogCoreProvider`. `DatadogOpenFeatureProvider` and
+  `DatadogOfflineOpenFeatureProvider` already track through the native SDK, so the hooks would
+  track their evaluations twice.
+
 ### Offline initialization
 
 Use `DatadogOfflineOpenFeatureProvider` to evaluate manually supplied precomputed or rules-based
 configurations with native exposure or RUM tracking. The provider does not fetch configuration;
-supply it with `setConfiguration`. For evaluation without tracking, use `DatadogCoreProvider`.
+supply it with `setConfiguration`. For evaluation without tracking, or with JavaScript tracking
+hooks, use `DatadogCoreProvider`.
 
 Rules-based evaluation requires `@datadog/mobile-react-native` and
 `@datadog/mobile-react-native-openfeature` 3.10.0 or later. Update both packages together to use the
