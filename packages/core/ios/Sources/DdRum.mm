@@ -145,7 +145,15 @@ RCT_REMAP_METHOD(addViewLoadingTime, withOverwrite:(BOOL)overwrite
     [self addViewLoadingTime:overwrite resolve:resolve reject:reject];
 }
 
-RCT_REMAP_METHOD(stopSession, withResolve:(RCTPromiseResolveBlock)resolve
+RCT_EXPORT_METHOD(reportAppFullyDisplayed:
+                 (RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self reportAppFullyDisplayed: resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(stopSession:
+                 (RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
     [self stopSession:resolve reject:reject];
@@ -260,6 +268,10 @@ RCT_REMAP_METHOD(failFeatureOperation,
 
 - (void)addViewLoadingTime:(BOOL)overwrite resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {\
     [self.ddRumImplementation addViewLoadingTimeWithOverwrite:overwrite resolve:resolve reject:reject];
+}
+
+- (void)reportAppFullyDisplayed:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddRumImplementation reportAppFullyDisplayedWithResolve:resolve reject: reject];
 }
 
 - (void)startAction:(NSString *)type name:(NSString *)name context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
