@@ -126,7 +126,7 @@ describe('intake transport', () => {
         expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         const [url, init] = (globalThis.fetch as jest.Mock).mock.calls[0];
         expect(url).toMatch(
-            /^https:\/\/browser-intake-datadoghq\.eu\/api\/v2\/exposures\?ddsource=react-native&dd-api-key=token&dd-evp-origin=react-native&dd-request-id=[0-9a-f-]{36}$/
+            /^https:\/\/browser-intake-datadoghq\.eu\/api\/v2\/exposures\?ddsource=react-native&dd-api-key=token&dd-evp-origin-version=\d+\.\d+\.\d+[^&]*&dd-evp-origin=react-native&dd-request-id=[0-9a-f-]{36}$/
         );
         expect(init).toEqual({
             method: 'POST',

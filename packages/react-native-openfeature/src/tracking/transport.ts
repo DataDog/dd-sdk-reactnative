@@ -7,6 +7,8 @@
 import { AppState } from 'react-native';
 import type { AppStateStatus } from 'react-native';
 
+import { version } from '../version';
+
 import type { TrackingConfiguration } from './configuration';
 
 export type IntakeTrackType = 'exposures' | 'flagevaluation';
@@ -36,6 +38,7 @@ export function buildIntakeUrl(
     const parameters = [
         `ddsource=${SOURCE}`,
         `dd-api-key=${encodeURIComponent(configuration.clientToken)}`,
+        `dd-evp-origin-version=${encodeURIComponent(version)}`,
         `dd-evp-origin=${SOURCE}`,
         `dd-request-id=${generateUUID()}`
     ].join('&');
