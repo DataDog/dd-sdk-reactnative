@@ -331,8 +331,13 @@ class DdSdkImplementation(
         ddSdkConfiguration: DdSdkConfiguration
     ): FrameRateProvider? {
         val frameTimeCallback = buildFrameTimeCallback(ddSdkConfiguration) ?: return null
-        val display = (appContext.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager)
-            ?.getDisplay(Display.DEFAULT_DISPLAY)
+        // Before API 30 every Display.refreshRate read is an IPC, so use the max refresh rate there
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            (appContext.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager)
+                ?.getDisplay(Display.DEFAULT_DISPLAY)
+        } else {
+            null
+        }
         val frameRateProvider = FrameRateProvider(frameTimeCallback, jsThreadExecutor, display)
         frameRateProvider.start()
 
