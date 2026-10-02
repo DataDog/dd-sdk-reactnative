@@ -44,6 +44,22 @@ class DdFlagsTests: XCTestCase {
         waitForExpectations(timeout: 1, handler: nil)
     }
 
+    func testInitializationTimeoutIsReturnedToJavaScript() {
+        let completion = expectation(description: "Timeout rejects")
+        let client = MockFlagsClient()
+        client.errorToReturn = .initializationTimedOut
+        implementation.clientProviders["test_client"] = { client }
+        implementation.setEvaluationContext(
+            "test_client", targetingKey: "athlete", attributes: [:],
+            resolve: { _ in XCTFail("Expected rejection") },
+            reject: { code, _, _ in
+                XCTAssertEqual(code, "INITIALIZATION_TIMED_OUT")
+                completion.fulfill()
+            }
+        )
+        waitForExpectations(timeout: 1)
+    }
+
     func testSetEvaluationContextSuccess() {
         let expectation = self.expectation(description: "SetEvaluationContext resolves with flags")
 

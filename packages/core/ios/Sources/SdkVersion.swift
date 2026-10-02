@@ -6,5 +6,5 @@
 
 import Foundation
 
-// This is automatically updated by the update-version.sh script
+// Generated from packages/core/package.json. Do not edit.
 let SdkVersion = "3.9.0"

@@ -6,5 +6,5 @@
 
 package com.datadog.reactnative
 
-// This is automatically updated by the update-version.sh script
+// Generated from packages/core/package.json. Do not edit.
 internal const val SDK_VERSION = "3.9.0"
