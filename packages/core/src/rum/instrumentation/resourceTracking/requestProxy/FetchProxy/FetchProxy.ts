@@ -12,6 +12,7 @@ import { callOriginalFetch } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
 import { createRequestContext } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
+import { filterFlaggingIntakeResource } from '../common/flaggingIntakeResourceFilter';
 import { filterDevResource } from '../common/internalDevResourceBlocklist';
 import {
     getInstrumentationHeaders,
@@ -49,7 +50,10 @@ export class FetchProxy extends RequestProxy {
         return new FetchProxy({
             fetchGlobal: globalThis,
             headersType: Headers,
-            resourceReporter: new ResourceReporter([filterDevResource])
+            resourceReporter: new ResourceReporter([
+                filterDevResource,
+                filterFlaggingIntakeResource
+            ])
         });
     }
 

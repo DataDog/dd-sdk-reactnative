@@ -11,6 +11,7 @@ import { isRunningWithinFetchProxy } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
 import { createRequestContext } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
+import { filterFlaggingIntakeResource } from '../common/flaggingIntakeResourceFilter';
 import { filterDevResource } from '../common/internalDevResourceBlocklist';
 import {
     getInstrumentationHeaders,
@@ -55,7 +56,10 @@ export class XHRProxy extends RequestProxy {
     static createWithResourceReporter() {
         return new XHRProxy({
             xhrType: XMLHttpRequest,
-            resourceReporter: new ResourceReporter([filterDevResource])
+            resourceReporter: new ResourceReporter([
+                filterDevResource,
+                filterFlaggingIntakeResource
+            ])
         });
     }
 

@@ -1094,6 +1094,7 @@ package/src/rum/instrumentation/resourceTracking/requestProxy/FetchProxy/FetchPr
 package/src/rum/instrumentation/resourceTracking/requestProxy/FetchProxy/__tests__/FetchProxy.test.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/__tests__/ResourceReporter.test.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/__tests__/__utils__/ResourceMockFactory.ts
+package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/__tests__/flaggingIntakeResourceFilter.test.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/DatadogRumResource/__tests__/internalDevResourceBlocklist.test.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/URLHostParser.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/XHRProxy.ts
@@ -1106,6 +1107,7 @@ package/src/rum/instrumentation/resourceTracking/requestProxy/XHRProxy/xhrUtils.
 package/src/rum/instrumentation/resourceTracking/requestProxy/common/FetchProxyState.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/common/RequestContext.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/common/ResourceReporter.ts
+package/src/rum/instrumentation/resourceTracking/requestProxy/common/flaggingIntakeResourceFilter.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/common/internalDevResourceBlocklist.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/common/requestHeaders.ts
 package/src/rum/instrumentation/resourceTracking/requestProxy/common/resourceTiming.ts
