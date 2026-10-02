@@ -40,7 +40,12 @@ export function createTrackingHookController(
     let lifecycle = Promise.resolve();
 
     return {
-        hooks: [{ after: (...args) => activeHook?.after?.(...args) }],
+        hooks: [
+            {
+                after: (...args) => activeHook?.after?.(...args),
+                finally: (...args) => activeHook?.finally?.(...args)
+            }
+        ],
         initialize: () => {
             // Serialize setup and teardown so shutdown also waits for a pending setup.
             lifecycle = lifecycle.then(() =>

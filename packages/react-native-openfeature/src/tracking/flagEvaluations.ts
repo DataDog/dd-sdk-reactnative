@@ -79,12 +79,20 @@ export function createFlagEvaluationLoggingHook(
                 flagEvaluationBatch.stop();
             }
         },
-        after: (
+        // `finally` also runs for failed evaluations, such as FLAG_NOT_FOUND and TYPE_MISMATCH,
+        // which skip `after`. The Datadog server SDKs use the same stage.
+        finally: (
             hookContext: HookContext,
             details: EvaluationDetails<FlagValue>
         ) => {
             try {
-                aggregator.addEvaluation(hookContext.context, details);
+                aggregator.addEvaluation(
+                    hookContext.context,
+                    details,
+                    details.errorCode
+                        ? details.errorMessage || details.errorCode
+                        : undefined
+                );
             } catch {
                 // Tracking must not interrupt flag evaluation.
             }

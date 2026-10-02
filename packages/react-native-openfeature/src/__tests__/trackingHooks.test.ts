@@ -58,13 +58,35 @@ const loggedDetails = (
     ...overrides
 });
 
-const runAfter = (
+// Run the hook stages OpenFeature runs for a successful evaluation: `after`, then `finally`.
+const runEvaluation = (
     hooks: Hook[],
     details: EvaluationDetails<FlagValue>,
     context: Record<string, unknown> = { targetingKey: 'user-1', plan: 'pro' }
 ) => {
     hooks.forEach(hook =>
         hook.after?.(hookContext(context), details, undefined as never)
+    );
+    hooks.forEach(hook =>
+        hook.finally?.(hookContext(context), details, undefined as never)
+    );
+};
+
+// Run the hook stages OpenFeature runs for a failed evaluation: `error`, then `finally`.
+const runFailedEvaluation = (
+    hooks: Hook[],
+    details: EvaluationDetails<FlagValue>,
+    context: Record<string, unknown> = { targetingKey: 'user-1', plan: 'pro' }
+) => {
+    hooks.forEach(hook =>
+        hook.error?.(
+            hookContext(context),
+            new Error(details.errorMessage),
+            undefined as never
+        )
+    );
+    hooks.forEach(hook =>
+        hook.finally?.(hookContext(context), details, undefined as never)
     );
 };
 
@@ -319,7 +341,7 @@ describe('intake transport', () => {
 describe('createDatadogExposureLoggingHook', () => {
     it('does not track until initialized', () => {
         const tracking = createDatadogExposureLoggingHook(options);
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         jest.runOnlyPendingTimers();
 
         expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -331,7 +353,7 @@ describe('createDatadogExposureLoggingHook', () => {
         const tracking = createDatadogExposureLoggingHook(options);
         await tracking.initialize();
 
-        runAfter(
+        runEvaluation(
             tracking.hooks,
             loggedDetails({
                 flagMetadata: {
@@ -366,13 +388,13 @@ describe('createDatadogExposureLoggingHook', () => {
         const tracking = createDatadogExposureLoggingHook(options);
         await tracking.initialize();
 
-        runAfter(
+        runEvaluation(
             tracking.hooks,
             loggedDetails({
                 flagMetadata: { allocationKey: 'allocation', doLog: false }
             })
         );
-        runAfter(tracking.hooks, loggedDetails({ variant: undefined }));
+        runEvaluation(tracking.hooks, loggedDetails({ variant: undefined }));
         await tracking.shutdown();
 
         expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -382,10 +404,12 @@ describe('createDatadogExposureLoggingHook', () => {
         const tracking = createDatadogExposureLoggingHook(options);
         await tracking.initialize();
 
-        runAfter(tracking.hooks, loggedDetails());
-        runAfter(tracking.hooks, loggedDetails());
-        runAfter(tracking.hooks, loggedDetails(), { targetingKey: 'user-2' });
-        runAfter(tracking.hooks, loggedDetails({ variant: 'off' }));
+        runEvaluation(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails(), {
+            targetingKey: 'user-2'
+        });
+        runEvaluation(tracking.hooks, loggedDetails({ variant: 'off' }));
         await tracking.shutdown();
 
         expect(fetchCalls().flatMap(sentEvents)).toMatchObject([
@@ -407,9 +431,9 @@ describe('createDatadogExposureLoggingHook', () => {
                 }
             });
 
-        runAfter(tracking.hooks, withConfigurationId('first'));
-        runAfter(tracking.hooks, withConfigurationId('first'));
-        runAfter(tracking.hooks, withConfigurationId('second'));
+        runEvaluation(tracking.hooks, withConfigurationId('first'));
+        runEvaluation(tracking.hooks, withConfigurationId('first'));
+        runEvaluation(tracking.hooks, withConfigurationId('second'));
         await tracking.shutdown();
 
         const events = fetchCalls().flatMap(sentEvents);
@@ -421,10 +445,10 @@ describe('createDatadogExposureLoggingHook', () => {
     it('keeps deduplication across shutdown and initialize', async () => {
         const tracking = createDatadogExposureLoggingHook(options);
         await tracking.initialize();
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         await tracking.shutdown();
         await tracking.initialize();
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         await tracking.shutdown();
 
         expect(fetchCalls().flatMap(sentEvents)).toHaveLength(1);
@@ -434,7 +458,7 @@ describe('createDatadogExposureLoggingHook', () => {
         const tracking = createDatadogExposureLoggingHook(options);
         await tracking.initialize();
         await tracking.shutdown();
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         jest.runOnlyPendingTimers();
 
         expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -465,9 +489,9 @@ describe('createDatadogEvaluationLoggingHook', () => {
         });
         await tracking.initialize();
 
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         jest.advanceTimersByTime(1000);
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         expect(globalThis.fetch).not.toHaveBeenCalled();
 
         jest.advanceTimersByTime(4000);
@@ -498,10 +522,40 @@ describe('createDatadogEvaluationLoggingHook', () => {
         await tracking.shutdown();
     });
 
+    it.each([
+        ['FLAG_NOT_FOUND', 'Flag not found', 'Flag not found'],
+        ['TYPE_MISMATCH', undefined, 'TYPE_MISMATCH']
+    ])(
+        'tracks evaluations that fail with %s',
+        async (errorCode, errorMessage, expectedMessage) => {
+            const tracking = createDatadogEvaluationLoggingHook(options);
+            await tracking.initialize();
+
+            runFailedEvaluation(tracking.hooks, {
+                flagKey: 'flag',
+                value: false,
+                reason: 'ERROR',
+                errorCode,
+                errorMessage,
+                flagMetadata: {}
+            } as EvaluationDetails<FlagValue>);
+            await tracking.shutdown();
+
+            expect(fetchCalls().flatMap(sentEvents)).toEqual([
+                expect.objectContaining({
+                    flag: { key: 'flag' },
+                    evaluation_count: 1,
+                    runtime_default_used: true,
+                    error: { message: expectedMessage }
+                })
+            ]);
+        }
+    );
+
     it('sends aggregated evaluations when the app leaves the foreground', async () => {
         const tracking = createDatadogEvaluationLoggingHook(options);
         await tracking.initialize();
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
 
         appStateListeners.forEach(listener => listener('background'));
 
@@ -512,11 +566,11 @@ describe('createDatadogEvaluationLoggingHook', () => {
     it('sends pending evaluations on shutdown and stops the interval', async () => {
         const tracking = createDatadogEvaluationLoggingHook(options);
         await tracking.initialize();
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         await tracking.shutdown();
         expect(fetchCalls()).toHaveLength(1);
 
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
         jest.advanceTimersByTime(60000);
         expect(fetchCalls()).toHaveLength(1);
     });
@@ -527,7 +581,7 @@ describe('createDatadogEvaluationLoggingHook', () => {
             flagEvaluationTrackingInterval: 10
         });
         await tracking.initialize();
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
 
         jest.advanceTimersByTime(999);
         expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -544,7 +598,7 @@ describe('createDatadogEvaluationLoggingHook', () => {
                 flagEvaluationTrackingInterval
             });
             await tracking.initialize();
-            runAfter(tracking.hooks, loggedDetails());
+            runEvaluation(tracking.hooks, loggedDetails());
 
             jest.advanceTimersByTime(9999);
             expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -558,14 +612,14 @@ describe('createDatadogEvaluationLoggingHook', () => {
 describe('createDatadogRumTrackingHook', () => {
     it('adds the evaluated variant to RUM', () => {
         const tracking = createDatadogRumTrackingHook();
-        runAfter(tracking.hooks, loggedDetails());
+        runEvaluation(tracking.hooks, loggedDetails());
 
         expect(mockAddFeatureFlagEvaluation).toHaveBeenCalledWith('flag', 'on');
     });
 
     it('skips results without a variant', () => {
         const tracking = createDatadogRumTrackingHook();
-        runAfter(tracking.hooks, loggedDetails({ variant: undefined }));
+        runEvaluation(tracking.hooks, loggedDetails({ variant: undefined }));
 
         expect(mockAddFeatureFlagEvaluation).not.toHaveBeenCalled();
     });
@@ -579,8 +633,12 @@ describe('createDatadogRumTrackingHook', () => {
         );
         const tracking = createDatadogRumTrackingHook();
 
-        expect(() => runAfter(tracking.hooks, loggedDetails())).not.toThrow();
-        expect(() => runAfter(tracking.hooks, loggedDetails())).not.toThrow();
+        expect(() =>
+            runEvaluation(tracking.hooks, loggedDetails())
+        ).not.toThrow();
+        expect(() =>
+            runEvaluation(tracking.hooks, loggedDetails())
+        ).not.toThrow();
         await Promise.resolve();
     });
 });

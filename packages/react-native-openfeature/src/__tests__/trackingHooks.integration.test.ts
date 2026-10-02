@@ -98,6 +98,32 @@ describe('Datadog tracking hooks with DatadogCoreProvider', () => {
         );
     });
 
+    it('tracks evaluations of flags that do not exist', async () => {
+        const tracking = createDatadogEvaluationLoggingHook({
+            clientToken: 'client-token'
+        });
+        await tracking.initialize();
+
+        const provider = new DatadogCoreProvider();
+        provider.setConfiguration(coreConfigurationFromString(rulesWire));
+        await OpenFeature.setProviderAndWait(DOMAIN, provider, matchingContext);
+        const client = OpenFeature.getClient(DOMAIN);
+        client.addHooks(...tracking.hooks);
+
+        const details = client.getBooleanDetails('missing-flag', false);
+        await tracking.shutdown();
+
+        expect(details.errorCode).toBe('FLAG_NOT_FOUND');
+        expect(sentEvents('flagevaluation')).toEqual([
+            expect.objectContaining({
+                flag: { key: 'missing-flag' },
+                evaluation_count: 1,
+                runtime_default_used: true,
+                error: { message: expect.any(String) }
+            })
+        ]);
+    });
+
     it('sends the exposure again after the configuration is replaced', async () => {
         const tracking = createDatadogExposureLoggingHook({
             clientToken: 'client-token'
