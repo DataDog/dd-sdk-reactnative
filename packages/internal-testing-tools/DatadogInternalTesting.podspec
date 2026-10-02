@@ -83,8 +83,13 @@ Pod::Spec.new do |s|
       "OTHER_CPLUSPLUSFLAGS" => "-DRCT_NEW_ARCH_ENABLED=1"
     })
 
-    install_modules_dependencies(s)
-  end
+    # Assign before install_modules_dependencies: the helper reads the spec's current
+    # pod_target_xcconfig, merges React Native's own header search paths and C++ settings into it
+    # and assigns the result back, so assigning afterwards would drop everything it added.
+    s.pod_target_xcconfig = xcconfig
 
-  s.pod_target_xcconfig = xcconfig
+    install_modules_dependencies(s)
+  else
+    s.pod_target_xcconfig = xcconfig
+  end
 end

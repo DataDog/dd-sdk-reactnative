@@ -85,13 +85,18 @@ Pod::Spec.new do |s|
       "OTHER_CPLUSPLUSFLAGS" => "-DRCT_NEW_ARCH_ENABLED=1"
     })
 
+    # Assign before install_modules_dependencies: the helper reads the spec's current
+    # pod_target_xcconfig, merges React Native's own header search paths and C++ settings into it
+    # and assigns the result back, so assigning afterwards would drop everything it added.
+    s.pod_target_xcconfig = xcconfig
+
     # install_modules_dependencies is only available on RN >= 0.71
     if respond_to?(:install_modules_dependencies, true)
       install_modules_dependencies(s)
     else
       Pod::UI.warn "Using Datadog React Native SDK with new architecture on RN < 0.71 is discouraged and not officially supported."
     end
+  else
+    s.pod_target_xcconfig = xcconfig
   end
-
-  s.pod_target_xcconfig = xcconfig
 end
