@@ -39,6 +39,7 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import {DdProfiling} from '@datadog/mobile-react-native-profiling';
 // @ts-ignore
 import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
@@ -72,6 +73,11 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
   // Initialize the Datadog SDK.
   await DdSdkReactNative.initialize(config);
+
+  await DdProfiling.enable({
+    applicationLaunchSampleRate: 100,
+    continuousSampleRate: 100,
+  });
 
   // Enable Datadog Flags feature.
   await DdFlags.enable();
