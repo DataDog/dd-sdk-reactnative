@@ -6,6 +6,7 @@
 
 import { NativeModules } from 'react-native';
 
+import { version as packageVersion } from '../../../package.json';
 import { InternalLog } from '../../InternalLog';
 import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 import { version } from '../../version';
@@ -21,6 +22,10 @@ jest.mock('../../InternalLog', () => {
 });
 
 describe('DdFlags', () => {
+    it('should report the core package version', () => {
+        expect(version).toBe(packageVersion);
+    });
+
     beforeEach(() => {
         jest.clearAllMocks();
         // Reset state of DdFlags instance.

@@ -2,6 +2,10 @@
 
 set -e
 
+# Change version in native files
+sed -i '' -e "s/\".*\"/\"$1\"/g" packages/core/ios/Sources/SdkVersion.swift
+sed -i '' -e "s/\".*\"/\"$1\"/g" packages/core/android/src/main/kotlin/com/datadog/reactnative/SdkVersion.kt
+
 # Change version
 yarn run lerna version $1 --ignore-changes --no-git-tag-version --no-push
 yarn prepare
