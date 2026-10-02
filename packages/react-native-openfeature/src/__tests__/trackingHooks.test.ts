@@ -20,7 +20,11 @@ import {
     createDatadogRumTrackingHook
 } from '../rules-based';
 import type { DatadogTrackingHooksOptions } from '../rules-based';
-import { buildIntakeHost, startIntakeBatch } from '../tracking/transport';
+import {
+    buildIntakeHost,
+    computeBytesCount,
+    startIntakeBatch
+} from '../tracking/transport';
 
 const mockAddFeatureFlagEvaluation = jest.fn((_name: string, _value: unknown) =>
     Promise.resolve()
@@ -183,6 +187,85 @@ describe('intake transport', () => {
             [{ n: 3 }],
             [{ n: 4 }]
         ]);
+    });
+
+    it('sends before the batch exceeds the byte limit and drops oversized events', () => {
+        const batch = startIntakeBatch(
+            {
+                clientToken: 'token',
+                site: 'datadoghq.com',
+                flagEvaluationTrackingInterval: 10000
+            },
+            'exposures',
+            { batchBytesLimit: 30, messageBytesLimit: 25 }
+        );
+
+        // Each {"s":"…"} message is 8 bytes plus the value.
+        batch.add({ s: 'aaaa' }); // 12 bytes
+        batch.add({ s: 'bbbb' }); // 12 + 1 + 12 = 25 bytes
+        expect(fetchCalls()).toHaveLength(0);
+
+        batch.add({ s: 'cccc' }); // 25 + 12 >= 30, so send first
+        expect(fetchCalls()).toHaveLength(1);
+
+        batch.add({ s: 'x'.repeat(18) }); // 26 bytes, dropped
+        batch.add({ s: 'dddddddddddddddd' }); // 12 + 24 >= 30, so send first
+        batch.add({ s: 'e'.repeat(10) }); // 24 + 18 >= 30, so send first
+        batch.flush();
+
+        expect(fetchCalls().map(sentEvents)).toEqual([
+            [{ s: 'aaaa' }, { s: 'bbbb' }],
+            [{ s: 'cccc' }],
+            [{ s: 'dddddddddddddddd' }],
+            [{ s: 'e'.repeat(10) }]
+        ]);
+    });
+
+    it('applies the byte limits at exactly the limit, leaving out the separator before adding', () => {
+        const batch = startIntakeBatch(
+            {
+                clientToken: 'token',
+                site: 'datadoghq.com',
+                flagEvaluationTrackingInterval: 10000
+            },
+            'exposures',
+            { batchBytesLimit: 24, messageBytesLimit: 13 }
+        );
+
+        batch.add({ s: 'x'.repeat(5) }); // 13 bytes, dropped
+        batch.add({ s: 'aaaa' }); // 12 bytes
+        batch.add({ s: 'bbbb' }); // 12 + 12 >= 24, so send first
+        batch.flush();
+
+        expect(fetchCalls().map(sentEvents)).toEqual([
+            [{ s: 'aaaa' }],
+            [{ s: 'bbbb' }]
+        ]);
+    });
+
+    it('sends as soon as the batch reaches the byte limit', () => {
+        const batch = startIntakeBatch(
+            {
+                clientToken: 'token',
+                site: 'datadoghq.com',
+                flagEvaluationTrackingInterval: 10000
+            },
+            'exposures',
+            { batchBytesLimit: 12 }
+        );
+
+        batch.add({ s: 'aaaa' }); // 12 bytes
+        expect(fetchCalls()).toHaveLength(1);
+    });
+
+    it.each([
+        ['ascii', 'abc', 3],
+        ['two-byte', 'é', 2],
+        ['three-byte', '€', 3],
+        ['surrogate pair', '😀', 4],
+        ['lone surrogate', '\ud800', 3]
+    ])('counts UTF-8 bytes for %s characters', (_name, value, bytes) => {
+        expect(computeBytesCount(value)).toBe(bytes);
     });
 
     it('sends pending events and removes its AppState listener on stop', () => {

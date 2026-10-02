@@ -14,9 +14,11 @@ import type { TrackingConfiguration } from './configuration';
 export type IntakeTrackType = 'exposures' | 'flagevaluation';
 
 const SOURCE = 'react-native';
-// Match the browser SDK's batch defaults.
+// Match the browser SDK's batch defaults (browser-core's createBatch and createFlushController).
 const DEFAULT_FLUSH_TIMEOUT_MS = 30000;
 const DEFAULT_MAX_EVENTS = 50;
+const DEFAULT_BATCH_BYTES_LIMIT = 16 * 1024;
+const DEFAULT_MESSAGE_BYTES_LIMIT = 256 * 1024;
 
 export interface IntakeBatch {
     add(event: object): void;
@@ -62,18 +64,26 @@ export function buildIntakeHost(site: string): string {
 
 /**
  * Batch events and send them to the intake as newline-delimited JSON. A batch is sent when it
- * reaches `maxEvents`, when the flush timeout expires, when the app leaves the foreground, and on
- * `stop`. Failed requests are dropped.
+ * reaches `maxEvents` or `batchBytesLimit`, when the flush timeout expires, when the app leaves the
+ * foreground, and on `stop`. Events of `messageBytesLimit` or more and failed requests are dropped.
  */
 export function startIntakeBatch(
     configuration: TrackingConfiguration,
     trackType: IntakeTrackType,
     {
         flushTimeoutMs = DEFAULT_FLUSH_TIMEOUT_MS,
-        maxEvents = DEFAULT_MAX_EVENTS
-    }: { flushTimeoutMs?: number; maxEvents?: number } = {}
+        maxEvents = DEFAULT_MAX_EVENTS,
+        batchBytesLimit = DEFAULT_BATCH_BYTES_LIMIT,
+        messageBytesLimit = DEFAULT_MESSAGE_BYTES_LIMIT
+    }: {
+        flushTimeoutMs?: number;
+        maxEvents?: number;
+        batchBytesLimit?: number;
+        messageBytesLimit?: number;
+    } = {}
 ): IntakeBatch {
     let events: string[] = [];
+    let batchBytes = 0;
     let flushTimeout: ReturnType<typeof setTimeout> | undefined;
 
     const flush = () => {
@@ -86,6 +96,7 @@ export function startIntakeBatch(
         }
         const body = events.join('\n');
         events = [];
+        batchBytes = 0;
         send(buildIntakeUrl(configuration, trackType), body);
     };
 
@@ -93,8 +104,19 @@ export function startIntakeBatch(
 
     return {
         add: (event: object) => {
-            events.push(JSON.stringify(event));
-            if (events.length >= maxEvents) {
+            const message = JSON.stringify(event);
+            const messageBytes = computeBytesCount(message);
+            if (messageBytes >= messageBytesLimit) {
+                return;
+            }
+            // As in the browser SDK, the check before adding leaves out the newline separator,
+            // which is counted once the event is added.
+            if (batchBytes + messageBytes >= batchBytesLimit) {
+                flush();
+            }
+            batchBytes += (events.length > 0 ? 1 : 0) + messageBytes;
+            events.push(message);
+            if (events.length >= maxEvents || batchBytes >= batchBytesLimit) {
                 flush();
             } else if (flushTimeout === undefined) {
                 flushTimeout = setTimeout(flush, flushTimeoutMs);
@@ -150,6 +172,39 @@ export function addBackgroundListener(onBackground: () => void): () => void {
     } catch {
         return () => {};
     }
+}
+
+// eslint-disable-next-line no-control-regex
+const HAS_MULTI_BYTES_CHARACTERS = /[^\u0000-\u007F]/;
+
+/**
+ * UTF-8 byte length of a string. Older Hermes and JSC engines have no `TextEncoder`.
+ */
+export function computeBytesCount(value: string): number {
+    if (!HAS_MULTI_BYTES_CHARACTERS.test(value)) {
+        return value.length;
+    }
+    let bytes = 0;
+    for (let index = 0; index < value.length; index++) {
+        const code = value.charCodeAt(index);
+        if (code < 0x80) {
+            bytes += 1;
+        } else if (code < 0x800) {
+            bytes += 2;
+        } else if (
+            code >= 0xd800 &&
+            code <= 0xdbff &&
+            index + 1 < value.length &&
+            (value.charCodeAt(index + 1) & 0xfc00) === 0xdc00
+        ) {
+            // A surrogate pair encodes one 4-byte code point.
+            bytes += 4;
+            index++;
+        } else {
+            bytes += 3;
+        }
+    }
+    return bytes;
 }
 
 function generateUUID(): string {
