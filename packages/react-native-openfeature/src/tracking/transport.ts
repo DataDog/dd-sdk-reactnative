@@ -28,7 +28,8 @@ export interface IntakeBatch {
  * Build an intake URL. Parameters are sent in the query string, as the browser SDK does, so a
  * `ddforward` proxy only needs to forward the URL and body.
  *
- * The core SDK's RUM resource tracking ignores requests to these URLs.
+ * The core SDK's RUM resource tracking ignores requests to these URLs. It matches on
+ * `ddsource=react-native` being the first parameter, so keep it first.
  */
 export function buildIntakeUrl(
     configuration: TrackingConfiguration,

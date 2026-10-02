@@ -7,13 +7,14 @@
 import type { RUMResource } from '../interfaces/RumResource';
 
 // The OpenFeature package's JavaScript tracking hooks send exposures and flag evaluations
-// to these intake paths, either directly or through a `ddforward` proxy.
+// to these intake paths, either directly or through a `ddforward` proxy. They always put
+// `ddsource=react-native` first, so other requests to the same paths are still tracked.
 const FLAGGING_INTAKE_REGEX = new RegExp(
-    '^https://browser-intake-[^/?#]+/api/v2/(exposures|flagevaluation)\\?'
+    '^https://browser-intake-[^/?#]+/api/v2/(exposures|flagevaluation)\\?ddsource=react-native&'
 );
 
 const FLAGGING_INTAKE_PROXY_REGEX = new RegExp(
-    '[?&]ddforward=%2Fapi%2Fv2%2F(exposures|flagevaluation)%3F'
+    '[?&]ddforward=%2Fapi%2Fv2%2F(exposures|flagevaluation)%3Fddsource%3Dreact-native%26'
 );
 
 export const filterFlaggingIntakeResource = (
