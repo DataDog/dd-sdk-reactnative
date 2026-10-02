@@ -31,6 +31,8 @@ package/lib/commonjs/tracking/tracking.js
 package/lib/commonjs/tracking/tracking.js.map
 package/lib/commonjs/tracking/transport.js
 package/lib/commonjs/tracking/transport.js.map
+package/lib/commonjs/version.js
+package/lib/commonjs/version.js.map
 package/lib/module/coreProvider.js
 package/lib/module/coreProvider.js.map
 package/lib/module/datadogCoreProvider.js
@@ -63,6 +65,8 @@ package/lib/module/tracking/tracking.js
 package/lib/module/tracking/tracking.js.map
 package/lib/module/tracking/transport.js
 package/lib/module/tracking/transport.js.map
+package/lib/module/version.js
+package/lib/module/version.js.map
 package/lib/typescript/core/src/DdAttributes.d.ts
 package/lib/typescript/core/src/DdAttributes.d.ts.map
 package/lib/typescript/core/src/DdSdkReactNative.d.ts
@@ -365,6 +369,8 @@ package/lib/typescript/react-native-openfeature/src/tracking/tracking.d.ts
 package/lib/typescript/react-native-openfeature/src/tracking/tracking.d.ts.map
 package/lib/typescript/react-native-openfeature/src/tracking/transport.d.ts
 package/lib/typescript/react-native-openfeature/src/tracking/transport.d.ts.map
+package/lib/typescript/react-native-openfeature/src/version.d.ts
+package/lib/typescript/react-native-openfeature/src/version.d.ts.map
 package/package.json
 package/rules-based/package.json
 package/src/__tests__/__utils__/coreConfiguration.ts
@@ -399,3 +405,4 @@ package/src/tracking/index.ts
 package/src/tracking/rumIntegration.ts
 package/src/tracking/tracking.ts
 package/src/tracking/transport.ts
+package/src/version.ts
