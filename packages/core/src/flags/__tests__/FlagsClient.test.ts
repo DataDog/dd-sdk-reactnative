@@ -82,6 +82,144 @@ describe('FlagsClient', () => {
         await DdFlags.enable();
     });
 
+    describe('offline evaluator subject presence', () => {
+        const evaluator = () => ({
+            reconcile: jest.fn(() => ({ status: 'ready' as const })),
+            evaluate: jest.fn()
+        });
+
+        it('preserves presence on the named client across evaluator/direct configuration replacement', () => {
+            const client = DdFlags.getClient('presence');
+            const initial = evaluator();
+            client.__ddSetOfflineEvaluator(() => initial);
+            expect(initial.reconcile).toHaveBeenLastCalledWith(
+                undefined,
+                undefined
+            );
+            const anonymous = {
+                targetingKey: '',
+                attributes: { country: 'CA' }
+            };
+            client.__ddSetOfflineEvaluationContext(anonymous, false);
+            expect(initial.reconcile).toHaveBeenLastCalledWith(
+                anonymous,
+                false
+            );
+
+            client.setConfiguration(configurationFromString('invalid'));
+            const replacement = evaluator();
+            DdFlags.getClient('presence').__ddSetOfflineEvaluator(
+                () => replacement
+            );
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                anonymous,
+                false
+            );
+            client.setEvaluationContextWithoutFetching(anonymous);
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                anonymous,
+                true
+            );
+            client.resetEvaluationContextWithoutFetching();
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                undefined,
+                undefined
+            );
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).not.toHaveBeenCalled();
+        });
+
+        it('keeps online normalization authoritative and clears stale offline presence', async () => {
+            const client = DdFlags.getClient('presence-online');
+            client.__ddSetOfflineEvaluator(evaluator);
+            client.__ddSetOfflineEvaluationContext({ targetingKey: '' }, false);
+            await client.setEvaluationContext({
+                targetingKey: '',
+                attributes: {}
+            });
+            expect(
+                NativeModules.DdFlags.setEvaluationContext
+            ).toHaveBeenCalledWith('presence-online', '', {});
+            const replacement = evaluator();
+            client.__ddSetOfflineEvaluator(() => replacement);
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                { targetingKey: '', attributes: {} },
+                true
+            );
+        });
+
+        it('clears offline presence when an online fetch discards the overlay and fails', async () => {
+            const client = DdFlags.getClient('presence-failed-fetch');
+            client.__ddSetOfflineEvaluator(evaluator);
+            client.__ddSetOfflineEvaluationContext({ targetingKey: '' }, false);
+            NativeModules.DdFlags.setEvaluationContext.mockRejectedValueOnce(
+                new Error('fetch failed')
+            );
+            await expect(
+                client.setEvaluationContext({ targetingKey: 'user' })
+            ).rejects.toThrow('fetch failed');
+            const replacement = evaluator();
+            client.__ddSetOfflineEvaluator(() => replacement);
+            expect(replacement.reconcile).toHaveBeenLastCalledWith(
+                undefined,
+                undefined
+            );
+        });
+    });
+
+    describe('offline evaluator tracking', () => {
+        it('tracks only successful delegate results, using the flag and context the delegate selected', () => {
+            const client = DdFlags.getClient('delegate-tracking');
+            const flag = {
+                key: 'flag',
+                value: true,
+                allocationKey: 'allocation',
+                variationKey: 'on',
+                variationType: 'boolean',
+                variationValue: 'true',
+                reason: 'TARGETING_MATCH',
+                doLog: true,
+                extraLogging: {},
+                serialId: '7'
+            };
+            const context = {
+                targetingKey: 'user',
+                attributes: { country: 'US' }
+            };
+            let errorCode: 'TYPE_MISMATCH' | undefined = 'TYPE_MISMATCH';
+            client.__ddSetOfflineEvaluator(() => ({
+                reconcile: () => ({ status: 'ready' as const }),
+                evaluate: <T>(key: string, defaultValue: T) => ({
+                    details: {
+                        key,
+                        value: defaultValue,
+                        reason: errorCode ? 'ERROR' : 'TARGETING_MATCH',
+                        errorCode
+                    },
+                    exposure: { flag, context }
+                })
+            }));
+            expect(client.getBooleanDetails('flag', false).errorCode).toBe(
+                'TYPE_MISMATCH'
+            );
+            expect(
+                NativeModules.DdFlags.trackEvaluation
+            ).not.toHaveBeenCalled();
+            errorCode = undefined;
+            client.getBooleanDetails('flag', false);
+            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+                'delegate-tracking',
+                'flag',
+                flag,
+                'user',
+                {
+                    country: 'US'
+                }
+            );
+        });
+    });
+
     describe('setEvaluationContext', () => {
         it('should set the evaluation context', async () => {
             const flagsClient = DdFlags.getClient();
@@ -189,6 +327,35 @@ describe('FlagsClient', () => {
                 variant: 'Native Greeting',
                 reason: 'STATIC'
             });
+        });
+
+        it('returns the flag details when native tracking throws synchronously', async () => {
+            const flagsClient = DdFlags.getClient();
+            await flagsClient.setEvaluationContext({
+                targetingKey: 'test-user-1',
+                attributes: { country: 'US' }
+            });
+            jest.spyOn(
+                NativeModules.DdFlags,
+                'trackEvaluation'
+            ).mockImplementationOnce(() => {
+                throw new Error('native bridge unavailable');
+            });
+
+            const details = flagsClient.getBooleanDetails(
+                'test-boolean-flag',
+                false
+            );
+
+            expect(details).toMatchObject({
+                value: true,
+                variant: 'true',
+                reason: 'STATIC'
+            });
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'Error tracking flag evaluation: native bridge unavailable',
+                SdkVerbosity.WARN
+            );
         });
 
         it('should return PROVIDER_NOT_READY if evaluation context is not set', () => {

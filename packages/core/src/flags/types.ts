@@ -167,6 +167,8 @@ export interface EvaluationContext {
  */
 type FlagErrorCode =
     | 'PROVIDER_NOT_READY'
+    | 'PROVIDER_FATAL'
+    | 'TARGETING_KEY_MISSING'
     | 'FLAG_NOT_FOUND'
     | 'PARSE_ERROR'
     | 'TYPE_MISMATCH'

@@ -13,7 +13,7 @@ import type { DdNativeRumType } from '../nativeModulesTypes';
 import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
-import { NativeDdSdk } from '../sdk/DdSdkInternal';
+import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import type { ErrorSource, FeatureOperationFailure } from '../types';
 import { getGlobalInstance } from '../utils/singletonUtils';
@@ -583,7 +583,7 @@ class DdRumWrapper implements DdRumType {
         }
         if (isOldStopActionAPI(args)) {
             if (this.lastActionData) {
-                NativeDdSdk.telemetryDebug(
+                DdSdk.telemetryDebug(
                     'DDdRum.stopAction called with the old signature'
                 );
                 const { type, name } = this.lastActionData;

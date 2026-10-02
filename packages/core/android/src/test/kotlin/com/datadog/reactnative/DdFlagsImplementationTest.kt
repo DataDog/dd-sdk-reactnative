@@ -12,6 +12,7 @@ import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsConfiguration
 import com.datadog.tools.unit.toReadableMap
 import com.facebook.react.bridge.Promise
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
@@ -73,5 +74,23 @@ internal class DdFlagsImplementationTest {
             flagsMock.close()
             datadogMock.close()
         }
+    }
+
+    @Test
+    fun `M omit null attributes W buildEvaluationContext()`() {
+        // Given
+        val attributes = mapOf(
+            "country" to "US",
+            "age" to 42,
+            "size" to null
+        ).toReadableMap()
+
+        // When
+        val context = buildEvaluationContext("user", attributes)
+
+        // Then
+        assertThat(context.targetingKey).isEqualTo("user")
+        assertThat(context.attributes).containsOnlyKeys("country", "age")
+        assertThat(context.attributes["country"]).isEqualTo("US")
     }
 }

@@ -169,14 +169,17 @@ private fun buildFlagsConfiguration(configuration: Map<String, Any?>): FlagsConf
         }.build()
 }
 
-private fun buildEvaluationContext(
+internal fun buildEvaluationContext(
     targetingKey: String,
     attributes: ReadableMap,
 ): EvaluationContext {
     val parsed = mutableMapOf<String, String>()
 
-    for ((key, value) in attributes.entryIterator) {
-        parsed[key] = value.toString()
+    // JS null attributes arrive as null; the native context only holds strings, so omit them.
+    for ((key, value) in attributes.toHashMap()) {
+        if (value != null) {
+            parsed[key] = value.toString()
+        }
     }
 
     return EvaluationContext(targetingKey, parsed)

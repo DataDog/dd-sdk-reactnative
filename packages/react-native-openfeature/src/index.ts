@@ -19,3 +19,4 @@ export {
     configurationFromString
 };
 export type { DatadogOpenFeatureProviderOptions, EnrichableEvaluationContext };
+export type { FlagsConfiguration } from '@datadog/flagging-core';

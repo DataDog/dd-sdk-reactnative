@@ -8,6 +8,7 @@ variables:
     DEVELOP_BRANCH: 'develop'
     DEVELOPER_DIR: '/Applications/Xcode-16.4.0.app/Contents/Developer'
     IOS_SIMULATOR_DESTINATION: 'platform=iOS Simulator,OS=18.5,name=iPhone 16 Pro Max'
+    IOS_DERIVED_DATA_PATH: '$CI_PROJECT_DIR/DerivedData'
     ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
     EMULATOR_NAME: 'android_emulator'
     ANDROID_ARCH: 'arm64-v8a'
@@ -105,7 +106,7 @@ test:native-ios:
     script:
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" | xcbeautify
 
 test:native-ios-sr:
     tags: ['macos:sequoia-arm64', 'specific:true']
@@ -116,7 +117,7 @@ test:native-ios-sr:
     script:
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" | xcbeautify
 
 test:native-ios-newarch:
     tags: ['macos:sequoia-arm64', 'specific:true']
@@ -127,7 +128,7 @@ test:native-ios-newarch:
     script:
         - yarn
         - (cd example-new-architecture/ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "$IOS_SIMULATOR_DESTINATION" | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" | xcbeautify
 
 build-examples:android:
     tags: ['macos:sequoia-arm64', 'specific:true']
@@ -164,7 +165,7 @@ build-examples:ios:
     script:
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DdSdkReactNativeExample -configuration Debug -sdk iphonesimulator -destination "$IOS_SIMULATOR_DESTINATION" build | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DdSdkReactNativeExample -configuration Debug -sdk iphonesimulator -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" build | xcbeautify
 
 build-examples:ios-newarch:
     tags: ['macos:sequoia-arm64', 'specific:true']
@@ -175,7 +176,7 @@ build-examples:ios-newarch:
     script:
         - yarn
         - (cd example-new-architecture/ios && RCT_NEW_ARCH_ENABLED=1 pod install --repo-update)
-        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DdSdkReactNativeExample -configuration Debug -sdk iphonesimulator -destination "$IOS_SIMULATOR_DESTINATION" build | xcbeautify
+        - set -o pipefail && xcodebuild -workspace example-new-architecture/ios/DdSdkReactNativeExample.xcworkspace -scheme DdSdkReactNativeExample -configuration Debug -sdk iphonesimulator -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" build | xcbeautify
 
 benchmark:
     stage: benchmark

@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { NativeDdSdk } from '../../DdSdkInternal';
+import NativeDdSdkSpec from '../../../specs/NativeDdSdk';
 import { EventMapper } from '../EventMapper';
 
 describe('EventMapper', () => {
@@ -26,7 +26,7 @@ describe('EventMapper', () => {
         ).toEqual({
             someData: 'some data'
         });
-        expect(NativeDdSdk.telemetryDebug).toHaveBeenCalledWith(
+        expect(NativeDdSdkSpec.telemetryDebug).toHaveBeenCalledWith(
             'Error while running the event mapper'
         );
     });

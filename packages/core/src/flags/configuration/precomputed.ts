@@ -152,9 +152,8 @@ const toFlagCacheEntry = (
         return null;
     }
 
-    // `serialId` is intentionally not propagated: `FlagCacheEntry` has no slot for it
-    // and the native CDN-fetched snapshot omits it too, so dropping it keeps
-    // offline/online parity.
+    // The released decoder's payload omits serialId. The OpenFeature offline adapter adds it from
+    // the evaluator's metadata, for both precomputed and rules flags.
     return {
         key,
         value: variationValue,

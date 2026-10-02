@@ -1,6 +1,6 @@
 PODS:
   - boost (1.84.0)
-  - DatadogSDKReactNative (3.8.0):
+  - DatadogSDKReactNative (3.9.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -21,7 +21,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNative/Tests (3.8.0):
+  - DatadogSDKReactNative/Tests (3.9.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1812,7 +1812,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
-  DatadogSDKReactNative: e281de7e36ebf1f752d237f975d8bdc4db044ef8
+  DatadogSDKReactNative: afaa7219416aa9d26c723604215e4c7b91c49ec5
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45

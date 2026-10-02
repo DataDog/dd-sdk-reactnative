@@ -9,7 +9,7 @@ import React from 'react';
 import { InternalLog } from '../../../InternalLog';
 import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getErrorMessage } from '../../../sdk/AttributesEncoding/errorUtils';
-import { NativeDdSdk } from '../../../sdk/DdSdkInternal';
+import { DdSdk } from '../../../sdk/DdSdk';
 import { BABEL_PLUGIN_TELEMETRY } from '../../constants';
 
 import { DdBabelInteractionTracking } from './DdBabelInteractionTracking';
@@ -82,7 +82,7 @@ export class DdRumUserInteractionTracking {
             return;
         }
 
-        NativeDdSdk?.sendTelemetryLog(
+        DdSdk?.sendTelemetryLog(
             BABEL_PLUGIN_TELEMETRY,
             DdBabelInteractionTracking.getTelemetryConfig(),
             { onlyOnce: true }
@@ -126,7 +126,7 @@ export class DdRumUserInteractionTracking {
                 };
             }
         } catch (e) {
-            NativeDdSdk.telemetryDebug(getErrorMessage(e));
+            DdSdk.telemetryDebug(getErrorMessage(e));
         }
 
         const originalMemo = React.memo;

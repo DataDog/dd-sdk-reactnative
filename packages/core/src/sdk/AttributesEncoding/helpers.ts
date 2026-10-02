@@ -5,7 +5,7 @@
  */
 
 import type { AttributeEncoder, Encodable } from './types';
-import { formatPathForLog, isPlainObject, warn } from './utils';
+import { formatPathForLog, isPlainObject, safeToString, warn } from './utils';
 
 const MAX_ATTRIBUTES = 256;
 
@@ -69,7 +69,7 @@ export function encodeAttributesInPlace(
             warn(
                 `Dropped unsupported value in array at '${formatPathForLog(
                     path
-                )}': ${String(v)}`
+                )}': ${safeToString(v)}`
             );
             return undefined;
         };
@@ -94,9 +94,9 @@ export function encodeAttributesInPlace(
 
     // Unsupported
     warn(
-        `Dropped unsupported value at '${formatPathForLog(path)}': ${String(
-            value
-        )}`
+        `Dropped unsupported value at '${formatPathForLog(
+            path
+        )}': ${safeToString(value)}`
     );
 }
 
@@ -138,7 +138,7 @@ export function applyEncoders(
                 return enc.encode(value as never);
             }
         } catch (err) {
-            warn(`Encoder error: ${String(err)}`);
+            warn(`Encoder error: ${safeToString(err)}`);
             return undefined;
         }
     }
