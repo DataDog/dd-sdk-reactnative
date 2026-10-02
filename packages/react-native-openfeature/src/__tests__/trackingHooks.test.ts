@@ -452,6 +452,24 @@ describe('createDatadogEvaluationLoggingHook', () => {
         expect(globalThis.fetch).toHaveBeenCalledTimes(1);
         await tracking.shutdown();
     });
+
+    it.each([NaN, Infinity])(
+        'uses the default tracking interval for %s',
+        async flagEvaluationTrackingInterval => {
+            const tracking = createDatadogEvaluationLoggingHook({
+                ...options,
+                flagEvaluationTrackingInterval
+            });
+            await tracking.initialize();
+            runAfter(tracking.hooks, loggedDetails());
+
+            jest.advanceTimersByTime(9999);
+            expect(globalThis.fetch).not.toHaveBeenCalled();
+            jest.advanceTimersByTime(1);
+            expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+            await tracking.shutdown();
+        }
+    );
 });
 
 describe('createDatadogRumTrackingHook', () => {

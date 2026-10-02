@@ -78,8 +78,10 @@ export function buildTrackingConfiguration(
         applicationId: options.applicationId,
         proxy: options.proxy,
         flagEvaluationTrackingInterval: clamp(
-            options.flagEvaluationTrackingInterval ??
-                DEFAULT_FLAG_EVALUATION_TRACKING_INTERVAL_MS,
+            // NaN would survive the clamp and make the timers fire almost immediately.
+            Number.isFinite(options.flagEvaluationTrackingInterval)
+                ? (options.flagEvaluationTrackingInterval as number)
+                : DEFAULT_FLAG_EVALUATION_TRACKING_INTERVAL_MS,
             MIN_FLAG_EVALUATION_TRACKING_INTERVAL_MS,
             MAX_FLAG_EVALUATION_TRACKING_INTERVAL_MS
         )
