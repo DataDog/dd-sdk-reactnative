@@ -11,6 +11,8 @@ PODS:
   - DatadogInternal (3.16.0)
   - DatadogLogs (3.16.0):
     - DatadogInternal (= 3.16.0)
+  - DatadogProfiling (3.16.0):
+    - DatadogInternal (= 3.16.0)
   - DatadogRUM (3.16.0):
     - DatadogInternal (= 3.16.0)
   - DatadogSDKReactNative (3.9.0):
@@ -21,6 +23,29 @@ PODS:
     - DatadogRUM (= 3.16.0)
     - DatadogTrace (= 3.16.0)
     - DatadogWebViewTracking (= 3.16.0)
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
+  - DatadogSDKReactNativeProfiling (3.9.0):
+    - DatadogProfiling (= 3.16.0)
+    - DatadogSDKReactNative
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1883,6 +1908,7 @@ PODS:
 DEPENDENCIES:
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - "DatadogSDKReactNative (from `../node_modules/@datadog/mobile-react-native`)"
+  - "DatadogSDKReactNativeProfiling (from `../node_modules/@datadog/mobile-react-native-profiling`)"
   - "DatadogSDKReactNativeSessionReplay (from `../node_modules/@datadog/mobile-react-native-session-replay`)"
   - "DatadogSDKReactNativeWebView (from `../node_modules/@datadog/mobile-react-native-webview`)"
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
@@ -1968,6 +1994,7 @@ SPEC REPOS:
     - DatadogFlags
     - DatadogInternal
     - DatadogLogs
+    - DatadogProfiling
     - DatadogRUM
     - DatadogSessionReplay
     - DatadogTrace
@@ -1982,6 +2009,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DatadogSDKReactNative:
     :path: "../node_modules/@datadog/mobile-react-native"
+  DatadogSDKReactNativeProfiling:
+    :path: "../node_modules/@datadog/mobile-react-native-profiling"
   DatadogSDKReactNativeSessionReplay:
     :path: "../node_modules/@datadog/mobile-react-native-session-replay"
   DatadogSDKReactNativeWebView:
@@ -2139,8 +2168,10 @@ SPEC CHECKSUMS:
   DatadogFlags: 033cf48e769c271843e77068c015519880011866
   DatadogInternal: e5a4652ee266986e29c6b8491aff7f78dc3b731d
   DatadogLogs: 52792add5827042f619771a23656e2bfb6b0f4e7
+  DatadogProfiling: 60f18d5cca882178bf89ec4e6d0e539d18062e9d
   DatadogRUM: b78d608e013f39c5679ed31ad97dad323c6113e8
   DatadogSDKReactNative: 45d497eeef512ab483054d033affa166bce15722
+  DatadogSDKReactNativeProfiling: 48475d4908d5d868a1e41a1a2b7327021bb32004
   DatadogSDKReactNativeSessionReplay: b78202de431d881190c5b8c62dfe75d31a06e232
   DatadogSDKReactNativeWebView: be9a4c687dcb10d9d3ca1e234ea102f6c3bf8106
   DatadogSessionReplay: 932b2077b1a5367de1450479d72093621b9fd618
