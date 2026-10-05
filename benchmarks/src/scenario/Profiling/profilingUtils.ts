@@ -29,3 +29,10 @@ export const computePrimes = (limit: number): number => {
     }
     return count;
 };
+
+export const blockJsThread = (durationMs: number): void => {
+    const start = Date.now();
+    while (Date.now() - start < durationMs) {
+        // no-op
+    }
+};

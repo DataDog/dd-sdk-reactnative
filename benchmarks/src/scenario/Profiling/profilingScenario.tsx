@@ -18,16 +18,18 @@ import { DdProfiling } from '@datadog/mobile-react-native-profiling';
 import { RunType } from '../../testSetup/types/testConfig';
 import { instrument } from '../../testSetup/testUtils';
 import {
+    blockJsThread,
     computePrimes,
     fibonacci,
     sortNumbers,
 } from './profilingUtils';
 import { Colors, CommonStyles as styles } from '../../common/styles';
 
+const OS = Platform.OS;
 const SORT_COUNT = 1_000_000;
 const FIBONACCI_N = 35;
 const PRIMES_LIMIT = 1_000_000;
-const OS = Platform.OS;
+const LONG_TASK_DURATION_MS = 500;
 
 function ProfilingScenario(props: ProfilingScenarioProps): React.JSX.Element {
     const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -64,6 +66,7 @@ function ProfilingScenario(props: ProfilingScenarioProps): React.JSX.Element {
     const onSortNumbers = () => runWork(`Sort ${SORT_COUNT} numbers`, () => sortNumbers(SORT_COUNT));
     const onFibonacci = () => runWork(`Fibonacci(${FIBONACCI_N})`, () => fibonacci(FIBONACCI_N));
     const onComputePrimes = () => runWork(`Primes up to ${PRIMES_LIMIT}`, () => computePrimes(PRIMES_LIMIT));
+    const onLongTask = () => runWork('JS long task', () => blockJsThread(LONG_TASK_DURATION_MS));
 
     return (
         <SafeAreaView style={styles.safeAreaContainer}>
@@ -91,6 +94,14 @@ function ProfilingScenario(props: ProfilingScenarioProps): React.JSX.Element {
                             color={OS === 'android' ? Colors.DatadogPurple : Colors.White}
                             onPress={onComputePrimes}
                             title="Compute primes"
+                            disabled={isRunning}
+                        />
+                    </View>
+                    <View style={styles.buttonWrapper}>
+                        <Button
+                            color={OS === 'android' ? Colors.DatadogPurple : Colors.White}
+                            onPress={onLongTask}
+                            title={`Trigger JS long task (${LONG_TASK_DURATION_MS}ms)`}
                             disabled={isRunning}
                         />
                     </View>
