@@ -9,6 +9,7 @@ package com.datadog.reactnative
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.hardware.display.DisplayManager
+import android.os.Build
 import android.os.Looper
 import android.util.Log
 import android.view.Choreographer
@@ -3668,6 +3669,136 @@ internal class DdSdkTest {
 
         // Then
         verify(mockDisplay, times(1)).supportedModes
+    }
+
+    @Test
+    fun `𝕄 normalize JS frame time with the display's current refresh rate 𝕎 doFrame()`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(
+            vitalsUpdateFrequency = "AVERAGE",
+            longTaskThresholdMs = 0.0
+        )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
+        val mockDisplayManager = mock<DisplayManager>()
+        val mockDisplay = mock<Display>()
+        whenever(mockContext.getSystemService(Context.DISPLAY_SERVICE)) doReturn mockDisplayManager
+        whenever(mockDisplayManager.getDisplay(Display.DEFAULT_DISPLAY)) doReturn mockDisplay
+        val originalSdkInt = Build.VERSION.SDK_INT
+        Build.VERSION::class.java.setStaticValue("SDK_INT", Build.VERSION_CODES.R)
+
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            argumentCaptor<Choreographer.FrameCallback> {
+                verify(mockChoreographer).postFrameCallback(capture())
+                var timestampNs = 0L
+                firstValue.doFrame(timestampNs)
+
+                // 120 fps, display running at 120Hz -> Normalized to 60fps
+                whenever(mockDisplay.refreshRate) doReturn 120f
+                timestampNs += 8_333_333L
+                firstValue.doFrame(timestampNs)
+                verify(mockRumInternalProxy).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    16_666_666.0
+                )
+
+                // 60 fps, display running at 120Hz -> Normalized to 30fps
+                timestampNs += 16_666_667L
+                firstValue.doFrame(timestampNs)
+                verify(mockRumInternalProxy).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    33_333_334.0
+                )
+
+                // 60 fps, display running at 60Hz -> Normalized to 60fps
+                whenever(mockDisplay.refreshRate) doReturn 60f
+                timestampNs += 16_666_667L
+                firstValue.doFrame(timestampNs)
+                verify(mockRumInternalProxy).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    16_666_667.0
+                )
+
+                // 30 fps, display running at 60Hz -> Normalized to 30fps
+                timestampNs += 33_333_333L
+                firstValue.doFrame(timestampNs)
+                verify(mockRumInternalProxy).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    33_333_333.0
+                )
+            }
+        } finally {
+            Build.VERSION::class.java.setStaticValue("SDK_INT", originalSdkInt)
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
+    }
+
+    @Test
+    fun `𝕄 normalize JS frame time with the max refresh rate 𝕎 doFrame() {API below 30}`(
+        @Forgery configuration: DdSdkConfiguration
+    ) {
+        // Given
+        val rumConfiguration = configuration.rumConfiguration?.copy(
+            vitalsUpdateFrequency = "AVERAGE",
+            longTaskThresholdMs = 0.0
+        )
+        val bridgeConfiguration = configuration.copy(rumConfiguration = rumConfiguration)
+        val mockDisplayManager = mock<DisplayManager>()
+        val mockDisplay = mock<Display>()
+        val mockDisplayMode = mock<Display.Mode>()
+        whenever(mockContext.getSystemService(Context.DISPLAY_SERVICE)) doReturn mockDisplayManager
+        whenever(mockDisplayManager.getDisplay(Display.DEFAULT_DISPLAY)) doReturn mockDisplay
+        whenever(mockDisplayMode.refreshRate) doReturn 120f
+        whenever(mockDisplay.supportedModes) doReturn arrayOf(mockDisplayMode)
+        val originalSdkInt = Build.VERSION.SDK_INT
+        Build.VERSION::class.java.setStaticValue("SDK_INT", Build.VERSION_CODES.Q)
+
+        val rumMock = org.mockito.Mockito.mockStatic(Rum::class.java)
+        val traceMock = org.mockito.Mockito.mockStatic(Trace::class.java)
+        val logsMock = org.mockito.Mockito.mockStatic(Logs::class.java)
+
+        try {
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            logsMock.`when`<Unit> { Logs.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            // When
+            testedBridgeSdk.initialize(bridgeConfiguration.toReadableJavaOnlyMap(), mockPromise)
+
+            // Then
+            argumentCaptor<Choreographer.FrameCallback> {
+                verify(mockChoreographer).postFrameCallback(capture())
+                firstValue.doFrame(0L)
+
+                // 60 fps, 120Hz capable display -> Normalized with the max refresh rate to 30fps
+                firstValue.doFrame(16_666_667L)
+                verify(mockRumInternalProxy).updatePerformanceMetric(
+                    RumPerformanceMetric.JS_FRAME_TIME,
+                    33_333_334.0
+                )
+                verify(mockDisplay, never()).refreshRate
+            }
+        } finally {
+            Build.VERSION::class.java.setStaticValue("SDK_INT", originalSdkInt)
+            rumMock.close()
+            logsMock.close()
+            traceMock.close()
+        }
     }
 
     // endregion

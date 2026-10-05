@@ -1332,6 +1332,34 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(
             rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016,
             accuracy: 0.001)
+
+        // 120 fps, display running at 120Hz -> Normalized to 60fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.0083, displayFps: 120.0)
+        sharedQueue.sync {}
+        XCTAssertEqual(
+            rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016,
+            accuracy: 0.001)
+
+        // 60 fps, display running at 120Hz -> Normalized to 30fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.016, displayFps: 120.0)
+        sharedQueue.sync {}
+        XCTAssertEqual(
+            rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.032,
+            accuracy: 0.001)
+
+        // 60 fps, display running at 60Hz -> Normalized to 60fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.016, displayFps: 60.0)
+        sharedQueue.sync {}
+        XCTAssertEqual(
+            rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.016,
+            accuracy: 0.001)
+
+        // 30 fps, display running at 60Hz -> Normalized to 30fps
+        mockRefreshRateMonitor.executeFrameCallback(frameTime: 0.03, displayFps: 60.0)
+        sharedQueue.sync {}
+        XCTAssertEqual(
+            rumMonitorMock.lastReceivedPerformanceMetrics[.jsFrameTimeSeconds]!, 0.03,
+            accuracy: 0.001)
     }
 
     func testFrameTimeNormalizationUtilityFunction() {
@@ -1757,8 +1785,8 @@ private final class MockJSRefreshRateMonitor: RefreshRateMonitor {
         isStarted = true
     }
 
-    func executeFrameCallback(frameTime: TimeInterval) {
-        frameTimeCallback?(frameTime)
+    func executeFrameCallback(frameTime: TimeInterval, displayFps: Double = 60.0) {
+        frameTimeCallback?(frameTime, displayFps)
     }
 }
 

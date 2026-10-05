@@ -7,14 +7,17 @@
 package com.datadog.reactnative
 
 import android.view.Choreographer
+import android.view.Display
 
 internal class FrameRateProvider(
-    reactFrameRateCallback: ((Double) -> Unit),
-    jsThreadExecutor: JsThreadExecutor
+    reactFrameRateCallback: ((Double, Double?) -> Unit),
+    jsThreadExecutor: JsThreadExecutor,
+    display: Display?
 ) {
     private val frameCallback: FpsFrameCallback = FpsFrameCallback(
         reactFrameRateCallback,
-        jsThreadExecutor
+        jsThreadExecutor,
+        display
     )
 
     fun start() {
@@ -28,8 +31,9 @@ internal class FrameRateProvider(
 }
 
 internal class FpsFrameCallback(
-    private val reactFrameRateCallback: ((Double) -> Unit),
-    private val jsThreadExecutor: JsThreadExecutor
+    private val reactFrameRateCallback: ((Double, Double?) -> Unit),
+    private val jsThreadExecutor: JsThreadExecutor,
+    private val display: Display?
 ) : Choreographer.FrameCallback {
 
     private var choreographer: Choreographer? = null
@@ -37,7 +41,8 @@ internal class FpsFrameCallback(
 
     override fun doFrame(time: Long) {
         if (lastFrameTime != -1L) {
-            reactFrameRateCallback((time - lastFrameTime).toDouble())
+            // Refresh rate the display is currently running at
+            reactFrameRateCallback((time - lastFrameTime).toDouble(), display?.refreshRate?.toDouble())
         }
         lastFrameTime = time
         choreographer?.postFrameCallback(this)

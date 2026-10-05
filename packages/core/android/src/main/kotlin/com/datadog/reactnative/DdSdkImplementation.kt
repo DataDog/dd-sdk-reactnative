@@ -331,7 +331,14 @@ class DdSdkImplementation(
         ddSdkConfiguration: DdSdkConfiguration
     ): FrameRateProvider? {
         val frameTimeCallback = buildFrameTimeCallback(ddSdkConfiguration) ?: return null
-        val frameRateProvider = FrameRateProvider(frameTimeCallback, jsThreadExecutor)
+        // Before API 30 every Display.refreshRate read is an IPC, so use the max refresh rate there
+        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            (appContext.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager)
+                ?.getDisplay(Display.DEFAULT_DISPLAY)
+        } else {
+            null
+        }
+        val frameRateProvider = FrameRateProvider(frameTimeCallback, jsThreadExecutor, display)
         frameRateProvider.start()
 
         return frameRateProvider
@@ -340,7 +347,7 @@ class DdSdkImplementation(
     @Suppress("CyclomaticComplexMethod")
     private fun buildFrameTimeCallback(
         ddSdkConfiguration: DdSdkConfiguration
-    ): ((Double) -> Unit)? {
+    ): ((Double, Double?) -> Unit)? {
         val jsRefreshRateMonitoringEnabled =
             ddSdkConfiguration.rumConfiguration != null &&
             buildVitalUpdateFrequency(ddSdkConfiguration.rumConfiguration.vitalsUpdateFrequency) !=
@@ -351,20 +358,21 @@ class DdSdkImplementation(
             return null
         }
 
-        return {
-            if (jsRefreshRateMonitoringEnabled && it > 0.0) {
-                val normalizedFrameTimeSeconds = normalizeFrameTime(it, appContext)
+        return { frameTime, displayFps ->
+            if (jsRefreshRateMonitoringEnabled && frameTime > 0.0) {
+                val normalizedFrameTimeSeconds =
+                    normalizeFrameTime(frameTime, appContext, deviceDisplayFps = displayFps)
                 datadog.getRumMonitor()
                     ._getInternal()
                     ?.updatePerformanceMetric(RumPerformanceMetric.JS_FRAME_TIME, normalizedFrameTimeSeconds)
             }
             if (jsLongTasksMonitoringEnabled &&
-                it >
+                frameTime >
                 TimeUnit.MILLISECONDS.toNanos(
                     ddSdkConfiguration.rumConfiguration?.longTaskThresholdMs?.toLong() ?: 0L
                 )
             ) {
-                datadog.getRumMonitor()._getInternal()?.addLongTask(it.toLong(), "javascript")
+                datadog.getRumMonitor()._getInternal()?.addLongTask(frameTime.toLong(), "javascript")
             }
         }
     }
@@ -374,7 +382,7 @@ class DdSdkImplementation(
      * @param frameTimeSeconds: the frame time to normalize. In seconds.
      * @param context: The current app context
      * @param fpsBudget: The maximum fps under which the frame Time will be normalized [0-fpsBudget]. Defaults to 60Hz.
-     * @param deviceDisplayFps: The maximum fps supported by the device. If not provided it will be set from the value obtained from the app context.
+     * @param deviceDisplayFps: The refresh rate the display is currently running at. If not provided it will be set from the maximum value obtained from the app context.
      */
     @Suppress("CyclomaticComplexMethod")
     fun normalizeFrameTime(

@@ -309,7 +309,7 @@ public class DdSdkImplementation: NSObject {
         }
     }
 
-    func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration) -> ((Double) -> Void)? {
+    func buildFrameTimeCallback(sdkConfiguration: DdSdkConfiguration) -> ((Double, Double) -> Void)? {
         let jsRefreshRateMonitoringEnabled =
             sdkConfiguration.rumConfiguration != nil
             && sdkConfiguration.rumConfiguration?.vitalsUpdateFrequency != nil
@@ -321,7 +321,7 @@ public class DdSdkImplementation: NSObject {
             return nil
         }
 
-        func frameTimeCallback(frameTime: Double) {
+        func frameTimeCallback(frameTime: Double, displayFps: Double) {
             // These checks happen before dispatching because they are quick and less overhead than the dispatch itself.
             let shouldRecordFrameTime = jsRefreshRateMonitoringEnabled && frameTime > 0
             let shouldRecordLongTask =
@@ -338,7 +338,8 @@ public class DdSdkImplementation: NSObject {
             sharedQueue.async {
                 if shouldRecordFrameTime {
                     let normalizedFrameTimeSeconds =
-                        DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(frameTime)
+                        DdSdkImplementation.normalizeFrameTimeForDeviceRefreshRate(
+                            frameTime, deviceDisplayFps: displayFps)
                     rumMonitorInternal.updatePerformanceMetric(
                         at: now, metric: .jsFrameTimeSeconds, value: normalizedFrameTimeSeconds,
                         attributes: [:])
