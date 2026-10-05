@@ -7088,9 +7088,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001806":
-  version: 1.0.30001812
-  resolution: "caniuse-lite@npm:1.0.30001812"
-  checksum: 40dc2b432bb0faf06c1504255a35f3cdf6377f949d833a63fab459c7d876762afd7bf885f87ba6d39f2a4744092a99d10cd05591f23dab6f9c323552647c2ee1
+  version: 1.0.30001814
+  resolution: "caniuse-lite@npm:1.0.30001814"
+  checksum: 41ca30953f593f4e568b241be8d5dd257d0c2496b7d9109792ce2c7debfcf476cc960bc7bad4b52beaa21dc502939d550ee7306e634ccfbc9abc0732a9532a2c
   languageName: node
   linkType: hard
 
@@ -8046,7 +8046,7 @@ __metadata:
     "@react-navigation/native": ^6.1.18
     "@react-navigation/stack": ^6.2.1
     "@rnx-kit/metro-resolver-symlinks": ^0.1.36
-    axios: 1.18.0
+    axios: 1.20.0
     babel-plugin-module-resolver: ^4.0.0
     patch-package: ^8.0.1
     postinstall-postinstall: ^2.1.0
@@ -8566,9 +8566,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.393":
-  version: 1.5.439
-  resolution: "electron-to-chromium@npm:1.5.439"
-  checksum: 06a8f0868bfe99261f5c18800b4bdd6443565b3cfec708b77f8bc0bfeb53d3bbd87a4e3258ec8db3f5b79a1c27b3ccec7c07a6c566dd87a536600ea77f2258ee
+  version: 1.5.444
+  resolution: "electron-to-chromium@npm:1.5.444"
+  checksum: 325d43a0a842aa5a4fa546ce4bb0f85dfde4b3ef9bedab58f9206d24e7a8a4d16ef01d9cc8ae1ca5275007661708ba1aa52fc92968fec3d442da50b262c9745d
   languageName: node
   linkType: hard
 
