@@ -77,6 +77,7 @@ export const initializeDatadog = (clientToken?: string, environment?: string, ap
                 trackErrors: true,
                 sessionSampleRate: 100,
                 nativeCrashReportEnabled: true,
+                longTaskThresholdMs: 200,
             },
             logsConfiguration: {
                 bundleLogsWithRum: true,
