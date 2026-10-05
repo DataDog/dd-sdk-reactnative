@@ -71,7 +71,7 @@ Launch a specific test scenario with a particular configuration:
 - **Method**: `start`
 - **Parameters**:
   - **scenario**: name of the test as defined on the `Scenario` enum in `types/testConfig.ts`
-  - **runType**: `instrumented|baseline|profiling`
+  - **runType**: one of the values defined on the `RunType` enum in `types/testConfig.ts`: `baseline|instrumented|instrumented_profiling_native`
 
 ### iOS
 
@@ -84,6 +84,24 @@ xcrun simctl openurl booted "benchmark://start?scenario=navigation&runType=instr
 ```
 adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=navigation\&runType=instrumented' com.benchmarkrunner
 ```
+
+### Example: profiling scenario
+
+The profiling scenario enables native profiling when `runType` is `instrumented_profiling_native`. With `instrumented`, it only initializes the SDK.
+
+iOS:
+
+```
+xcrun simctl openurl booted "benchmark://start?scenario=profiling&runType=instrumented_profiling_native"
+```
+
+Android:
+
+```
+adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=profiling\&runType=instrumented_profiling_native' com.benchmarkrunner
+```
+
+Note: native profiling only takes effect on Android 15 (API 35) and above; on lower API levels the native profiling call is a no-op.
 
 ## Stop a test scenario
 
