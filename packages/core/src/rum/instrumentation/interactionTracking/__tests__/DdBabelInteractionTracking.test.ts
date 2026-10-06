@@ -69,7 +69,10 @@ describe('DdBabelInteractionTracking.wrapRumAction', () => {
 
     it('should forward the first handler argument as actionContext to DdRum.addAction', () => {
         const mockAddAction = jest.fn().mockResolvedValue(undefined);
-        DdBabelInteractionTracking.config = { trackInteractions: true };
+        DdBabelInteractionTracking.config = {
+            trackInteractions: true,
+            useAccessibilityLabel: true
+        };
         DdBabelInteractionTracking.attachRumInstance({
             addAction: mockAddAction
         } as any);
@@ -92,6 +95,106 @@ describe('DdBabelInteractionTracking.wrapRumAction', () => {
             expect.anything(),
             expect.any(Number),
             event
+        );
+    });
+
+    describe('action naming precedence', () => {
+        const mockAddAction = jest.fn().mockResolvedValue(undefined);
+        const originalConfig = DdBabelInteractionTracking.config;
+
+        beforeEach(() => {
+            mockAddAction.mockClear();
+            DdBabelInteractionTracking.attachRumInstance({
+                addAction: mockAddAction
+            } as any);
+        });
+
+        afterEach(() => {
+            DdBabelInteractionTracking.config = originalConfig;
+        });
+
+        describe.each([true, false])(
+            'useAccessibilityLabel=%s',
+            useAccessibilityLabel => {
+                it.each([
+                    {
+                        source:
+                            'dd-action-name over custom attribute, accessibility label and content',
+                        attributes: {
+                            'dd-action-name': ['Explicit'],
+                            customName: ['Custom'],
+                            accessibilityLabel: ['Accessible']
+                        },
+                        content: ['Content'],
+                        expected: 'Pressable ("Explicit")'
+                    },
+                    {
+                        source:
+                            'custom attribute over accessibility label and content',
+                        attributes: {
+                            customName: ['Custom'],
+                            accessibilityLabel: ['Accessible']
+                        },
+                        content: ['Content'],
+                        expected: 'Pressable ("Custom")'
+                    },
+                    {
+                        source:
+                            'accessibility label or content according to configuration',
+                        attributes: { accessibilityLabel: ['Accessible'] },
+                        content: ['Content'],
+                        expected: useAccessibilityLabel
+                            ? 'Pressable ("Accessible")'
+                            : 'Pressable ("Content")'
+                    },
+                    {
+                        source:
+                            'accessibility label or component name when there is no content',
+                        attributes: { accessibilityLabel: ['Edit'] },
+                        content: [],
+                        expected: useAccessibilityLabel
+                            ? 'Pressable ("Edit")'
+                            : 'Pressable'
+                    },
+                    {
+                        source: 'content when there are no naming attributes',
+                        attributes: {},
+                        content: ['Content'],
+                        expected: 'Pressable ("Content")'
+                    },
+                    {
+                        source:
+                            'component name when there are no naming attributes or content',
+                        attributes: {},
+                        content: [],
+                        expected: 'Pressable'
+                    }
+                ])('uses $source', ({ attributes, content, expected }) => {
+                    DdBabelInteractionTracking.config = {
+                        trackInteractions: true,
+                        useAccessibilityLabel
+                    };
+                    const wrapped = DdBabelInteractionTracking.wrapRumAction(
+                        jest.fn(),
+                        RumActionType.TAP,
+                        {
+                            options: {
+                                useContent: true,
+                                useNamePrefix: true
+                            },
+                            handlerArgs: [],
+                            componentName: 'Pressable',
+                            getContent: () => content,
+                            ...attributes
+                        } as any
+                    );
+
+                    wrapped();
+
+                    expect(mockAddAction).toHaveBeenCalledTimes(1);
+                    expect(mockAddAction.mock.calls[0][1]).toBe(expected);
+                });
+            }
         );
     });
 });
