@@ -993,6 +993,179 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(actualTraceContextInjection, .sampled)
     }
 
+    // MARK: - nativeIosResourceTracking (URLSession tracking tri-state)
+
+    private func buildURLSessionTracking(
+        nativeIosResourceTracking: Bool?,
+        firstPartyHosts: [String: Set<TracingHeaderType>]?,
+        disallowList: [String] = []
+    ) -> RUM.Configuration.URLSessionTracking? {
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.resourceTraceSampleRate = 66
+        rumConfiguration.nativeIosResourceTracking = nativeIosResourceTracking
+        rumConfiguration.nativeIosResourceTrackingDisallowList = disallowList
+        rumConfiguration.firstPartyHosts = firstPartyHosts
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+        return DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        ).urlSessionTracking
+    }
+
+    /// Returns the hosts of `.traceWithHeaders`, or `nil` when tracing is not configured.
+    private func tracedHosts(
+        _ tracking: RUM.Configuration.URLSessionTracking?
+    ) -> [String: Set<TracingHeaderType>]? {
+        switch tracking?.firstPartyHostsTracing {
+        case let .traceWithHeaders(hostsWithHeaders, samplingRate, _):
+            XCTAssertEqual(samplingRate, 66)
+            return hostsWithHeaders
+        case .trace, .none:
+            return nil
+        }
+    }
+
+    private let nonEmptyFirstPartyHosts: [String: Set<TracingHeaderType>] = [
+        "example.com": [.datadog, .tracecontext]
+    ]
+
+    // Legacy (nil) behavior: must be unchanged
+
+    func testNativeIosResourceTrackingNilWithEmptyFirstPartyHostsEnablesTracking() {
+        // Regression: JS default `firstPartyHosts: []` => URLSession tracking ON
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: nil, firstPartyHosts: [:])
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), [:])
+    }
+
+    func testNativeIosResourceTrackingNilWithNilFirstPartyHostsDisablesTracking() {
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: nil, firstPartyHosts: nil)
+        XCTAssertNil(tracking)
+    }
+
+    func testNativeIosResourceTrackingNilWithFirstPartyHostsTracesHosts() {
+        let tracking = buildURLSessionTracking(
+            nativeIosResourceTracking: nil, firstPartyHosts: nonEmptyFirstPartyHosts)
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), nonEmptyFirstPartyHosts)
+    }
+
+    // Explicit opt-in
+
+    func testNativeIosResourceTrackingTrueWithNilFirstPartyHostsEnablesTrackingWithoutTracing() {
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: true, firstPartyHosts: nil)
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertNil(tracking?.firstPartyHostsTracing)
+    }
+
+    func testNativeIosResourceTrackingTrueWithEmptyFirstPartyHostsEnablesTracking() {
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: true, firstPartyHosts: [:])
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), [:])
+    }
+
+    func testNativeIosResourceTrackingTrueWithFirstPartyHostsTracesHosts() {
+        let tracking = buildURLSessionTracking(
+            nativeIosResourceTracking: true, firstPartyHosts: nonEmptyFirstPartyHosts)
+        XCTAssertNotNil(tracking)
+        XCTAssertNotNil(tracking?.resourceAttributesProvider)
+        XCTAssertEqual(tracedHosts(tracking), nonEmptyFirstPartyHosts)
+    }
+
+    // Explicit opt-out
+
+    func testNativeIosResourceTrackingFalseWithNilFirstPartyHostsDisablesTracking() {
+        XCTAssertNil(buildURLSessionTracking(nativeIosResourceTracking: false, firstPartyHosts: nil))
+    }
+
+    func testNativeIosResourceTrackingFalseWithEmptyFirstPartyHostsDisablesTracking() {
+        XCTAssertNil(buildURLSessionTracking(nativeIosResourceTracking: false, firstPartyHosts: [:]))
+    }
+
+    func testNativeIosResourceTrackingFalseWithFirstPartyHostsDisablesTracking() {
+        XCTAssertNil(buildURLSessionTracking(
+            nativeIosResourceTracking: false, firstPartyHosts: nonEmptyFirstPartyHosts))
+    }
+
+    // MARK: - nativeIosResourceTrackingDisallowList
+
+    private let disallowList = ["https://3p.example.com/*", "https://cdn.example.com/a"]
+
+    /// Runs `block` with `DD.logger` replaced by a recording logger, restoring the original afterwards.
+    private func withRecordingLogger(_ block: () -> Void) -> [(level: CoreLoggerLevel, message: String)] {
+        let recordingLogger = RecordingCoreLogger()
+        let originalLogger = DD.logger
+        DD.logger = recordingLogger
+        defer { DD.logger = originalLogger }
+        block()
+        return recordingLogger.recordedLogs
+    }
+
+    private func disallowListWarnings(
+        _ logs: [(level: CoreLoggerLevel, message: String)]
+    ) -> [(level: CoreLoggerLevel, message: String)] {
+        return logs.filter { $0.level == .warn && $0.message.contains("nativeIosResourceTrackingDisallowList") }
+    }
+
+    func testDisallowListIsPassedWhenTrackingExplicitlyEnabled() {
+        let tracking = buildURLSessionTracking(
+            nativeIosResourceTracking: true, firstPartyHosts: nil, disallowList: disallowList)
+        XCTAssertNotNil(tracking)
+        XCTAssertEqual(tracking?.disallowList, disallowList)
+    }
+
+    func testDisallowListIsPassedWhenTrackingEnabledByLegacyFirstPartyHosts() {
+        let tracking = buildURLSessionTracking(
+            nativeIosResourceTracking: nil, firstPartyHosts: nonEmptyFirstPartyHosts, disallowList: disallowList)
+        XCTAssertNotNil(tracking)
+        XCTAssertEqual(tracking?.disallowList, disallowList)
+        XCTAssertEqual(tracedHosts(tracking), nonEmptyFirstPartyHosts)
+    }
+
+    func testDisallowListDefaultsToEmptyWhenTrackingEnabled() {
+        let tracking = buildURLSessionTracking(nativeIosResourceTracking: true, firstPartyHosts: nil)
+        XCTAssertNotNil(tracking)
+        XCTAssertEqual(tracking?.disallowList, [])
+    }
+
+    func testDisallowListDoesNotEnableTrackingWhenExplicitlyDisabled() {
+        var tracking: RUM.Configuration.URLSessionTracking?
+        let logs = withRecordingLogger {
+            tracking = buildURLSessionTracking(
+                nativeIosResourceTracking: false, firstPartyHosts: nil, disallowList: disallowList)
+        }
+        XCTAssertNil(tracking)
+        XCTAssertEqual(disallowListWarnings(logs).count, 1)
+    }
+
+    func testDisallowListDoesNotEnableTrackingWhenLegacyDisabled() {
+        var tracking: RUM.Configuration.URLSessionTracking?
+        let logs = withRecordingLogger {
+            tracking = buildURLSessionTracking(
+                nativeIosResourceTracking: nil, firstPartyHosts: nil, disallowList: disallowList)
+        }
+        XCTAssertNil(tracking)
+        XCTAssertEqual(disallowListWarnings(logs).count, 1)
+    }
+
+    func testNoDisallowListWarningWhenTrackingDisabledAndListEmpty() {
+        let logs = withRecordingLogger {
+            XCTAssertNil(buildURLSessionTracking(nativeIosResourceTracking: false, firstPartyHosts: nil))
+        }
+        XCTAssertTrue(disallowListWarnings(logs).isEmpty)
+    }
+
+    func testNoDisallowListWarningWhenTrackingEnabled() {
+        let logs = withRecordingLogger {
+            XCTAssertNotNil(buildURLSessionTracking(
+                nativeIosResourceTracking: true, firstPartyHosts: nil, disallowList: disallowList))
+        }
+        XCTAssertTrue(disallowListWarnings(logs).isEmpty)
+    }
+
     func testBuildTelemetrySampleRate() {
         let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
         rumConfiguration.telemetrySampleRate = 42.0
@@ -1966,5 +2139,13 @@ class MockOnSdkInitializedListener {
     lazy var listener: OnSdkInitializedListener = { core in
         self.called = true
         self.receivedCore = core
+    }
+}
+
+private final class RecordingCoreLogger: CoreLogger {
+    private(set) var recordedLogs: [(level: CoreLoggerLevel, message: String)] = []
+
+    func log(_ level: CoreLoggerLevel, message: @autoclosure () -> String, error: Error?) {
+        recordedLogs.append((level: level, message: message()))
     }
 }

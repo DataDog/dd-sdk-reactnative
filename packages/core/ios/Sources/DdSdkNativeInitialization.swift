@@ -168,22 +168,40 @@ public class DdSdkNativeInitialization: NSObject {
             uiKitActionsPredicate = DefaultUIKitRUMActionsPredicate()
         }
 
-        var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
+        // `nativeIosResourceTracking` (iOS only):
+        // - nil (default): legacy behavior, tracking enabled iff `firstPartyHosts` is non-nil.
+        // - true: tracking always enabled (trace headers only if `firstPartyHosts` is non-nil).
+        // - false: tracking disabled.
+        // `nativeIosResourceTrackingDisallowList` is applied only when tracking is enabled; it never enables it.
+        var firstPartyHostsTracing: RUM.Configuration.URLSessionTracking.FirstPartyHostsTracing? = nil
         if let firstPartyHosts = rumConfig.firstPartyHosts {
+            firstPartyHostsTracing = .traceWithHeaders(
+                hostsWithHeaders: firstPartyHosts,
+                sampleRate: Float(
+                    configuration.rumConfiguration?.resourceTraceSampleRate
+                        ?? DefaultConfiguration.resourceTraceSampleRate)
+            )
+        }
+        let shouldTrackURLSession = rumConfig.nativeIosResourceTracking ?? (rumConfig.firstPartyHosts != nil)
+
+        var urlSessionTracking: RUM.Configuration.URLSessionTracking? = nil
+        if shouldTrackURLSession {
             urlSessionTracking = RUM.Configuration.URLSessionTracking(
-                firstPartyHostsTracing: .traceWithHeaders(
-                    hostsWithHeaders: firstPartyHosts,
-                    sampleRate: Float(
-                        configuration.rumConfiguration?.resourceTraceSampleRate
-                            ?? DefaultConfiguration.resourceTraceSampleRate)
-                ),
+                firstPartyHostsTracing: firstPartyHostsTracing,
                 resourceAttributesProvider: { request, _, _, _ in
                     let trackedBy = request.value(forHTTPHeaderField: InternalConfigurationAttributes.trackedByHeaderKey)
                     if trackedBy == InternalConfigurationAttributes.trackedByHeaderValue {
                         return [InternalConfigurationAttributes.dropResource: true]
                     }
                     return nil
-                }
+                },
+                disallowList: rumConfig.nativeIosResourceTrackingDisallowList
+            )
+        } else if !rumConfig.nativeIosResourceTrackingDisallowList.isEmpty {
+            DD.logger.warn(
+                "nativeIosResourceTrackingDisallowList is set but native iOS resource tracking is disabled "
+                    + "(nativeIosResourceTracking is false, or unset with no firstPartyHosts). "
+                    + "The disallow list will be ignored."
             )
         }
 

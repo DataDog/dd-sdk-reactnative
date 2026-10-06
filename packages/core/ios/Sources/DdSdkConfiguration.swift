@@ -95,6 +95,13 @@ public class DdSdkConfiguration: NSObject {
 ///    - nativeLongTaskThresholdMs: The threshold for reporting native long tasks in milliseconds.
 ///    - nativeViewTracking: Enables tracking of native iOS/Android UI views.
 ///    - nativeInteractionTracking: Enables tracking of native UI interactions.
+///    - nativeIosResourceTracking: Controls automatic URLSession resource tracking (iOS only).
+///      `nil` (default): legacy behavior, tracking enabled iff `firstPartyHosts` is non-nil.
+///      `true`: tracking always enabled (trace headers for `firstPartyHosts`, if non-nil).
+///      `false`: tracking disabled.
+///    - nativeIosResourceTrackingDisallowList: URL patterns excluded from automatic URLSession resource tracking
+///      (iOS only). Passed to `RUM.Configuration.URLSessionTracking.disallowList`; only effective when
+///      URLSession tracking is enabled. Default: `[]`.
 ///    - firstPartyHosts: List of backend hosts considered first-party for network tracing.
 ///    - appHangThreshold: Threshold in seconds for reporting non-fatal app hangs (iOS only).
 ///    - trackWatchdogTerminations: Whether the SDK should track application terminations
@@ -115,6 +122,8 @@ public class RumConfiguration: NSObject {
     public var nativeLongTaskThresholdMs: Double? = nil
     public var nativeViewTracking: Bool? = nil
     public var nativeInteractionTracking: Bool? = nil
+    public var nativeIosResourceTracking: Bool? = nil
+    public var nativeIosResourceTrackingDisallowList: [String] = []
     public var firstPartyHosts: [String: Set<TracingHeaderType>]? = nil
     public var appHangThreshold: Double? = nil
     public var trackWatchdogTerminations: Bool
@@ -135,6 +144,8 @@ public class RumConfiguration: NSObject {
         nativeLongTaskThresholdMs: Double? = nil,
         nativeViewTracking: Bool?,
         nativeInteractionTracking: Bool?,
+        nativeIosResourceTracking: Bool? = nil,
+        nativeIosResourceTrackingDisallowList: [String] = [],
         firstPartyHosts: [String: Set<TracingHeaderType>]?,
         appHangThreshold: Double?,
         trackWatchdogTerminations: Bool,
@@ -154,6 +165,8 @@ public class RumConfiguration: NSObject {
         self.nativeLongTaskThresholdMs = nativeLongTaskThresholdMs
         self.nativeViewTracking = nativeViewTracking
         self.nativeInteractionTracking = nativeInteractionTracking
+        self.nativeIosResourceTracking = nativeIosResourceTracking
+        self.nativeIosResourceTrackingDisallowList = nativeIosResourceTrackingDisallowList
         self.firstPartyHosts = firstPartyHosts
         self.appHangThreshold = appHangThreshold
         self.trackWatchdogTerminations = trackWatchdogTerminations

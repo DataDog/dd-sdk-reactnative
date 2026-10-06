@@ -110,6 +110,29 @@ export interface RumConfigurationOptions {
     nativeViewTracking?: boolean;
 
     /**
+     * Controls automatic native network (URLSession) resource tracking. iOS only: has no effect on Android.
+     * - `undefined` (default): legacy behavior, enables iOS network tracking if `firstPartyHosts` is defined.
+     * - `true`: enables iOS network tracking (with trace headers for `firstPartyHosts`, if defined).
+     * - `false`: disables iOS network tracking.
+     */
+    nativeIosResourceTracking?: boolean;
+
+    /**
+     * URL patterns excluded from automatic native iOS network (URLSession) resource tracking.
+     * iOS only: has no effect on Android.
+     * - Patterns are matched against the full URL: plain strings match exactly, `*` matches any characters.
+     * - Patterns without any literal characters (e.g. `"*"`) are ignored.
+     * - Matching requests also get no trace headers injected and no APM span.
+     *
+     * Only takes effect when native iOS resource tracking is enabled (see `nativeIosResourceTracking`);
+     * it never enables tracking by itself. If set while tracking is disabled, the native SDK logs
+     * a warning (subject to `verbosity`).
+     *
+     * Default: `[]` (no URLs excluded).
+     */
+    nativeIosResourceTrackingDisallowList?: string[];
+
+    /**
      * Custom mapper to transform RUM resource events.
      */
     resourceEventMapper?: ResourceEventMapper | null;

@@ -208,7 +208,12 @@ export const getJSONConfiguration = (
                 telemetrySampleRate:
                     configuration.rumConfiguration.telemetrySampleRate,
                 nativeInteractionTracking:
-                    configuration.rumConfiguration.nativeInteractionTracking
+                    configuration.rumConfiguration.nativeInteractionTracking,
+                nativeIosResourceTracking:
+                    configuration.rumConfiguration.nativeIosResourceTracking,
+                nativeIosResourceTrackingDisallowList:
+                    configuration.rumConfiguration
+                        .nativeIosResourceTrackingDisallowList
             }
         }),
         ...(configuration.traceConfiguration !== undefined && {
