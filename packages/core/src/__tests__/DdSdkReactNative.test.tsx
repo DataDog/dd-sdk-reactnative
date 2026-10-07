@@ -18,6 +18,7 @@ import { ProxyConfiguration, ProxyType, SdkVerbosity } from '../config/types';
 import { DdLogs } from '../logs/DdLogs';
 import { DdRum } from '../rum/DdRum';
 import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
+import { DdBabelInteractionTracking } from '../rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
 import { PropagatorType, RumActionType } from '../rum/types';
@@ -653,6 +654,50 @@ describe('DdSdkReactNative', () => {
     });
 
     describe('feature enablement', () => {
+        describe('Babel interaction tracking', () => {
+            const originalConfig = DdBabelInteractionTracking.config;
+            const originalPluginFlag =
+                globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__;
+
+            beforeEach(() => {
+                globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__ = true;
+                NativeModules.DdSdk.initialize.mockResolvedValue(null);
+            });
+
+            afterEach(() => {
+                globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__ = originalPluginFlag;
+                DdBabelInteractionTracking.config = originalConfig;
+            });
+
+            it.each([
+                { useAccessibilityLabel: false, expected: false },
+                { useAccessibilityLabel: true, expected: true },
+                { useAccessibilityLabel: undefined, expected: true }
+            ])(
+                'respects useAccessibilityLabel=$useAccessibilityLabel during initialization',
+                async ({ useAccessibilityLabel, expected }) => {
+                    const configuration = new CoreConfiguration('2', 'env');
+                    configuration.rumConfiguration = new RumConfiguration(
+                        '1',
+                        true,
+                        false,
+                        false,
+                        { useAccessibilityLabel }
+                    );
+
+                    await DdSdkReactNative.initialize(configuration);
+
+                    expect(DdBabelInteractionTracking.config).toEqual({
+                        trackInteractions: true,
+                        useAccessibilityLabel: expected
+                    });
+                    expect(
+                        DdRumUserInteractionTracking.startTracking
+                    ).not.toHaveBeenCalled();
+                }
+            );
+        });
+
         it('enables user interaction feature when initialize { user interaction config enabled }', async () => {
             // GIVEN
             const fakeAppId = '1';
