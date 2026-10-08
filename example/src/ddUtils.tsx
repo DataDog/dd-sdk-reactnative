@@ -36,6 +36,13 @@ export function getDatadogConfig(trackingConsent: TrackingConsent) {
                 trackErrors: true,
                 sessionSampleRate: 100,
                 nativeCrashReportEnabled: true,
+                // Report JavaScript long tasks. These are forwarded to the native RUM
+                // monitor, which is what continuous profiling correlates profiles against:
+                // a continuous profile is only uploaded if the profiling window captured a
+                // long task, an app hang/ANR, or a vital. Leaving this at its default of 0
+                // disables JS long task reporting, so profiles would be collected and then
+                // discarded. See the "Trigger JS long task" button on the main screen.
+                longTaskThresholdMs: 200,
                 firstPartyHosts: [{
                     match: "example.com",
                     propagatorTypes: [PropagatorType.B3MULTI, PropagatorType.TRACECONTEXT]

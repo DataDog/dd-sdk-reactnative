@@ -26,6 +26,7 @@ interface MainScreenState {
   resultTouchableOpacityAction: string,
   resultTouchableWithoutFeedback: string,
   resultTouchableNativeFeedback: string,
+  resultLongTaskAction: string,
   trackingConsent: TrackingConsent,
   trackingConsentModalVisible: boolean
 }
@@ -91,6 +92,25 @@ export default class MainScreen extends Component<any, MainScreenState> {
   axiosVehicle() {
     return axios.request({ method: 'get', url: '/api/vehicle/random_vehicle' })
       .then((response) => response.data);
+  }
+
+  /**
+   * Blocks the JavaScript thread synchronously, which the SDK reports as a JS long task
+   * (see `longTaskThresholdMs` in ddUtils.tsx). The long task is forwarded to the native
+   * RUM monitor, and continuous profiling attaches the in-flight profile to it: a
+   * continuous profile is only uploaded when its window captured a long task, an app
+   * hang/ANR, or a vital. Without an event like this, profiles are collected and dropped.
+   */
+  triggerJsLongTask(durationMs: number = 500) {
+    const start = Date.now();
+    // Busy-wait on purpose: yielding would let the JS thread breathe and no long task
+    // would be recorded.
+    while (Date.now() - start < durationMs) {
+      // no-op
+    }
+    this.setState({
+      resultLongTaskAction: `Blocked the JS thread for ${durationMs}ms`
+    } as MainScreenState);
   }
 
   componentDidMount() {
@@ -203,6 +223,12 @@ export default class MainScreen extends Component<any, MainScreenState> {
             <Text>Click me</Text>
           </View>
         </TouchableWithoutFeedback>
+        <Text style={{ marginTop: 20 }}>{this.state.resultLongTaskAction}</Text>
+        <Button
+          title="Trigger JS long task (500ms)"
+          accessibilityLabel="trigger_js_long_task_button"
+          onPress={() => this.triggerJsLongTask(500)}
+        />
         <Text style={{ marginTop: 20 }}>{this.state.resultTouchableNativeFeedback}</Text>
         <TouchableNativeFeedback
           accessibilityLabel="click_me_touchablenativefeedback"
