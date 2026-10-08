@@ -31,7 +31,12 @@ public class DdFlagsImplementation: NSObject {
         clientProviders.removeAll()
 
         if let config = configuration.asFlagsConfiguration() {
-            Flags.enable(with: config)
+            Flags.enable(
+                with: config,
+                in: core,
+                wrapperSDKName: "dd-sdk-reactnative",
+                wrapperSDKVersion: configuration["_ddFlagsSdkVersion"] as? String ?? "unknown"
+            )
         } else {
             consolePrint("Invalid configuration provided for Flags. Feature initialization skipped.", .error)
         }
@@ -91,6 +96,9 @@ public class DdFlagsImplementation: NSObject {
                 case .invalidResponse:
                     errorCode = "INVALID_RESPONSE"
                     errorMessage = "The flags service returned an invalid response for client '\(clientName)'."
+                case .initializationTimedOut:
+                    errorCode = "INITIALIZATION_TIMED_OUT"
+                    errorMessage = "Flag initialization timed out for client '\(clientName)'."
                 case .networkError:
                     errorCode = "NETWORK_ERROR"
                     errorMessage = "A network error occurred while fetching feature flags for client '\(clientName)'."
