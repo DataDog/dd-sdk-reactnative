@@ -600,8 +600,14 @@ export function getJSXElementActionPaths(
                 return;
             }
 
-            // Accumulate handler attributes that we should wrap
-            const isValidMapping = actionMapList.includes(attrName);
+            // Accumulate handler attributes that we should wrap. Only this
+            // element's own attributes qualify: `path.traverse` also visits
+            // nested elements, and a nested tracked component must be wrapped
+            // with its own ddValues (useContent/getContent) when its JSXElement
+            // is visited, not with those of the enclosing tracked element.
+            const isValidMapping =
+                actionMapList.includes(attrName) &&
+                subpath.parentPath?.node === path.node.openingElement;
             if (isValidMapping) {
                 actionPathNames.push(attrName);
                 actionPathList.push(subpath);
