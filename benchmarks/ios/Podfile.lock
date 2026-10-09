@@ -1,6 +1,6 @@
 PODS:
   - boost (1.84.0)
-  - DatadogSDKReactNative (3.9.0):
+  - DatadogSDKReactNative (3.10.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -21,7 +21,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNativeSessionReplay (3.9.0):
+  - DatadogSDKReactNativeSessionReplay (3.10.0):
     - DatadogSDKReactNative
     - DoubleConversion
     - glog
@@ -44,7 +44,7 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
-  - DatadogSDKReactNativeWebView (3.9.0):
+  - DatadogSDKReactNativeWebView (3.10.0):
     - DatadogSDKReactNative
     - DoubleConversion
     - glog
@@ -2079,9 +2079,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
-  DatadogSDKReactNative: 625c5d19a50227bb96959703619fed06d13dee89
-  DatadogSDKReactNativeSessionReplay: 4fe2c3e274def3ecb04435a87630c923673fce0e
-  DatadogSDKReactNativeWebView: 57eefb783b439f9d098bd681a252e1bda7fea8ed
+  DatadogSDKReactNative: 947d6f992420412fe096f0b60944c4a39ba91e87
+  DatadogSDKReactNativeSessionReplay: ddea55ec1b4e9695dd5e87b5e9c605d92818f3a5
+  DatadogSDKReactNativeWebView: 2bde1bed8f57a2a828a62852e03f4a6e37fdf758
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: e32d34492c519a2194ec9d7f5e7a79d11b73f91c

@@ -1837,6 +1837,74 @@ describe('Babel plugin: wrap interaction handlers for RUM ( with memoization )',
     });
 });
 
+describe('Babel plugin: nested tracked components', () => {
+    const options: Partial<PluginOptions> = {
+        components: {
+            useContent: true,
+            useNamePrefix: true,
+            tracked: [
+                {
+                    name: 'Row',
+                    useContent: false,
+                    handlers: [{ event: 'onPress', action: 'TAP' }]
+                },
+                {
+                    name: 'CustomButton',
+                    handlers: [{ event: 'onPress', action: 'TAP' }]
+                }
+            ]
+        }
+    };
+
+    const targetObjectFor = (output: string, componentName: string) => {
+        const marker = `"componentName": "${componentName}"`;
+        const end = output.indexOf(marker);
+        expect(end).toBeGreaterThan(-1);
+        const start = output.lastIndexOf('"options"', end);
+        return output.slice(start, end + marker.length);
+    };
+
+    it('should wrap a tracked component nested in another tracked component with its own options and content', () => {
+        const input = `
+            function Screen({ onRowPress, onButtonPress }) {
+                return (
+                    <Row onPress={onRowPress}>
+                        <CustomButton title="Open" onPress={onButtonPress} />
+                    </Row>
+                );
+            }
+        `;
+        const output = transformCode(input, options) ?? '';
+
+        const row = targetObjectFor(output, 'Row');
+        expect(row).toContain('"useContent": false');
+        expect(row).not.toContain('"getContent"');
+
+        const button = targetObjectFor(output, 'CustomButton');
+        expect(button).toContain('"useContent": true');
+        expect(button).toContain('"getContent"');
+        expect(button).toContain('["Open"]');
+    });
+
+    it('should wrap a nested tracked component even when the enclosing tracked component has no handler', () => {
+        const input = `
+            function Screen({ onButtonPress }) {
+                return (
+                    <Row>
+                        <CustomButton title="Open" onPress={onButtonPress} />
+                    </Row>
+                );
+            }
+        `;
+        const output = transformCode(input, options) ?? '';
+        expect(output).not.toContain('"componentName": "Row"');
+
+        const button = targetObjectFor(output, 'CustomButton');
+        expect(button).toContain('"useContent": true');
+        expect(button).toContain('["Open"]');
+    });
+});
+
 describe('Babel plugin: hyphenated JSX attribute names in getContent', () => {
     function extractGetContent(output: string | null | undefined): string {
         if (!output) {

@@ -1,22 +1,22 @@
 PODS:
   - boost (1.84.0)
-  - DatadogSDKReactNative (3.9.0):
+  - DatadogSDKReactNative (3.10.0):
     - React-Core
-  - DatadogSDKReactNative/Tests (3.9.0):
+  - DatadogSDKReactNative/Tests (3.10.0):
     - React-Core
-  - DatadogSDKReactNativeSessionReplay (3.9.0):
+  - DatadogSDKReactNativeSessionReplay (3.10.0):
     - DatadogSDKReactNative
     - React-Core
     - React-RCTText
-  - DatadogSDKReactNativeSessionReplay/Tests (3.9.0):
+  - DatadogSDKReactNativeSessionReplay/Tests (3.10.0):
     - DatadogSDKReactNative
     - React-Core
     - React-RCTText
-  - DatadogSDKReactNativeWebView (3.9.0):
+  - DatadogSDKReactNativeWebView (3.10.0):
     - DatadogSDKReactNative
     - React-Core
     - react-native-webview
-  - DatadogSDKReactNativeWebView/Tests (3.9.0):
+  - DatadogSDKReactNativeWebView/Tests (3.10.0):
     - DatadogSDKReactNative
     - React-Core
     - react-native-webview
@@ -1905,9 +1905,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
-  DatadogSDKReactNative: 7eaa0d5c8b59cec34220d8f8b038662eba47e8f5
-  DatadogSDKReactNativeSessionReplay: fc4be259fa3f8a72530b46c739721122b5f5712d
-  DatadogSDKReactNativeWebView: 7ab3a76e03fa9f5f368c15432b1c733af83843a8
+  DatadogSDKReactNative: f9a4f480748bc6b1e16f5d8b2afbdd8aa6b7f933
+  DatadogSDKReactNativeSessionReplay: 91d98d752e954e2f4bbb986aac402e9dce86b043
+  DatadogSDKReactNativeWebView: 7bbc147b8f8b8507f16adc1788688b8f72002972
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45

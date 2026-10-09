@@ -530,7 +530,7 @@ export class DdSdkReactNative {
             DdBabelInteractionTracking.config = {
                 trackInteractions,
                 useAccessibilityLabel:
-                    configuration.rumConfiguration?.useAccessibilityLabel ||
+                    configuration.rumConfiguration?.useAccessibilityLabel ??
                     RUM_DEFAULTS.useAccessibilityLabel
             };
 

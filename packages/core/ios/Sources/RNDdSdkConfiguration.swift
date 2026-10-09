@@ -60,6 +60,9 @@ extension NSDictionary {
             let nativeLongTaskThresholdMs = rumDict["nativeLongTaskThresholdMs"] as? Double
             let nativeViewTracking = rumDict["nativeViewTracking"] as? Bool
             let nativeInteractionTracking = rumDict["nativeInteractionTracking"] as? Bool
+            // No default on purpose: nil means legacy URLSession tracking behavior
+            let nativeIosResourceTracking = rumDict["nativeIosResourceTracking"] as? Bool
+            let nativeIosResourceTrackingDisallowList = rumDict["nativeIosResourceTrackingDisallowList"] as? [String]
             
             let firstPartyHostsArray = rumDict["firstPartyHosts"] as? NSArray
             let firstPartyHosts = firstPartyHostsArray?.asFirstPartyHosts()
@@ -89,6 +92,8 @@ extension NSDictionary {
                 nativeViewTracking: nativeViewTracking ?? DefaultConfiguration.nativeViewTracking,
                 nativeInteractionTracking: nativeInteractionTracking
                     ?? DefaultConfiguration.nativeInteractionTracking,
+                nativeIosResourceTracking: nativeIosResourceTracking,
+                nativeIosResourceTrackingDisallowList: nativeIosResourceTrackingDisallowList ?? [],
                 firstPartyHosts: firstPartyHosts,
                 appHangThreshold: appHangThreshold,
                 trackWatchdogTerminations: trackWatchdogTerminations
@@ -378,6 +383,10 @@ extension Dictionary where Key == String, Value == AnyObject {
                     ?? DefaultConfiguration.nativeViewTracking,
                 nativeInteractionTracking: rum["nativeInteractionTracking"] as? Bool
                     ?? DefaultConfiguration.nativeInteractionTracking,
+                // No default on purpose: nil means legacy URLSession tracking behavior
+                nativeIosResourceTracking: rum["nativeIosResourceTracking"] as? Bool,
+                nativeIosResourceTrackingDisallowList:
+                    (rum["nativeIosResourceTrackingDisallowList"] as? [String]) ?? [],
                 firstPartyHosts: firstPartyHosts,
                 appHangThreshold: rum["appHangThreshold"] as? Double,
                 trackWatchdogTerminations: rum["trackWatchdogTerminations"] as? Bool

@@ -6,7 +6,7 @@
 
 import Foundation
 
-typealias frame_time_callback = (Double) -> Void
+typealias frame_time_callback = (_ frameTime: Double, _ displayFps: Double) -> Void
 
 internal protocol RefreshRateListener {
     func start()
@@ -54,6 +54,7 @@ private final class JSRefreshRateListener: RefreshRateListener {
     private var jsQueue: DispatchQueueType
     private var frameTimeCallback: frame_time_callback
     private var lastFrameTimestamp: TimeInterval = -1
+    private var displayFps: Double = -1
     private var jsDisplayLink: CADisplayLink?
 
     init(jsQueue: DispatchQueueType, frameTimeCallback: @escaping frame_time_callback) {
@@ -80,8 +81,11 @@ private final class JSRefreshRateListener: RefreshRateListener {
         let frameTimestamp = displayLink.timestamp
         if lastFrameTimestamp != -1 {
             let frameDuration = frameTimestamp - lastFrameTimestamp
-            frameTimeCallback(frameDuration)
+            frameTimeCallback(frameDuration, displayFps)
         }
         lastFrameTimestamp = frameTimestamp
+        
+        // Refresh rate the display is currently running at
+        displayFps = 1.0 / (displayLink.targetTimestamp - frameTimestamp)
     }
 }
