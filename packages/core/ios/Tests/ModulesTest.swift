@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import Foundation
 import XCTest
 @testable import DatadogSDKReactNative
 @testable import React
