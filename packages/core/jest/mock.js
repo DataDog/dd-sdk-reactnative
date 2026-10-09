@@ -143,6 +143,9 @@ module.exports = {
         addViewLoadingTime: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),
+        reportAppFullyDisplayed: jest
+            .fn()
+            .mockImplementation(() => new Promise(resolve => resolve())),
         addFeatureFlagEvaluation: jest
             .fn()
             .mockImplementation(() => new Promise(resolve => resolve())),

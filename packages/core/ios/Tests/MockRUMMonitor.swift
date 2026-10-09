@@ -11,10 +11,6 @@ import Foundation
 @testable import DatadogSDKReactNative
 
 internal class MockRUMMonitor: RUMMonitorProtocol {
-    func reportAppFullyDisplayed() {
-        // not implemented
-    }
-    
     func currentSessionID(completion: @escaping (String?) -> Void) {
         // not implemented
     }
@@ -70,6 +66,7 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
         case addViewAttributes(_: Int? = nil) // We need an attribute for the case to be Equatable
         case removeViewAttributes(keys: [String])
         case addViewLoadingTime(overwrite: Bool)
+        case reportAppFullyDisplayed(_: Int? = nil) // We need an attribute for the case to be Equatable
         case stopSession(_: Int? = nil) // We need an attribute for the case to be Equatable
         case addResourceMetrics(resourceKey: String,
                                 fetch: Interval,
@@ -151,6 +148,9 @@ internal class MockRUMMonitor: RUMMonitorProtocol {
     
     func addViewLoadingTime(overwrite: Bool) {
         calledMethods.append(.addViewLoadingTime(overwrite: overwrite))
+    }
+    func reportAppFullyDisplayed() {
+        calledMethods.append(.reportAppFullyDisplayed())
     }
     func stopSession() {
         calledMethods.append(.stopSession())
