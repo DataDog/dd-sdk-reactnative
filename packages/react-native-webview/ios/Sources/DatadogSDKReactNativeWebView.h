@@ -12,7 +12,7 @@
 // react-native-webview is a static library under CocoaPods' default linkage, where its public
 // headers land flat in Pods/Headers/Public and resolve as a quoted import. When the pod is built
 // as a dynamic framework instead -- which is mandatory when the native Datadog iOS SDK is resolved
-// through Swift Package Manager --the same header is only reachable
+// through Swift Package Manager -- the same header is only reachable
 // as <react_native_webview/RNCWebViewImpl.h>. Support both layouts.
 #if __has_include(<react_native_webview/RNCWebViewImpl.h>)
 #import <react_native_webview/RNCWebViewImpl.h>
