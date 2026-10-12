@@ -309,4 +309,47 @@ describe('Babel plugin: DD attribute values', () => {
             expect(captured[0].testID).toEqual(['a,b']);
         });
     });
+
+    describe('JSX nested inside getContent expressions', () => {
+        // JSX nested in callbacks, non-JSX branches or attribute values is not reached by
+        // the direct conversion, and the JSX transform never visits code hoisted into hooks
+        const hasRawJsx = (code: string) => /<[A-Z_][\w.]*[\s>/]/.test(code);
+
+        it('converts JSX inside a .map() callback in hoisted children', () => {
+            const code = `
+                import React from 'react';
+                import { Pressable, Text } from 'react-native';
+                const ITEMS = [{ id: 'a', name: 'Item A' }];
+                export function render() {
+                    const handlePress = React.useCallback(() => {}, []);
+                    return (
+                        <Pressable onPress={handlePress}>
+                            {ITEMS.map(i => <Text key={i.id}>{i.name}</Text>)}
+                        </Pressable>
+                    );
+                }
+            `;
+            expect(hasRawJsx(transformCode(code))).toBe(false);
+            expect(() => pressAll(code)).not.toThrow();
+        });
+
+        it('converts JSX in non-JSX ternary branches and attribute values', () => {
+            const code = `
+                import React from 'react';
+                import { Pressable, Text } from 'react-native';
+                const ITEMS = [{ id: 'a', name: 'Item A' }];
+                export function render() {
+                    const handlePress = React.useCallback(() => {}, []);
+                    return (
+                        <Pressable title={<Text>title</Text>} onPress={handlePress}>
+                            {ITEMS.length ? ITEMS.map(i => <Text key={i.id}>{i.name}</Text>) : null}
+                            <Text icon={<Text>icon</Text>}>label</Text>
+                        </Pressable>
+                    );
+                }
+            `;
+            expect(hasRawJsx(transformCode(code))).toBe(false);
+            expect(() => pressAll(code)).not.toThrow();
+        });
+    });
 });
