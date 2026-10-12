@@ -45,11 +45,15 @@ function transformCode(code: string) {
 /**
  * Transforms `code`, executes it with stubbed modules, presses every rendered
  * element and returns the `targetObject` each press handed to `wrapRumAction`.
+ * Like the runtime, `getContent` is resolved when the wrapper runs; errors it
+ * throws are collected in `contentErrors`.
  */
 function pressAll(code: string, modules: Record<string, any> = {}) {
     const output = transformCode(code);
     const captured: Record<string, any>[] = [];
     const rendered: Record<string, any>[] = [];
+    const contentErrors: unknown[] = [];
+    let isResolvingContent = false;
 
     const DdBabelInteractionTracking = {
         getInstance: () => DdBabelInteractionTracking,
@@ -59,13 +63,23 @@ function pressAll(code: string, modules: Record<string, any> = {}) {
             target: Record<string, any>
         ) => (...args: any[]) => {
             captured.push(target);
+            isResolvingContent = true;
+            try {
+                target.getContent?.();
+            } catch (e) {
+                contentErrors.push(e);
+            } finally {
+                isResolvingContent = false;
+            }
             return fn?.(...args);
         }
     };
 
     const React = {
         createElement: (_type: any, props: any) => {
-            rendered.push(props || {});
+            if (!isResolvingContent) {
+                rendered.push(props || {});
+            }
             return { props };
         },
         Fragment: 'Fragment',
@@ -109,7 +123,7 @@ function pressAll(code: string, modules: Record<string, any> = {}) {
         props.onPress?.();
     }
 
-    return { output, captured };
+    return { output, captured, contentErrors };
 }
 
 describe('Babel plugin: DD attribute values', () => {
@@ -360,6 +374,66 @@ describe('Babel plugin: DD attribute values', () => {
                     './testIDs': { TestIDs: { someTestId: 'imported_id' } }
                 })
             ).not.toThrow();
+        });
+
+        it('keeps component params', () => {
+            const { captured } = pressAll(`
+                import React from 'react';
+                import { Button } from 'react-native';
+                export function render(props = { id: 'param_id' }) {
+                    const handler = React.useMemo(() => () => {}, []);
+                    return <Button testID={props.id} onPress={handler} />;
+                }
+            `);
+            expect(captured[0].testID).toStrictEqual(['param_id']);
+        });
+
+        it('keeps bindings declared before the hook', () => {
+            const { captured } = pressAll(`
+                import React from 'react';
+                import { Button } from 'react-native';
+                export function render() {
+                    const before = 'declared_before';
+                    const handler = React.useMemo(() => () => {}, []);
+                    return <Button testID={before} onPress={handler} />;
+                }
+            `);
+            expect(captured[0].testID).toStrictEqual(['declared_before']);
+        });
+
+        it('drops content referencing bindings declared after the hook', () => {
+            const { output, contentErrors } = pressAll(`
+                import React from 'react';
+                import { Button } from 'react-native';
+                export function render() {
+                    const handler = React.useMemo(() => () => {}, []);
+                    const title = 'declared_after';
+                    return <Button title={title} onPress={handler} />;
+                }
+            `);
+            const factory = output.slice(
+                output.indexOf('useMemo('),
+                output.indexOf("const title = 'declared_after'")
+            );
+            expect(factory).not.toContain('[title]');
+            expect(contentErrors).toStrictEqual([]);
+        });
+
+        it('keeps content referencing bindings declared before the hook', () => {
+            const { output } = pressAll(`
+                import React from 'react';
+                import { Button } from 'react-native';
+                export function render() {
+                    const title = 'declared_before';
+                    const handler = React.useMemo(() => () => {}, []);
+                    return <Button title={title} onPress={handler} />;
+                }
+            `);
+            const factory = output.slice(
+                output.indexOf('useMemo('),
+                output.indexOf('return /*#__PURE__*/')
+            );
+            expect(factory).toContain('[title]');
         });
 
         it('keeps program scope values in the factory args', () => {
