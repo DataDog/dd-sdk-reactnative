@@ -69,7 +69,9 @@ function pressAll(code: string, modules: Record<string, any> = {}) {
             return { props };
         },
         Fragment: 'Fragment',
-        useCallback: (fn: any) => fn
+        useCallback: (fn: any) => fn,
+        // Like React, run the factory during render
+        useMemo: (factory: () => any) => factory()
     };
 
     const allModules: Record<string, any> = {
@@ -201,7 +203,7 @@ describe('Babel plugin: DD attribute values', () => {
                 </Pressable>;
             `);
             expect(output).not.toMatch(/"testID": \[[^\]]*i\.id/);
-            expect(captured[0].testID).toEqual(['parent_id']);
+            expect(captured[0].testID).toStrictEqual(['parent_id', undefined]);
         });
     });
 
@@ -250,7 +252,7 @@ describe('Babel plugin: DD attribute values', () => {
             `);
             const hoisted = output.slice(0, output.indexOf('items.map'));
             expect(hoisted).not.toContain('item.');
-            expect(captured[0].testID).toBeUndefined();
+            expect(captured[0].testID).toStrictEqual([undefined]);
             // Previously `[item.name]` was hoisted and threw a ReferenceError
             expect(() => captured[0].getContent()).not.toThrow();
         });
@@ -307,6 +309,72 @@ describe('Babel plugin: DD attribute values', () => {
                 }
             `);
             expect(captured[0].testID).toEqual(['a,b']);
+        });
+    });
+
+    describe('compound component positions', () => {
+        it('keeps an undefined placeholder for dropped values', () => {
+            const { captured } = pressAll(`
+                import { Pressable, Text } from 'react-native';
+                const items = [{ id: 'a' }];
+                <Pressable testID="first" onPress={() => {}}>
+                    {items.map(i => <Text key={i.id} testID={i.id}>x</Text>)}
+                    <Text testID="third">y</Text>
+                </Pressable>;
+            `);
+            expect(captured[0].testID).toStrictEqual([
+                'first',
+                undefined,
+                'third'
+            ]);
+        });
+    });
+
+    describe('memoized handlers (useMemo)', () => {
+        // React runs the factory during render at the hook call, so component bindings
+        // declared after it are still in their temporal dead zone
+        it('drops component bindings and keeps program scope values', () => {
+            const code = `
+                import React from 'react';
+                import { Button } from 'react-native';
+                import { TestIDs } from './testIDs';
+                export function render() {
+                    const handler = React.useMemo(() => () => {}, []);
+                    const id = 'declared_after';
+                    return (
+                        <>
+                            <Button testID={id} onPress={handler} />
+                            <Button testID={TestIDs.someTestId} onPress={handler} />
+                        </>
+                    );
+                }
+            `;
+            const output = transformCode(code);
+            const factory = output.slice(
+                output.indexOf('useMemo('),
+                output.indexOf("const id = 'declared_after'")
+            );
+            expect(factory).not.toMatch(/"testID": \[id\]/);
+            expect(() =>
+                pressAll(code, {
+                    './testIDs': { TestIDs: { someTestId: 'imported_id' } }
+                })
+            ).not.toThrow();
+        });
+
+        it('keeps program scope values in the factory args', () => {
+            const output = transformCode(`
+                import React from 'react';
+                import { Button } from 'react-native';
+                import { TestIDs } from './testIDs';
+                export function render() {
+                    const handler = React.useMemo(() => () => {}, []);
+                    return <Button testID={TestIDs.someTestId} onPress={handler} />;
+                }
+            `);
+            expect(output).toMatch(
+                /useMemo\([\s\S]*"testID": \[_testIDs\.TestIDs\.someTestId\][\s\S]*\}, \[\]\)/
+            );
         });
     });
 

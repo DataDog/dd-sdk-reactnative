@@ -94,7 +94,8 @@ export function handleJSXElementActionPaths(
         actionPathList,
         actionPathNames,
         ddValues,
-        hoistedDdValues
+        hoistedDdValues,
+        factoryDdValues
     } = getJSXElementActionPaths(componentName, t, path, state, options);
 
     // Create known custom components list tracked by the plugin
@@ -135,12 +136,17 @@ export function handleJSXElementActionPaths(
         programPath
     );
 
+    if (hoistedDdValues.getContent) {
+        factoryDdValues.getContent = hoistedDdValues.getContent;
+    }
+
     // Wrap every actionable handler attribute with RUM
     for (const attrPath of actionPathList) {
         attrPath.node.extra = {
             ...attrPath.node.extra,
             ddValues,
-            hoistedDdValues
+            hoistedDdValues,
+            factoryDdValues
         };
         handleRumActions(t, attrPath, state, componentNameList);
     }
@@ -662,6 +668,13 @@ export function getJSXElementActionPaths(
     // is hoisted into a `useCallback`/`useMemo` call in the component body
     const hoistedDdValues: DdValues = {};
 
+    // Same as `hoistedDdValues`, restricted to program scope for `useMemo` factories
+    const factoryDdValues: DdValues = {};
+
+    const programPath = path.findParent(p =>
+        p.isProgram()
+    ) as Babel.NodePath<Babel.types.Program>;
+
     // Handler names to consider actionable (e.g., onPress, onLongPress)
     const actionMapList =
         state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
@@ -693,6 +706,7 @@ export function getJSXElementActionPaths(
 
     if (ddValues['options']) {
         hoistedDdValues['options'] = ddValues['options'];
+        factoryDdValues['options'] = ddValues['options'];
     }
 
     // Traverse attributes to collect DD props and actionable handlers
@@ -716,38 +730,52 @@ export function getJSXElementActionPaths(
                 if (t.isStringLiteral(data)) {
                     pushDdValue(t, ddValues, attrName, data);
                     pushDdValue(t, hoistedDdValues, attrName, data);
+                    pushDdValue(t, factoryDdValues, attrName, data);
                 } else if (
                     t.isJSXExpressionContainer(data) &&
                     !t.isJSXEmptyExpression(data.expression)
                 ) {
                     // Expressions are evaluated at runtime inside the generated wrapper,
-                    // so they are only forwarded when their bindings are visible there
+                    // so they are only forwarded when their bindings are visible there.
+                    // Otherwise an `undefined` placeholder keeps compound component positions.
                     const exprPath = subpath.get(
                         'value.expression'
                     ) as Babel.NodePath<Babel.types.Expression>;
+                    const expression = data.expression;
 
-                    if (!isExpressionInScope(exprPath, path)) {
-                        return;
-                    }
+                    const isInline = isExpressionInScope(exprPath, path);
+                    const getValue = (isVisible: boolean) =>
+                        isVisible
+                            ? t.cloneNode(expression, true)
+                            : t.unaryExpression('void', t.numericLiteral(0));
 
-                    pushDdValue(
-                        t,
-                        ddValues,
-                        attrName,
-                        t.cloneNode(data.expression, true)
-                    );
+                    pushDdValue(t, ddValues, attrName, getValue(isInline));
 
                     // Memoized handlers hoist the args object to the component body
-                    if (
-                        isExpressionInScope(exprPath, getHoistTargetPath(path))
-                    ) {
-                        pushDdValue(
-                            t,
-                            hoistedDdValues,
-                            attrName,
-                            t.cloneNode(data.expression, true)
-                        );
-                    }
+                    pushDdValue(
+                        t,
+                        hoistedDdValues,
+                        attrName,
+                        getValue(
+                            isInline &&
+                                isExpressionInScope(
+                                    exprPath,
+                                    getHoistTargetPath(path)
+                                )
+                        )
+                    );
+
+                    // `useMemo` factories run during render at the hook call, before later
+                    // component bindings are initialized, so only program scope is safe
+                    pushDdValue(
+                        t,
+                        factoryDdValues,
+                        attrName,
+                        getValue(
+                            isInline &&
+                                isExpressionInScope(exprPath, programPath)
+                        )
+                    );
                 }
 
                 return;
@@ -769,7 +797,13 @@ export function getJSXElementActionPaths(
         }
     });
 
-    return { actionPathList, actionPathNames, ddValues, hoistedDdValues };
+    return {
+        actionPathList,
+        actionPathNames,
+        ddValues,
+        hoistedDdValues,
+        factoryDdValues
+    };
 }
 
 /**
