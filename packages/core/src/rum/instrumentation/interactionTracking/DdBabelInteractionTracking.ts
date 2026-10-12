@@ -85,10 +85,26 @@ class BabelInteractionTracking {
             return null;
         };
 
+        // Values can come from runtime expressions, so everything that
+        // doesn't resolve to a usable name is ignored.
+        const getValidValues = (values: unknown): string[] | null => {
+            if (!Array.isArray(values)) {
+                return null;
+            }
+
+            const validValues = values
+                .filter(
+                    x =>
+                        (typeof x === 'string' && x.length > 0) ||
+                        (typeof x === 'number' && Number.isFinite(x))
+                )
+                .map(String);
+
+            return validValues.length > 0 ? validValues : null;
+        };
+
         const getAccessibilityLabel = () =>
-            useAccessibilityLabel && accessibilityLabel
-                ? accessibilityLabel
-                : null;
+            useAccessibilityLabel ? getValidValues(accessibilityLabel) : null;
 
         const index = handlerArgs
             ? handlerArgs.find(x => typeof x === 'number') || 0
@@ -96,8 +112,8 @@ class BabelInteractionTracking {
 
         // Order: actionName → actionNameAttribute → accessibilityLabel → content
         const selectedContent =
-            actionName ||
-            Object.values(attrs)[0] ||
+            getValidValues(actionName) ||
+            getValidValues(Object.values(attrs)[0]) ||
             getAccessibilityLabel() ||
             tryContent();
 

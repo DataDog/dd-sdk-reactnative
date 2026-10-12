@@ -28,10 +28,18 @@ import {
     getImportDeclaration,
     getNodeName,
     insertAtProgramTop,
+    isExpressionInScope,
     toExpression
 } from '../../utils';
 
 import { handleTapAction } from './tap';
+
+type DdValues = Record<
+    string,
+    | Babel.types.ArrayExpression
+    | Babel.types.ArrowFunctionExpression
+    | Babel.types.ObjectExpression
+>;
 
 /**
  * Inserts RUM Action Tracking import at the top of the Program.
@@ -85,7 +93,8 @@ export function handleJSXElementActionPaths(
     const {
         actionPathList,
         actionPathNames,
-        ddValues
+        ddValues,
+        hoistedDdValues
     } = getJSXElementActionPaths(componentName, t, path, state, options);
 
     // Create known custom components list tracked by the plugin
@@ -116,13 +125,22 @@ export function handleJSXElementActionPaths(
     const programPath = path.findParent(p =>
         p.isProgram()
     ) as Babel.NodePath<Babel.types.Program>;
-    setContentAttribute(componentName, t, path, state, ddValues, programPath);
+    setContentAttribute(
+        componentName,
+        t,
+        path,
+        state,
+        ddValues,
+        hoistedDdValues,
+        programPath
+    );
 
     // Wrap every actionable handler attribute with RUM
     for (const attrPath of actionPathList) {
         attrPath.node.extra = {
             ...attrPath.node.extra,
-            ddValues
+            ddValues,
+            hoistedDdValues
         };
         handleRumActions(t, attrPath, state, componentNameList);
     }
@@ -390,24 +408,24 @@ function jsxChildToRuntimeCall(
  *   - the element's children (rendered via a React.createElement(Fragment) call)
  *   - common label-like props (`trackingLabel`, `title`, `label`, `text`, plus an optional custom prop)
  *
- * @param componentName  Host component name (controls whether content is used).
- * @param t              Babel types helper.
- * @param path           JSXElement path.
- * @param state          Plugin state with trackedComponents metadata.
- * @param ddValues       Mutable map of computed values attached to attributes via `node.extra.ddValues`.
- * @param programPath   Program path for inserting jsx-runtime imports.
+ * A second resolver is attached into `hoistedDdValues`, leaving out any candidate or
+ * children that reference bindings not visible from the component body (e.g., `.map()` params).
+ *
+ * @param componentName    Host component name (controls whether content is used).
+ * @param t                Babel types helper.
+ * @param path             JSXElement path.
+ * @param state            Plugin state with trackedComponents metadata.
+ * @param ddValues         Mutable map of computed values attached to attributes via `node.extra.ddValues`.
+ * @param hoistedDdValues  Mutable map of values used when the args object is hoisted into a memoization hook.
+ * @param programPath      Program path for inserting jsx-runtime imports.
  */
 export function setContentAttribute(
     componentName: string,
     t: typeof Babel.types,
     path: Babel.NodePath<Babel.types.JSXElement>,
     state: PluginPassState,
-    ddValues: Record<
-        string,
-        | Babel.types.ArrayExpression
-        | Babel.types.ArrowFunctionExpression
-        | Babel.types.ObjectExpression
-    >,
+    ddValues: DdValues,
+    hoistedDdValues: DdValues,
     programPath: Babel.NodePath<Babel.types.Program>
 ) {
     const componentData = state.trackedComponents?.[componentName];
@@ -419,17 +437,27 @@ export function setContentAttribute(
             LABEL_PROPS.push(componentData.contentProp);
         }
 
+        const attrPaths = path.get(
+            'openingElement.attributes'
+        ) as Babel.NodePath<
+            Babel.types.JSXAttribute | Babel.types.JSXSpreadAttribute
+        >[];
+
+        // Where the args object ends up for memoized handlers
+        const hoistPath = getHoistTargetPath(path);
+
         // Retrieve literal/expr values from matching attributes
         const candidates: Babel.types.Expression[] = [];
+        const hoistedCandidates: Babel.types.Expression[] = [];
         for (const name of LABEL_PROPS) {
-            const attr = (path.node.openingElement.attributes as (
-                | Babel.types.JSXAttribute
-                | Babel.types.JSXSpreadAttribute
-            )[]).find(
-                a => t.isJSXAttribute(a) && t.isJSXIdentifier(a.name, { name })
-            ) as Babel.types.JSXAttribute | undefined;
+            const attrPath = attrPaths.find(
+                a =>
+                    t.isJSXAttribute(a.node) &&
+                    t.isJSXIdentifier(a.node.name, { name })
+            ) as Babel.NodePath<Babel.types.JSXAttribute> | undefined;
 
-            if (!attr) {
+            const attr = attrPath?.node;
+            if (!attrPath || !attr) {
                 continue;
             }
 
@@ -439,10 +467,19 @@ export function setContentAttribute(
 
             if (t.isStringLiteral(attr.value)) {
                 candidates.push(attr.value);
+                hoistedCandidates.push(attr.value);
             } else if (t.isJSXExpressionContainer(attr.value)) {
-                candidates.push(
-                    attr.value.expression as Babel.types.Expression
-                );
+                const expression = attr.value
+                    .expression as Babel.types.Expression;
+                candidates.push(expression);
+
+                const exprPath = attrPath.get(
+                    'value.expression'
+                ) as Babel.NodePath<Babel.types.Expression>;
+
+                if (isExpressionInScope(exprPath, hoistPath)) {
+                    hoistedCandidates.push(expression);
+                }
             }
         }
 
@@ -453,56 +490,94 @@ export function setContentAttribute(
             .map(child => jsxChildToRuntimeCall(t, child, programPath))
             .filter((x): x is Babel.types.Expression => x !== null);
 
-        const fragmentId = addNamed(
-            programPath,
-            'Fragment',
-            'react/jsx-runtime'
+        // Share jsx-runtime imports between both resolvers
+        const runtimeIds: Record<string, Babel.types.Identifier> = {};
+        const getRuntimeId = (name: string) => {
+            if (!runtimeIds[name]) {
+                runtimeIds[name] = addNamed(
+                    programPath,
+                    name,
+                    'react/jsx-runtime'
+                ) as Babel.types.Identifier;
+            }
+            return runtimeIds[name];
+        };
+
+        ddValues.getContent = getContentNode(
+            t,
+            convertedChildren,
+            candidates,
+            getRuntimeId
         );
 
-        const childrenProp =
-            convertedChildren.length === 1
-                ? t.objectProperty(
-                      t.identifier('children'),
-                      convertedChildren[0]
-                  )
-                : convertedChildren.length > 1
-                ? t.objectProperty(
-                      t.identifier('children'),
-                      t.arrayExpression(convertedChildren)
-                  )
-                : null;
+        const childrenInScope = path
+            .get('children')
+            .every(child => isExpressionInScope(child, hoistPath));
 
-        const fragmentProps = childrenProp
-            ? t.objectExpression([childrenProp])
-            : t.objectExpression([]);
-
-        const runtimeFn =
-            convertedChildren.length > 1
-                ? addNamed(programPath, 'jsxs', 'react/jsx-runtime')
-                : addNamed(programPath, 'jsx', 'react/jsx-runtime');
-
-        const fragment = t.callExpression(t.cloneNode(runtimeFn), [
-            t.cloneNode(fragmentId),
-            fragmentProps
-        ]);
-
-        // () => __ddExtractText(jsxs(Fragment, { children: [...] }), [candidates...])
-        const getContentNode = t.arrowFunctionExpression(
-            [],
-            t.blockStatement([
-                t.returnStatement(
-                    t.callExpression(t.identifier('__ddExtractText'), [
-                        fragment,
-                        t.arrayExpression(
-                            candidates.map(e => t.cloneNode(e, true))
-                        )
-                    ])
-                )
-            ])
-        );
-
-        ddValues.getContent = getContentNode;
+        hoistedDdValues.getContent =
+            childrenInScope && hoistedCandidates.length === candidates.length
+                ? ddValues.getContent
+                : getContentNode(
+                      t,
+                      childrenInScope ? convertedChildren : [],
+                      hoistedCandidates,
+                      getRuntimeId
+                  );
     }
+}
+
+/**
+ * Builds the `getContent` resolver:
+ * `() => __ddExtractText(jsxs(Fragment, { children: [...] }), [candidates...])`
+ *
+ * @param t                  Babel types helper.
+ * @param convertedChildren  Children already converted to jsx()/jsxs() runtime calls.
+ * @param candidates         Label-like prop values.
+ * @param getRuntimeId       Returns the local identifier for a `react/jsx-runtime` import.
+ */
+function getContentNode(
+    t: typeof Babel.types,
+    convertedChildren: Babel.types.Expression[],
+    candidates: Babel.types.Expression[],
+    getRuntimeId: (name: string) => Babel.types.Identifier
+) {
+    const fragmentId = getRuntimeId('Fragment');
+
+    const childrenProp =
+        convertedChildren.length === 1
+            ? t.objectProperty(t.identifier('children'), convertedChildren[0])
+            : convertedChildren.length > 1
+            ? t.objectProperty(
+                  t.identifier('children'),
+                  t.arrayExpression(convertedChildren)
+              )
+            : null;
+
+    const fragmentProps = childrenProp
+        ? t.objectExpression([childrenProp])
+        : t.objectExpression([]);
+
+    const runtimeFn =
+        convertedChildren.length > 1
+            ? getRuntimeId('jsxs')
+            : getRuntimeId('jsx');
+
+    const fragment = t.callExpression(t.cloneNode(runtimeFn), [
+        t.cloneNode(fragmentId),
+        fragmentProps
+    ]);
+
+    return t.arrowFunctionExpression(
+        [],
+        t.blockStatement([
+            t.returnStatement(
+                t.callExpression(t.identifier('__ddExtractText'), [
+                    fragment,
+                    t.arrayExpression(candidates.map(e => t.cloneNode(e, true)))
+                ])
+            )
+        ])
+    );
 }
 
 /**
@@ -532,12 +607,11 @@ export function getJSXElementActionPaths(
     ].filter(Boolean);
 
     // Map for dd attributes and misc options
-    const ddValues: Record<
-        string,
-        | Babel.types.ArrayExpression
-        | Babel.types.ArrowFunctionExpression
-        | Babel.types.ObjectExpression
-    > = {};
+    const ddValues: DdValues = {};
+
+    // Same as `ddValues`, restricted to values that stay valid when the args object
+    // is hoisted into a `useCallback`/`useMemo` call in the component body
+    const hoistedDdValues: DdValues = {};
 
     // Handler names to consider actionable (e.g., onPress, onLongPress)
     const actionMapList =
@@ -568,6 +642,10 @@ export function getJSXElementActionPaths(
         ]);
     }
 
+    if (ddValues['options']) {
+        hoistedDdValues['options'] = ddValues['options'];
+    }
+
     // Traverse attributes to collect DD props and actionable handlers
     path.traverse({
         JSXAttribute(subpath) {
@@ -580,20 +658,46 @@ export function getJSXElementActionPaths(
                 return;
             }
 
-            // Collect literal DD attributes into arrays inside ddValues
+            // Collect DD attributes into arrays inside ddValues
             // Required for handling `CompoundComponents`
             const isValidAttr = ddAttrs.includes(attrName);
             if (isValidAttr) {
                 const data = subpath.node.value;
 
                 if (t.isStringLiteral(data)) {
-                    if (!ddValues[attrName]) {
-                        ddValues[attrName] = t.arrayExpression([]);
+                    pushDdValue(t, ddValues, attrName, data);
+                    pushDdValue(t, hoistedDdValues, attrName, data);
+                } else if (
+                    t.isJSXExpressionContainer(data) &&
+                    !t.isJSXEmptyExpression(data.expression)
+                ) {
+                    // Expressions are evaluated at runtime inside the generated wrapper,
+                    // so they are only forwarded when their bindings are visible there
+                    const exprPath = subpath.get(
+                        'value.expression'
+                    ) as Babel.NodePath<Babel.types.Expression>;
+
+                    if (!isExpressionInScope(exprPath, path)) {
+                        return;
                     }
 
-                    const valuesArray = ddValues[attrName];
-                    if (t.isArrayExpression(valuesArray)) {
-                        valuesArray.elements.push(data);
+                    pushDdValue(
+                        t,
+                        ddValues,
+                        attrName,
+                        t.cloneNode(data.expression, true)
+                    );
+
+                    // Memoized handlers hoist the args object to the component body
+                    if (
+                        isExpressionInScope(exprPath, getHoistTargetPath(path))
+                    ) {
+                        pushDdValue(
+                            t,
+                            hoistedDdValues,
+                            attrName,
+                            t.cloneNode(data.expression, true)
+                        );
                     }
                 }
 
@@ -616,7 +720,52 @@ export function getJSXElementActionPaths(
         }
     });
 
-    return { actionPathList, actionPathNames, ddValues };
+    return { actionPathList, actionPathNames, ddValues, hoistedDdValues };
+}
+
+/**
+ * Returns the path whose scope matches where memoized handlers get their args object
+ * hoisted to: the nearest enclosing component (same lookup as `handleMemoization`),
+ * or the Program when there is none.
+ *
+ * @param path  JSXElement path.
+ */
+function getHoistTargetPath(
+    path: Babel.NodePath<Babel.types.JSXElement>
+): Babel.NodePath<Babel.types.Node> {
+    return (
+        path.findParent(
+            p =>
+                p.isFunctionDeclaration() ||
+                p.isFunctionExpression() ||
+                p.isClassDeclaration() ||
+                p.isProgram()
+        ) || path
+    );
+}
+
+/**
+ * Appends a value to the array stored under `attrName`, creating it if needed.
+ *
+ * @param t          Babel types helper.
+ * @param values     Map of computed values (`ddValues` or `hoistedDdValues`).
+ * @param attrName   Attribute name used as key.
+ * @param value      Expression to append.
+ */
+function pushDdValue(
+    t: typeof Babel.types,
+    values: DdValues,
+    attrName: string,
+    value: Babel.types.Expression
+) {
+    if (!values[attrName]) {
+        values[attrName] = t.arrayExpression([]);
+    }
+
+    const valuesArray = values[attrName];
+    if (t.isArrayExpression(valuesArray)) {
+        valuesArray.elements.push(value);
+    }
 }
 
 /**

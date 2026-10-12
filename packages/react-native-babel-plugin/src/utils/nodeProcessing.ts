@@ -603,3 +603,56 @@ export function findIdentifierInScope(
 
     return foundValue;
 }
+
+/**
+ * Checks whether an expression can be safely evaluated at a different location
+ * than where it was written, i.e. whether every binding it references resolves
+ * to the same binding from `targetPath`'s scope. Globals are always visible.
+ *
+ * @param exprPath    Path of the expression to check.
+ * @param targetPath  Path where the expression would be evaluated.
+ * @returns           `true` if all referenced bindings are visible from the target location.
+ */
+export function isExpressionInScope(
+    exprPath: Babel.NodePath<Babel.types.Node>,
+    targetPath: Babel.NodePath<Babel.types.Node>
+): boolean {
+    let inScope = true;
+
+    const check = (
+        path: Babel.NodePath<Babel.types.Identifier | Babel.types.JSXIdentifier>
+    ) => {
+        if (!inScope || !path.isReferencedIdentifier()) {
+            return;
+        }
+
+        const name = path.node.name;
+        const binding = path.scope.getBinding(name);
+
+        if (binding && targetPath.scope.getBinding(name) !== binding) {
+            inScope = false;
+        }
+    };
+
+    if (exprPath.isIdentifier() || exprPath.isJSXIdentifier()) {
+        check(exprPath);
+        return inScope;
+    }
+
+    exprPath.traverse({
+        Identifier(path) {
+            check(path);
+            if (!inScope) {
+                path.stop();
+            }
+        },
+        JSXIdentifier(path) {
+            check(path);
+            if (!inScope) {
+                path.stop();
+            }
+        }
+    });
+
+    return inScope;
+}

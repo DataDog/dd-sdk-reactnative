@@ -70,20 +70,30 @@ export function handleTapAction(
         (path.node.extra.ddValues as any)['handlerArgs'] = handlerArgs;
     }
 
-    const argsObject = t.objectExpression([
-        ...Object.entries(path.node?.extra?.ddValues || {}).map(
-            ([key, value]) => {
+    if (path.node?.extra?.hoistedDdValues) {
+        (path.node.extra.hoistedDdValues as any)['handlerArgs'] = handlerArgs;
+    }
+
+    const getArgsObject = (ddValues: unknown) =>
+        t.objectExpression([
+            ...Object.entries(ddValues || {}).map(([key, value]) => {
                 return t.objectProperty(
                     t.stringLiteral(key),
                     toExpression(t, value)
                 );
-            }
-        ),
-        t.objectProperty(
-            t.stringLiteral('componentName'),
-            t.stringLiteral(parentName)
-        )
-    ]);
+            }),
+            t.objectProperty(
+                t.stringLiteral('componentName'),
+                t.stringLiteral(parentName)
+            )
+        ]);
+
+    const argsObject = getArgsObject(path.node?.extra?.ddValues);
+
+    // Memoized handlers are wrapped in the component body, outside the JSX scope
+    const hoistedArgsObject = path.node?.extra?.hoistedDdValues
+        ? getArgsObject(path.node.extra.hoistedDdValues)
+        : argsObject;
 
     // Used only for function references
     // Wraps our custom logic at the level of the memoization call insead of on the property level (default behaviour)
@@ -99,7 +109,7 @@ export function handleTapAction(
                   expression,
                   fName,
                   fNode,
-                  argsObject,
+                  hoistedArgsObject,
                   handler?.mode
               );
 
