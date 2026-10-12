@@ -258,4 +258,23 @@ describe('DdBabelInteractionTracking target name resolution', () => {
     it('should stringify numeric values', () => {
         expect(getTargetName({ testID: [42] })).toBe('42');
     });
+
+    it('should keep positions when resolving the indexed value', () => {
+        expect(
+            getTargetName({
+                testID: ['first', undefined, 'third'],
+                handlerArgs: [2]
+            })
+        ).toBe('third');
+    });
+
+    it('should fall back to the next source when the indexed value is unresolved', () => {
+        expect(
+            getTargetName({
+                testID: ['first', undefined, 'third'],
+                accessibilityLabel: ['a11y_first', 'a11y_second'],
+                handlerArgs: [1]
+            })
+        ).toBe('a11y_second');
+    });
 });

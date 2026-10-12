@@ -173,6 +173,15 @@ describe('Babel plugin: DD attribute values', () => {
         expect(captured[0].testID).toEqual(['before']);
     });
 
+    it('forwards expressions declaring their own bindings', () => {
+        const { captured } = pressAll(`
+            import { Button } from 'react-native';
+            const items = [{ id: 'a' }, { id: 'b' }];
+            <Button testID={items.map(item => item.id).join(',')} onPress={() => {}} />;
+        `);
+        expect(captured[0].testID).toEqual(['a,b']);
+    });
+
     describe('inline handlers', () => {
         it('forwards per-item values inside .map()', () => {
             const { captured } = pressAll(`
@@ -264,6 +273,40 @@ describe('Babel plugin: DD attribute values', () => {
             expect(hoisted).not.toContain('item.');
             expect(hoisted).toContain('["static"]');
             expect(() => captured[0].getContent()).not.toThrow();
+        });
+
+        it('keeps children whose callbacks declare their own bindings in the hoisted content', () => {
+            const output = transformCode(`
+                import React from 'react';
+                import { Pressable, Text } from 'react-native';
+                export function render() {
+                    const items = [{ id: 'a', name: 'Item A' }];
+                    const handlePress = React.useCallback(() => {}, []);
+                    return (
+                        <Pressable onPress={handlePress}>
+                            {items.map(i => <Text key={i.id}>{i.name}</Text>)}
+                        </Pressable>
+                    );
+                }
+            `);
+            const hoisted = output.slice(
+                0,
+                output.indexOf('return /*#__PURE__*/')
+            );
+            expect(hoisted).toContain('items.map(i =>');
+        });
+
+        it('keeps expressions declaring their own bindings in the hoisted args', () => {
+            const { captured } = pressAll(`
+                import React from 'react';
+                import { Button } from 'react-native';
+                const items = [{ id: 'a' }, { id: 'b' }];
+                export function render() {
+                    const handlePress = React.useCallback(() => {}, []);
+                    return <Button testID={items.map(item => item.id).join(',')} onPress={handlePress} />;
+                }
+            `);
+            expect(captured[0].testID).toEqual(['a,b']);
         });
     });
 });

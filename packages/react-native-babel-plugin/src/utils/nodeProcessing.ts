@@ -606,8 +606,9 @@ export function findIdentifierInScope(
 
 /**
  * Checks whether an expression can be safely evaluated at a different location
- * than where it was written, i.e. whether every binding it references resolves
- * to the same binding from `targetPath`'s scope. Globals are always visible.
+ * than where it was written, i.e. whether every free binding it references resolves
+ * to the same binding from `targetPath`'s scope. Globals are always visible, and
+ * bindings declared within the expression (e.g., callback params) travel with it.
  *
  * @param exprPath    Path of the expression to check.
  * @param targetPath  Path where the expression would be evaluated.
@@ -629,7 +630,11 @@ export function isExpressionInScope(
         const name = path.node.name;
         const binding = path.scope.getBinding(name);
 
-        if (binding && targetPath.scope.getBinding(name) !== binding) {
+        if (!binding || binding.path.isDescendant(exprPath)) {
+            return;
+        }
+
+        if (targetPath.scope.getBinding(name) !== binding) {
             inScope = false;
         }
     };
