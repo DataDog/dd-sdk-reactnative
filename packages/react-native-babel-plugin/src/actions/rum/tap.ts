@@ -10,6 +10,11 @@ import { RumAction, RumActionConstants } from '../../constants';
 import type { PluginPassState, RumActionResult } from '../../types';
 import { getArgumentsFromParams, getNodeName, toExpression } from '../../utils';
 
+type MemoArgsObjects = Record<
+    'useCallback' | 'useMemo',
+    Babel.types.ObjectExpression
+>;
+
 /**
  * Wraps a tap handler attribute (e.g., onPress) with RUM Action Tracking wrapper call.
  *
@@ -74,6 +79,10 @@ export function handleTapAction(
         (path.node.extra.hoistedDdValues as any)['handlerArgs'] = handlerArgs;
     }
 
+    if (path.node?.extra?.factoryDdValues) {
+        (path.node.extra.factoryDdValues as any)['handlerArgs'] = handlerArgs;
+    }
+
     const getArgsObject = (ddValues: unknown) =>
         t.objectExpression([
             ...Object.entries(ddValues || {}).map(([key, value]) => {
@@ -91,9 +100,14 @@ export function handleTapAction(
     const argsObject = getArgsObject(path.node?.extra?.ddValues);
 
     // Memoized handlers are wrapped in the component body, outside the JSX scope
-    const hoistedArgsObject = path.node?.extra?.hoistedDdValues
-        ? getArgsObject(path.node.extra.hoistedDdValues)
-        : argsObject;
+    const hoistedArgsObjects: MemoArgsObjects = {
+        useCallback: path.node?.extra?.hoistedDdValues
+            ? getArgsObject(path.node.extra.hoistedDdValues)
+            : argsObject,
+        useMemo: path.node?.extra?.factoryDdValues
+            ? getArgsObject(path.node.extra.factoryDdValues)
+            : argsObject
+    };
 
     // Used only for function references
     // Wraps our custom logic at the level of the memoization call insead of on the property level (default behaviour)
@@ -109,7 +123,7 @@ export function handleTapAction(
                   expression,
                   fName,
                   fNode,
-                  hoistedArgsObject,
+                  hoistedArgsObjects,
                   handler?.mode
               );
 
@@ -253,7 +267,7 @@ function getNamedFunctionNode(
  * @param state - Plugin state, with `memoization` map.
  * @param fName - The variable name bound to the memoized value.
  * @param fNode - The variable declarator or function declaration of the memoized symbol.
- * @param argsObject - Datadog-specific args object (ddValues/options).
+ * @param argsObjects - Datadog-specific args objects (ddValues/options), one per memoization hook.
  * @param mode - Optional handler mode; when `'delayed'`, wrapper invocation is deferred.
  * @returns `true` if considered memoized (wrapped or intentionally skipped), else `false`.
  */
@@ -267,7 +281,7 @@ function handleMemoization(
         | babel.types.FunctionDeclaration
         | babel.types.VariableDeclarator
         | null,
-    argsObject: babel.types.ObjectExpression,
+    argsObjects: MemoArgsObjects,
     mode?: string
 ) {
     if (!fName || !fNode || t.isFunctionDeclaration(fNode)) {
@@ -290,9 +304,11 @@ function handleMemoization(
         memoName = getNodeName(t, varInit.callee.property);
     }
 
-    if (!memoName || !['useCallback', 'useMemo'].includes(memoName)) {
+    if (memoName !== 'useCallback' && memoName !== 'useMemo') {
         return false;
     }
+
+    const argsObject = argsObjects[memoName];
 
     const callbackFn = varInit.arguments.at(0);
     const handleWrapping = (
