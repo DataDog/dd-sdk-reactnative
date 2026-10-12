@@ -610,13 +610,19 @@ export function findIdentifierInScope(
  * to the same binding from `targetPath`'s scope. Globals are always visible, and
  * bindings declared within the expression (e.g., callback params) travel with it.
  *
- * @param exprPath    Path of the expression to check.
- * @param targetPath  Path where the expression would be evaluated.
- * @returns           `true` if all referenced bindings are visible from the target location.
+ * When `initializedBefore` is given, the expression is evaluated eagerly at that source
+ * position, so non-program bindings must also be initialized there: params and function
+ * declarations always are, other declarations only if they end before that position.
+ *
+ * @param exprPath           Path of the expression to check.
+ * @param targetPath         Path where the expression would be evaluated.
+ * @param initializedBefore  Optional source position where the expression is evaluated eagerly.
+ * @returns                  `true` if all referenced bindings are visible (and initialized) from the target location.
  */
 export function isExpressionInScope(
     exprPath: Babel.NodePath<Babel.types.Node>,
-    targetPath: Babel.NodePath<Babel.types.Node>
+    targetPath: Babel.NodePath<Babel.types.Node>,
+    initializedBefore?: number
 ): boolean {
     let inScope = true;
 
@@ -635,6 +641,21 @@ export function isExpressionInScope(
         }
 
         if (targetPath.scope.getBinding(name) !== binding) {
+            inScope = false;
+            return;
+        }
+
+        if (
+            initializedBefore === undefined ||
+            binding.scope.path.isProgram() ||
+            binding.kind === 'param' ||
+            binding.kind === 'hoisted'
+        ) {
+            return;
+        }
+
+        const declarationEnd = binding.path.node.end;
+        if (declarationEnd == null || declarationEnd > initializedBefore) {
             inScope = false;
         }
     };

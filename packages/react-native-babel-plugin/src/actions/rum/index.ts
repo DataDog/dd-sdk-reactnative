@@ -133,12 +133,10 @@ export function handleJSXElementActionPaths(
         state,
         ddValues,
         hoistedDdValues,
+        factoryDdValues,
+        getUseMemoStart(t, path, state, componentName),
         programPath
     );
-
-    if (hoistedDdValues.getContent) {
-        factoryDdValues.getContent = hoistedDdValues.getContent;
-    }
 
     // Wrap every actionable handler attribute with RUM
     for (const attrPath of actionPathList) {
@@ -456,15 +454,18 @@ function convertNestedJsx(
  *   - the element's children (rendered via a React.createElement(Fragment) call)
  *   - common label-like props (`trackingLabel`, `title`, `label`, `text`, plus an optional custom prop)
  *
- * A second resolver is attached into `hoistedDdValues`, leaving out any candidate or
- * children that reference bindings not visible from the component body (e.g., `.map()` params).
+ * Additional resolvers are attached into `hoistedDdValues` and `factoryDdValues`, leaving
+ * out any candidate or children that reference bindings not visible from the component
+ * body (e.g., `.map()` params) or, for `useMemo` factories, not yet initialized at the hook.
  *
  * @param componentName    Host component name (controls whether content is used).
  * @param t                Babel types helper.
  * @param path             JSXElement path.
  * @param state            Plugin state with trackedComponents metadata.
  * @param ddValues         Mutable map of computed values attached to attributes via `node.extra.ddValues`.
- * @param hoistedDdValues  Mutable map of values used when the args object is hoisted into a memoization hook.
+ * @param hoistedDdValues  Mutable map of values used when the args object is hoisted into `useCallback`.
+ * @param factoryDdValues  Mutable map of values used when the args object is hoisted into a `useMemo` factory.
+ * @param useMemoStart     Source position of the `useMemo` call used by this element's handlers, if any.
  * @param programPath      Program path for inserting jsx-runtime imports.
  */
 export function setContentAttribute(
@@ -474,6 +475,8 @@ export function setContentAttribute(
     state: PluginPassState,
     ddValues: DdValues,
     hoistedDdValues: DdValues,
+    factoryDdValues: DdValues,
+    useMemoStart: number | undefined,
     programPath: Babel.NodePath<Babel.types.Program>
 ) {
     const componentData = state.trackedComponents?.[componentName];
@@ -494,9 +497,26 @@ export function setContentAttribute(
         // Where the args object ends up for memoized handlers
         const hoistPath = getHoistTargetPath(path);
 
+        // One resolver per args object, each keeping only what is valid where it runs
+        const variants: {
+            values: DdValues;
+            isValid: (p: Babel.NodePath<Babel.types.Node>) => boolean;
+            candidates: Babel.types.Expression[];
+        }[] = [
+            { values: ddValues, isValid: () => true, candidates: [] },
+            {
+                values: hoistedDdValues,
+                isValid: p => isExpressionInScope(p, hoistPath),
+                candidates: []
+            },
+            {
+                values: factoryDdValues,
+                isValid: p => isExpressionInScope(p, hoistPath, useMemoStart),
+                candidates: []
+            }
+        ];
+
         // Retrieve literal/expr values from matching attributes
-        const candidates: Babel.types.Expression[] = [];
-        const hoistedCandidates: Babel.types.Expression[] = [];
         for (const name of LABEL_PROPS) {
             const attrPath = attrPaths.find(
                 a =>
@@ -514,8 +534,8 @@ export function setContentAttribute(
             }
 
             if (t.isStringLiteral(attr.value)) {
-                candidates.push(attr.value);
-                hoistedCandidates.push(attr.value);
+                const value = attr.value;
+                variants.forEach(v => v.candidates.push(value));
             } else if (t.isJSXExpressionContainer(attr.value)) {
                 const expression = convertNestedJsx(
                     t,
@@ -525,15 +545,14 @@ export function setContentAttribute(
                     ),
                     programPath
                 );
-                candidates.push(expression);
 
                 const exprPath = attrPath.get(
                     'value.expression'
                 ) as Babel.NodePath<Babel.types.Expression>;
 
-                if (isExpressionInScope(exprPath, hoistPath)) {
-                    hoistedCandidates.push(expression);
-                }
+                variants
+                    .filter(v => v.isValid(exprPath))
+                    .forEach(v => v.candidates.push(expression));
             }
         }
 
@@ -545,7 +564,7 @@ export function setContentAttribute(
             .filter((x): x is Babel.types.Expression => x !== null)
             .map(child => convertNestedJsx(t, child, programPath));
 
-        // Share jsx-runtime imports between both resolvers
+        // Share jsx-runtime imports between all resolvers
         const runtimeIds: Record<string, Babel.types.Identifier> = {};
         const getRuntimeId = (name: string) => {
             if (!runtimeIds[name]) {
@@ -558,26 +577,28 @@ export function setContentAttribute(
             return runtimeIds[name];
         };
 
-        ddValues.getContent = getContentNode(
-            t,
-            convertedChildren,
-            candidates,
-            getRuntimeId
-        );
+        // Each variant is stricter than the previous one, so equal selections share a node
+        const resolvers: Record<
+            string,
+            Babel.types.ArrowFunctionExpression
+        > = {};
+        for (const variant of variants) {
+            const childrenValid = path
+                .get('children')
+                .every(child => variant.isValid(child));
+            const key = `${variant.candidates.length}:${childrenValid}`;
 
-        const childrenInScope = path
-            .get('children')
-            .every(child => isExpressionInScope(child, hoistPath));
+            if (!resolvers[key]) {
+                resolvers[key] = getContentNode(
+                    t,
+                    childrenValid ? convertedChildren : [],
+                    variant.candidates,
+                    getRuntimeId
+                );
+            }
 
-        hoistedDdValues.getContent =
-            childrenInScope && hoistedCandidates.length === candidates.length
-                ? ddValues.getContent
-                : getContentNode(
-                      t,
-                      childrenInScope ? convertedChildren : [],
-                      hoistedCandidates,
-                      getRuntimeId
-                  );
+            variant.values.getContent = resolvers[key];
+        }
     }
 }
 
@@ -668,12 +689,11 @@ export function getJSXElementActionPaths(
     // is hoisted into a `useCallback`/`useMemo` call in the component body
     const hoistedDdValues: DdValues = {};
 
-    // Same as `hoistedDdValues`, restricted to program scope for `useMemo` factories
+    // Same as `hoistedDdValues`, restricted to bindings initialized at the hook call
+    // for `useMemo` factories
     const factoryDdValues: DdValues = {};
 
-    const programPath = path.findParent(p =>
-        p.isProgram()
-    ) as Babel.NodePath<Babel.types.Program>;
+    const useMemoStart = getUseMemoStart(t, path, state, componentName);
 
     // Handler names to consider actionable (e.g., onPress, onLongPress)
     const actionMapList =
@@ -765,15 +785,19 @@ export function getJSXElementActionPaths(
                         )
                     );
 
-                    // `useMemo` factories run during render at the hook call, before later
-                    // component bindings are initialized, so only program scope is safe
+                    // `useMemo` factories run during render at the hook call, so component
+                    // bindings declared after it are still in their temporal dead zone
                     pushDdValue(
                         t,
                         factoryDdValues,
                         attrName,
                         getValue(
                             isInline &&
-                                isExpressionInScope(exprPath, programPath)
+                                isExpressionInScope(
+                                    exprPath,
+                                    getHoistTargetPath(path),
+                                    useMemoStart
+                                )
                         )
                     );
                 }
@@ -825,6 +849,59 @@ function getHoistTargetPath(
                 p.isProgram()
         ) || path
     );
+}
+
+/**
+ * Returns the earliest source position of a `useMemo` call whose result is used as
+ * one of this element's tracked handlers (e.g., `onPress={handler}` with
+ * `const handler = useMemo(...)`), or undefined when there is none.
+ *
+ * @param t              Babel types helper.
+ * @param path           JSXElement path.
+ * @param state          Plugin state.
+ * @param componentName  Host component name to look up handlers.
+ */
+function getUseMemoStart(
+    t: typeof Babel.types,
+    path: Babel.NodePath<Babel.types.JSXElement>,
+    state: PluginPassState,
+    componentName: string
+): number | undefined {
+    const handlerNames =
+        state.trackedComponents?.[componentName]?.handlers.map(x => x.event) ||
+        [];
+
+    let start: number | undefined;
+    for (const attr of path.node.openingElement.attributes) {
+        if (
+            !t.isJSXAttribute(attr) ||
+            !handlerNames.includes(getNodeName(t, attr.name) || '') ||
+            !t.isJSXExpressionContainer(attr.value) ||
+            !t.isIdentifier(attr.value.expression)
+        ) {
+            continue;
+        }
+
+        const declarator = path.scope.getBinding(attr.value.expression.name)
+            ?.path.node;
+        if (
+            !t.isVariableDeclarator(declarator) ||
+            !t.isCallExpression(declarator.init)
+        ) {
+            continue;
+        }
+
+        const callee = declarator.init.callee;
+        const hookName = t.isMemberExpression(callee)
+            ? getNodeName(t, callee.property)
+            : getNodeName(t, callee);
+
+        if (hookName === 'useMemo' && declarator.init.start != null) {
+            start = Math.min(start ?? Infinity, declarator.init.start);
+        }
+    }
+
+    return start;
 }
 
 /**
