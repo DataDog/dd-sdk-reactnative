@@ -76,56 +76,47 @@ class BabelInteractionTracking {
 
         const { useAccessibilityLabel } = this.config;
 
-        const tryContent = () => {
-            const content = getContent?.();
-            if (content && content.length > 0) {
-                return content;
+        const index = handlerArgs
+            ? handlerArgs.find(x => typeof x === 'number') || 0
+            : 0;
+
+        // Picks the value at `index` (positions map to compound component parts).
+        // Values can come from runtime expressions, so a value that doesn't resolve
+        // to a usable name returns null and lets the next naming source take over.
+        const getIndexedValue = (values: unknown): string | null => {
+            if (!Array.isArray(values) || values.length === 0) {
+                return null;
+            }
+
+            // Fail-safe in case the our 'index' value turns out to not be a real index
+            const value =
+                index + 1 > values.length || index < 0
+                    ? values[0]
+                    : values[index];
+
+            if (
+                (typeof value === 'string' && value.length > 0) ||
+                (typeof value === 'number' && Number.isFinite(value))
+            ) {
+                return String(value);
             }
 
             return null;
         };
 
-        // Values can come from runtime expressions, so everything that
-        // doesn't resolve to a usable name is ignored.
-        const getValidValues = (values: unknown): string[] | null => {
-            if (!Array.isArray(values)) {
-                return null;
-            }
-
-            const validValues = values
-                .filter(
-                    x =>
-                        (typeof x === 'string' && x.length > 0) ||
-                        (typeof x === 'number' && Number.isFinite(x))
-                )
-                .map(String);
-
-            return validValues.length > 0 ? validValues : null;
-        };
-
         const getAccessibilityLabel = () =>
-            useAccessibilityLabel ? getValidValues(accessibilityLabel) : null;
-
-        const index = handlerArgs
-            ? handlerArgs.find(x => typeof x === 'number') || 0
-            : 0;
+            useAccessibilityLabel ? getIndexedValue(accessibilityLabel) : null;
 
         // Order: actionName → actionNameAttribute → accessibilityLabel → content
-        const selectedContent =
-            getValidValues(actionName) ||
-            getValidValues(Object.values(attrs)[0]) ||
-            getAccessibilityLabel() ||
-            tryContent();
+        const output =
+            getIndexedValue(actionName) ??
+            getIndexedValue(Object.values(attrs)[0]) ??
+            getAccessibilityLabel() ??
+            getIndexedValue(getContent?.());
 
-        if (!selectedContent) {
+        if (output === null) {
             return componentName;
         }
-
-        // Fail-safe in case the our 'index' value turns out to not be a real index
-        const output =
-            index + 1 > selectedContent.length || index < 0
-                ? selectedContent[0]
-                : selectedContent[index];
 
         return options.useNamePrefix
             ? `${componentName} ("${output}")`
