@@ -403,6 +403,48 @@ function jsxChildToRuntimeCall(
 }
 
 /**
+ * Replaces any JSX left anywhere inside `node` (callbacks, non-JSX ternary branches,
+ * attribute values, ...) with jsx()/jsxs() runtime calls, mutating it in place.
+ * `jsxChildToRuntimeCall` only converts JSX it reaches directly, and the JSX transform
+ * never visits code hoisted into memoization hooks, so leftovers would end up as
+ * raw JSX in the bundle.
+ *
+ * @param t            Babel types helper.
+ * @param node         Detached (cloned) expression to convert.
+ * @param programPath  Program path for inserting jsx-runtime imports.
+ * @returns            The converted expression (a new node if `node` itself is JSX).
+ */
+function convertNestedJsx(
+    t: typeof Babel.types,
+    node: Babel.types.Expression,
+    programPath: Babel.NodePath<Babel.types.Program>
+): Babel.types.Expression {
+    if (t.isJSXElement(node) || t.isJSXFragment(node)) {
+        const converted = jsxChildToRuntimeCall(t, node, programPath);
+        return converted ? convertNestedJsx(t, converted, programPath) : node;
+    }
+
+    const record = (node as unknown) as Record<string, unknown>;
+    const isNode = (x: unknown): x is Babel.types.Expression =>
+        !!x && typeof (x as Babel.types.Node).type === 'string';
+
+    for (const key of t.VISITOR_KEYS[node.type] || []) {
+        const value = record[key];
+        if (Array.isArray(value)) {
+            value.forEach((item, i) => {
+                if (isNode(item)) {
+                    value[i] = convertNestedJsx(t, item, programPath);
+                }
+            });
+        } else if (isNode(value)) {
+            record[key] = convertNestedJsx(t, value, programPath);
+        }
+    }
+
+    return node;
+}
+
+/**
  * Optionally attaches a `getContent` resolver into `ddValues` that, at runtime,
  * returns a string derived from:
  *   - the element's children (rendered via a React.createElement(Fragment) call)
@@ -469,8 +511,14 @@ export function setContentAttribute(
                 candidates.push(attr.value);
                 hoistedCandidates.push(attr.value);
             } else if (t.isJSXExpressionContainer(attr.value)) {
-                const expression = attr.value
-                    .expression as Babel.types.Expression;
+                const expression = convertNestedJsx(
+                    t,
+                    t.cloneNode(
+                        attr.value.expression as Babel.types.Expression,
+                        true
+                    ),
+                    programPath
+                );
                 candidates.push(expression);
 
                 const exprPath = attrPath.get(
@@ -488,7 +536,8 @@ export function setContentAttribute(
         // plugins, so any JSX nodes created here would survive untransformed.
         const convertedChildren = path.node.children
             .map(child => jsxChildToRuntimeCall(t, child, programPath))
-            .filter((x): x is Babel.types.Expression => x !== null);
+            .filter((x): x is Babel.types.Expression => x !== null)
+            .map(child => convertNestedJsx(t, child, programPath));
 
         // Share jsx-runtime imports between both resolvers
         const runtimeIds: Record<string, Babel.types.Identifier> = {};
