@@ -492,6 +492,8 @@ class DdFlagsTests: XCTestCase {
 }
 
 private class FlagsTestCore: DatadogCoreProtocol {
+    var remoteConfiguration: RemoteConfiguration? { nil }
+
     private var features: [String: DatadogFeature] = [:]
 
     func register<T>(feature: T) throws where T : DatadogFeature {

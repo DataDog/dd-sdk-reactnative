@@ -94,6 +94,9 @@ public class DdFlagsImplementation: NSObject {
                 case .networkError:
                     errorCode = "NETWORK_ERROR"
                     errorMessage = "A network error occurred while fetching feature flags for client '\(clientName)'."
+                case .initializationTimedOut:
+                    errorCode = "INITIALIZATION_TIMED_OUT"
+                    errorMessage = "Feature flags for client '\(clientName)' did not become ready before the initialization timeout."
                 }
                 reject(errorCode, errorMessage, error as NSError)
             }
