@@ -7,12 +7,20 @@
 import Foundation
 import XCTest
 
-/// `DatadogWebViewTracking` and the `consumeWebviewEvent` bridge method are iOS-only (the
-/// framework isn't published for tvOS, see the podspec's `s.ios.dependency 'DatadogWebViewTracking'`).
+/// `DatadogWebViewTracking` and the `consumeWebviewEvent` bridge method are iOS-only in our own
+/// code. This used to also be true one level down: the podspec's `s.ios.dependency
+/// 'DatadogWebViewTracking'` meant the pod dependency itself was never pulled in on tvOS. Now that
+/// the native SDK is resolved through SwiftPM, `spm_dependency` cannot be scoped per platform (see
+/// the podspec), so the product is requested unconditionally instead. Confirmed with a standalone
+/// scratch SPM package (outside this repo, since it has no tvOS build target of its own) that
+/// `DatadogWebViewTracking` 3.16.0 itself still compiles cleanly for tvOS -- but that only checks
+/// dd-sdk-ios's own product in isolation, not this whole pod (React-Core, the FRAMEWORK_SEARCH_PATHS
+/// and OTHER_LDFLAGS workarounds in the podspec, ...) built and linked for tvOS end to end.
 ///
 /// This test statically enforces that every reference to these symbols in `Sources` is wrapped in
 /// a platform guard (`#if os(iOS)` for Swift, `#if TARGET_OS_IOS` for Objective-C++), as a
-/// lightweight substitute for an actual tvOS build.
+/// lightweight substitute for an actual tvOS build. It only covers our own code, not whether the
+/// dependency resolves for tvOS in the first place.
 final class TvOSCompatibilityTests: XCTestCase {
     private static let iOSOnlySymbols = ["DatadogWebViewTracking", "WebViewTracking", "consumeWebviewEvent"]
 
