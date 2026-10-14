@@ -1884,6 +1884,16 @@ describe('DdRum', () => {
         });
     });
 
+    describe('DdRum.reportAppFullyDisplayed', () => {
+        it('calls the native API', async () => {
+            await DdRum.reportAppFullyDisplayed();
+
+            expect(
+                NativeModules.DdRum.reportAppFullyDisplayed
+            ).toHaveBeenCalledTimes(1);
+        });
+    });
+
     describe('PropagatorTypes', () => {
         it('matches with the native name of propagators', () => {
             /**
