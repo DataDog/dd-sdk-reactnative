@@ -453,7 +453,7 @@ class DdFlagsTests: XCTestCase {
     }
 
     func testDictionaryToFlagAssignmentIgnoresMalformedSerialID() {
-        // A malformed serial ID binds to the serial ID. It must not reject the assignment,
+        // A malformed serial ID yields no serial ID. It must not reject the assignment,
         // because that would drop the exposure event for the whole flag.
         let malformedValues: [Any] = ["not-a-number", "", true, 340132]
 
