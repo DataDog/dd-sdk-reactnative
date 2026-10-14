@@ -126,6 +126,26 @@ class DdFlagsTests: XCTestCase {
         waitForExpectations(timeout: 1.0, handler: nil)
     }
 
+    func testSetEvaluationContextInitializationTimedOut() {
+        let expectation = self.expectation(description: "SetEvaluationContext rejects with initialization timeout")
+
+        let mockClient = MockFlagsClient()
+        mockClient.errorToReturn = .initializationTimedOut
+
+        implementation.clientProviders["test_client"] = { mockClient }
+
+        implementation.setEvaluationContext("test_client", targetingKey: "user_1", attributes: [:], resolve: { result in
+            XCTFail("Should not resolve")
+            expectation.fulfill()
+        }, reject: { code, message, error in
+            XCTAssertEqual(code, "INITIALIZATION_TIMED_OUT")
+            XCTAssertNotNil(message)
+            expectation.fulfill()
+        })
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+    }
+
     func testTrackEvaluation() {
         let expectation = self.expectation(description: "TrackEvaluation resolves")
 
