@@ -92,6 +92,10 @@ import {APPLICATION_ID, CLIENT_TOKEN, ENVIRONMENT} from './ddCredentials';
 
   const spanId = await DdTrace.startSpan('test span');
   await DdTrace.finishSpan(spanId);
+
+  setTimeout(async () => {
+    await DdRum.reportAppFullyDisplayed();
+  }, 5000);
 })();
 
 function AppWithProviders() {

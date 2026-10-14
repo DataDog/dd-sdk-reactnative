@@ -558,6 +558,15 @@ internal class DdRumTest {
     }
 
     @Test
+    fun `M call reportAppFullyDisplayed w reportAppFullyDisplayed()`() {
+        // When
+        testedDdRum.reportAppFullyDisplayed(mockPromise)
+
+        // Then
+        verify(mockRumMonitor).reportAppFullyDisplayed()
+    }
+
+    @Test
     fun `M call stopSession W stopSession()`() {
         // When
         testedDdRum.stopSession(mockPromise)
