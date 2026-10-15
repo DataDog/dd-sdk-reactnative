@@ -2147,6 +2147,14 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
     });
 
     it('should prefer the active platform re-export over a plain fallback', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'src', 'components', 'icon-ios.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"/>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'src', 'components', 'icon-plain.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"/>'
+        );
         const moduleResolverPath = require.resolve(
             'babel-plugin-module-resolver'
         );
@@ -2189,6 +2197,14 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
     });
 
     it('should resolve the re-export target matching the REAL target platform passed to buildSvgMap(), not always ios, when both Icon.ios.tsx and Icon.android.tsx exist with different exports', () => {
+        fs.writeFileSync(
+            path.join(tmpDir, 'src', 'components', 'icon-ios.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"/>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'src', 'components', 'icon-android.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"/>'
+        );
         const moduleResolverPath = require.resolve(
             'babel-plugin-module-resolver'
         );

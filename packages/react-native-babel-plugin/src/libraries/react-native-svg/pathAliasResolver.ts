@@ -269,12 +269,16 @@ export class PathAliasResolver {
         this.resultCache.clear();
     }
 
-    resolve(importSource: string, currentFile: string): string | null {
+    resolve(
+        importSource: string,
+        currentFile: string,
+        platform?: string
+    ): string | null {
         if (!isBareSpecifier(importSource)) {
             return null;
         }
 
-        const cacheKey = `${currentFile}\0${importSource}`;
+        const cacheKey = `${platform ?? ''}\0${currentFile}\0${importSource}`;
         const cached = this.resultCache.get(cacheKey);
         if (cached !== undefined) {
             return cached;
@@ -282,7 +286,11 @@ export class PathAliasResolver {
 
         const resolved =
             this.resolveWithModuleResolver(importSource, currentFile) ??
-            this.resolveWithTsconfigPaths(importSource, currentFile) ??
+            this.resolveWithTsconfigPaths(
+                importSource,
+                currentFile,
+                platform
+            ) ??
             this.resolveWithMetroExtraNodeModules(importSource, currentFile);
         this.resultCache.set(cacheKey, resolved);
         return resolved;
@@ -363,7 +371,8 @@ export class PathAliasResolver {
 
     private resolveWithTsconfigPaths(
         importSource: string,
-        currentFile: string
+        currentFile: string,
+        platform?: string
     ): string | null {
         const matchPath = this.getTsMatchPath(currentFile);
         if (!matchPath) {
@@ -375,7 +384,18 @@ export class PathAliasResolver {
             // config was first loaded) -- e.g. a malformed/conflicting
             // `paths` pattern -- so guard it the same way
             // `resolveWithModuleResolver` guards its own third-party call.
-            return matchPath(importSource) ?? null;
+            const extensions = MODULE_SPECIFIER_FALLBACK_EXTENSIONS.flatMap(
+                ext => [
+                    ...platformSuffixesToTry(platform).map(
+                        suffix => `.${suffix}${ext}`
+                    ),
+                    ext
+                ]
+            );
+            return (
+                matchPath(importSource, undefined, undefined, extensions) ??
+                null
+            );
         } catch (err) {
             console.warn(
                 '[PathAliasResolver]: tsconfig-paths failed to resolve an aliased import, falling back to relative resolution',

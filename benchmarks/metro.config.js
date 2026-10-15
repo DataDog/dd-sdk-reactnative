@@ -4,6 +4,11 @@ const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
+const aliasFixtureDir = path.resolve(
+    __dirname,
+    'src/scenario/SessionReplay/component/assets/alias-fixtures'
+);
+
 const root = path.resolve(__dirname, '..');
 const modules = Object.keys({
     ...pakCore.peerDependencies
@@ -60,14 +65,8 @@ const config = {
             // e.g. '@metroAssets/star.svg' wouldn't match a key of just
             // '@metroAssets' (see pathAliasResolver.ts).
             //
-            // Points into @react-native/debugger-frontend (a real npm
-            // dependency, not a workspace symlink) for the same reason as
-            // the babel-plugin-module-resolver aliases above -- see
-            // babel.config.js.
-            metroAssets: path.join(
-                __dirname,
-                'node_modules/@react-native/debugger-frontend/dist/third-party/front_end/Images'
-            )
+            // H4 uses the repository-owned SVG fixtures (see babel.config.js).
+            metroAssets: aliasFixtureDir
         }
     },
 };

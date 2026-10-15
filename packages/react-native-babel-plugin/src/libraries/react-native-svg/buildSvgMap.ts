@@ -23,6 +23,17 @@ import {
 import { getExportedName, getLocalName } from './specifierNames';
 import type { SvgBindingMap } from './svgBindingMap';
 
+function isSvgFile(file: string): boolean {
+    if (!file.endsWith('.svg')) {
+        return false;
+    }
+    try {
+        return fs.statSync(file).isFile();
+    } catch {
+        return false;
+    }
+}
+
 /** Resolves an import/export source that already ends in `.svg`. Returns
  * `null` when `source` is a bare specifier (e.g. a typo'd or unconfigured
  * alias) that no alias mechanism could resolve -- treating it as relative
@@ -35,7 +46,7 @@ function resolveImportSource(
 ): string | null {
     const aliasResolved = pathAliasResolver.resolve(source, file);
     if (aliasResolved) {
-        return aliasResolved;
+        return isSvgFile(aliasResolved) ? aliasResolved : null;
     }
     if (isBareSpecifier(source)) {
         return null;
@@ -43,26 +54,7 @@ function resolveImportSource(
     return pathN.resolve(pathN.dirname(file), source);
 }
 
-/** Returns the resolved `.svg` file path for an import/export source, or
- * `null` if it isn't an SVG import. A source that already ends in `.svg`
- * is resolved directly; otherwise it may still be an aliased specifier
- * (e.g. `alias: { '@logo': './src/assets/logo.svg' }` used as `import Logo
- * from '@logo'`) whose specifier itself carries no extension, so alias
- * resolution is attempted before giving up. */
-function resolveSvgImportSource(
-    pathAliasResolver: PathAliasResolver,
-    file: string,
-    source: string
-): string | null {
-    if (source.endsWith('.svg')) {
-        return resolveImportSource(pathAliasResolver, file, source);
-    }
-
-    const aliased = pathAliasResolver.resolve(source, file);
-    return aliased?.endsWith('.svg') ? aliased : null;
-}
-
-/** Records a `bindingEdges` entry for each specifier of a relative
+/** Records a `bindingEdges` entry for each specifier of a resolved
  * `import ... from './somewhere'` -- mapping the LOCAL name in `file` to
  * the EXPORT-table entry it's bound to in the target file (an import
  * always reaches into what its source module exports, never that
@@ -71,19 +63,13 @@ function resolveSvgImportSource(
  * import, another barrel file, etc). Namespace imports (`import * as X`)
  * aren't tracked: JSX would reference them via a member expression
  * (`<X.Foo/>`), which isn't a plain name this graph models. */
-function recordRelativeImportEdges(
+function recordImportEdges(
     t: typeof Babel.types,
     file: string,
-    source: string,
+    targetFile: string,
     specifiers: Babel.types.ImportDeclaration['specifiers'],
-    bindingEdges: Map<string, string>,
-    platform: string | undefined
+    bindingEdges: Map<string, string>
 ): void {
-    const targetFile = resolveRelativeModuleFile(file, source, platform);
-    if (!targetFile) {
-        return;
-    }
-
     for (const spec of specifiers) {
         const localName = getLocalName(t, spec.local);
         if (!localName) {
@@ -113,7 +99,7 @@ function recordRelativeImportEdges(
     }
 }
 
-/** Shared specifier-walking logic behind `recordRelativeReexportEdges` and
+/** Shared specifier-walking logic behind `recordReexportEdges` and
  * `recordLocalReexportEdges` below -- both record one `bindingEdges` entry
  * per `ExportSpecifier`, mapping `file`'s own EXPORT-table entry
  * (`exportNodeKey(file, exportedName)`) to a target key built from the
@@ -146,25 +132,19 @@ function recordExportSpecifierEdges(
     }
 }
 
-/** Records a `bindingEdges` entry for each specifier of a relative
+/** Records a `bindingEdges` entry for each specifier of a resolved
  * `export { ... } from './somewhere'` re-export -- mapping `file`'s own
  * EXPORT-table entry to the EXPORT-table entry it re-exports from the
  * target file (both ends are export-table entries: this declaration
  * doesn't reference or create any local binding in either file), the
- * mirror image of `recordRelativeImportEdges` above for barrel files. */
-function recordRelativeReexportEdges(
+ * mirror image of `recordImportEdges` above for barrel files. */
+function recordReexportEdges(
     t: typeof Babel.types,
     file: string,
-    source: string,
+    targetFile: string,
     specifiers: Babel.types.ExportNamedDeclaration['specifiers'],
-    bindingEdges: Map<string, string>,
-    platform: string | undefined
+    bindingEdges: Map<string, string>
 ): void {
-    const targetFile = resolveRelativeModuleFile(file, source, platform);
-    if (!targetFile) {
-        return;
-    }
-
     recordExportSpecifierEdges(t, file, specifiers, bindingEdges, localName =>
         exportNodeKey(targetFile, localName)
     );
@@ -176,7 +156,7 @@ function recordRelativeReexportEdges(
  * EXPORT-table entry `LocalComponent` to its LOCAL binding `Something`
  * (this form, unlike the one above, really does reference an existing
  * local variable in the same file: there's no `from` module to reach
- * into). The within-file counterpart of `recordRelativeReexportEdges`
+ * into). The within-file counterpart of `recordReexportEdges`
  * above, since this rebind never crosses a module boundary for
  * `resolveRelativeModuleFile` to resolve.
  *
@@ -242,19 +222,9 @@ export function scanProjectForSvgs({
         followSymbolicLinks: followSymlinks
     });
 
-    // An extensionless aliased import (e.g. `@logo` -> a .svg with no
-    // extension in the specifier) can only be told apart from an
-    // ordinary bare import (e.g. 'react') by actually attempting alias
-    // resolution, which is expensive per file (it can trigger
-    // @babel/core's loadPartialConfig()). Running that for every bare
-    // import in every file -- most of which are never SVGs -- would
-    // regress badly on large codebases. So this defers alias resolution
-    // for non-'.svg'-suffixed sources to a second pass, run only for
-    // import/export names that are provably rendered as JSX somewhere
-    // in the project (checked project-wide, not per file, since a
-    // barrel re-export and its JSX usage can live in different files --
-    // see the barrel-export tests). An import never rendered as JSX
-    // could never be looked up via localSvgMap anyway.
+    // Resolve bare imports only when their binding is reached from JSX.
+    // An alias may point directly to an SVG or to a module whose exports
+    // need to be followed, so resolve it during the binding walk below.
     type PendingBareSource = {
         file: string;
         source: string;
@@ -265,6 +235,7 @@ export function scanProjectForSvgs({
         // below must test, since JSX usage of a re-exported name is
         // impossible (JSX can only ever reference a local binding).
         nameKind: 'local' | 'export';
+        connect: (targetFile: string) => void;
         // Takes the subset of `candidateNames` actually proven
         // reachable (not all of them) -- a multi-specifier import/export
         // can have some names that are genuinely JSX-rendered and others
@@ -276,17 +247,18 @@ export function scanProjectForSvgs({
         ) => void;
     };
     const pendingBareSources: PendingBareSource[] = [];
-    // How the two `pendingBareSources.push` call sites below differ is
-    // entirely in how `candidateNames` gets collected (import vs.
-    // export specifiers) and what `populate` does with a resolved
-    // path -- both genuinely distinct per caller. This just centralizes
-    // the "skip if nothing to defer, otherwise defer it" wrapper they'd
-    // otherwise duplicate around that.
+    const pendingByNode = new Map<string, PendingBareSource>();
+    const resolvedBareSources = new Set<PendingBareSource>();
+    const resolvedBareSvgs = new Map<PendingBareSource, string>();
     const deferBareSource = (entry: PendingBareSource): void => {
         if (!entry.candidateNames.length) {
             return;
         }
         pendingBareSources.push(entry);
+        const keyFn = entry.nameKind === 'export' ? exportNodeKey : nodeKey;
+        for (const name of entry.candidateNames) {
+            pendingByNode.set(keyFn(entry.file, name), entry);
+        }
     };
     // JSX usages, kept per-file (not a flat name set) -- a name rendered
     // as JSX in one file must never be able to justify resolving an
@@ -377,14 +349,20 @@ export function scanProjectForSvgs({
                     }
 
                     if (!isBareSpecifier(source)) {
-                        recordRelativeImportEdges(
-                            t,
+                        const targetFile = resolveRelativeModuleFile(
                             file,
                             source,
-                            path.node.specifiers,
-                            bindingEdges,
                             platform
                         );
+                        if (targetFile) {
+                            recordImportEdges(
+                                t,
+                                file,
+                                targetFile,
+                                path.node.specifiers,
+                                bindingEdges
+                            );
+                        }
                         return;
                     }
 
@@ -400,6 +378,14 @@ export function scanProjectForSvgs({
                         source,
                         candidateNames,
                         nameKind: 'local',
+                        connect: targetFile =>
+                            recordImportEdges(
+                                t,
+                                file,
+                                targetFile,
+                                path.node.specifiers,
+                                bindingEdges
+                            ),
                         populate: (resolved, reachableNames) => {
                             for (const name of candidateNames) {
                                 if (reachableNames.has(name)) {
@@ -433,7 +419,8 @@ export function scanProjectForSvgs({
                         // the alias landed instead of `dirname(file)`.
                         const aliasResolved = pathAliasResolver.resolve(
                             source,
-                            file
+                            file,
+                            platform
                         );
                         targetFile = aliasResolved
                             ? resolveModuleFileFromBase(aliasResolved, platform)
@@ -493,14 +480,20 @@ export function scanProjectForSvgs({
                     }
 
                     if (!isBareSpecifier(source)) {
-                        recordRelativeReexportEdges(
-                            t,
+                        const targetFile = resolveRelativeModuleFile(
                             file,
                             source,
-                            path.node.specifiers,
-                            bindingEdges,
                             platform
                         );
+                        if (targetFile) {
+                            recordReexportEdges(
+                                t,
+                                file,
+                                targetFile,
+                                path.node.specifiers,
+                                bindingEdges
+                            );
+                        }
                         return;
                     }
 
@@ -519,6 +512,14 @@ export function scanProjectForSvgs({
                         source,
                         candidateNames,
                         nameKind: 'export',
+                        connect: targetFile =>
+                            recordReexportEdges(
+                                t,
+                                file,
+                                targetFile,
+                                path.node.specifiers,
+                                bindingEdges
+                            ),
                         populate: (resolved, reachableNames) =>
                             svgBindingMap.populateExportedSvgNames(
                                 t,
@@ -597,6 +598,36 @@ export function scanProjectForSvgs({
             }
             consumers.add(root);
 
+            const pending = pendingByNode.get(current);
+            if (pending && !resolvedBareSources.has(pending)) {
+                resolvedBareSources.add(pending);
+                try {
+                    const resolved = pathAliasResolver.resolve(
+                        pending.source,
+                        pending.file,
+                        platform
+                    );
+                    if (resolved?.endsWith('.svg')) {
+                        if (isSvgFile(resolved)) {
+                            resolvedBareSvgs.set(pending, resolved);
+                        }
+                    } else if (resolved) {
+                        const targetFile = resolveModuleFileFromBase(
+                            resolved,
+                            platform
+                        );
+                        if (targetFile) {
+                            pending.connect(targetFile);
+                        }
+                    }
+                } catch (err) {
+                    console.error(
+                        `[buildSvgMap]: \n File: ${pending.file}\n`,
+                        err
+                    );
+                }
+            }
+
             const directEdge = bindingEdges.get(current);
             if (directEdge) {
                 queue.push(directEdge);
@@ -654,44 +685,21 @@ export function scanProjectForSvgs({
         }
     }
 
-    // Second pass: only now attempt the (potentially expensive) alias
-    // resolution, and only for sources with at least one candidate name
-    // that's actually reachable from a real JSX usage via that binding
-    // chain (not just textually matching some unrelated usage elsewhere).
-    // Wrapped in a try/catch per entry -- mirroring the first pass's
-    // per-file isolation -- so a single misconfigured alias (e.g. a
-    // malformed tsconfig.json `paths` pattern) can't abort SVG detection
-    // for the rest of the project.
+    // Populate direct alias targets only after every consumer has been
+    // traced, so entries can be attributed to all importing bindings.
     for (const pending of pendingBareSources) {
         try {
-            const keyFn =
-                pending.nameKind === 'export' ? exportNodeKey : nodeKey;
-            // Most bare imports/re-exports in a real project are never
-            // rendered as JSX under any of their candidate names -- a
-            // cheap, allocation-free `.some()` check lets that common
-            // case skip straight past without paying for a `.filter()`
-            // array and a `Set` that would just get discarded.
-            if (
-                !pending.candidateNames.some(name =>
-                    reachable.has(keyFn(pending.file, name))
-                )
-            ) {
+            const resolved = resolvedBareSvgs.get(pending);
+            if (!resolved) {
                 continue;
             }
+            const keyFn =
+                pending.nameKind === 'export' ? exportNodeKey : nodeKey;
             const reachableNames = new Set(
                 pending.candidateNames.filter(name =>
                     reachable.has(keyFn(pending.file, name))
                 )
             );
-
-            const resolved = resolveSvgImportSource(
-                pathAliasResolver,
-                pending.file,
-                pending.source
-            );
-            if (!resolved) {
-                continue;
-            }
 
             pending.populate(resolved, reachableNames);
         } catch (err) {

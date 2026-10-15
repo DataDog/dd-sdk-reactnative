@@ -169,17 +169,12 @@ export class ReactNativeSVG {
                 return;
             }
 
-            // Every `SvgBindingMap` write puts `name` into `localSvgMap`
-            // and its per-binding map together (or into `localSvgMap`
-            // alone), so a miss on this flat, allocation-free check
-            // proves `name` can't be in the per-binding map either --
-            // skips the per-binding lookup for the overwhelming majority
-            // of JSX elements (`View`, `Text`, ...) that are never a
-            // local SVG import at all.
-            const localSvgEntry =
-                name in this.localSvgMap
-                    ? this.svgBindingMap.getLocalSvgEntry(currentFile, name)
-                    : undefined;
+            // A barrel consumer can rename an export or import its default
+            // under a new name, present only in the per-binding map.
+            const localSvgEntry = this.svgBindingMap.getLocalSvgEntry(
+                currentFile,
+                name
+            );
 
             HandlerResolver.configure({
                 t: this.t,

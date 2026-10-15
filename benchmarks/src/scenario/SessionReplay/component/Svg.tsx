@@ -26,11 +26,8 @@ import { HeartIcon, ShieldIcon } from './assets/icons';
 // Aliased via the 'module-resolver' babel plugin (see benchmarks/babel.config.js) —
 // tests that buildSvgMap resolves aliased local SVG imports (RUM-12185).
 import AliasedStarSvg from '@assets/star.svg';
-// H2/H3/H4 alias into @react-native/debugger-frontend -- a real npm
-// dependency (not a workspace symlink), so the Babel plugin's node_modules
-// exclusion applies to it, meaning localSvgMap/pathAliasResolver is the
-// only thing that can make these show up wrapped in Session Replay (see
-// babel.config.js for why this matters).
+// H2-H4 use repository-owned SVG fixtures. Their Babel override disables
+// direct SVG instrumentation so these cases exercise alias discovery.
 // H2: alias resolves straight to a file -- specifier has no '.svg' extension.
 import CheckmarkLogo from '@heart-logo';
 // H3: alias substitute is an absolute filesystem path.
@@ -570,13 +567,13 @@ export default function SvgTestCases() {
                 <Case label="H1 module-resolver alias" sublabel="@assets/star.svg">
                     <AliasedStarImport />
                 </Case>
-                <Case label="H2 extensionless alias" sublabel="@heart-logo → checkmark.svg (node_modules)">
+                <Case label="H2 extensionless alias" sublabel="@heart-logo → checkmark.svg (local fixture)">
                     <AliasedExtensionlessImport />
                 </Case>
-                <Case label="H3 absolute-path alias" sublabel="@absoluteAssets/lock.svg (node_modules)">
+                <Case label="H3 absolute-path alias" sublabel="@absoluteAssets/lock.svg (local fixture)">
                     <AbsoluteAliasImport />
                 </Case>
-                <Case label="H4 metro.config.js alias" sublabel="metroAssets/gear-filled.svg (node_modules)">
+                <Case label="H4 metro.config.js alias" sublabel="metroAssets/gear-filled.svg (local fixture)">
                     <MetroExtraNodeModulesImport />
                 </Case>
             </Section>
