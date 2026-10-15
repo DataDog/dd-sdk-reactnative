@@ -4,6 +4,11 @@ const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
+const aliasFixtureDir = path.resolve(
+    __dirname,
+    'src/scenario/SessionReplay/component/assets/alias-fixtures'
+);
+
 const root = path.resolve(__dirname, '..');
 const modules = Object.keys({
     ...pakCore.peerDependencies
@@ -47,10 +52,22 @@ const config = {
                     )
             )
         ),
-        extraNodeModules: modules.reduce((acc, name) => {
-            acc[name] = path.join(__dirname, 'node_modules', name);
-            return acc;
-        }, {})
+        extraNodeModules: {
+            ...modules.reduce((acc, name) => {
+                acc[name] = path.join(__dirname, 'node_modules', name);
+                return acc;
+            }, {}),
+            // H4: alias configured directly in metro.config.js (rather than
+            // babel-plugin-module-resolver/tsconfig.json), exercising
+            // buildSvgMap's resolver.extraNodeModules alias path. Unscoped
+            // (no leading '@') so it matches for any subpath depth -- Metro's
+            // own parsing only splits a scoped key at a *second* slash, so
+            // e.g. '@metroAssets/star.svg' wouldn't match a key of just
+            // '@metroAssets' (see pathAliasResolver.ts).
+            //
+            // H4 uses the repository-owned SVG fixtures (see babel.config.js).
+            metroAssets: aliasFixtureDir
+        }
     },
 };
 
