@@ -76,22 +76,38 @@ export class ReactNativeSVG {
      * Builds (or loads a cached) mapping of JSX identifiers to their
      * corresponding SVG file paths, storing the result in `svgBindingMap`.
      *
+     * `platform` should be the real target platform (Metro's
+     * `caller.platform`, e.g. 'ios' / 'android'), when the caller has one
+     * -- see `src/index.ts`'s `pre()` hook, which already reads this for
+     * its own web-build check. Restricts which platform-specific file
+     * variant (`Icon.ios.tsx` vs `Icon.android.tsx`) a relative import/
+     * re-export/wildcard resolves through to the one actually relevant
+     * to this build (see `scanProjectForSvgs`/`platformSuffixesToTry`),
+     * and segments the disk cache by platform so a cache written for one
+     * platform is never loaded for (or overwritten by) a different one.
+     * Without a platform, only unsuffixed modules are followed and the
+     * generic cache is used. Native builds must rescan rather than load
+     * this cache, whose bindings were computed without their platform.
+     *
      * If `saveSvgMapToDisk` is false, first attempts to load the mapping
-     * from a previously saved `svg-map.json` for better performance; if
-     * that file doesn't exist or can't be read, falls back to scanning
-     * the codebase (see `scanProjectForSvgs` in `buildSvgMap.ts`).
+     * from the cache for the requested platform for better performance;
+     * if it doesn't exist or can't be read, scans the codebase (see
+     * `scanProjectForSvgs` in `buildSvgMap.ts`).
      *
      * If `saveSvgMapToDisk` is true, the mapping is saved to that JSON
      * file after scanning.
      */
-    buildSvgMap() {
+    buildSvgMap(platform?: string) {
         if (!this.t) {
             return;
         }
 
         // Resolve to package root: from lib/commonjs/libraries/react-native-svg -> package root
         const packageRoot = pathN.resolve(__dirname, '../../../..');
-        const svgMapPath = pathN.join(packageRoot, 'svg-map.json');
+        const svgMapPath = pathN.join(
+            packageRoot,
+            platform ? `svg-map-${platform}.json` : 'svg-map.json'
+        );
 
         if (
             !this.saveSvgMapToDisk &&
@@ -104,6 +120,7 @@ export class ReactNativeSVG {
         // otherwise edits to tsconfig.json/babel.config.js made since then
         // would be invisible to a reused instance.
         this.pathAliasResolver.reset();
+        this.svgBindingMap.reset();
 
         scanProjectForSvgs({
             t: this.t,
@@ -111,7 +128,8 @@ export class ReactNativeSVG {
             scanIgnorePatterns: this.scanIgnorePatterns,
             followSymlinks: this.followSymlinks,
             pathAliasResolver: this.pathAliasResolver,
-            svgBindingMap: this.svgBindingMap
+            svgBindingMap: this.svgBindingMap,
+            platform
         });
 
         if (this.saveSvgMapToDisk) {

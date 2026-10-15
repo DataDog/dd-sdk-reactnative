@@ -2107,7 +2107,7 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         );
     });
 
-    it('should trace an aliased import through a re-export barrel whose target only exists as platform-specific files (e.g. Icon.ios.tsx/Icon.android.tsx, no plain Icon.tsx)', () => {
+    it('should trace an aliased import through a platform-specific barrel for the active platform', () => {
         const moduleResolverPath = require.resolve(
             'babel-plugin-module-resolver'
         );
@@ -2138,7 +2138,7 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
 
         const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
         instance.setApiTypes(t);
-        instance.buildSvgMap();
+        instance.buildSvgMap('ios');
 
         expect(instance.localSvgMap['Logo']).toBeDefined();
         expect(instance.localSvgMap['Logo'].path).toBe(
@@ -2146,7 +2146,7 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
         );
     });
 
-    it('should prefer a platform-specific re-export target (Icon.ios.tsx) over a plain fallback (Icon.tsx) when both exist, matching real Metro resolution order', () => {
+    it('should prefer the active platform re-export over a plain fallback', () => {
         const moduleResolverPath = require.resolve(
             'babel-plugin-module-resolver'
         );
@@ -2180,10 +2180,61 @@ describe('ReactNativeSVG.buildSvgMap with aliased paths', () => {
 
         const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
         instance.setApiTypes(t);
-        instance.buildSvgMap();
+        instance.buildSvgMap('ios');
 
         expect(instance.localSvgMap['Logo']).toBeDefined();
         expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon-ios.svg')
+        );
+    });
+
+    it('should resolve the re-export target matching the REAL target platform passed to buildSvgMap(), not always ios, when both Icon.ios.tsx and Icon.android.tsx exist with different exports', () => {
+        const moduleResolverPath = require.resolve(
+            'babel-plugin-module-resolver'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'babel.config.js'),
+            `module.exports = {
+                plugins: [
+                    [${JSON.stringify(moduleResolverPath)}, {
+                        alias: {
+                            '@logoIos': './src/components/icon-ios.svg',
+                            '@logoAndroid': './src/components/icon-android.svg'
+                        }
+                    }]
+                ]
+            };`
+        );
+        // Two platform-split barrels re-exporting a DIFFERENT SVG under
+        // the SAME name -- a real Android build must resolve Icon.android.tsx,
+        // not silently fall through to Icon.ios.tsx just because it's
+        // tried first when the platform is unknown.
+        fs.writeFileSync(
+            path.join(tmpDir, 'Icon.ios.tsx'),
+            `export { default as Logo } from '@logoIos';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Icon.android.tsx'),
+            `export { default as Logo } from '@logoAndroid';`
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Screen.tsx'),
+            `import { Logo } from './Icon';\nexport default function Screen() { return <Logo />; }`
+        );
+
+        const androidInstance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        androidInstance.setApiTypes(t);
+        androidInstance.buildSvgMap('android');
+
+        expect(androidInstance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon-android.svg')
+        );
+
+        const iosInstance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        iosInstance.setApiTypes(t);
+        iosInstance.buildSvgMap('ios');
+
+        expect(iosInstance.localSvgMap['Logo'].path).toBe(
             path.join(tmpDir, 'src', 'components', 'icon-ios.svg')
         );
     });
@@ -2919,5 +2970,52 @@ describe('ReactNativeSVG end-to-end: same local name aliased to different SVGs a
         // FileB at all.
         expect(outputFileA).not.toContain('SessionReplayView');
         expect(outputFileA).not.toMatch(/hash:\s*["'][0-9a-f]{32}["']/i);
+    });
+});
+
+describe('ReactNativeSVG end-to-end: transform() called with no filename option', () => {
+    it('should still resolve a local SVG import via the flat map when Babel is called without a `filename` (an empty currentFile can never match a per-binding entry, so it must never be treated as "provably unreachable")', () => {
+        const tmpDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-no-filename-')
+        );
+        const assetsDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'dd-svg-no-filename-assets-')
+        );
+
+        fs.writeFileSync(
+            path.join(tmpDir, 'icon.svg'),
+            '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="red"/></svg>'
+        );
+        const code =
+            "import Icon from './icon.svg';\nexport default function B() { return <Icon width={24} height={24} />; }";
+        fs.writeFileSync(path.join(tmpDir, 'FileB.jsx'), code);
+
+        const instance = new ReactNativeSVG(tmpDir, assetsDir);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        // No TypeScript preset here (and no `filename` option below) --
+        // `@babel/preset-typescript` itself requires a filename to detect
+        // .ts/.tsx parsing mode, so a plain-JS/JSX-only pipeline is the
+        // only way to genuinely exercise a `transform()` call with no
+        // filename at all, matching e.g. a custom in-memory tool that
+        // invokes this plugin directly.
+        const output = transform(code, {
+            presets: ['@babel/preset-react'],
+            plugins: [
+                [
+                    plugin,
+                    {
+                        sessionReplay: { svgTracking: true },
+                        __internal_reactNativeSVG: instance
+                    }
+                ]
+            ],
+            configFile: false
+            // Deliberately no `filename` option.
+        })?.code as string;
+
+        expect(output).toContain('SessionReplayView');
+        expect(output).toMatch(/hash:\s*["'][0-9a-f]{32}["']/i);
     });
 });

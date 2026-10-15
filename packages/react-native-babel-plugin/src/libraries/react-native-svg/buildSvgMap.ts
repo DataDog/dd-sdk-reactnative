@@ -76,9 +76,10 @@ function recordRelativeImportEdges(
     file: string,
     source: string,
     specifiers: Babel.types.ImportDeclaration['specifiers'],
-    bindingEdges: Map<string, string>
+    bindingEdges: Map<string, string>,
+    platform: string | undefined
 ): void {
-    const targetFile = resolveRelativeModuleFile(file, source);
+    const targetFile = resolveRelativeModuleFile(file, source, platform);
     if (!targetFile) {
         return;
     }
@@ -156,9 +157,10 @@ function recordRelativeReexportEdges(
     file: string,
     source: string,
     specifiers: Babel.types.ExportNamedDeclaration['specifiers'],
-    bindingEdges: Map<string, string>
+    bindingEdges: Map<string, string>,
+    platform: string | undefined
 ): void {
-    const targetFile = resolveRelativeModuleFile(file, source);
+    const targetFile = resolveRelativeModuleFile(file, source, platform);
     if (!targetFile) {
         return;
     }
@@ -202,6 +204,15 @@ export type ScanOptions = {
     followSymlinks: boolean;
     pathAliasResolver: PathAliasResolver;
     svgBindingMap: SvgBindingMap;
+    // The real target platform (Metro's `caller.platform`, e.g. 'ios' /
+    // 'android'), when known -- restricts which platform-specific file
+    // variant (`Icon.ios.tsx` vs `Icon.android.tsx`) a relative import/
+    // re-export/wildcard resolves through to the one that's actually
+    // relevant to this build. `undefined` (e.g. a standalone CLI scan
+    // with no real Metro/Babel `caller` context) only follows unsuffixed
+    // files rather than guessing a platform -- see
+    // `platformSuffixesToTry` in `pathAliasResolver.ts`.
+    platform: string | undefined;
 };
 
 /**
@@ -221,7 +232,8 @@ export function scanProjectForSvgs({
     scanIgnorePatterns,
     followSymlinks,
     pathAliasResolver,
-    svgBindingMap
+    svgBindingMap,
+    platform
 }: ScanOptions): void {
     const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
         cwd: rootDir,
@@ -370,7 +382,8 @@ export function scanProjectForSvgs({
                             file,
                             source,
                             path.node.specifiers,
-                            bindingEdges
+                            bindingEdges,
+                            platform
                         );
                         return;
                     }
@@ -423,10 +436,14 @@ export function scanProjectForSvgs({
                             file
                         );
                         targetFile = aliasResolved
-                            ? resolveModuleFileFromBase(aliasResolved)
+                            ? resolveModuleFileFromBase(aliasResolved, platform)
                             : null;
                     } else {
-                        targetFile = resolveRelativeModuleFile(file, source);
+                        targetFile = resolveRelativeModuleFile(
+                            file,
+                            source,
+                            platform
+                        );
                     }
                     if (!targetFile) {
                         return;
@@ -481,7 +498,8 @@ export function scanProjectForSvgs({
                             file,
                             source,
                             path.node.specifiers,
-                            bindingEdges
+                            bindingEdges,
+                            platform
                         );
                         return;
                     }

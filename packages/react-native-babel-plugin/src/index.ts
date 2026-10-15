@@ -39,6 +39,7 @@ export default declare(
             }
         };
 
+        const svgByPlatform = new Map<string | undefined, ReactNativeSVG>();
         let reactNativeSVG: ReactNativeSVG | undefined;
 
         let assetsPath: string | null = null;
@@ -64,7 +65,8 @@ export default declare(
                 // Reuse the instance across files instead of rebuilding (and
                 // rescanning) it per file.
                 reactNativeSVG =
-                    options.__internal_reactNativeSVG ?? reactNativeSVG;
+                    options.__internal_reactNativeSVG ??
+                    svgByPlatform.get(platform);
                 if (!reactNativeSVG && assetsPath) {
                     reactNativeSVG = new ReactNativeSVG(
                         process.cwd(),
@@ -72,7 +74,8 @@ export default declare(
                         options.__internal_saveSvgMapToDisk || false
                     );
                     reactNativeSVG.setApiTypes(api.types);
-                    reactNativeSVG.buildSvgMap();
+                    reactNativeSVG.buildSvgMap(platform);
+                    svgByPlatform.set(platform, reactNativeSVG);
                 }
                 reactNativeSVG?.setApiTypes(api.types);
             },

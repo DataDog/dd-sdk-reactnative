@@ -50,11 +50,14 @@ export function isBareSpecifier(source: string): boolean {
 
 const RELATIVE_MODULE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
 
-// Metro resolves a platform-specific variant (e.g. `Icon.ios.tsx`) before
-// the plain form, and some RN components only ever exist in platform-split
-// files with no plain fallback -- tried without knowing which platform a
-// real build would target, so all of them are candidates here.
-const RELATIVE_MODULE_PLATFORM_SUFFIXES = ['ios', 'android', 'native', 'web'];
+/** Match the active platform, then native, then the unsuffixed file.
+ * Without a platform, don't guess which platform-specific export applies. */
+function platformSuffixesToTry(platform: string | undefined): string[] {
+    if (!platform) {
+        return [];
+    }
+    return platform === 'web' ? [platform] : [platform, 'native'];
+}
 
 /** Resolves a `base` path (not yet known to be a real file -- it may be
  * missing its extension, or be a directory expecting an `index` file) to a
@@ -63,20 +66,27 @@ const RELATIVE_MODULE_PLATFORM_SUFFIXES = ['ios', 'android', 'native', 'web'];
  * re-export chains without pulling in a full resolver for what's normally a
  * single lookup. Used both for a relative specifier resolved to an absolute
  * `base` directly, and for an alias/tsconfig/Metro resolution that only
- * gets as far as a bare directory or extensionless path. */
-export function resolveModuleFileFromBase(base: string): string | null {
-    const withPlatformSuffixes = (prefix: string) =>
-        RELATIVE_MODULE_PLATFORM_SUFFIXES.flatMap(platform =>
-            RELATIVE_MODULE_EXTENSIONS.map(ext => `${prefix}.${platform}${ext}`)
-        );
+ * gets as far as a bare directory or extensionless path.
+ *
+ * `platform`, when known, restricts which platform-specific suffix(es) are
+ * even considered (see `platformSuffixesToTry`) -- so a barrel with
+ * different `Icon.ios.tsx`/`Icon.android.tsx` exports resolves to the one
+ * actually relevant to the build being transformed, not whichever
+ * platform happens to be tried first. */
+export function resolveModuleFileFromBase(
+    base: string,
+    platform?: string
+): string | null {
+    const suffixes = platformSuffixesToTry(platform);
+    const withExtensions = (prefix: string) =>
+        RELATIVE_MODULE_EXTENSIONS.flatMap(ext => [
+            ...suffixes.map(suffix => `${prefix}.${suffix}${ext}`),
+            `${prefix}${ext}`
+        ]);
     const candidates = [
         base,
-        ...withPlatformSuffixes(base),
-        ...RELATIVE_MODULE_EXTENSIONS.map(ext => `${base}${ext}`),
-        ...withPlatformSuffixes(pathN.join(base, 'index')),
-        ...RELATIVE_MODULE_EXTENSIONS.map(ext =>
-            pathN.join(base, `index${ext}`)
-        )
+        ...withExtensions(base),
+        ...withExtensions(pathN.join(base, 'index'))
     ];
     for (const candidate of candidates) {
         try {
@@ -91,13 +101,15 @@ export function resolveModuleFileFromBase(base: string): string | null {
 }
 
 /** Resolves a relative import specifier (e.g. `./icons`) to a real file on
- * disk -- see `resolveModuleFileFromBase` for how. */
+ * disk -- see `resolveModuleFileFromBase` for how (including `platform`). */
 export function resolveRelativeModuleFile(
     fromFile: string,
-    specifier: string
+    specifier: string,
+    platform?: string
 ): string | null {
     return resolveModuleFileFromBase(
-        pathN.resolve(pathN.dirname(fromFile), specifier)
+        pathN.resolve(pathN.dirname(fromFile), specifier),
+        platform
     );
 }
 

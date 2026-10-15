@@ -46,21 +46,16 @@ export class SvgBindingMap {
     // `.content` (in LocalSvgHandler) updates both consistently.
     private localSvgMapByBinding: Record<string, SvgEntry> = {};
 
-    // Whether `localSvgMapByBinding` holds ANY per-binding data at all for
-    // this instance (fresh scan or loaded disk cache) -- not per-name, the
-    // whole map. Once true, `getLocalSvgEntry` stops falling back to the
-    // flat, name-only `localSvgMap` on a miss: with a fresh scan's full
-    // `rootsReaching` propagation, every file that legitimately consumes a
-    // resolved SVG (directly or through a re-export chain) gets its OWN
-    // `localSvgMapByBinding` entry, so a miss means `name` genuinely isn't
-    // reachable from THIS file -- falling back to the flat map at that
-    // point would risk silently inheriting an entry that belongs to some
-    // OTHER, unconnected file merely sharing the same text. The flat map
-    // stays a safe fallback only while this is false, i.e. a legacy
-    // (pre-versioned) disk cache with no per-binding data was loaded --
-    // the same, historical, non-regressive behavior as before per-binding
-    // disambiguation existed.
-    private hasBindingData = false;
+    // Only legacy caches lack binding information. An empty binding map
+    // from a fresh scan or a versioned cache means no SVG consumers were
+    // found, so it must still reject unrelated same-named components.
+    private allowFlatFallback = false;
+
+    reset(): void {
+        this.localSvgMap = Object.create(null);
+        this.localSvgMapByBinding = {};
+        this.allowFlatFallback = false;
+    }
 
     /** Loads a previously-saved `svg-map.json` from `svgMapPath`, if one
      * exists, replacing both maps wholesale. Returns `true` when a cache
@@ -95,8 +90,8 @@ export class SvgBindingMap {
             // previous scan can't reintroduce the same hazard here.
             this.localSvgMap = Object.assign(Object.create(null), flat);
             this.localSvgMapByBinding = byBinding ?? {};
-            this.hasBindingData =
-                Object.keys(this.localSvgMapByBinding).length > 0;
+            this.allowFlatFallback =
+                parsed?.version !== CURRENT_SVG_MAP_VERSION;
             return true;
         } catch (err) {
             console.warn(
@@ -149,7 +144,6 @@ export class SvgBindingMap {
         this.localSvgMap[name] = entry;
         const key = nodeKey(file, name);
         this.localSvgMapByBinding[key] = entry;
-        this.hasBindingData = true;
         const consumers = rootsReaching.get(key);
         if (consumers) {
             for (const consumerRoot of consumers) {
@@ -170,7 +164,7 @@ export class SvgBindingMap {
      * then wrongly resolve a JSX usage of the real local import to this
      * re-export's target instead. A consuming file with no traced chain
      * of its own (absent from `rootsReaching`) gets no entry here at all
-     * -- see `getLocalSvgEntry`/`hasBindingData` for why that's now
+     * -- see `getLocalSvgEntry` for why that's now
      * correct rather than a gap: once any fresh per-binding data exists,
      * a miss means genuinely unreachable, not merely undocumented. */
     setFlatSvgMapEntry(
@@ -185,7 +179,6 @@ export class SvgBindingMap {
         if (consumers) {
             for (const consumerRoot of consumers) {
                 this.localSvgMapByBinding[consumerRoot] = entry;
-                this.hasBindingData = true;
             }
         }
     }
@@ -196,29 +189,42 @@ export class SvgBindingMap {
      * different files can each legitimately alias a different SVG under
      * the same local name.
      *
-     * Once `hasBindingData` is true, a `byBinding` miss returns `undefined`
-     * directly rather than falling through to the flat map: a fresh
-     * scan's `rootsReaching` propagation (see `buildSvgMap.ts`) already
-     * gives every file that legitimately consumes a resolved SVG --
-     * directly or through a re-export chain -- its OWN `byBinding` entry,
-     * so a miss at this point means `name` genuinely isn't reachable from
-     * `currentFile` at all. Falling back to the flat map there would risk
-     * silently inheriting an entry that belongs to some OTHER, unconnected
-     * file that merely happens to share the same text (e.g. a real
-     * `<Icon/>` from a UI library colliding with an aliased SVG also
-     * named `Icon` in an unrelated file). The flat map is only consulted
-     * when `hasBindingData` is false, i.e. a legacy (pre-versioned) disk
-     * cache with no per-binding data was loaded -- the same, historical,
+     * An empty `currentFile` (an in-memory `transform()` call with no
+     * `filename` option -- see `src/index.ts`'s JSXElement visitor) can
+     * never match a real per-binding entry, since no file the scanner
+     * ever walks is the empty string -- there's no file identity at all
+     * to disambiguate against in that case, so this always falls back to
+     * the flat map for it, the best that's possible with no filename to
+     * key on (and the same behavior this had before per-binding
+     * disambiguation existed).
+     *
+     * Otherwise, a fresh scan or versioned cache returns `undefined` on
+     * a `byBinding` miss rather than falling through to the
+     * flat map: a fresh scan's `rootsReaching` propagation (see
+     * `buildSvgMap.ts`) already gives every file that legitimately
+     * consumes a resolved SVG -- directly or through a re-export chain --
+     * its OWN `byBinding` entry, so a miss at this point means `name`
+     * genuinely isn't reachable from `currentFile` at all. Falling back
+     * to the flat map there would risk silently inheriting an entry that
+     * belongs to some OTHER, unconnected file that merely happens to
+     * share the same text (e.g. a real `<Icon/>` from a UI library
+     * colliding with an aliased SVG also named `Icon` in an unrelated
+     * file). The flat map is otherwise only consulted when a legacy
+     * (pre-versioned) disk cache with no per-binding data was loaded --
+     * the same, historical,
      * non-regressive behavior as before per-binding disambiguation
      * existed. */
     getLocalSvgEntry(currentFile: string, name: string): SvgEntry | undefined {
+        if (!currentFile) {
+            return this.localSvgMap[name];
+        }
         const byBindingHit = this.localSvgMapByBinding[
             nodeKey(currentFile, name)
         ];
         if (byBindingHit) {
             return byBindingHit;
         }
-        return this.hasBindingData ? undefined : this.localSvgMap[name];
+        return this.allowFlatFallback ? this.localSvgMap[name] : undefined;
     }
 
     /** Populates `localSvgMap` (and, via `rootsReaching`,
