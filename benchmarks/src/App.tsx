@@ -21,6 +21,7 @@ import TracesScenario from './scenario/Traces/tracesScenario';
 import RUMManualScenario from './scenario/RUM/Manual/rumManualScenario';
 import RUMAutoScenario from './scenario/RUM/Auto/rumAutoScenario';
 import SessionReplayScenario from './scenario/SessionReplay/sessionReplayScenario';
+import ProfilingScenario from './scenario/Profiling/profilingScenario';
 
 function App(): React.JSX.Element {
   const [testConfig, setTestConfig] = useState<TestConfig | undefined>();
@@ -85,6 +86,8 @@ function App(): React.JSX.Element {
       return <RUMAutoScenario testConfig={testConfig}/>;
     case Scenario.SessionReplay:
       return <SessionReplayScenario testConfig={testConfig}/>;
+    case Scenario.Profiling:
+      return <ProfilingScenario testConfig={testConfig}/>;
     // Add new scenarios here
     default:
       return (
