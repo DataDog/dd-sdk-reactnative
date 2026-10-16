@@ -2038,7 +2038,7 @@ __metadata:
     svgo: ^4.1.0
     tsc-alias: ^1.8.16
     typescript: 5.9.3
-    uuid: ^14.0.3
+    uuid: ^11.1.1
   peerDependencies:
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"
@@ -18247,12 +18247,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:^14.0.3":
-  version: 14.0.3
-  resolution: "uuid@npm:14.0.3"
+"uuid@npm:^11.1.1":
+  version: 11.1.1
+  resolution: "uuid@npm:11.1.1"
   bin:
-    uuid: dist-node/bin/uuid
-  checksum: c425aeefbfa0a78e1e6a4d917647187246e660cf278470a9c71f4791b1d648c33a533e9bc8ed2e25f80bdf6806e387524bb0ddf5ce840c34f6906e076d601edd
+    uuid: dist/esm/bin/uuid
+  checksum: 1c1ea6ffc9fd02a343d77151734af65644ebf5bac733b59bdab85859cf793cf03ac8d60909fa19dcd2272e154b20734c464b667afd8bdac02b4da5e206079469
   languageName: node
   linkType: hard
 
