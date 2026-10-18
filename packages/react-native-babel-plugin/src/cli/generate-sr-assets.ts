@@ -297,8 +297,8 @@ function mergeSvgAssets(assetsDir: string) {
  *   --followSymlinks      Follow symbolic links during directory traversal.
  *                         Default: false (symlinks are ignored).
  */
-function generateSessionReplayAssets() {
-    const cliOptions = parseCliArgs();
+export function generateSessionReplayAssets(args?: string[]) {
+    const cliOptions = parseCliArgs(args);
     const { verbose } = cliOptions;
 
     // Resolve the root directory from --path flag or default to cwd
@@ -370,46 +370,56 @@ function generateSessionReplayAssets() {
     let processedCount = 0;
     const errors: Array<{ file: string; error: string }> = [];
 
-    const reactNativeSVG = new ReactNativeSVG(
-        rootDir,
-        assetsPath,
-        true,
-        ignorePatterns,
-        cliOptions.followSymlinks
-    );
-    reactNativeSVG.setApiTypes(babelTypes);
-    reactNativeSVG.buildSvgMap();
+    // Native builds load platform-specific caches. Generate their assets with
+    // the same bindings, while retaining the generic cache for other callers.
+    const svgProcessors = [undefined, 'ios', 'android'].map(platform => {
+        const reactNativeSVG = new ReactNativeSVG(
+            rootDir,
+            assetsPath,
+            true,
+            ignorePatterns,
+            cliOptions.followSymlinks
+        );
+        reactNativeSVG.setApiTypes(babelTypes);
+        reactNativeSVG.buildSvgMap(platform);
+        return { platform, reactNativeSVG };
+    });
 
     for (const file of files) {
         try {
             const code = fs.readFileSync(file, 'utf8');
 
-            // Transform the file using the Babel plugin with SVG tracking enabled
-            transformSync(code, {
-                filename: file,
-                plugins: [
-                    [
-                        babelPlugin,
-                        {
-                            sessionReplay: {
-                                svgTracking: true
-                            },
-                            __internal_saveSvgMapToDisk: true,
-                            __internal_reactNativeSVG: reactNativeSVG
-                        }
-                    ]
-                ],
-                presets: [
-                    [
-                        '@babel/preset-typescript',
-                        { isTSX: true, allExtensions: true }
+            for (const { platform, reactNativeSVG } of svgProcessors) {
+                transformSync(code, {
+                    filename: file,
+                    caller: {
+                        name: 'datadog-generate-sr-assets',
+                        ...(platform ? { platform } : {})
+                    },
+                    plugins: [
+                        [
+                            babelPlugin,
+                            {
+                                sessionReplay: {
+                                    svgTracking: true
+                                },
+                                __internal_saveSvgMapToDisk: true,
+                                __internal_reactNativeSVG: reactNativeSVG
+                            }
+                        ]
                     ],
-                    '@babel/preset-react'
-                ],
-                // Don't generate actual output, we just want the asset generation
-                code: false,
-                ast: false
-            });
+                    presets: [
+                        [
+                            '@babel/preset-typescript',
+                            { isTSX: true, allExtensions: true }
+                        ],
+                        '@babel/preset-react'
+                    ],
+                    // Only the extracted SVG assets are needed.
+                    code: false,
+                    ast: false
+                });
+            }
 
             processedCount++;
         } catch (error) {

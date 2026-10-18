@@ -15,6 +15,7 @@ import { getNodeName } from '../../utils';
 
 import { scanProjectForSvgs } from './buildSvgMap';
 import { HandlerResolver } from './handlers/HandlerResolver';
+import { referencesModuleBinding } from './moduleBinding';
 import { PathAliasResolver } from './pathAliasResolver';
 import { writeAssetToDisk } from './processing/fs';
 import { SvgBindingMap } from './svgBindingMap';
@@ -169,12 +170,11 @@ export class ReactNativeSVG {
                 return;
             }
 
-            // A barrel consumer can rename an export or import its default
-            // under a new name, present only in the per-binding map.
-            const localSvgEntry = this.svgBindingMap.getLocalSvgEntry(
-                currentFile,
-                name
-            );
+            // Cached entries describe module-level imports, including barrel
+            // consumers. A same-named nested binding refers to another component.
+            const localSvgEntry = referencesModuleBinding(path, name)
+                ? this.svgBindingMap.getLocalSvgEntry(currentFile, name)
+                : undefined;
 
             HandlerResolver.configure({
                 t: this.t,

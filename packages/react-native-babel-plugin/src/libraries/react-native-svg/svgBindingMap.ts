@@ -17,6 +17,10 @@ export type SvgEntry = { path: string; content?: string };
 // between the save and load paths so the two can't desync on the number.
 const CURRENT_SVG_MAP_VERSION = 2;
 
+function isObjectMap(value: unknown): boolean {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 /**
  * The name -> resolved-SVG-path mapping `buildSvgMap.ts`'s project scan
  * populates, and `ReactNativeSVG.processItem` consults at real transform
@@ -70,28 +74,33 @@ export class SvgBindingMap {
             }
             const mapContent = fs.readFileSync(svgMapPath, 'utf8');
             const parsed = JSON.parse(mapContent);
+            const isVersioned = parsed?.version === CURRENT_SVG_MAP_VERSION;
+            // Valid JSON is not necessarily a complete cache. Reject missing
+            // or invalid maps so the caller discovers SVGs from source instead
+            // of treating an incomplete cache as a successful empty scan.
+            if (
+                !isObjectMap(parsed) ||
+                (isVersioned &&
+                    (!isObjectMap(parsed.flat) ||
+                        !isObjectMap(parsed.byBinding)))
+            ) {
+                return false;
+            }
             // Versioned wrapper (current format, carrying both the flat
             // map and its per-binding counterpart) vs. a pre-existing
             // cache file written before `localSvgMapByBinding` existed,
             // which was just the flat map itself with no wrapper at all
             // -- still loadable, just without per-binding disambiguation
             // until the cache is regenerated.
-            const flat =
-                parsed?.version === CURRENT_SVG_MAP_VERSION
-                    ? parsed.flat
-                    : parsed;
-            const byBinding =
-                parsed?.version === CURRENT_SVG_MAP_VERSION
-                    ? parsed.byBinding
-                    : null;
+            const flat = isVersioned ? parsed.flat : parsed;
+            const byBinding = isVersioned ? parsed.byBinding : null;
             // `JSON.parse` always returns a plain (Object.prototype)
             // object -- re-home it onto a null prototype so a
             // `__proto__`/`constructor`-named entry persisted from a
             // previous scan can't reintroduce the same hazard here.
             this.localSvgMap = Object.assign(Object.create(null), flat);
             this.localSvgMapByBinding = byBinding ?? {};
-            this.allowFlatFallback =
-                parsed?.version !== CURRENT_SVG_MAP_VERSION;
+            this.allowFlatFallback = !isVersioned;
             return true;
         } catch (err) {
             console.warn(

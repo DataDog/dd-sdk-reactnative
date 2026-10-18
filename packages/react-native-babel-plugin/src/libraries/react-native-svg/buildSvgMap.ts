@@ -13,6 +13,7 @@ import pathN from 'path';
 
 import { getNodeName } from '../../utils';
 
+import { referencesModuleBinding } from './moduleBinding';
 import { exportNodeKey, nodeKey, splitNodeKey } from './nodeKeys';
 import type { PathAliasResolver } from './pathAliasResolver';
 import {
@@ -320,7 +321,7 @@ export function scanProjectForSvgs({
             traverse(ast, {
                 JSXOpeningElement: path => {
                     const name = getNodeName(t, path.node.name);
-                    if (name) {
+                    if (name && referencesModuleBinding(path, name)) {
                         usedJsxNodes.add(nodeKey(file, name));
                     }
                 },

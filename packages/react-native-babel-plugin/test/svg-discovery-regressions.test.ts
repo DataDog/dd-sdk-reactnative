@@ -178,6 +178,142 @@ describe('SVG discovery regressions', () => {
         ).toBe('icon.svg');
     });
 
+    it.each([
+        ['local variable', 'const Icon = Other; return <Icon/>;'],
+        ['function parameter', 'return <Icon/>;', 'Icon'],
+        ['destructured parameter', 'return <Icon/>;', '{ Icon }'],
+        [
+            'block variable',
+            'if (true) { const Icon = Other; return <Icon/>; } return null;'
+        ],
+        ['local function', 'function Icon() { return null; } return <Icon/>;']
+    ])(
+        'does not resolve an unused SVG alias shadowed by a %s',
+        (_, body, parameter = '') => {
+            write('icon.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
+            configureAliases('metro', { '@logo': path.join(root, 'icon.svg') });
+            write(
+                'Screen.jsx',
+                `import Icon from '@logo'; import Other from 'ui-library';
+                 export default function Screen(${parameter}) { ${body} }`
+            );
+            const resolveSpy = jest.spyOn(
+                PathAliasResolver.prototype,
+                'resolve'
+            );
+
+            const instance = scan('android');
+
+            expect(
+                resolveSpy.mock.calls.filter(([source]) => source === '@logo')
+            ).toEqual([]);
+            expect(instance.localSvgMap.Icon).toBeUndefined();
+            expect(render(instance)).not.toContain('SessionReplayView');
+            expect(fs.readdirSync(assets)).toEqual([]);
+        }
+    );
+
+    describe.each(['fresh scan', 'versioned cache', 'legacy cache'])(
+        '%s lexical bindings',
+        mode => {
+            it.each(['alias', 'relative', 'barrel'])(
+                'wraps only the imported %s SVG when a nested parameter shadows its name',
+                sourceKind => {
+                    const svg = write(
+                        'icon.svg',
+                        '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="5" fill="red"/></svg>'
+                    );
+                    configureAliases('metro', { '@logo': svg });
+                    write(
+                        'barrel.ts',
+                        "export { default as Icon } from '@logo';"
+                    );
+                    const importDeclaration =
+                        sourceKind === 'barrel'
+                            ? "import { Icon } from './barrel';"
+                            : `import Icon from '${
+                                  sourceKind === 'alias'
+                                      ? '@logo'
+                                      : './icon.svg'
+                              }';`;
+                    const screen = write(
+                        'Screen.jsx',
+                        `${importDeclaration}
+                         export const Actual = () => <Icon/>;
+                         export default function Shadowed(Icon) { return <Icon/>; }`
+                    );
+                    if (mode !== 'fresh scan') {
+                        const cachePath = path.join(root, 'cache.json');
+                        if (mode === 'versioned cache') {
+                            const map = new SvgBindingMap();
+                            map.setLocalSvgMapEntry(
+                                screen,
+                                'Icon',
+                                svg,
+                                new Map()
+                            );
+                            map.saveToDisk(cachePath);
+                        } else {
+                            fs.writeFileSync(
+                                cachePath,
+                                JSON.stringify({ Icon: { path: svg } })
+                            );
+                        }
+                        const loadFromDisk =
+                            SvgBindingMap.prototype.loadFromDisk;
+                        jest.spyOn(
+                            SvgBindingMap.prototype,
+                            'loadFromDisk'
+                        ).mockImplementation(function loadCachedMap() {
+                            return loadFromDisk.call(this, cachePath);
+                        });
+                    }
+
+                    const output = render(scan('android'));
+
+                    expect(
+                        output.match(/SessionReplayView\.Privacy/g)
+                    ).toHaveLength(1);
+                    expect(
+                        output.slice(output.indexOf('function Shadowed'))
+                    ).not.toContain('SessionReplayView.Privacy');
+                    expect(fs.readdirSync(assets)).toHaveLength(1);
+                }
+            );
+        }
+    );
+
+    it.each([
+        ['missing maps', { version: 2 }],
+        ['missing flat map', { version: 2, byBinding: {} }],
+        ['missing binding map', { version: 2, flat: {} }],
+        ['null flat map', { version: 2, flat: null, byBinding: {} }],
+        ['null binding map', { version: 2, flat: {}, byBinding: null }],
+        ['array flat map', { version: 2, flat: [], byBinding: {} }],
+        ['array binding map', { version: 2, flat: {}, byBinding: [] }],
+        ['string flat map', { version: 2, flat: 'invalid', byBinding: {} }],
+        ['string binding map', { version: 2, flat: {}, byBinding: 'invalid' }]
+    ])('rescans instead of accepting a cache with %s', (_, cache) => {
+        write('icon.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
+        write(
+            'Screen.jsx',
+            "import Logo from './icon.svg'; export default () => <Logo/>;"
+        );
+        const cachePath = write('invalid-cache.json', JSON.stringify(cache));
+        const map = new SvgBindingMap();
+
+        expect(map.loadFromDisk(cachePath)).toBe(false);
+
+        const loadFromDisk = SvgBindingMap.prototype.loadFromDisk;
+        jest.spyOn(SvgBindingMap.prototype, 'loadFromDisk').mockImplementation(
+            function loadInvalidCache() {
+                return loadFromDisk.call(this, cachePath);
+            }
+        );
+
+        expect(render(scan('android'))).toContain('SessionReplayView');
+    });
+
     it.each(['import', 're-export', 'wildcard', 'aliased wildcard'])(
         'uses the active platform through the %s chain',
         chain => {
