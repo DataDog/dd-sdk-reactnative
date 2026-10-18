@@ -138,11 +138,15 @@ describe('Babel plugin: web platform', () => {
             expect(buildSvgMapSpy).not.toHaveBeenCalled();
         });
 
-        it('should still scan for SVGs on non-web platform builds with svgTracking enabled', () => {
-            transformSvg({ name: 'metro', platform: 'ios' });
+        it.each(['ios', 'android'])(
+            'should pass the %s platform to SVG discovery',
+            platform => {
+                transformSvg({ name: 'metro', platform });
 
-            expect(buildSvgMapSpy).toHaveBeenCalledTimes(1);
-        });
+                expect(buildSvgMapSpy).toHaveBeenCalledTimes(1);
+                expect(buildSvgMapSpy).toHaveBeenCalledWith(platform);
+            }
+        );
 
         // pre() reuses the ReactNativeSVG instance across files in the same
         // worker instead of rebuilding (and rescanning) it per file.
@@ -168,6 +172,25 @@ describe('Babel plugin: web platform', () => {
             });
 
             expect(buildSvgMapSpy).toHaveBeenCalledTimes(1);
+        });
+
+        it('should reuse a separate SVG map for each platform', () => {
+            const pluginConfig: [typeof plugin, unknown] = [
+                plugin,
+                { sessionReplay: { svgTracking: true } }
+            ];
+
+            for (const platform of ['ios', 'android', 'ios']) {
+                transform('<Svg/>', {
+                    filename: path.join(projectDir, 'Screen.tsx'),
+                    parserOpts: { plugins: ['jsx'] },
+                    plugins: [pluginConfig],
+                    configFile: false,
+                    caller: { name: 'metro', platform }
+                });
+            }
+
+            expect(buildSvgMapSpy.mock.calls).toEqual([['ios'], ['android']]);
         });
     });
 });
