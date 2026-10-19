@@ -10,6 +10,8 @@ import DatadogInternal
 
 internal class DatadogCoreProxy: DatadogCoreProtocol {
     let core: DatadogCoreProtocol
+
+    var remoteConfiguration: RemoteConfiguration? { core.remoteConfiguration }
     
     private var featureScopeInterceptors: [String: FeatureScopeInterceptor] = [:]
 
