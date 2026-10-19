@@ -3221,8 +3221,8 @@ __metadata:
   linkType: hard
 
 "@npmcli/arborist@npm:^9.1.8":
-  version: 9.9.2
-  resolution: "@npmcli/arborist@npm:9.9.2"
+  version: 9.9.3
+  resolution: "@npmcli/arborist@npm:9.9.3"
   dependencies:
     "@gar/promise-retry": ^1.0.0
     "@isaacs/string-locale-compare": ^1.1.0
@@ -3260,7 +3260,7 @@ __metadata:
     walk-up-path: ^4.0.0
   bin:
     arborist: bin/index.js
-  checksum: f6f8e646db1c490f3a9623a972553607e038ed83cf5ad4edd3240b73774acfcdbdc739e5555cff20b79838d091767038db642d4c1a06bc3715968faaf98dfd6d
+  checksum: ab7dbd565bfc7787aa3a6830315ce7e817ec26c38aed65aeaba724a7800b9c7e60271b19d53df79684c63880255c3dfb831cec307c3a0a76632c5dd573ec7f53
   languageName: node
   linkType: hard
 
@@ -7088,9 +7088,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001806":
-  version: 1.0.30001815
-  resolution: "caniuse-lite@npm:1.0.30001815"
-  checksum: eab81396e1dc5434c05ae105e91a8f1b9e1070d702a014ac7056ab6a3e1870f567efe387456d5cc087b4c7c83bc13e55292f0a066327cd668321ea739aefa2ed
+  version: 1.0.30001816
+  resolution: "caniuse-lite@npm:1.0.30001816"
+  checksum: 458291bbddfd7d39dba02522211bd5475bf705c4ca3baca14143186c4f63aef8b50cfa13a93418755c8d531497a73982d8a53df0ea11ed852d408eae70c618b6
   languageName: node
   linkType: hard
 
@@ -8566,9 +8566,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.393":
-  version: 1.5.452
-  resolution: "electron-to-chromium@npm:1.5.452"
-  checksum: 4855b93fa1e328afb013ad96d8f86bacd2148868795ce378204538d524f7021c5c259a279f68296f030f225caa6e428566538c551aecd3d3b96f884346f3a94e
+  version: 1.5.459
+  resolution: "electron-to-chromium@npm:1.5.459"
+  checksum: b0abef57a5203e865ff5831fa1c41b3b82ad933ef36f8435cebb4768d9137cfe72a80c0da9203c831e4bd1914a15044342dc0cbd1c8d67fe1857b2f66cac1c9b
   languageName: node
   linkType: hard
 
@@ -13937,9 +13937,9 @@ __metadata:
   linkType: hard
 
 "node-releases@npm:^2.0.51":
-  version: 2.0.58
-  resolution: "node-releases@npm:2.0.58"
-  checksum: 37045b20bbdd9e3bd7103ada92601566c4ed8ec3d0270c4006a6c21a55acb167d21027e65a1cbf39ed64bb63c392bdc12c5a140e2366e1246656d6c0cf8554be
+  version: 2.0.59
+  resolution: "node-releases@npm:2.0.59"
+  checksum: 035cab26c3867a2ab3bfb89586bcdef5881651fe8636bfa140f2b982c3447879d6c428e473fe381dbec4e8555a79cde88cbe567ac77e2a64725ae4771927a671
   languageName: node
   linkType: hard
 
