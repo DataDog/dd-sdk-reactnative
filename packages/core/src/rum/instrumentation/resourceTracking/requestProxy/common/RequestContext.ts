@@ -17,6 +17,7 @@ import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import type { DdRumResourceGraphqlAttributes } from '../interfaces/RumResource';
 
 export interface RequestContext {
+    resourceId: number;
     graphql: DdRumResourceGraphqlAttributes & {
         trackErrors?: boolean;
     };
@@ -26,6 +27,10 @@ export interface RequestContext {
     tracingAttributes: DdRumResourceTracingAttributes;
     baggageHeaderEntries: Set<string>;
 }
+
+// Disambiguates resources sharing the same start millisecond and method,
+// which would otherwise collide on the native side.
+let resourceSequence = 0;
 
 export const createRequestContext = ({
     method,
@@ -37,6 +42,7 @@ export const createRequestContext = ({
     options: RequestProxyOptions;
 }): RequestContext => {
     return {
+        resourceId: ++resourceSequence,
         method,
         url,
         timer: new Timer(),
@@ -52,3 +58,6 @@ export const createRequestContext = ({
         baggageHeaderEntries: new Set<string>()
     };
 };
+
+export const getResourceKey = (context: RequestContext): string =>
+    `${context.timer.startTime}/${context.method}/${context.resourceId}`;

@@ -157,6 +157,35 @@ describe('FetchProxy', () => {
         expect(outgoingHeaders.get(PARENT_ID_HEADER_KEY)).not.toBeNull();
     });
 
+    it('reports distinct keys for same-method requests started in the same millisecond', async () => {
+        const now = Date.now();
+        const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(now);
+        const originalFetch = jest
+            .fn()
+            .mockResolvedValue(createResponse()) as jest.MockedFunction<
+            typeof fetch
+        >;
+        const reportResource = jest.fn();
+        const { fetchGlobal, proxy } = createProxy({
+            originalFetch,
+            reportResource
+        });
+        proxy.onTrackingStart(getOptions());
+
+        await Promise.all([
+            fetchGlobal.fetch('https://api.example.com/users'),
+            fetchGlobal.fetch('https://api.example.com/settings')
+        ]);
+        dateNowSpy.mockRestore();
+
+        expect(reportResource).toHaveBeenCalledTimes(2);
+        const [first, second] = reportResource.mock.calls.map(
+            call => call[0] as RUMResource
+        );
+        expect(first.timings.startTime).toBe(second.timings.startTime);
+        expect(first.key).not.toBe(second.key);
+    });
+
     it('extracts GraphQL metadata and removes its internal header', async () => {
         const originalFetch = jest
             .fn()

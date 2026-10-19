@@ -10,7 +10,7 @@ import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
 import { getErrorData } from '../XHRProxy/xhrUtils';
 import { callOriginalFetch } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
-import { createRequestContext } from '../common/RequestContext';
+import { createRequestContext, getResourceKey } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
 import { filterDevResource } from '../common/internalDevResourceBlocklist';
 import {
@@ -259,7 +259,7 @@ const reportFetch = async ({
     }
 
     resourceReporter.reportResource({
-        key: `${context.timer.startTime}/${context.method}`,
+        key: getResourceKey(context),
         request: {
             method: context.method,
             url: context.url,
@@ -287,7 +287,7 @@ const reportFetchFailure = ({
     resourceReporter: ResourceReporter;
 }) => {
     resourceReporter.reportResource({
-        key: `${context.timer.startTime}/${context.method}`,
+        key: getResourceKey(context),
         request: {
             method: context.method,
             url: context.url,

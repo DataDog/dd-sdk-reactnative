@@ -145,6 +145,46 @@ describe('XHRProxy', () => {
             expect(xhr.originalOnReadyStateChangeCalled).toBe(true);
         });
 
+        it('reports distinct resources for same-method XHR requests started in the same millisecond', async () => {
+            // GIVEN
+            const now = Date.now();
+            (Date.now as jest.MockedFunction<
+                typeof Date.now
+            >).mockImplementation(() => now);
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([])
+            });
+
+            // WHEN
+            const xhr1 = new XMLHttpRequestMock();
+            const xhr2 = new XMLHttpRequestMock();
+            xhr1.open('GET', 'https://api.example.com/v2/user');
+            xhr2.open('GET', 'https://api.example.com/v2/settings');
+            xhr1.send();
+            xhr2.send();
+            xhr1.notifyResponseArrived();
+            xhr2.notifyResponseArrived();
+            xhr1.complete(200, 'ok');
+            xhr2.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(DdNativeRum.startResource.mock.calls.length).toBe(2);
+            expect(DdNativeRum.startResource.mock.calls[0][4]).toBe(
+                DdNativeRum.startResource.mock.calls[1][4]
+            );
+            expect(DdNativeRum.startResource.mock.calls[0][0]).not.toBe(
+                DdNativeRum.startResource.mock.calls[1][0]
+            );
+            expect(DdNativeRum.stopResource.mock.calls.length).toBe(2);
+            expect(
+                DdNativeRum.stopResource.mock.calls.map(call => call[0]).sort()
+            ).toEqual(
+                DdNativeRum.startResource.mock.calls.map(call => call[0]).sort()
+            );
+        });
+
         it('intercepts failing XHR request when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN
             const method = 'GET';
