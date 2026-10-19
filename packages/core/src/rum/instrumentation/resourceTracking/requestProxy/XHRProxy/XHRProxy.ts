@@ -9,7 +9,7 @@ import { SdkVerbosity } from '../../../../../config/types';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
 import { isRunningWithinFetchProxy } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
-import { createRequestContext } from '../common/RequestContext';
+import { createRequestContext, getResourceKey } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
 import { filterDevResource } from '../common/internalDevResourceBlocklist';
 import {
@@ -189,7 +189,7 @@ const reportXhr = async (
         return;
     }
 
-    const key = `${context.timer.startTime}/${context.method}`;
+    const key = getResourceKey(context);
 
     context.timer.stop();
 
