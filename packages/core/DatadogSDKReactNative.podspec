@@ -6,7 +6,7 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 #     - DatadogSDKReactNativeSessionReplay.podspec
 #     - DatadogSDKReactNativeWebView.podspec
 #     - DatadogInternalTesting.podspec
-datadog_ios_version = '3.16.0'
+datadog_ios_version = '3.16.1'
 datadog_ios_spm_url = 'https://github.com/DataDog/dd-sdk-ios.git'
 
 # The native iOS SDK is resolved through Swift Package Manager, using React Native's
