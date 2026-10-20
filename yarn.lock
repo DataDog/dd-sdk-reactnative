@@ -2090,6 +2090,7 @@ __metadata:
     "@openfeature/core": ^1.9.2
     "@openfeature/web-sdk": ^1.8.0
     "@testing-library/react-native": 7.0.2
+    genversion: 3.0.2
     react-native-builder-bob: 0.26.0
     react-native-gesture-handler: 1.10.3
   peerDependencies:
