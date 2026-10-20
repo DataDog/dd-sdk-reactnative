@@ -174,6 +174,83 @@ class DdFlagsTests: XCTestCase {
         waitForExpectations(timeout: 1.0, handler: nil)
     }
 
+    func testTrackExposureIsIndependentAndPreservesSerialID() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
+        let flag: NSDictionary = [
+            "allocationKey": "allocation", "variationKey": "on", "reason": "TARGETING_MATCH",
+            "doLog": true, "value": true, "serialId": "9007199254740993"
+        ]
+        var resolved = false
+        implementation.trackExposure("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: ["country": "US"], resolve: { _ in
+            resolved = true
+        }, reject: { _, _, _ in XCTFail("Should resolve") })
+
+        XCTAssertTrue(resolved)
+        XCTAssertEqual(client.trackedExposure?.key, "flag")
+        XCTAssertEqual(client.trackedExposure?.assignment.serialID, 9_007_199_254_740_993)
+        XCTAssertEqual(client.trackedExposure?.context.targetingKey, "user")
+        XCTAssertEqual(client.trackedExposure?.context.attributes["country"], .string("US"))
+        XCTAssertNil(client.trackedEvaluation)
+        XCTAssertNil(client.trackedEvaluationEvent)
+        XCTAssertNil(client.lastEvaluationContext)
+    }
+
+    func testTrackEvaluationEventIsIndependent() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
+        let flag: NSDictionary = [
+            "allocationKey": "allocation", "variationKey": "off", "reason": "STATIC",
+            "doLog": false, "value": false
+        ]
+        var resolved = false
+        implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: ["country": "US"], errorCode: nil, resolve: { _ in
+            resolved = true
+        }, reject: { _, _, _ in XCTFail("Should resolve") })
+
+        XCTAssertTrue(resolved)
+        XCTAssertEqual(client.trackedEvaluationEvent?.key, "flag")
+        XCTAssertEqual(client.trackedEvaluationEvent?.assignment?.variationKey, "off")
+        XCTAssertEqual(client.trackedEvaluationEvent?.context.targetingKey, "user")
+        XCTAssertEqual(client.trackedEvaluationEvent?.context.attributes["country"], .string("US"))
+        XCTAssertNil(client.trackedEvaluationEvent?.errorCode)
+        XCTAssertNil(client.trackedExposure)
+        XCTAssertNil(client.trackedEvaluation)
+        XCTAssertNil(client.lastEvaluationContext)
+    }
+
+    func testTrackEvaluationEventWithoutAssignment() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
+        for errorCode in [nil, "FLAG_NOT_FOUND"] as [String?] {
+            var resolved = false
+            implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: nil, targetingKey: "user", attributes: [:], errorCode: errorCode, resolve: { _ in
+                resolved = true
+            }, reject: { _, _, _ in XCTFail("Should resolve") })
+            XCTAssertTrue(resolved)
+            XCTAssertEqual(client.trackedEvaluationEvent?.key, "flag")
+            XCTAssertNil(client.trackedEvaluationEvent?.assignment)
+            XCTAssertEqual(client.trackedEvaluationEvent?.errorCode, errorCode)
+        }
+        XCTAssertNil(client.trackedExposure)
+        XCTAssertNil(client.trackedEvaluation)
+    }
+
+    func testIndependentTrackingRejectsMalformedAssignments() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
+        var rejectionCount = 0
+        let reject: RCTPromiseReject = { code, _, _ in
+            XCTAssertEqual(code, "INVALID_FLAG_ASSIGNMENT")
+            rejectionCount += 1
+        }
+        implementation.trackExposure("tracking", key: "flag", rawFlag: [:], targetingKey: "user", attributes: [:], resolve: { _ in XCTFail("Should reject") }, reject: reject)
+        implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: [:], targetingKey: "user", attributes: [:], errorCode: nil, resolve: { _ in XCTFail("Should reject") }, reject: reject)
+        XCTAssertEqual(rejectionCount, 2)
+        XCTAssertNil(client.trackedExposure)
+        XCTAssertNil(client.trackedEvaluationEvent)
+    }
+
     // MARK: - AnyValue Tests
 
     func testAnyValueWrapUnwrapNull() {
@@ -394,6 +471,7 @@ class DdFlagsTests: XCTestCase {
 
 private class FlagsTestCore: DatadogCoreProtocol {
     private var features: [String: DatadogFeature] = [:]
+    var remoteConfiguration: RemoteConfiguration? { nil }
 
     func register<T>(feature: T) throws where T : DatadogFeature {
         features[T.name] = feature
@@ -422,6 +500,8 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
 
     var lastEvaluationContext: FlagsEvaluationContext?
     var trackedEvaluation: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
+    var trackedExposure: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
+    var trackedEvaluationEvent: (key: String, assignment: FlagAssignment?, context: FlagsEvaluationContext, errorCode: String?)?
 
     func setEvaluationContext(_ context: DatadogFlags.FlagsEvaluationContext, completion: @escaping (Result<Void, DatadogFlags.FlagsError>) -> Void) {
         lastEvaluationContext = context
@@ -438,5 +518,13 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
 
     func sendFlagEvaluation(key: String, assignment: DatadogFlags.FlagAssignment, context: DatadogFlags.FlagsEvaluationContext) {
         trackedEvaluation = (key, assignment, context)
+    }
+
+    func sendFlagExposure(key: String, assignment: FlagAssignment, context: FlagsEvaluationContext) {
+        trackedExposure = (key, assignment, context)
+    }
+
+    func sendFlagEvaluationEvent(key: String, assignment: FlagAssignment?, context: FlagsEvaluationContext, errorCode: String?) {
+        trackedEvaluationEvent = (key, assignment, context, errorCode)
     }
 }

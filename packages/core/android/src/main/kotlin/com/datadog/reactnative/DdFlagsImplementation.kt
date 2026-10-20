@@ -130,6 +130,42 @@ class DdFlagsImplementation(
         promise.resolve(null)
     }
 
+    @Suppress("LongParameterList")
+    fun trackExposure(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
+    ) {
+        _FlagsInternalProxy(getClient(clientName)).trackFlagExposure(
+            key,
+            convertMapToUnparsedFlag(rawFlag.toMap()),
+            buildEvaluationContext(targetingKey, attributes),
+        )
+        promise.resolve(null)
+    }
+
+    @Suppress("LongParameterList")
+    fun trackEvaluationEvent(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap?,
+        targetingKey: String,
+        attributes: ReadableMap,
+        errorCode: String?,
+        promise: Promise,
+    ) {
+        _FlagsInternalProxy(getClient(clientName)).trackFlagEvaluationEvent(
+            key,
+            rawFlag?.let { convertMapToUnparsedFlag(it.toMap()) },
+            buildEvaluationContext(targetingKey, attributes),
+            errorCode,
+        )
+        promise.resolve(null)
+    }
+
     internal companion object {
         internal const val NAME = "DdFlags"
     }

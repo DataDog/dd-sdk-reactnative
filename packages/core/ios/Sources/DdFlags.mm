@@ -44,6 +44,29 @@ RCT_EXPORT_METHOD(trackEvaluation:(NSString *)clientName
     [self trackEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
+RCT_EXPORT_METHOD(trackExposure:(NSString *)clientName
+                  withKey:(NSString *)key
+                  withRawFlag:(NSDictionary *)rawFlag
+                  targetingKey:(NSString *)targetingKey
+                  attributes:(NSDictionary *)attributes
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self trackExposure:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+RCT_EXPORT_METHOD(trackEvaluationEvent:(NSString *)clientName
+                  withKey:(NSString *)key
+                  withRawFlag:(nullable NSDictionary *)rawFlag
+                  targetingKey:(NSString *)targetingKey
+                  attributes:(NSDictionary *)attributes
+                  errorCode:(nullable NSString *)errorCode
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self trackEvaluationEvent:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes errorCode:errorCode resolve:resolve reject:reject];
+}
+
 // Thanks to this guard, we won't compile this code when we build for the new architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -79,5 +102,13 @@ RCT_EXPORT_METHOD(trackEvaluation:(NSString *)clientName
 
 - (void)trackEvaluation:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary *)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddFlagsImplementation trackEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)trackExposure:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary *)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddFlagsImplementation trackExposure:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)trackEvaluationEvent:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary * _Nullable)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes errorCode:(NSString * _Nullable)errorCode resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddFlagsImplementation trackEvaluationEvent:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes errorCode:errorCode resolve:resolve reject:reject];
 }
 @end

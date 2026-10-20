@@ -94,6 +94,9 @@ public class DdFlagsImplementation: NSObject {
                 case .networkError:
                     errorCode = "NETWORK_ERROR"
                     errorMessage = "A network error occurred while fetching feature flags for client '\(clientName)'."
+                case .initializationTimedOut:
+                    errorCode = "CLIENT_NOT_INITIALIZED"
+                    errorMessage = "Flags initialization timed out for client '\(clientName)'."
                 }
                 reject(errorCode, errorMessage, error as NSError)
             }
@@ -115,6 +118,35 @@ public class DdFlagsImplementation: NSObject {
 
         client.sendFlagEvaluation(key: key, assignment: flagAssignment, context: evaluationContext)
 
+        resolve(nil)
+    }
+
+    @objc
+    public func trackExposure(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized.", nil)
+            return
+        }
+        guard let assignment = rawFlag.asFlagAssignment() else {
+            reject("INVALID_FLAG_ASSIGNMENT", "Failed to parse correct flag assignment from the provided raw flag data.", nil)
+            return
+        }
+        client.sendFlagExposure(key: key, assignment: assignment, context: buildEvaluationContext(targetingKey: targetingKey, attributes: attributes))
+        resolve(nil)
+    }
+
+    @objc
+    public func trackEvaluationEvent(_ clientName: String, key: String, rawFlag: NSDictionary?, targetingKey: String, attributes: NSDictionary, errorCode: String?, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized.", nil)
+            return
+        }
+        let assignment = rawFlag?.asFlagAssignment()
+        guard rawFlag == nil || assignment != nil else {
+            reject("INVALID_FLAG_ASSIGNMENT", "Failed to parse correct flag assignment from the provided raw flag data.", nil)
+            return
+        }
+        client.sendFlagEvaluationEvent(key: key, assignment: assignment, context: buildEvaluationContext(targetingKey: targetingKey, attributes: attributes), errorCode: errorCode)
         resolve(nil)
     }
 
@@ -213,7 +245,8 @@ extension NSDictionary {
             variationKey: variationKey,
             variation: variation,
             reason: reason,
-            doLog: doLog
+            doLog: doLog,
+            serialID: (object(forKey: "serialId") as? String).flatMap(Int.init)
         )
     }
 }

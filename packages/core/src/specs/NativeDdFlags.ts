@@ -29,6 +29,22 @@ export interface Spec extends TurboModule {
         targetingKey: string,
         attributes: Object
     ) => Promise<void>;
+    readonly trackExposure: (
+        clientName: string,
+        key: string,
+        rawFlag: Object,
+        targetingKey: string,
+        attributes: Object
+    ) => Promise<void>;
+
+    readonly trackEvaluationEvent: (
+        clientName: string,
+        key: string,
+        rawFlag: Object | null,
+        targetingKey: string,
+        attributes: Object,
+        errorCode: string | null
+    ) => Promise<void>;
 }
 
 // eslint-disable-next-line import/no-default-export

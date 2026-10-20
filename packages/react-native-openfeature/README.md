@@ -338,6 +338,73 @@ precomputed-only `configurationFromString` helper.
   `Error`. Loading a usable configuration after an error emits `Ready`, followed by
   `ConfigurationChanged`.
 
+### Optional tracking with DatadogCoreProvider
+
+Register exposure, evaluation, and RUM hooks independently with the evaluation-only
+`DatadogCoreProvider`. Do not add these hooks to `DatadogOpenFeatureProvider` or
+`DatadogOfflineOpenFeatureProvider`, which already track automatically.
+
+The exposure and evaluation hooks require the core Datadog SDK to be initialized and
+`DdFlags.enable()` to have completed. RUM tracking requires RUM to be enabled separately.
+The hooks do not initialize, shut down, or change consent for the shared native SDK.
+
+```tsx
+import { DdFlags } from '@datadog/mobile-react-native';
+import {
+    composeDatadogTrackingHooks,
+    createDatadogExposureLoggingHook,
+    createDatadogEvaluationLoggingHook,
+    createDatadogRumTrackingHook
+} from '@datadog/mobile-react-native-openfeature';
+import {
+    DatadogCoreProvider,
+    coreConfigurationFromString
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+// After initializing the core Datadog SDK:
+await DdFlags.enable();
+const provider = new DatadogCoreProvider();
+provider.setConfiguration(coreConfigurationFromString(wire));
+await OpenFeature.setProviderAndWait('datadog-core', provider, {
+    targetingKey: 'user-123', country: 'US'
+});
+
+// Include only the tracking operations your application needs.
+const tracking = composeDatadogTrackingHooks(
+    createDatadogExposureLoggingHook({ clientName: 'datadog-core' }),
+    createDatadogEvaluationLoggingHook({ clientName: 'datadog-core' }),
+    createDatadogRumTrackingHook()
+);
+await tracking.initialize();
+const client = OpenFeature.getClient('datadog-core');
+client.addHooks(...tracking.hooks);
+const enabled = client.getBooleanValue('new-feature', false);
+
+// When this dedicated client no longer needs tracking:
+client.clearHooks();
+await tracking.shutdown();
+```
+
+`clearHooks()` removes all client-level hooks, so this cleanup assumes a client dedicated to
+this tracking setup. It does not remove global or provider hooks. `shutdown()` deactivates
+these tracking hooks without flushing or shutting down the shared native SDK.
+
+The composer also accepts hooks with optional synchronous or asynchronous lifecycle methods.
+A lifecycle failure in one hook does not prevent the remaining hooks from initializing or
+shutting down.
+
+Each hook submits its record immediately through an asynchronous native call. There is no
+JavaScript batching, timer, or upload queue, and evaluation does not await native delivery.
+Native consent handling, exposure deduplication, evaluation aggregation, storage, and upload
+batching remain unchanged. Exposure logging respects `doLog`; evaluation logging also records
+errors and coded defaults. RUM records the variant of successful evaluations.
+
+These hooks depend on the separate native tracking APIs being introduced in the iOS and Android
+SDKs. Until those APIs are released and the RN native dependencies are updated, test them with
+the corresponding local native SDK builds; the currently pinned native releases do not contain
+these APIs.
+
 ### Offline initialization
 
 Use `DatadogOfflineOpenFeatureProvider` to evaluate manually supplied precomputed or rules-based

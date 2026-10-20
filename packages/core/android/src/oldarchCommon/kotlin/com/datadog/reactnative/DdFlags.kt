@@ -60,4 +60,37 @@ class DdFlags(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
     ) {
         implementation.trackEvaluation(clientName, key, rawFlag, targetingKey, attributes, promise)
     }
+
+    @ReactMethod
+    fun trackExposure(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.trackExposure(clientName, key, rawFlag, targetingKey, attributes, promise)
+    }
+
+    @ReactMethod
+    fun trackEvaluationEvent(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap?,
+        targetingKey: String,
+        attributes: ReadableMap,
+        errorCode: String?,
+        promise: Promise
+    ) {
+        implementation.trackEvaluationEvent(
+            clientName,
+            key,
+            rawFlag,
+            targetingKey,
+            attributes,
+            errorCode,
+            promise
+        )
+    }
 }
