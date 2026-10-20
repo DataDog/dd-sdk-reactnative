@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { configurationToString } from '@datadog/flagging-core/rules-based';
 import { DdRum } from '@datadog/mobile-react-native';
 import { ErrorCode, OpenFeature } from '@openfeature/web-sdk';
 
@@ -299,6 +300,123 @@ describe('optional native tracking hooks', () => {
         expect(native.trackExposure).toHaveBeenCalledTimes(1);
         expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(2);
         expect(rum).toHaveBeenCalledTimes(2);
+        expect(native.trackEvaluation).not.toHaveBeenCalled();
+        expect(native.enable).not.toHaveBeenCalled();
+        expect(native.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('uses refreshed rules and tracking metadata without registering hooks again', async () => {
+        // Re-encode changed rules so both requests exercise the actual protobuf decoder.
+        const replacement = rulesConfiguration();
+        const replacementFlag = replacement.rules.response.flags['test-flag'];
+        replacementFlag.variations[0].value = {
+            case: 'booleanValue',
+            value: false
+        };
+        replacement.rules.response.strings[
+            replacementFlag.variations[0].keyStringIndex
+        ] = 'refreshed-off';
+        replacementFlag.allocations[0].key = 'refreshed-allocation';
+        replacementFlag.allocations[0].splits[0].serialId = 8;
+        const responses = [rulesWire, configurationToString(replacement)].map(
+            wire => {
+                const bytes = Uint8Array.from(
+                    Buffer.from(JSON.parse(wire).rules.response, 'base64')
+                );
+                return { ok: true, arrayBuffer: async () => bytes.buffer };
+            }
+        );
+        const fetch = jest
+            .fn()
+            .mockResolvedValueOnce(responses[0])
+            .mockResolvedValueOnce(responses[1]);
+        const fetchOptions = { clientToken: 'test-token', env: 'test', fetch };
+        const provider = new DatadogCoreProvider();
+        provider.setConfiguration(await fetchRulesConfiguration(fetchOptions));
+        const domain = `tracking-${++sequence}`;
+        await OpenFeature.setProviderAndWait(domain, provider, matchingContext);
+        const client = OpenFeature.getClient(domain);
+        const addHooks = jest.spyOn(client, 'addHooks');
+        const tracking = composeDatadogTrackingHooks(
+            createDatadogExposureLoggingHook({ clientName: 'refresh-owner' }),
+            createDatadogEvaluationLoggingHook({ clientName: 'refresh-owner' }),
+            createDatadogRumTrackingHook()
+        );
+        await tracking.initialize();
+        client.addHooks(...tracking.hooks);
+        expect(native.trackExposure).not.toHaveBeenCalled();
+        expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+        expect(rum).not.toHaveBeenCalled();
+
+        expect(client.getBooleanDetails('test-flag', false)).toMatchObject({
+            value: true,
+            variant: 'on',
+            flagMetadata: {
+                allocationKey: 'allocation',
+                __dd_split_serial_id: 7
+            }
+        });
+        const refreshed = await fetchRulesConfiguration(fetchOptions);
+        provider.setConfiguration(refreshed);
+        expect(native.trackExposure).toHaveBeenCalledTimes(1);
+        expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(1);
+        expect(rum).toHaveBeenCalledTimes(1);
+
+        expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
+            value: false,
+            variant: 'refreshed-off',
+            flagMetadata: {
+                allocationKey: 'refreshed-allocation',
+                __dd_split_serial_id: 8
+            }
+        });
+        const expectedRecords = [
+            [
+                'refresh-owner',
+                'test-flag',
+                expect.objectContaining({
+                    value: true,
+                    variationValue: 'true',
+                    variationKey: 'on',
+                    allocationKey: 'allocation',
+                    serialId: '7',
+                    doLog: true
+                }),
+                'user-1',
+                { country: 'US' }
+            ],
+            [
+                'refresh-owner',
+                'test-flag',
+                expect.objectContaining({
+                    value: false,
+                    variationValue: 'false',
+                    variationKey: 'refreshed-off',
+                    allocationKey: 'refreshed-allocation',
+                    serialId: '8',
+                    doLog: true
+                }),
+                'user-1',
+                { country: 'US' }
+            ]
+        ];
+        expect(native.trackExposure.mock.calls).toEqual(expectedRecords);
+        expect(native.trackEvaluationEvent.mock.calls).toEqual(
+            expectedRecords.map(record => [...record, null])
+        );
+        expect(rum.mock.calls).toEqual([
+            ['default', 'test-flag', 'on', 'user-1', { country: 'US' }],
+            [
+                'default',
+                'test-flag',
+                'refreshed-off',
+                'user-1',
+                { country: 'US' }
+            ]
+        ]);
+        expect(provider.getConfiguration()).toBe(refreshed);
+        expect(addHooks).toHaveBeenCalledTimes(1);
+        expect(fetch).toHaveBeenCalledTimes(2);
         expect(native.trackEvaluation).not.toHaveBeenCalled();
         expect(native.enable).not.toHaveBeenCalled();
         expect(native.setEvaluationContext).not.toHaveBeenCalled();
