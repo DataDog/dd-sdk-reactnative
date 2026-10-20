@@ -198,3 +198,83 @@ describe('DdBabelInteractionTracking.wrapRumAction', () => {
         );
     });
 });
+
+describe('DdBabelInteractionTracking target name resolution', () => {
+    const mockAddAction = jest.fn().mockResolvedValue(undefined);
+
+    beforeEach(() => {
+        mockAddAction.mockClear();
+        DdBabelInteractionTracking.config = {
+            trackInteractions: true,
+            useAccessibilityLabel: true
+        };
+        DdBabelInteractionTracking.attachRumInstance({
+            addAction: mockAddAction
+        } as any);
+    });
+
+    const getTargetName = (targetObject: Record<string, any>) => {
+        DdBabelInteractionTracking.wrapRumAction(jest.fn(), RumActionType.TAP, {
+            ...mockTargetObject,
+            options: { useContent: true, useNamePrefix: false },
+            ...targetObject
+        } as any)();
+        return mockAddAction.mock.calls[0][1];
+    };
+
+    it('should use the actionNameAttribute value', () => {
+        expect(getTargetName({ testID: ['save_button'] })).toBe('save_button');
+    });
+
+    it('should skip undefined and empty actionNameAttribute values', () => {
+        expect(
+            getTargetName({
+                testID: [undefined, ''],
+                accessibilityLabel: ['Save']
+            })
+        ).toBe('Save');
+    });
+
+    it('should skip empty dd-action-name and fall back to actionNameAttribute', () => {
+        expect(
+            getTargetName({ 'dd-action-name': [], testID: ['save_button'] })
+        ).toBe('save_button');
+    });
+
+    it('should fall back to content when no attribute resolves', () => {
+        expect(
+            getTargetName({
+                testID: [null],
+                accessibilityLabel: [undefined],
+                getContent: () => ['Save content']
+            })
+        ).toBe('Save content');
+    });
+
+    it('should fall back to the component name when nothing resolves', () => {
+        expect(getTargetName({ testID: [undefined] })).toBe('Button');
+    });
+
+    it('should stringify numeric values', () => {
+        expect(getTargetName({ testID: [42] })).toBe('42');
+    });
+
+    it('should keep positions when resolving the indexed value', () => {
+        expect(
+            getTargetName({
+                testID: ['first', undefined, 'third'],
+                handlerArgs: [2]
+            })
+        ).toBe('third');
+    });
+
+    it('should fall back to the next source when the indexed value is unresolved', () => {
+        expect(
+            getTargetName({
+                testID: ['first', undefined, 'third'],
+                accessibilityLabel: ['a11y_first', 'a11y_second'],
+                handlerArgs: [1]
+            })
+        ).toBe('a11y_second');
+    });
+});
