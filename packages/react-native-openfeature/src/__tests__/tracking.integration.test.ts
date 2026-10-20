@@ -289,6 +289,102 @@ describe('optional native tracking hooks', () => {
         expect(native.enable).not.toHaveBeenCalled();
     });
 
+    it('restarts the same tracking controller without duplicate registrations', async () => {
+        const tracking = composeDatadogTrackingHooks(
+            createDatadogExposureLoggingHook(),
+            createDatadogEvaluationLoggingHook(),
+            createDatadogRumTrackingHook()
+        );
+        const { client } = await configuredClient(tracking);
+        const expectRecords = (count: number) => {
+            expect(native.trackExposure).toHaveBeenCalledTimes(count);
+            expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(count);
+            expect(rum).toHaveBeenCalledTimes(count);
+        };
+
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        expectRecords(1);
+        client.clearHooks();
+        await tracking.shutdown();
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        expectRecords(1);
+
+        await tracking.initialize();
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        expectRecords(1);
+        client.addHooks(...tracking.hooks);
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        expectRecords(2);
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        expectRecords(3);
+        expect(native.trackEvaluation).not.toHaveBeenCalled();
+        expect(native.enable).not.toHaveBeenCalled();
+        expect(native.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('routes named clients independently and keeps one active when the other stops', async () => {
+        const firstTracking = composeDatadogTrackingHooks(
+            createDatadogExposureLoggingHook({ clientName: 'native-first' }),
+            createDatadogEvaluationLoggingHook({ clientName: 'native-first' })
+        );
+        const secondTracking = composeDatadogTrackingHooks(
+            createDatadogExposureLoggingHook({ clientName: 'native-second' }),
+            createDatadogEvaluationLoggingHook({ clientName: 'native-second' })
+        );
+        const first = await configuredClient(firstTracking, true);
+        const second = await configuredClient(secondTracking, true);
+        await OpenFeature.setContext(second.domain, {
+            targetingKey: 'user-2',
+            country: 'US',
+            tier: 'premium'
+        });
+
+        expect(first.client.getBooleanValue('test-flag', false)).toBe(true);
+        expect(second.client.getBooleanValue('test-flag', false)).toBe(true);
+        first.client.clearHooks();
+        await firstTracking.shutdown();
+        expect(first.client.getBooleanValue('test-flag', false)).toBe(true);
+        expect(second.client.getBooleanValue('test-flag', false)).toBe(true);
+
+        const assignment = expect.objectContaining({
+            value: true,
+            allocationKey: 'allocation',
+            variationKey: 'on',
+            doLog: true
+        });
+        const expectedRecords = [
+            [
+                'native-first',
+                'test-flag',
+                assignment,
+                'user-1',
+                { country: 'US' }
+            ],
+            [
+                'native-second',
+                'test-flag',
+                assignment,
+                'user-2',
+                { country: 'US', tier: 'premium' }
+            ],
+            [
+                'native-second',
+                'test-flag',
+                assignment,
+                'user-2',
+                { country: 'US', tier: 'premium' }
+            ]
+        ];
+        expect(native.trackExposure.mock.calls).toEqual(expectedRecords);
+        expect(native.trackEvaluationEvent.mock.calls).toEqual(
+            expectedRecords.map(record => [...record, null])
+        );
+        expect(rum).not.toHaveBeenCalled();
+        expect(native.trackEvaluation).not.toHaveBeenCalled();
+        expect(native.enable).not.toHaveBeenCalled();
+        expect(native.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
     describe('composition lifecycle', () => {
         it('accepts lifecycle-free hooks and optional synchronous methods without starting them', async () => {
             const firstHook = { finally: jest.fn() };
