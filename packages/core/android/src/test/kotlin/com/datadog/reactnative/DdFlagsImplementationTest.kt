@@ -77,11 +77,59 @@ internal class DdFlagsImplementationTest {
             testedImplementation.enable(configuration, mockPromise)
 
             // Then
-            flagsMock.verify { Flags.enable(any<FlagsConfiguration>(), same(initializedCore)) }
+            val flagsConfig = argumentCaptor<FlagsConfiguration>()
+            flagsMock.verify { Flags.enable(flagsConfig.capture(), same(initializedCore)) }
+            assertThat(flagsConfig.firstValue).extracting("customEvaluationEndpoint").isNull()
             verify(mockPromise).resolve(null)
         } finally {
             flagsMock.close()
             datadogMock.close()
+        }
+    }
+
+    @Test
+    fun `M forward separate endpoint overrides W enable()`() {
+        val core = mock<SdkCore>()
+        val configuration = mapOf(
+            "enabled" to true,
+            "customFlagsEndpoint" to "https://flags.example.com",
+            "customExposureEndpoint" to "https://exposure.example.com",
+            "customEvaluationEndpoint" to "https://evaluation.example.com"
+        ).toReadableMap()
+
+        Mockito.mockStatic(Flags::class.java).use { flagsMock ->
+            DdFlagsImplementation(core).enable(configuration, mockPromise)
+
+            val flagsConfig = argumentCaptor<FlagsConfiguration>()
+            flagsMock.verify { Flags.enable(flagsConfig.capture(), same(core)) }
+            assertThat(flagsConfig.firstValue).extracting("customFlagEndpoint")
+                .isEqualTo("https://flags.example.com/precompute-assignments")
+            assertThat(flagsConfig.firstValue).extracting("customExposureEndpoint")
+                .isEqualTo("https://exposure.example.com/api/v2/exposures")
+            assertThat(flagsConfig.firstValue).extracting("customEvaluationEndpoint")
+                .isEqualTo("https://evaluation.example.com/api/v2/flagevaluation")
+            verify(mockPromise).resolve(null)
+        }
+    }
+
+    @Test
+    fun `M preserve other endpoints W enable() with only an evaluation override`() {
+        val core = mock<SdkCore>()
+        val configuration = mapOf(
+            "enabled" to true,
+            "customEvaluationEndpoint" to "https://evaluation.example.com/proxy"
+        ).toReadableMap()
+
+        Mockito.mockStatic(Flags::class.java).use { flagsMock ->
+            DdFlagsImplementation(core).enable(configuration, mockPromise)
+
+            val flagsConfig = argumentCaptor<FlagsConfiguration>()
+            flagsMock.verify { Flags.enable(flagsConfig.capture(), same(core)) }
+            assertThat(flagsConfig.firstValue).extracting("customEvaluationEndpoint")
+                .isEqualTo("https://evaluation.example.com/proxy/api/v2/flagevaluation")
+            assertThat(flagsConfig.firstValue).extracting("customFlagEndpoint").isNull()
+            assertThat(flagsConfig.firstValue).extracting("customExposureEndpoint").isNull()
+            verify(mockPromise).resolve(null)
         }
     }
 

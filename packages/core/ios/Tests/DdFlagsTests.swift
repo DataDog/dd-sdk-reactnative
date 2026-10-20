@@ -393,7 +393,8 @@ class DdFlagsTests: XCTestCase {
             "trackExposures": false,
             "rumIntegrationEnabled": false,
             "customFlagsEndpoint": "https://flags.example.com",
-            "customExposureEndpoint": "https://exposure.example.com"
+            "customExposureEndpoint": "https://exposure.example.com",
+            "customEvaluationEndpoint": "https://evaluation.example.com"
         ]
 
         let config = configDict.asFlagsConfiguration()
@@ -403,6 +404,7 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(config?.rumIntegrationEnabled, false)
         XCTAssertEqual(config?.customFlagsEndpoint?.absoluteString, "https://flags.example.com/precompute-assignments")
         XCTAssertEqual(config?.customExposureEndpoint?.absoluteString, "https://exposure.example.com/api/v2/exposures")
+        XCTAssertEqual(config?.customEvaluationEndpoint?.absoluteString, "https://evaluation.example.com/api/v2/flagevaluation")
     }
 
     func testConfigurationParsingDefaults() {
@@ -412,6 +414,20 @@ class DdFlagsTests: XCTestCase {
         XCTAssertNotNil(config)
         XCTAssertEqual(config?.trackExposures, true)
         XCTAssertEqual(config?.rumIntegrationEnabled, true)
+        XCTAssertNil(config?.customFlagsEndpoint)
+        XCTAssertNil(config?.customExposureEndpoint)
+        XCTAssertNil(config?.customEvaluationEndpoint)
+    }
+
+    func testConfigurationParsingEvaluationEndpointOnly() {
+        let configDict: NSDictionary = [
+            "enabled": true,
+            "customEvaluationEndpoint": "https://evaluation.example.com/proxy"
+        ]
+        let config = configDict.asFlagsConfiguration()
+
+        XCTAssertNotNil(config)
+        XCTAssertEqual(config?.customEvaluationEndpoint?.absoluteString, "https://evaluation.example.com/proxy/api/v2/flagevaluation")
         XCTAssertNil(config?.customFlagsEndpoint)
         XCTAssertNil(config?.customExposureEndpoint)
     }

@@ -182,12 +182,17 @@ extension NSDictionary {
         if let customExposureEndpoint = object(forKey: "customExposureEndpoint") as? String {
             customExposureEndpointURL = URL(string: "\(customExposureEndpoint)/api/v2/exposures" as String)
         }
+        var customEvaluationEndpointURL: URL? = nil
+        if let customEvaluationEndpoint = object(forKey: "customEvaluationEndpoint") as? String {
+            customEvaluationEndpointURL = URL(string: "\(customEvaluationEndpoint)/api/v2/flagevaluation" as String)
+        }
 
         return Flags.Configuration(
             gracefulModeEnabled: gracefulModeEnabled,
             customFlagsEndpoint: customFlagsEndpointURL,
             customExposureEndpoint: customExposureEndpointURL,
             trackExposures: trackExposures ?? true,
+            customEvaluationEndpoint: customEvaluationEndpointURL,
             rumIntegrationEnabled: rumIntegrationEnabled ?? true
         )
     }

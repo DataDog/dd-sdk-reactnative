@@ -202,6 +202,9 @@ private fun buildFlagsConfiguration(configuration: Map<String, Any?>): FlagsConf
             (configuration["customExposureEndpoint"] as? String)?.let {
                 useCustomExposureEndpoint("$it/api/v2/exposures")
             }
+            (configuration["customEvaluationEndpoint"] as? String)?.let {
+                useCustomEvaluationEndpoint("$it/api/v2/flagevaluation")
+            }
         }.build()
 }
 

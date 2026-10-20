@@ -348,6 +348,13 @@ The exposure and evaluation hooks require the core Datadog SDK to be initialized
 `DdFlags.enable()` to have completed. RUM tracking requires RUM to be enabled separately.
 The hooks do not initialize, shut down, or change consent for the shared native SDK.
 
+Tracking destinations are configured on the native SDK, not on individual hooks. The core
+SDK's site selects the default endpoints. For custom intake routing, pass
+`customExposureEndpoint` and/or `customEvaluationEndpoint` to `DdFlags.enable()` before
+creating clients. Both accept base URLs; the RN bridge appends `/api/v2/exposures` and
+`/api/v2/flagevaluation`, respectively. RUM's endpoint is configured separately when
+initializing RUM. These overrides do not change configuration fetching.
+
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
 import {
