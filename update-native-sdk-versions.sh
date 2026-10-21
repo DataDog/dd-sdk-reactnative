@@ -12,6 +12,7 @@ podspec_files=(
     "packages/core/DatadogSDKReactNative.podspec"
     "packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec"
     "packages/react-native-webview/DatadogSDKReactNativeWebView.podspec"
+    "packages/internal-testing-tools/DatadogInternalTesting.podspec"
 )
 
 # Android build.gradle files
@@ -83,7 +84,7 @@ else
 fi
 
 # Get iOS version
-extract_and_validate_version podspec_files[@] "dependency 'Datadog.*' *, *'" "s/.*dependency *'Datadog.*, *'\([0-9.]*\).*/\1/" "iOS" ios_version
+extract_and_validate_version podspec_files[@] "datadog_ios_version *= *'" "s/.*datadog_ios_version *= *'\([0-9.]*\)'.*/\1/" "iOS" ios_version
 
 # Get Android version
 extract_and_validate_version build_gradle_files[@] "com.datadoghq:dd-sdk-android" 's/.*:\([0-9.]*\).*/\1/' "Android" android_version
