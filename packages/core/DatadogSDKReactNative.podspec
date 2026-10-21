@@ -17,6 +17,68 @@ if !respond_to?(:spm_dependency, true)
         "React Native >= 0.75 -- the first version to ship the `spm_dependency` podspec helper."
 end
 
+# Xcode builds some of the package's frameworks as dynamic frameworks: DatadogInternal, a target
+# shared by every product, and a `<Product>_<hash>_PackageProduct` framework for any product that
+# more than one pod requests (e.g. DatadogWebViewTracking). The pods link them, but CocoaPods'
+# "[CP] Embed Pods Frameworks" phase only embeds pod frameworks, and `spm_dependency` does not
+# embed them either, so a Release or archived app crashes at launch with dyld "Library not
+# loaded". Debug builds hide it because Xcode adds an rpath to the build folder.
+# This extends React Native's SPM post-install step, which every React Native Podfile already
+# runs through `react_native_post_install`, so the app embeds them without any Podfile change.
+unless defined?(SPM) && SPM.respond_to?(:apply_on_post_install)
+  raise "Datadog: could not find React Native's Swift Package Manager integration " \
+        "(SPM.apply_on_post_install), which is needed to embed the native iOS SDK frameworks."
+end
+
+unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
+  SPM.singleton_class.prepend(Module.new do
+    def datadog_embeds_spm_frameworks?
+      true
+    end
+
+    def apply_on_post_install(installer)
+      super
+      embed = <<~'SH'
+        # Embeds the Datadog Swift package frameworks that Xcode builds dynamically. Looks where Xcode
+        # writes them: the products dir, PackageFrameworks, or UninstalledProducts when archiving.
+        embed_datadog_spm_frameworks()
+        {
+          local dir framework found
+          for dir in "${PODS_CONFIGURATION_BUILD_DIR}" "${PODS_CONFIGURATION_BUILD_DIR}/PackageFrameworks" "${OBJROOT}/UninstalledProducts/${PLATFORM_NAME}"; do
+            found=false
+            for framework in "${dir}"/$1.framework; do
+              [ -d "${framework}" ] || continue
+              found=true
+              if file -b "${framework}/$(basename "${framework}" .framework)" | grep -q "dynamically linked"; then
+                install_framework "${framework}"
+              fi
+            done
+            [ "${found}" = true ] && return 0
+          done
+          # Nothing to embed (e.g. every Datadog product is linked statically) is fine; returning the
+          # last test's status instead would abort the script, which runs with `set -e`.
+          return 0
+        }
+        embed_datadog_spm_frameworks "DatadogInternal"
+        embed_datadog_spm_frameworks "Datadog*_PackageProduct"
+      SH
+      anchor = /^if \[ "\$\{COCOAPODS_PARALLEL_CODE_SIGN\}" == "true" \]; then$/
+      installer.aggregate_targets.each do |target|
+        next unless target.pod_targets.any? { |pod| pod.name == 'DatadogSDKReactNative' }
+        script_path = target.embed_frameworks_script_path
+        next unless File.exist?(script_path)
+        script = File.read(script_path)
+        next if script.include?('embed_datadog_spm_frameworks()')
+        unless script.match?(anchor)
+          raise "Datadog: could not add the native iOS SDK frameworks to #{script_path}, " \
+                "so the app would crash at launch in Release builds."
+        end
+        File.write(script_path, script.sub(anchor) { "#{embed}#{$&}" })
+      end
+    end
+  end)
+end
+
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNative"
   s.version      = package["version"]
