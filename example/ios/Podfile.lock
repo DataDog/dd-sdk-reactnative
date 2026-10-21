@@ -1905,9 +1905,9 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 1dca942403ed9342f98334bf4c3621f011aa7946
-  DatadogSDKReactNative: c8d763826fba47968d28aa7947022b9e00091ac4
-  DatadogSDKReactNativeSessionReplay: 719afc386d385473924c45ea1b72a439782fe400
-  DatadogSDKReactNativeWebView: ddcef966890c5a0751b222237a8599fa406040ac
+  DatadogSDKReactNative: 2764bf00d35df024f1c87fdb9ff5a135676b41b5
+  DatadogSDKReactNativeSessionReplay: 66ad1c183f6e6275bb81abdc07b1e49d6412617e
+  DatadogSDKReactNativeWebView: 3349a0842b697603ddf8d13ded95c817ce567a6d
   DoubleConversion: f16ae600a246532c4020132d54af21d0ddb2a385
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
   FBLazyVector: 7605ea4810e0e10ae4815292433c09bf4324ba45

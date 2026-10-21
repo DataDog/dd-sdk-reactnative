@@ -71,8 +71,11 @@ Pod::Spec.new do |s|
   # <symroot>/<config><platform>/DatadogSDKReactNative, one level below where SwiftPM actually
   # writes PackageFrameworks/. Spelling it as SYMROOT/CONFIGURATION+EFFECTIVE_PLATFORM_NAME
   # matches what `spm_dependency` itself uses for SWIFT_INCLUDE_PATHS.
+  #
+  # Archive builds lay this out differently: PackageFrameworks/ stays empty and the package
+  # frameworks are linked straight into the products directory itself, so search that too.
   datadog_spm_xcconfig = {
-    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"'
+    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks" "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"'
   }
 
   xcconfig = datadog_spm_xcconfig.dup
