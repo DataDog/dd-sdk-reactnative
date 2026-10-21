@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { setCachedAccountId } from '../../rum/helper';
+import { clearCachedAccountId, setCachedAccountId } from '../../rum/helper';
 
 import type { AccountInfo } from './types';
 
@@ -33,6 +33,7 @@ class AccountInfoProvider {
 
     clearAccountInfo = () => {
         this.accountInfo = undefined;
+        clearCachedAccountId();
     };
 }
 

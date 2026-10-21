@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { setCachedUserId } from '../../rum/helper';
+import { clearCachedUserId, setCachedUserId } from '../../rum/helper';
 
 import type { UserInfo } from './types';
 
@@ -35,6 +35,7 @@ class UserInfoProvider {
 
     clearUserInfo = () => {
         this.userInfo = undefined;
+        clearCachedUserId();
     };
 }
 
