@@ -30,6 +30,24 @@ function getGlobalInstance<T>(key: string, objectConstructor: () => T): T {
     return g[symbol] as T;
 }
 
+// Minimal interface for the NavigationBuffer methods used by this package.
+// Accessed via the shared globalThis key so we don't need to import
+// BufferSingleton from the core package's public API.
+interface INavigationBuffer {
+    readonly navigationStartTime: number | null;
+    startNavigation(): void;
+    prepareEndNavigation(): void;
+    flush(): void;
+    endNavigation(): void;
+}
+
+interface IBufferSingleton {
+    getNavigationBuffer(): INavigationBuffer | null;
+}
+
+// IMPORTANT: Keep this key aligned with core package
+const BUFFER_SINGLETON_KEY = 'com.datadog.reactnative.buffer_singleton';
+
 // AppStateStatus can have values:
 //     'active' - The app is running in the foreground
 //     'background' - The app is running in the background. The user is either in another app or on the home screen
@@ -42,6 +60,18 @@ export type NavigationTrackingOptions = {
     viewNamePredicate?: ViewNamePredicate;
     viewTrackingPredicate?: ViewTrackingPredicate;
     paramsTrackingPredicate?: ParamsTrackingPredicate;
+    /**
+     * When `true` (default), a NavigationBuffer is used to hold RUM events (e.g. resources,
+     * actions) that fire between a navigation dispatch and the next `onStateChange` callback.
+     * Those buffered events are then flushed and attributed to the newly-started view, preventing
+     * them from being attributed to the previous view.
+     *
+     * Set to `false` to disable the buffer entirely. Events will pass through immediately without
+     * any buffering. Use this if the buffer causes unexpected behaviour in your setup.
+     *
+     * @default true
+     */
+    useNavigationBuffer?: boolean;
 };
 
 export type ViewNamePredicate = (
@@ -106,6 +136,8 @@ class RumReactNavigationTracking {
 
     private backHandler: NativeEventSubscription | null = null;
 
+    private unsafeActionListener: NavigationListener | null = null;
+
     private appStateSubscription?: NativeEventSubscription;
 
     private previousAppState: AppStateStatus | undefined;
@@ -113,6 +145,8 @@ class RumReactNavigationTracking {
     private previousRouteKey: string | undefined;
 
     private trackingState: 'TRACKING' | 'NOT_TRACKING' = 'NOT_TRACKING';
+
+    private useNavigationBuffer: boolean = true;
 
     /**
      * @internal
@@ -169,8 +203,10 @@ class RumReactNavigationTracking {
         const {
             viewNamePredicate = defaultViewNamePredicate,
             viewTrackingPredicate = defaultViewTrackingPredicate,
-            paramsTrackingPredicate = defaultParamsPredicate
+            paramsTrackingPredicate = defaultParamsPredicate,
+            useNavigationBuffer = true
         } = trackingOptions ?? {};
+        this.useNavigationBuffer = useNavigationBuffer;
 
         if (navigationRef == null) {
             InternalLog.log(
@@ -202,6 +238,24 @@ class RumReactNavigationTracking {
             }
             this.registeredContainer = navigationRef;
 
+            // Listen to __unsafe_action__ — fires before state changes and before
+            // the new screen mounts, so the buffer is active before any useEffect fetches run.
+            // This catches all navigation (in-screen navigate() calls AND external dispatch()),
+            // unlike patching navigationRef.dispatch which only catches the latter.
+            // Only wired when useNavigationBuffer is true.
+            if (this.useNavigationBuffer) {
+                this.unsafeActionListener = (event: any) => {
+                    if (event.data?.noop) {
+                        return;
+                    }
+                    this.getNavBuffer()?.startNavigation();
+                };
+                navigationRef.addListener(
+                    '__unsafe_action__',
+                    this.unsafeActionListener
+                );
+            }
+
             const listener = this.resolveNavigationStateChangeListener();
             navigationRef.addListener('state', listener);
 
@@ -224,6 +278,15 @@ class RumReactNavigationTracking {
         this.navigationTimeline?.addStopTrackingEvent();
         this.previousRoute = undefined;
         if (navigationRef != null) {
+            if (this.unsafeActionListener) {
+                navigationRef.removeListener(
+                    '__unsafe_action__',
+                    this.unsafeActionListener
+                );
+                this.unsafeActionListener = null;
+            }
+            this.getNavBuffer()?.endNavigation();
+
             if (this.navigationStateChangeListener) {
                 navigationRef.removeListener(
                     'state',
@@ -255,22 +318,42 @@ class RumReactNavigationTracking {
     }
 
     _resetInternalStateForTesting(): void {
+        if (this.unsafeActionListener && this.registeredContainer) {
+            this.registeredContainer.removeListener(
+                '__unsafe_action__',
+                this.unsafeActionListener
+            );
+        }
         this._navigationTimeline = undefined;
         this.registeredContainer = null;
         this.navigationStateChangeListener = null;
+        this.unsafeActionListener = null;
         this.previousRoute = undefined;
         this.backHandler = null;
         this.appStateSubscription = undefined;
         this.previousAppState = undefined;
         this.previousRouteKey = undefined;
         this.trackingState = 'NOT_TRACKING';
+        this.useNavigationBuffer = true;
         this.resetPredicates();
+        this.getNavBuffer()?.endNavigation();
     }
 
     private resetPredicates() {
         this.paramsTrackingPredicate = defaultParamsPredicate;
         this.viewNamePredicate = defaultViewNamePredicate;
         this.viewTrackingPredicate = defaultViewTrackingPredicate;
+    }
+
+    private getNavBuffer(): INavigationBuffer | null | undefined {
+        if (!this.useNavigationBuffer) {
+            return undefined;
+        }
+        const symbol = Symbol.for(BUFFER_SINGLETON_KEY);
+        const singleton = (globalThis as any)[symbol] as
+            | IBufferSingleton
+            | undefined;
+        return singleton?.getNavigationBuffer() ?? null;
     }
 
     private handleRouteNavigation(
@@ -284,6 +367,8 @@ class RumReactNavigationTracking {
                 SdkVerbosity.WARN
             );
             // RUMM-1400 in some cases the route seem to be undefined
+            // Still drain the buffer so events are never held indefinitely
+            this.getNavBuffer()?.endNavigation();
             return;
         }
         const key = route.key;
@@ -305,14 +390,50 @@ class RumReactNavigationTracking {
                     }
                 );
                 if (this.viewTrackingPredicate(route)) {
+                    // Stop buffering BEFORE startView so the startView call
+                    // itself passes through the NavigationBuffer immediately (not queued).
+                    // Then flush queued events AFTER startView resolves so they are
+                    // attributed to the now-active view.
+                    const navBuffer = this.getNavBuffer();
+                    // Capture the navigation start timestamp before marking the navigation
+                    // as ended, so we can backdate the view start to when navigation began.
+                    const navigationStartTime =
+                        navBuffer?.navigationStartTime ?? undefined;
+                    navBuffer?.prepareEndNavigation();
+
                     const params = this.paramsTrackingPredicate(route);
-                    if (params) {
-                        DdRum.startView(customKey, screenName, { params });
-                    } else {
-                        DdRum.startView(customKey, screenName);
-                    }
+                    const context = params ? { params } : undefined;
+                    const startViewPromise =
+                        navigationStartTime !== undefined
+                            ? DdRum.startView(
+                                  customKey,
+                                  screenName,
+                                  context ?? {},
+                                  navigationStartTime
+                              )
+                            : context
+                            ? DdRum.startView(customKey, screenName, context)
+                            : DdRum.startView(customKey, screenName);
+
+                    startViewPromise
+                        .then(() => {
+                            navBuffer?.flush();
+                        })
+                        .catch(() => {
+                            // Fail-safe: always release buffered events
+                            navBuffer?.flush();
+                        });
+                } else {
+                    // view not tracked — drain buffer immediately (no startView to wait for)
+                    this.getNavBuffer()?.endNavigation();
                 }
+            } else {
+                // App is in background — no startView, drain buffer immediately
+                this.getNavBuffer()?.endNavigation();
             }
+        } else {
+            // key or screenName is null — no startView, drain buffer immediately
+            this.getNavBuffer()?.endNavigation();
         }
 
         this.previousRouteKey = route.key;
@@ -366,7 +487,6 @@ class RumReactNavigationTracking {
         if (this.navigationStateChangeListener == null) {
             this.navigationStateChangeListener = () => {
                 const route = this.registeredContainer?.getCurrentRoute();
-
                 const newRouteStateEvent = this.navigationTimeline?.addNewRouteEvent(
                     this.previousRouteKey,
                     route?.key
@@ -377,6 +497,7 @@ class RumReactNavigationTracking {
                         this.ROUTE_UNDEFINED_NAVIGATION_WARNING_MESSAGE,
                         SdkVerbosity.WARN
                     );
+                    this.getNavBuffer()?.endNavigation();
                     return;
                 }
 
@@ -415,6 +536,7 @@ class RumReactNavigationTracking {
                 `We could not determine the route when changing the application state to: ${appStateStatus}. No RUM View event will be sent in this case.`,
                 SdkVerbosity.ERROR
             );
+
             return;
         }
 
