@@ -10,8 +10,8 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-# The Datadog podspecs resolve the native iOS SDK through Swift Package Manager, which requires
-# pods to be linked as dynamic frameworks.
+# The Datadog podspecs work with any pod linkage, but BenchmarkRunner, which links the OpenTelemetry
+# SPM products directly, has only been set up and verified with dynamic frameworks.
 use_frameworks! :linkage => :dynamic
 
 target 'BenchmarkRunner' do

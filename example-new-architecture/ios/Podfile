@@ -10,12 +10,8 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-# The Datadog podspecs resolve the native iOS SDK through Swift Package Manager, which requires
-# pods to be linked as dynamic frameworks: dd-sdk-ios declares its SPM products without an explicit
-# `type:`, so SwiftPM builds them as static libraries, and combining those with CocoaPods' default
-# static linkage produces duplicate symbols at link time. Dynamic frameworks are the only
-# combination that works -- see https://github.com/facebook/react-native/pull/44627 for the full
-# matrix.
+# The Datadog podspecs work with any pod linkage. This app links pods as dynamic frameworks so that
+# CI covers that setup, while example/ covers React Native's default static linkage.
 use_frameworks! :linkage => :dynamic
 
 target 'DdSdkReactNativeExample' do
