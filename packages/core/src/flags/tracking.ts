@@ -53,6 +53,25 @@ export function __ddTrackFlagEvaluationEvent(
     );
 }
 
+/** @internal Used by the matching-version OpenFeature tracking hooks. */
+export function __ddTrackFlagRumEvaluation(
+    clientName: string,
+    key: string,
+    variant: string,
+    context: EvaluationContext
+): void {
+    const captured = processEvaluationContext(context);
+    submit(native =>
+        native.trackRumEvaluation(
+            clientName,
+            key,
+            variant,
+            captured.targetingKey,
+            captured.attributes ?? {}
+        )
+    );
+}
+
 function submit(operation: (native: Spec) => Promise<void>): void {
     // Submit immediately. Evaluation must not wait for native acknowledgment or upload.
     try {

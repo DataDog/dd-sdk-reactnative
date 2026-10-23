@@ -219,6 +219,26 @@ class DdFlagsTests: XCTestCase {
         XCTAssertNil(client.lastEvaluationContext)
     }
 
+    func testTrackRumEvaluationIsIndependentAndPreservesOptOutContext() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
+        var resolved = false
+
+        implementation.trackRumEvaluation("tracking", key: "flag", variant: "on", targetingKey: "user", attributes: ["dd_evaluation_telemetry_opt_out": true], resolve: { _ in
+            resolved = true
+        }, reject: { _, _, _ in XCTFail("Should resolve") })
+
+        XCTAssertTrue(resolved)
+        XCTAssertEqual(client.trackedRUMEvaluation?.key, "flag")
+        XCTAssertEqual(client.trackedRUMEvaluation?.variant, "on")
+        XCTAssertEqual(client.trackedRUMEvaluation?.context.targetingKey, "user")
+        XCTAssertEqual(client.trackedRUMEvaluation?.context.attributes["dd_evaluation_telemetry_opt_out"], .bool(true))
+        XCTAssertNil(client.trackedExposure)
+        XCTAssertNil(client.trackedEvaluation)
+        XCTAssertNil(client.trackedEvaluationEvent)
+        XCTAssertNil(client.lastEvaluationContext)
+    }
+
     func testTrackEvaluationEventWithoutAssignment() {
         let client = MockFlagsClient()
         implementation.clientProviders["tracking"] = { client }
@@ -518,6 +538,7 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
     var trackedEvaluation: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
     var trackedExposure: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
     var trackedEvaluationEvent: (key: String, assignment: FlagAssignment?, context: FlagsEvaluationContext, errorCode: String?)?
+    var trackedRUMEvaluation: (key: String, variant: String, context: FlagsEvaluationContext)?
 
     func setEvaluationContext(_ context: DatadogFlags.FlagsEvaluationContext, completion: @escaping (Result<Void, DatadogFlags.FlagsError>) -> Void) {
         lastEvaluationContext = context
@@ -542,5 +563,9 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
 
     func sendFlagEvaluationEvent(key: String, assignment: FlagAssignment?, context: FlagsEvaluationContext, errorCode: String?) {
         trackedEvaluationEvent = (key, assignment, context, errorCode)
+    }
+
+    func sendFlagRUMEvaluation(key: String, variant: String, context: FlagsEvaluationContext) {
+        trackedRUMEvaluation = (key, variant, context)
     }
 }

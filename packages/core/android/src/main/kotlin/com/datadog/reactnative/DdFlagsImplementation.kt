@@ -166,6 +166,23 @@ class DdFlagsImplementation(
         promise.resolve(null)
     }
 
+    @Suppress("LongParameterList")
+    fun trackRumEvaluation(
+        clientName: String,
+        key: String,
+        variant: String,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
+    ) {
+        _FlagsInternalProxy(getClient(clientName)).trackFlagRumEvaluation(
+            key,
+            variant,
+            buildEvaluationContext(targetingKey, attributes),
+        )
+        promise.resolve(null)
+    }
+
     internal companion object {
         internal const val NAME = "DdFlags"
     }

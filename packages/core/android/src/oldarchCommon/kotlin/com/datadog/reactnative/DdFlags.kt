@@ -62,6 +62,25 @@ class DdFlags(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
     }
 
     @ReactMethod
+    fun trackRumEvaluation(
+        clientName: String,
+        key: String,
+        variant: String,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise
+    ) {
+        implementation.trackRumEvaluation(
+            clientName,
+            key,
+            variant,
+            targetingKey,
+            attributes,
+            promise
+        )
+    }
+
+    @ReactMethod
     fun trackExposure(
         clientName: String,
         key: String,

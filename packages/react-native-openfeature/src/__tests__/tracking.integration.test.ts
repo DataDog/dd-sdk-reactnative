@@ -32,7 +32,8 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
         setEvaluationContext: jest.fn(),
         trackEvaluation: jest.fn(),
         trackExposure: jest.fn(() => new Promise(() => {})),
-        trackEvaluationEvent: jest.fn(() => new Promise(() => {}))
+        trackEvaluationEvent: jest.fn(() => new Promise(() => {})),
+        trackRumEvaluation: jest.fn(() => new Promise(() => {}))
     }
 }));
 
@@ -40,6 +41,7 @@ if (!NativeDdFlags) {
     throw new Error('Native flags test double is required');
 }
 const native = jest.mocked(NativeDdFlags);
+const rum = native.trackRumEvaluation;
 let sequence = 0;
 
 async function configuredClient(
@@ -61,16 +63,15 @@ async function configuredClient(
 }
 
 describe('optional native tracking hooks', () => {
-    let rum: jest.SpyInstance;
-
     beforeEach(() => {
         jest.clearAllMocks();
-        rum = jest
-            .spyOn(DdRum, 'addFeatureFlagEvaluation')
-            .mockImplementation(() => new Promise(() => {}));
+        jest.spyOn(DdRum, 'addFeatureFlagEvaluation').mockImplementation(
+            () => new Promise(() => {})
+        );
     });
 
     afterEach(async () => {
+        expect(DdRum.addFeatureFlagEvaluation).not.toHaveBeenCalled();
         await OpenFeature.clearProviders();
         await OpenFeature.clearContext();
         jest.restoreAllMocks();
@@ -110,7 +111,7 @@ describe('optional native tracking hooks', () => {
         const tracking = composeDatadogTrackingHooks(
             createDatadogExposureLoggingHook({ clientName: 'native-owner' }),
             createDatadogEvaluationLoggingHook({ clientName: 'native-owner' }),
-            createDatadogRumTrackingHook()
+            createDatadogRumTrackingHook({ clientName: 'native-owner' })
         );
         const { client } = await configuredClient(tracking);
         jest.useFakeTimers();
@@ -136,7 +137,13 @@ describe('optional native tracking hooks', () => {
             'user-1',
             { country: 'US' }
         );
-        expect(rum).toHaveBeenLastCalledWith('boolean-flag', 'on');
+        expect(rum).toHaveBeenLastCalledWith(
+            'native-owner',
+            'boolean-flag',
+            'on',
+            'user-1',
+            { country: 'US' }
+        );
     });
 
     it('does not suppress evaluation or RUM when doLog is false', async () => {
@@ -157,7 +164,13 @@ describe('optional native tracking hooks', () => {
             { country: 'US' },
             null
         );
-        expect(rum).toHaveBeenCalledWith('string-flag', 'greeting');
+        expect(rum).toHaveBeenCalledWith(
+            'default',
+            'string-flag',
+            'greeting',
+            'user-1',
+            { country: 'US' }
+        );
     });
 
     it('records errors once without an assignment, exposure, or RUM event', async () => {
@@ -214,6 +227,29 @@ describe('optional native tracking hooks', () => {
             ['user-1', { country: 'US' }],
             ['user-2', { country: 'CA' }]
         ]);
+        expect(native.setEvaluationContext).not.toHaveBeenCalled();
+    });
+
+    it('passes opt-out context to the selected native RUM tracking client', async () => {
+        const { client, domain } = await configuredClient(
+            createDatadogRumTrackingHook({ clientName: 'opt-out-owner' }),
+            true
+        );
+        await OpenFeature.setContext(domain, {
+            ...matchingContext,
+            dd_evaluation_telemetry_opt_out: true
+        });
+
+        expect(client.getBooleanValue('test-flag', false)).toBe(true);
+        expect(rum).toHaveBeenCalledWith(
+            'opt-out-owner',
+            'test-flag',
+            'on',
+            'user-1',
+            { country: 'US', dd_evaluation_telemetry_opt_out: true }
+        );
+        expect(native.trackExposure).not.toHaveBeenCalled();
+        expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
         expect(native.setEvaluationContext).not.toHaveBeenCalled();
     });
 

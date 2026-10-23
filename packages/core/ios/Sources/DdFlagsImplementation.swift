@@ -150,6 +150,16 @@ public class DdFlagsImplementation: NSObject {
         resolve(nil)
     }
 
+    @objc
+    public func trackRumEvaluation(_ clientName: String, key: String, variant: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized.", nil)
+            return
+        }
+        client.sendFlagRUMEvaluation(key: key, variant: variant, context: buildEvaluationContext(targetingKey: targetingKey, attributes: attributes))
+        resolve(nil)
+    }
+
     /// Construct an `FlagsEvaluationContext` from a targeting key and a dictionary of attributes.
     private func buildEvaluationContext(targetingKey: String, attributes: NSDictionary) -> FlagsEvaluationContext {
         let dict = attributes as? [String: Any] ?? [:]

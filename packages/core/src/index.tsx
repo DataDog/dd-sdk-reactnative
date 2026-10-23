@@ -73,7 +73,8 @@ import { TimeProvider } from './utils/time-provider/TimeProvider';
 
 export {
     __ddTrackFlagExposure,
-    __ddTrackFlagEvaluationEvent
+    __ddTrackFlagEvaluationEvent,
+    __ddTrackFlagRumEvaluation
 } from './flags/tracking';
 
 export {
