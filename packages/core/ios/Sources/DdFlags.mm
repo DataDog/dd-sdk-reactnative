@@ -44,6 +44,18 @@ RCT_EXPORT_METHOD(trackEvaluation:(NSString *)clientName
     [self trackEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
+RCT_EXPORT_METHOD(trackEvaluationWithTelemetryTargetingKey:(NSString *)clientName
+                  withKey:(NSString *)key
+                  withRawFlag:(NSDictionary *)rawFlag
+                  targetingKey:(NSString *)targetingKey
+                  attributes:(NSDictionary *)attributes
+                  telemetryTargetingKey:(nullable NSString *)telemetryTargetingKey
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self trackEvaluationWithTelemetryTargetingKey:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes telemetryTargetingKey:telemetryTargetingKey resolve:resolve reject:reject];
+}
+
 // Thanks to this guard, we won't compile this code when we build for the new architecture.
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
@@ -79,5 +91,9 @@ RCT_EXPORT_METHOD(trackEvaluation:(NSString *)clientName
 
 - (void)trackEvaluation:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary *)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddFlagsImplementation trackEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)trackEvaluationWithTelemetryTargetingKey:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary *)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes telemetryTargetingKey:(nullable NSString *)telemetryTargetingKey resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddFlagsImplementation trackEvaluationWithTelemetryTargetingKey:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes telemetryTargetingKey:telemetryTargetingKey resolve:resolve reject:reject];
 }
 @end

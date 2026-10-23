@@ -27,8 +27,9 @@ export class DatadogOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
         const ddContext = toDdContext(context);
-        this.contextChangePromise = this.flagsClient.setEvaluationContext(
-            ddContext
+        this.contextChangePromise = this.flagsClient.__ddSetEvaluationContext(
+            ddContext,
+            typeof context.targetingKey === 'string'
         );
 
         await this.contextChangePromise;
@@ -39,12 +40,16 @@ export class DatadogOpenFeatureProvider extends DatadogCoreOpenFeatureProvider {
         newContext: OFEvaluationContext
     ): Promise<void> {
         const newDdContext = toDdContext(newContext);
+        const hasTargetingKey = typeof newContext.targetingKey === 'string';
 
         // Promise chain in case `onContextChange` is called multiple times.
         this.contextChangePromise = this.contextChangePromise
             .catch(() => undefined)
             .then(() => {
-                return this.flagsClient.setEvaluationContext(newDdContext);
+                return this.flagsClient.__ddSetEvaluationContext(
+                    newDdContext,
+                    hasTargetingKey
+                );
             });
 
         // Wait for the current context change to complete.

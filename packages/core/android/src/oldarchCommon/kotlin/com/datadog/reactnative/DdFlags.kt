@@ -60,4 +60,20 @@ class DdFlags(reactContext: ReactApplicationContext) : ReactContextBaseJavaModul
     ) {
         implementation.trackEvaluation(clientName, key, rawFlag, targetingKey, attributes, promise)
     }
+
+    /** Track with a telemetry identity that preserves omission independently of assignment context. */
+    @ReactMethod
+    fun trackEvaluationWithTelemetryTargetingKey(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        telemetryTargetingKey: String?,
+        promise: Promise
+    ) {
+        implementation.trackEvaluationWithTelemetryTargetingKey(
+            clientName, key, rawFlag, targetingKey, attributes, telemetryTargetingKey, promise
+        )
+    }
 }
