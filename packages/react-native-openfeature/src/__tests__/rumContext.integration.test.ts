@@ -33,7 +33,9 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
                 }
             })
         ),
-        trackEvaluation: jest.fn(() => Promise.resolve())
+        trackEvaluationWithTelemetryTargetingKey: jest.fn(() =>
+            Promise.resolve()
+        )
     }
 }));
 
@@ -124,12 +126,15 @@ describe('explicit RUM context enrichment', () => {
             'rum-user',
             expectedAttributes
         );
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
             'rum-user',
-            expectedAttributes
+            expectedAttributes,
+            'rum-user'
         );
     });
 
@@ -190,12 +195,15 @@ describe('explicit RUM context enrichment', () => {
                 '',
                 expectedAttributes
             );
-            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            expect(
+                NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+            ).toHaveBeenCalledWith(
                 clientName,
                 'test-flag',
                 expect.any(Object),
                 '',
-                expectedAttributes
+                expectedAttributes,
+                null
             );
         }
     );
@@ -225,12 +233,15 @@ describe('explicit RUM context enrichment', () => {
             'rum-user',
             expectedAttributes
         );
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
             'rum-user',
-            expectedAttributes
+            expectedAttributes,
+            'rum-user'
         );
     });
 
@@ -272,13 +283,14 @@ describe('explicit RUM context enrichment', () => {
             }
         );
         expect(
-            NativeDdFlags.trackEvaluation
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
         ).toHaveBeenLastCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
             'rum-user-b',
-            { email: 'b@example.com', plan: 'pro', region: 'us' }
+            { email: 'b@example.com', plan: 'pro', region: 'us' },
+            'rum-user-b'
         );
         expect(applicationContext).toStrictEqual({ region: 'us' });
     });
@@ -316,13 +328,14 @@ describe('explicit RUM context enrichment', () => {
             NativeDdFlags.setEvaluationContext
         ).toHaveBeenLastCalledWith(clientName, '', { region: 'us' });
         expect(
-            NativeDdFlags.trackEvaluation
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
         ).toHaveBeenLastCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
             '',
-            { region: 'us' }
+            { region: 'us' },
+            null
         );
     });
 
@@ -403,12 +416,15 @@ describe('explicit RUM context enrichment', () => {
             'rum-user',
             {}
         );
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
             'rum-user',
-            {}
+            {},
+            'rum-user'
         );
     });
 });

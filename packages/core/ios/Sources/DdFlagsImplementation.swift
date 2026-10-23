@@ -118,6 +118,30 @@ public class DdFlagsImplementation: NSObject {
         resolve(nil)
     }
 
+    @objc
+    public func trackEvaluationWithTelemetryTargetingKey(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, telemetryTargetingKey: String?, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized. Make sure the Datadog SDK has been initialized and Flags.enable() has been called.", nil)
+            return
+        }
+        guard let flagAssignment = rawFlag.asFlagAssignment() else {
+            reject("INVALID_FLAG_ASSIGNMENT", "Failed to parse correct flag assignment from the provided raw flag data.", nil)
+            return
+        }
+
+        let evaluationContext = buildEvaluationContext(targetingKey: targetingKey, attributes: attributes)
+        client.sendFlagEvaluation(
+            key: key,
+            assignment: flagAssignment,
+            context: evaluationContext,
+            telemetryTargetingKey: telemetryTargetingKey,
+            observeFullEvaluationData: flagAssignment.observeFullEvaluationData,
+            flagError: nil
+        )
+
+        resolve(nil)
+    }
+
     /// Construct an `FlagsEvaluationContext` from a targeting key and a dictionary of attributes.
     private func buildEvaluationContext(targetingKey: String, attributes: NSDictionary) -> FlagsEvaluationContext {
         let dict = attributes as? [String: Any] ?? [:]
