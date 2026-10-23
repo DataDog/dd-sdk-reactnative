@@ -40,6 +40,7 @@ describe('DdFlags', () => {
     it('should call the native enable method with the correct configuration', async () => {
         await DdFlags.enable({
             customExposureEndpoint: 'https://example.com',
+            customEvaluationEndpoint: 'https://evaluations.example.com',
             customFlagsEndpoint: 'https://example.com',
             trackExposures: false,
             rumIntegrationEnabled: false
@@ -48,9 +49,21 @@ describe('DdFlags', () => {
         expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
             enabled: true,
             customExposureEndpoint: 'https://example.com',
+            customEvaluationEndpoint: 'https://evaluations.example.com',
             customFlagsEndpoint: 'https://example.com',
             trackExposures: false,
             rumIntegrationEnabled: false
+        });
+    });
+
+    it('should forward an evaluation endpoint without other endpoint overrides', async () => {
+        await DdFlags.enable({
+            customEvaluationEndpoint: 'https://evaluations.example.com/proxy'
+        });
+
+        expect(NativeModules.DdFlags.enable).toHaveBeenCalledWith({
+            enabled: true,
+            customEvaluationEndpoint: 'https://evaluations.example.com/proxy'
         });
     });
 
