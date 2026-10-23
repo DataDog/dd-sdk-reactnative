@@ -345,7 +345,8 @@ Register exposure, evaluation, and RUM hooks independently with the evaluation-o
 `DatadogOfflineOpenFeatureProvider`, which already track automatically.
 
 The exposure and evaluation hooks require the core Datadog SDK to be initialized and
-`DdFlags.enable()` to have completed. RUM tracking requires RUM to be enabled separately.
+`DdFlags.enable()` to have completed. The RUM hook also uses a native Flags client to enforce
+its evaluation telemetry opt-out policy, and requires RUM to be enabled separately.
 The hooks do not initialize, shut down, or change consent for the shared native SDK.
 
 Tracking destinations are configured on the native SDK, not on individual hooks. The core
@@ -381,7 +382,7 @@ await OpenFeature.setProviderAndWait('datadog-core', provider, {
 const tracking = composeDatadogTrackingHooks(
     createDatadogExposureLoggingHook({ clientName: 'datadog-core' }),
     createDatadogEvaluationLoggingHook({ clientName: 'datadog-core' }),
-    createDatadogRumTrackingHook()
+    createDatadogRumTrackingHook({ clientName: 'datadog-core' })
 );
 await tracking.initialize();
 const client = OpenFeature.getClient('datadog-core');
@@ -405,7 +406,15 @@ Each hook submits its record immediately through an asynchronous native call. Th
 JavaScript batching, timer, or upload queue, and evaluation does not await native delivery.
 Native consent handling, exposure deduplication, evaluation aggregation, storage, and upload
 batching remain unchanged. Exposure logging respects `doLog`; evaluation logging also records
-errors and coded defaults. RUM records the variant of successful evaluations.
+errors and coded defaults. RUM records the variant of successful evaluations through the
+selected native Flags client, respecting its opt-out policy and RUM integration setting.
+Use the same `clientName` for evaluation and RUM hooks to apply the same client's policy.
+The hooks do not enable or synchronize per-subject opt-out; they preserve the native client's
+existing policy. Exposure logging is not suppressed by evaluation telemetry opt-out.
+
+Use matching core and OpenFeature package releases containing the tracking APIs. If the core
+package is missing a required tracking helper, `initialize()` warns once per hook and leaves
+that hook inactive; flag evaluation continues. Repeated evaluations do not repeat the warning.
 
 These hooks depend on the separate native tracking APIs being introduced in the iOS and Android
 SDKs. Until those APIs are released and the RN native dependencies are updated, test them with

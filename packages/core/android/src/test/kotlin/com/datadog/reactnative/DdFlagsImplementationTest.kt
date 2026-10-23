@@ -245,6 +245,37 @@ internal class DdFlagsImplementationTest {
         }
     }
 
+    @Test
+    fun `M only track RUM W trackRumEvaluation()`() {
+        // Given
+        val client = mock<FlagsClient>()
+        Mockito.mockConstruction(FlagsClient.Builder::class.java) { builder, _ ->
+            whenever(builder.build()).thenReturn(client)
+        }.use {
+            Mockito.mockConstruction(_FlagsInternalProxy::class.java).use { proxies ->
+                // When
+                DdFlagsImplementation(mock()).trackRumEvaluation(
+                    "tracking",
+                    "flag",
+                    "on",
+                    "user",
+                    mapOf("country" to "US").toReadableMap(),
+                    mockPromise
+                )
+
+                // Then
+                val proxy = proxies.constructed().single()
+                val context = argumentCaptor<EvaluationContext>()
+                verify(proxy).trackFlagRumEvaluation(eq("flag"), eq("on"), context.capture())
+                assertThat(context.firstValue.targetingKey).isEqualTo("user")
+                assertThat(context.firstValue.attributes).containsEntry("country", "US")
+                verifyNoMoreInteractions(proxy)
+                verifyNoInteractions(client)
+                verify(mockPromise).resolve(null)
+            }
+        }
+    }
+
     private fun rawFlag() = mapOf(
         "allocationKey" to "allocation",
         "variationKey" to "on",

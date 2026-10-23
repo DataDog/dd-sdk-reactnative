@@ -65,6 +65,18 @@ class DdFlags(
     }
 
     @ReactMethod
+    override fun trackRumEvaluation(
+        clientName: String,
+        key: String,
+        variant: String,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
+    ) {
+        implementation.trackRumEvaluation(clientName, key, variant, targetingKey, attributes, promise)
+    }
+
+    @ReactMethod
     override fun trackExposure(
         clientName: String,
         key: String,
