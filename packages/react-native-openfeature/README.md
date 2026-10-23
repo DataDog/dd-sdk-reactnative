@@ -338,6 +338,43 @@ precomputed-only `configurationFromString` helper.
   `Error`. Loading a usable configuration after an error emits `Ready`, followed by
   `ConfigurationChanged`.
 
+### Fetching rules configuration
+
+Use `fetchRulesConfiguration` from the `/rules-based` entry point to fetch client-distributed rules and decode them into a `FlagsConfiguration`. Like the browser helper, it accepts `clientToken`, `env`, an optional site domain, an optional `fetch` implementation, and an optional `AbortSignal`. It does not require native SDK initialization or `DdFlags.enable()`.
+
+```tsx
+import {
+    DatadogCoreProvider,
+    fetchRulesConfiguration
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+const fetchOptions = {
+    clientToken: '<CLIENT_TOKEN>',
+    env: 'production',
+    site: 'datadoghq.com'
+};
+const provider = new DatadogCoreProvider();
+provider.setConfiguration(await fetchRulesConfiguration(fetchOptions));
+await OpenFeature.setProviderAndWait('datadog-core', provider, {
+    targetingKey: 'user-123', country: 'US'
+});
+const client = OpenFeature.getClient('datadog-core');
+const enabled = client.getBooleanValue('new-feature', false);
+
+// Context changes evaluate the loaded rules locally, without another request.
+await OpenFeature.setContext('datadog-core', {
+    targetingKey: 'user-456', country: 'CA'
+});
+
+// Refresh explicitly when the application needs new rules.
+provider.setConfiguration(await fetchRulesConfiguration(fetchOptions));
+```
+
+The helper makes one request per call, with no automatic polling, retries, persistence, or tracking. It rejects on HTTP, network, cancellation, body-read, or decoding failures. Catch refresh errors before replacing the provider configuration to keep evaluating the last successfully loaded rules. Use a client token; the helper only requests client-distributed configuration, never server-distributed rules.
+
+`site` uses a domain such as `datadoghq.com` or `datadoghq.eu`, not the native SDK's `US1` or `EU1` identifiers. The default is `datadoghq.com`. Fetching and evaluation do not register tracking; use the hooks below when tracking is needed.
+
 ### Optional tracking with DatadogCoreProvider
 
 Register exposure, evaluation, and RUM hooks independently with the evaluation-only
