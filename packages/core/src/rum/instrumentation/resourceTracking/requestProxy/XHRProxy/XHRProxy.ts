@@ -7,6 +7,7 @@
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
+import { isHeaderAllowed } from '../../headerCapture/isHeaderAllowed';
 import { parseResponseHeaders } from '../../headerCapture/parseResponseHeaders';
 import { isRunningWithinFetchProxy } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
@@ -207,7 +208,10 @@ const reportXhr = async (
         url: context.url,
         statusCode,
         responseHeaders: () =>
-            parseResponseHeaders(xhrProxy.getAllResponseHeaders())
+            parseResponseHeaders(
+                xhrProxy.getAllResponseHeaders(),
+                isHeaderAllowed
+            )
     });
 
     // Only extract GraphQL errors if operationType is set AND error tracking is enabled

@@ -4,9 +4,18 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { isHeaderAllowed } from '../isHeaderAllowed';
 import { parseResponseHeaders } from '../parseResponseHeaders';
 
 describe('parseResponseHeaders', () => {
+    it('never stores headers rejected by the isAllowed filter', () => {
+        const raw =
+            'set-cookie: session=secret\r\nauthorization: Bearer x\r\nx-datadog-trace-id: 1\r\ncache-control: no-cache\r\n';
+        expect(parseResponseHeaders(raw, isHeaderAllowed)).toEqual({
+            'cache-control': 'no-cache'
+        });
+    });
+
     it('parses standard CRLF-delimited headers', () => {
         const raw = 'content-type: text/html\r\ncache-control: no-cache\r\n';
         expect(parseResponseHeaders(raw)).toEqual({

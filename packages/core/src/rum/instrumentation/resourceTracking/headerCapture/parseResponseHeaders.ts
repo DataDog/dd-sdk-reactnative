@@ -16,9 +16,11 @@
  * - Header names are trimmed and lowercased; values are trimmed (HTTP OWS)
  * - Duplicate names resolve to last-value-wins
  * - Malformed lines (no colon, empty name) are silently skipped
+ * - Headers rejected by `isAllowed` (if provided) are never stored
  */
 export const parseResponseHeaders = (
-    rawHeaders: string | null | undefined
+    rawHeaders: string | null | undefined,
+    isAllowed?: (headerName: string) => boolean
 ): Record<string, string> => {
     if (!rawHeaders) {
         return {};
@@ -42,8 +44,8 @@ export const parseResponseHeaders = (
 
         const name = line.slice(0, colonIndex).trim().toLowerCase();
 
-        // Name is empty after trimming — skip
-        if (name === '') {
+        // Name is empty after trimming, or the header is not allowed — skip
+        if (name === '' || (isAllowed !== undefined && !isAllowed(name))) {
             continue;
         }
 

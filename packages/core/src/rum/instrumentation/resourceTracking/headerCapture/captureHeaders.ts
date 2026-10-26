@@ -268,7 +268,11 @@ export const captureResponseHeaders = (
         return undefined;
     }
 
-    return filterResponseHeaders(parseResponseHeaders(rawHeaders), url, config);
+    return filterResponseHeaders(
+        parseResponseHeaders(rawHeaders, isHeaderAllowed),
+        url,
+        config
+    );
 };
 
 /**

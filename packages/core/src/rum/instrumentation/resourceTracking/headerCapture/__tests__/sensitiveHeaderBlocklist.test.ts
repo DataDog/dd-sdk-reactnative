@@ -50,6 +50,9 @@ describe('isSensitiveHeader', () => {
             'accesskey',
             'app-key',
             'appkey',
+            'dd-application-key',
+            'x-application-key',
+            'application_key',
             // Forwarding / IP headers
             'forwarded',
             'x-forwarded-for',

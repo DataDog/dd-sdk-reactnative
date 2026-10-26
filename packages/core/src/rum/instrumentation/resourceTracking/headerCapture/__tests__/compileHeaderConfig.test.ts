@@ -295,6 +295,52 @@ describe('compileHeaderCaptureConfig', () => {
             );
         });
 
+        it('forURLs matches URLs with userinfo on the configured host', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['api.example.com/v2']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            expect(
+                urlRegex.test('https://user:pass@api.example.com/v2/users')
+            ).toBe(true);
+            expect(urlRegex.test('https://user@cdn.api.example.com/v2')).toBe(
+                true
+            );
+            expect(
+                urlRegex.test('https://user:pass@api.example.com/v1/users')
+            ).toBe(false);
+        });
+
+        it('forURLs path scope applies to the resolved path', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['api.example.com/public']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            const matches = (url: string) =>
+                urlRegex.test(normalizeUrlForMatching(url));
+
+            expect(matches('https://api.example.com/public/../private')).toBe(
+                false
+            );
+            expect(
+                matches('https://api.example.com/public/%2e%2e/private')
+            ).toBe(false);
+            expect(matches('https://api.example.com/public/\t../private')).toBe(
+                false
+            );
+            expect(matches('https://api.example.com/other/../public/x')).toBe(
+                true
+            );
+        });
+
         it('forURLs matches the host case-insensitively and the path case-sensitively', () => {
             const result = compileHeaderCaptureConfig([
                 {
@@ -311,6 +357,42 @@ describe('compileHeaderCaptureConfig', () => {
             expect(matches('HTTPS://API.EXAMPLE.COM/Public/users')).toBe(true);
             expect(matches('https://api.example.com/public/users')).toBe(false);
             expect(matches('https://api.example.com/PUBLIC/users')).toBe(false);
+        });
+
+        it('forURLs normalizes configured hostnames like request hostnames', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['API\uFF0EExample.com/v2']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+
+            expect(
+                urlRegex.test(
+                    normalizeUrlForMatching('https://api.example.com/v2/users')
+                )
+            ).toBe(true);
+        });
+
+        it('forURLs root path scope matches requests without a path', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['api.example.com/']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            const matches = (url: string) =>
+                urlRegex.test(normalizeUrlForMatching(url));
+
+            expect(matches('https://api.example.com')).toBe(true);
+            expect(matches('https://api.example.com?view=home')).toBe(true);
+            expect(matches('https://api.example.com#top')).toBe(true);
+            expect(matches('https://api.example.com/users')).toBe(true);
+            expect(matches('https://other.example.com')).toBe(false);
         });
 
         it('forURLs path prefix ending with a slash matches nested paths', () => {
@@ -363,6 +445,14 @@ describe('compileHeaderCaptureConfig', () => {
                 false
             );
             expect(urlRegex.test('https://notapi.example.com/')).toBe(false);
+            expect(
+                urlRegex.test('https://api.example.com@unrelated.test/users')
+            ).toBe(false);
+            expect(
+                urlRegex.test(
+                    'https://user:pass@unrelated.test/api.example.com'
+                )
+            ).toBe(false);
             // URL parsers treat '\\' as '/', so this request goes to unrelated.test
             expect(
                 urlRegex.test('https://unrelated.test\\.api.example.com/users')
@@ -480,6 +570,11 @@ describe('compileHeaderCaptureConfig', () => {
             [
                 'a rule with non-array forURLs',
                 { type: 'defaults', forURLs: 'api.example.com' }
+            ],
+            ['a rule with a non-string type', { type: ['defaults'] }],
+            [
+                'a rule whose type cannot be converted to a string',
+                { type: { toString: null } }
             ]
         ])('skips %s with a WARN log instead of throwing', (_, rule) => {
             const result = compileHeaderCaptureConfig([

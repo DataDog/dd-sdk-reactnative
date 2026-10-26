@@ -10,6 +10,7 @@ import {
     filterResponseHeaders
 } from '../../headerCapture/captureHeaders';
 import { enforceSizeLimits } from '../../headerCapture/enforceSizeLimits';
+import { isHeaderAllowed } from '../../headerCapture/isHeaderAllowed';
 import type { CompiledHeaderCaptureConfig } from '../../headerCapture/types';
 import { isDatadogCustomHeader } from '../../headers';
 
@@ -97,6 +98,7 @@ export const finalizeCapturedHeaders = ({
 
 /**
  * Converts a Fetch `Headers` object into a record keyed by lowercased name.
+ * Blocked headers (sensitive or SDK-injected) are never copied.
  * Some Fetch implementations (e.g. older `expo/fetch`) may not implement
  * `forEach`, in which case no headers are returned.
  */
@@ -108,7 +110,10 @@ export const fetchHeadersToRecord = (
         return result;
     }
     headers.forEach((value: string, name: string) => {
-        result[name.toLowerCase()] = value;
+        const lowered = name.toLowerCase();
+        if (isHeaderAllowed(lowered)) {
+            result[lowered] = value;
+        }
     });
     return result;
 };

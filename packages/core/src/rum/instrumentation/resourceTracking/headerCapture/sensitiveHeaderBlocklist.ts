@@ -13,7 +13,7 @@
  * The `/i` flag ensures case-insensitive matching. Compiled once at module load
  * time — no per-call allocation.
  */
-const SENSITIVE_HEADER_PATTERN = /(?:token|cookie|secret|authorization|password|credential|bearer|(?:api|secret|access|app).?key|forwarded|real.?ip|connecting.?ip|client.?ip)/i;
+const SENSITIVE_HEADER_PATTERN = /(?:token|cookie|secret|authorization|password|credential|bearer|(?:api|secret|access|app|application).?key|forwarded|real.?ip|connecting.?ip|client.?ip)/i;
 
 /**
  * Checks whether a header name matches a known sensitive header pattern.
