@@ -82,6 +82,17 @@ Header names use RFC Title-Case for default headers (`Cache-Control`, `ETag`, �
 
 When nothing is captured these attributes are omitted entirely.
 
+## Supported clients
+
+Headers are captured for every request tracked by the SDK:
+
+- **XHR** (`trackResources: true`) — covers React Native's built-in `fetch`, axios and any other XMLHttpRequest-based client.
+- **Global Fetch** (`trackFetchResources: true`) — covers the Expo-installed global `fetch`. When the global `fetch` is backed by XHR, headers are reported once, on the Fetch resource. Direct imports retained from `expo/fetch` are not intercepted.
+
+Fetch `Headers` lowercase header names, so on Fetch resources custom request headers use the casing from your rule's `headers` array rather than the casing passed to `fetch`.
+
+Requests that fail without a response (aborted, network error) never report headers.
+
 ## Security
 
 Two filters are always enforced, regardless of configuration:

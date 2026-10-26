@@ -7,18 +7,15 @@
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
-import {
-    accumulateRequestHeader,
-    captureResponseHeaders,
-    filterRequestHeadersByMode
-} from '../../headerCapture/captureHeaders';
-import { enforceSizeLimits } from '../../headerCapture/enforceSizeLimits';
-import type { CompiledHeaderCaptureConfig } from '../../headerCapture/types';
-import { isDatadogCustomHeader } from '../../headers';
+import { parseResponseHeaders } from '../../headerCapture/parseResponseHeaders';
 import { isRunningWithinFetchProxy } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
 import { createRequestContext, getResourceKey } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
+import {
+    finalizeCapturedHeaders,
+    recordRequestHeader
+} from '../common/headerCapture';
 import { filterDevResource } from '../common/internalDevResourceBlocklist';
 import {
     getInstrumentationHeaders,
@@ -38,9 +35,6 @@ interface DdRumXhr extends XMLHttpRequest {
 
 interface DdRumXhrContext extends RequestContext {
     reported: boolean;
-    headerCaptureConfig: CompiledHeaderCaptureConfig;
-    capturedRequestHeaders: Record<string, string> | undefined;
-    capturedResponseHeaders?: Record<string, string>;
 }
 
 interface XHRProxyProviders {
@@ -124,11 +118,7 @@ const proxyOpen = (
         // start time is tracked by the `send` method
         this._datadog_xhr = {
             ...createRequestContext({ method, url, options: context }),
-            reported: false,
-            headerCaptureConfig: context.headerCaptureConfig,
-            capturedRequestHeaders:
-                context.headerCaptureConfig != null ? {} : undefined,
-            capturedResponseHeaders: undefined
+            reported: false
         };
         // eslint-disable-next-line prefer-rest-params
         return originalXhrOpen.apply(this, arguments as any);
@@ -170,46 +160,6 @@ const proxyOnReadyStateChange = (
 
     xhrProxy.onreadystatechange = function onreadystatechange() {
         if (xhrProxy.readyState === xhrType.DONE) {
-            // Capture response headers (only if capture enabled and not aborted/network-error)
-            if (
-                requestContext.headerCaptureConfig != null &&
-                xhrProxy.status !== 0
-            ) {
-                requestContext.capturedResponseHeaders = captureResponseHeaders(
-                    xhrProxy.getAllResponseHeaders(),
-                    requestContext.url,
-                    requestContext.headerCaptureConfig
-                );
-            }
-
-            // Discard accumulated request headers on aborted/network-error requests (status 0)
-            if (xhrProxy.status === 0) {
-                requestContext.capturedRequestHeaders = undefined;
-            }
-
-            // Filter accumulated request headers by mode now that URL is final
-            if (requestContext.capturedRequestHeaders !== undefined) {
-                requestContext.capturedRequestHeaders = filterRequestHeadersByMode(
-                    requestContext.capturedRequestHeaders,
-                    requestContext.url,
-                    requestContext.headerCaptureConfig
-                );
-            }
-
-            // Enforce size limits after security/mode filtering, before reporting
-            if (
-                requestContext.capturedRequestHeaders !== undefined ||
-                requestContext.capturedResponseHeaders !== undefined
-            ) {
-                const limited = enforceSizeLimits(
-                    requestContext.capturedRequestHeaders,
-                    requestContext.capturedResponseHeaders
-                );
-                requestContext.capturedRequestHeaders = limited.requestHeaders;
-                requestContext.capturedResponseHeaders =
-                    limited.responseHeaders;
-            }
-
             if (!requestContext.reported) {
                 reportXhr(xhrProxy, providers.resourceReporter).catch(error => {
                     const errorData = getErrorData(error);
@@ -278,8 +228,13 @@ const reportXhr = async (
         },
         graphqlAttributes: context.graphql,
         tracingAttributes: context.tracingAttributes,
-        capturedRequestHeaders: context.capturedRequestHeaders,
-        capturedResponseHeaders: context.capturedResponseHeaders,
+        ...finalizeCapturedHeaders({
+            state: context.headerCapture,
+            url: context.url,
+            statusCode: xhrProxy.status,
+            responseHeaders: () =>
+                parseResponseHeaders(xhrProxy.getAllResponseHeaders())
+        }),
         response: {
             statusCode: xhrProxy.status,
             size: responseSize
@@ -319,17 +274,7 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
                 processedHeader.header,
                 processedHeader.value
             ]);
-            // Accumulate for header capture (only user-set, non-Datadog headers)
-            if (
-                this._datadog_xhr.capturedRequestHeaders !== undefined &&
-                !isDatadogCustomHeader(header.toLowerCase())
-            ) {
-                accumulateRequestHeader(
-                    this._datadog_xhr.capturedRequestHeaders,
-                    header,
-                    value
-                );
-            }
+            recordRequestHeader(this._datadog_xhr.headerCapture, header, value);
             return result;
         }
     };
