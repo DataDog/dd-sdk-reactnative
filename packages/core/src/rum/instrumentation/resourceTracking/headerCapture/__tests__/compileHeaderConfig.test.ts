@@ -359,6 +359,23 @@ describe('compileHeaderCaptureConfig', () => {
             expect(matches('https://api.example.com/PUBLIC/users')).toBe(false);
         });
 
+        it('forURLs normalizes configured hostnames like request hostnames', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['API\uFF0EExample.com/v2']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+
+            expect(
+                urlRegex.test(
+                    normalizeUrlForMatching('https://api.example.com/v2/users')
+                )
+            ).toBe(true);
+        });
+
         it('forURLs root path scope matches requests without a path', () => {
             const result = compileHeaderCaptureConfig([
                 {

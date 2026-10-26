@@ -243,6 +243,30 @@ describe('captureHeaders', () => {
                 ).toEqual({ 'x-request-id': 'abc' });
             });
 
+            it.each([
+                'https://api\uFF0Eexample.com/v2/users',
+                'https://api%EF%BC%8Eexample.com/v2/users',
+                'https:///api.example.com/v2/users'
+            ])(
+                'applies a scoped rule over catch-all rules for the equivalent spelling %s',
+                url => {
+                    const config = compileHeaderCaptureConfig([
+                        { type: 'defaults' },
+                        {
+                            type: 'matchResponseHeaders',
+                            headers: ['x-request-id'],
+                            forURLs: ['api.example.com/v2']
+                        }
+                    ]);
+                    const raw =
+                        'cache-control: no-cache\r\nx-request-id: abc\r\n';
+
+                    expect(captureResponseHeaders(raw, url, config)).toEqual({
+                        'x-request-id': 'abc'
+                    });
+                }
+            );
+
             it('matches forURLs hosts case-insensitively and paths case-sensitively', () => {
                 const config = compileHeaderCaptureConfig([
                     {

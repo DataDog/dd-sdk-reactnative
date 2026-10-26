@@ -4,7 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { normalizeUrlForMatching } from '../normalizeUrlForMatching';
+import {
+    normalizeHostname,
+    normalizeUrlForMatching
+} from '../normalizeUrlForMatching';
 
 describe('normalizeUrlForMatching', () => {
     it.each([
@@ -114,6 +117,55 @@ describe('normalizeUrlForMatching', () => {
         ['https://api.ex%zzample.com/x', 'https://api.ex%zzample.com/x']
     ])('decodes percent-encoded hostname characters in %s', (url, expected) => {
         expect(normalizeUrlForMatching(url)).toBe(expected);
+    });
+
+    it.each([
+        [
+            'https:///api.example.com/v2/users',
+            'https://api.example.com/v2/users'
+        ],
+        ['https:////api.example.com/v2', 'https://api.example.com/v2'],
+        ['https:\\\\api.example.com/v2', 'https://api.example.com/v2'],
+        ['HTTPS:api.example.com/v2', 'https://api.example.com/v2'],
+        ['http:/api.example.com', 'http://api.example.com/']
+    ])('collapses the slashes after the scheme of %s', (url, expected) => {
+        expect(normalizeUrlForMatching(url)).toBe(expected);
+    });
+
+    it.each([
+        [
+            'https://api\uFF0Eexample.com/v2/users',
+            'https://api.example.com/v2/users'
+        ],
+        [
+            'https://api%EF%BC%8Eexample.com/v2/users',
+            'https://api.example.com/v2/users'
+        ],
+        ['https://api\u3002example\uFF61com/v2', 'https://api.example.com/v2'],
+        [
+            'https://\uFF41\uFF50\uFF49.example.com/v2',
+            'https://api.example.com/v2'
+        ],
+        [
+            'https://api\uFF0Eexample.com:8443/v2',
+            'https://api.example.com:8443/v2'
+        ],
+        ['https://[::1]:8080/v2', 'https://[::1]:8080/v2']
+    ])('maps Unicode hostname equivalents in %s', (url, expected) => {
+        expect(normalizeUrlForMatching(url)).toBe(expected);
+    });
+
+    describe('normalizeHostname', () => {
+        it.each([
+            ['API.Example.com', 'api.example.com'],
+            ['api\uFF0Eexample.com', 'api.example.com'],
+            ['%61pi.example.com', 'api.example.com'],
+            // Decoding must not introduce characters that change the host
+            ['api.example.com%2fevil', 'api.example.com%2fevil'],
+            ['api.example.com%E0%A4%A', 'api.example.com%e0%a4%a']
+        ])('normalizes %s', (hostname, expected) => {
+            expect(normalizeHostname(hostname)).toBe(expected);
+        });
     });
 
     it('returns URLs without a scheme unchanged', () => {

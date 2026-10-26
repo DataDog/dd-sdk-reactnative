@@ -131,6 +131,19 @@ describe('headerCapture', () => {
     });
 
     describe('fetchHeadersToRecord', () => {
+        it('never copies blocked headers', () => {
+            expect(
+                fetchHeadersToRecord(
+                    new Headers({
+                        'Set-Cookie': 'session=secret',
+                        Authorization: 'Bearer secret',
+                        'x-datadog-tracked-by': 'react-native',
+                        'Cache-Control': 'no-cache'
+                    })
+                )
+            ).toEqual({ 'cache-control': 'no-cache' });
+        });
+
         it('lowercases header names', () => {
             expect(
                 fetchHeadersToRecord(

@@ -15,6 +15,7 @@ import {
     CANONICAL_REQUEST_HEADERS,
     CANONICAL_RESPONSE_HEADERS
 } from './captureHeaders';
+import { normalizeHostname } from './normalizeUrlForMatching';
 import type {
     CompiledHeaderCaptureConfig,
     CompiledHeaderCaptureRule
@@ -47,9 +48,9 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
     const hostname = slashIndex === -1 ? match : match.slice(0, slashIndex);
     const pathPrefix = slashIndex === -1 ? '' : match.slice(slashIndex);
 
-    // Hostnames are case-insensitive: the pattern host is lowercased and URLs are
-    // normalized with normalizeUrlForMatching. Paths stay case-sensitive.
-    const escapedHost = escapeRegExp(hostname.toLowerCase());
+    // The pattern host goes through the same normalizeHostname as request URLs
+    // (normalizeUrlForMatching), so hosts match case-insensitively. Paths stay case-sensitive.
+    const escapedHost = escapeRegExp(normalizeHostname(hostname));
     // Host and path prefix must be followed by /, ?, # or end-of-string.
     // A path prefix ending with '/' is already on a segment boundary.
     const boundary = '(/|\\?|#|$)';
