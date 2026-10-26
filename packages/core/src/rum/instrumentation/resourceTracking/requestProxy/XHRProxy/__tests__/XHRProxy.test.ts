@@ -2939,6 +2939,36 @@ describe('XHRProxy', () => {
             });
         });
 
+        it('stringifies non-string request header values and still reports the resource', async () => {
+            // GIVEN
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([]),
+                headerCaptureConfig: compileHeaderCaptureConfig([
+                    {
+                        type: 'matchRequestHeaders',
+                        headers: ['x-count', 'x-empty']
+                    }
+                ])
+            });
+
+            // WHEN untyped callers pass non-string values
+            const xhr = new XMLHttpRequestMock();
+            xhr.open('GET', 'https://api.example.com/v2/user');
+            xhr.setRequestHeader('x-count', (42 as unknown) as string);
+            xhr.setRequestHeader('x-empty', (null as unknown) as string);
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(DdNativeRum.stopResource).toHaveBeenCalledTimes(1);
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4]['_dd.request_headers']
+            ).toEqual({ 'x-count': '42', 'x-empty': 'null' });
+        });
+
         it('does not capture the SDK tracked-by header even when a rule names it', async () => {
             // GIVEN
             xhrProxy.onTrackingStart({

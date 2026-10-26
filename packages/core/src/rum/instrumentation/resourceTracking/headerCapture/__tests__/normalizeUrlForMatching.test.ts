@@ -15,7 +15,8 @@ describe('normalizeUrlForMatching', () => {
         ['https://API.example.com:8443', 'https://api.example.com:8443'],
         ['https://API.example.com?Q=A', 'https://api.example.com?Q=A'],
         ['https://API.example.com#Top', 'https://api.example.com#Top'],
-        ['https://api.example.com/v2', 'https://api.example.com/v2']
+        ['https://api.example.com/v2', 'https://api.example.com/v2'],
+        ['https://API.example.com\\Path', 'https://api.example.com\\Path']
     ])('lowercases only scheme and authority of %s', (url, expected) => {
         expect(normalizeUrlForMatching(url)).toBe(expected);
     });

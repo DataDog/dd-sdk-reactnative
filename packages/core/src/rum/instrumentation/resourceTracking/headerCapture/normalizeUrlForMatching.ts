@@ -21,7 +21,7 @@ export const normalizeUrlForMatching = (url: string): string => {
     let authorityEnd = url.length;
     for (let i = authorityStart; i < url.length; i++) {
         const char = url[i];
-        if (char === '/' || char === '?' || char === '#') {
+        if (char === '/' || char === '\\' || char === '?' || char === '#') {
             authorityEnd = i;
             break;
         }

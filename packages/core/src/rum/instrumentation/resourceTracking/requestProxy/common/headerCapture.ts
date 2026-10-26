@@ -37,6 +37,8 @@ export const createHeaderCaptureState = (
 /**
  * Records a user-set request header. Datadog internal headers are ignored,
  * sensitive headers are dropped before being stored.
+ * Values are stringified the same way XHR and Fetch coerce them, since
+ * untyped callers can pass `null`, numbers, etc.
  */
 export const recordRequestHeader = (
     state: HeaderCaptureState,
@@ -49,7 +51,7 @@ export const recordRequestHeader = (
     ) {
         return;
     }
-    accumulateRequestHeader(state.requestHeaders, header, value);
+    accumulateRequestHeader(state.requestHeaders, header, String(value));
 };
 
 /**

@@ -220,6 +220,19 @@ describe('compileHeaderCaptureConfig', () => {
             expect(isScoped).toBe(false);
         });
 
+        it('forURLs containing "*" alongside other patterns is catch-all', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchHeaders',
+                    headers: ['x-foo'],
+                    forURLs: ['*', 'api.example.com']
+                }
+            ]);
+            const { urlRegex, isScoped } = (result ?? [])[0];
+            expect(isScoped).toBe(false);
+            expect(urlRegex.test('https://other.com/path')).toBe(true);
+        });
+
         it('specific forURLs patterns produce isScoped: true', () => {
             const result = compileHeaderCaptureConfig([
                 {
@@ -350,6 +363,10 @@ describe('compileHeaderCaptureConfig', () => {
                 false
             );
             expect(urlRegex.test('https://notapi.example.com/')).toBe(false);
+            // URL parsers treat '\\' as '/', so this request goes to unrelated.test
+            expect(
+                urlRegex.test('https://unrelated.test\\.api.example.com/users')
+            ).toBe(false);
         });
 
         it('forURLs: [] (empty) skips the rule with WARN log', () => {

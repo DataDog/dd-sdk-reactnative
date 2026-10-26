@@ -24,9 +24,10 @@ import type {
  * Builds a URL-matching RegExp from a user-supplied `match` string.
  *
  * The regex is applied to full URL strings (e.g. "https://api.example.com/v2/users").
- * Pattern: `^https?://([^/?#@:]+\.)?${escapedHost}(:\d+)?${pathSuffix}`
+ * Pattern: `^https?://([^/?#@:\\]+\.)?${escapedHost}(:\d+)?${pathSuffix}`
  * Subdomains are restricted to hostname characters, so a hostname appearing in
- * the path or query of another URL never matches. The path prefix (if any) must
+ * the path or query of another URL never matches. Backslashes are excluded too,
+ * as URL parsers treat them as path separators. The path prefix (if any) must
  * end on a path segment boundary: `api.example.com/v2` matches `/v2` and `/v2/users`,
  * but not `/v22`. The host is matched case-insensitively (URLs go through
  * normalizeUrlForMatching first), the path prefix case-sensitively.
@@ -57,7 +58,7 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
     try {
         // Regex matches full URL strings: scheme + optional subdomains + host + optional port + path
         const regex = new RegExp(
-            `^https?://([^/?#@:]+\\.)?${escapedHost}(:\\d+)?${pathSuffix}`
+            `^https?://([^/?#@:\\\\]+\\.)?${escapedHost}(:\\d+)?${pathSuffix}`
         );
         // Validate the final regex is well-formed
         regex.test('validation_probe');
@@ -92,8 +93,9 @@ const buildForURLsRegex = (forURLs: string[] | undefined): ForURLsResult => {
         return 'skip';
     }
 
-    // ['*'] is equivalent to omitting forURLs (catch-all)
-    if (forURLs.length === 1 && forURLs[0] === '*') {
+    // Any array containing '*' matches all URLs, so it is equivalent to
+    // omitting forURLs (catch-all)
+    if (forURLs.includes('*')) {
         return { regex: /.*/, isScoped: false };
     }
 
