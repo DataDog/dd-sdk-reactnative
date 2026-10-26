@@ -24,7 +24,9 @@ import type {
  * Builds a URL-matching RegExp from a user-supplied `match` string.
  *
  * The regex is applied to full URL strings (e.g. "https://api.example.com/v2/users").
- * Pattern: `^https?://([^/?#@:\\]+\.)?${escapedHost}(:\d+)?${pathSuffix}`
+ * Pattern: `^https?://([^/?#\\]*@)?([^/?#@:\\]+\.)?${escapedHost}(:\d+)?${pathSuffix}`
+ * Optional userinfo (`user:pass@`) is allowed before the host; a hostname that
+ * only appears in the userinfo never matches.
  * Subdomains are restricted to hostname characters, so a hostname appearing in
  * the path or query of another URL never matches. Backslashes are excluded too,
  * as URL parsers treat them as path separators. The path prefix (if any) must
@@ -56,9 +58,9 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
         : `${escapeRegExp(pathPrefix)}${boundary}`;
 
     try {
-        // Regex matches full URL strings: scheme + optional subdomains + host + optional port + path
+        // Regex matches full URL strings: scheme + optional userinfo + optional subdomains + host + optional port + path
         const regex = new RegExp(
-            `^https?://([^/?#@:\\\\]+\\.)?${escapedHost}(:\\d+)?${pathSuffix}`
+            `^https?://([^/?#\\\\]*@)?([^/?#@:\\\\]+\\.)?${escapedHost}(:\\d+)?${pathSuffix}`
         );
         // Validate the final regex is well-formed
         regex.test('validation_probe');
@@ -151,7 +153,10 @@ const getRuleValidationError = (rule: unknown): string | null => {
                 ? null
                 : '`headers` must be an array of strings';
         default:
-            return `unknown type "${String(type)}"`;
+            // Only interpolate strings: arbitrary objects may not be convertible
+            return typeof type === 'string'
+                ? `unknown type "${type}"`
+                : '`type` must be a string';
     }
 };
 

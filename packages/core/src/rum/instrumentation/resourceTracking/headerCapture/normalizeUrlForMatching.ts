@@ -4,12 +4,18 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+const SINGLE_DOT_SEGMENTS = new Set(['.', '%2e']);
+const DOUBLE_DOT_SEGMENTS = new Set(['..', '.%2e', '%2e.', '%2e%2e']);
+
 /**
- * Lowercases the scheme and authority of a URL, leaving path, query and
- * fragment untouched. Compiled `forURLs` regexes are case-sensitive with a
- * lowercased host, so hosts match case-insensitively while paths keep their case.
+ * Normalizes a URL for `forURLs` scope matching, following the URL parsing
+ * semantics of HTTP clients:
+ * - the scheme and authority are lowercased (hosts match case-insensitively);
+ * - in the path, backslashes are treated as slashes and dot segments
+ *   (`.`, `..`, and their `%2e` encodings) are resolved;
+ * - path case, query and fragment are left untouched.
  *
- * Example: `HTTPS://API.Example.com/Public?Q=1` -> `https://api.example.com/Public?Q=1`
+ * Example: `HTTPS://API.Example.com/Public/../Private?Q=1` -> `https://api.example.com/Private?Q=1`
  */
 export const normalizeUrlForMatching = (url: string): string => {
     const schemeEnd = url.indexOf('://');
@@ -17,15 +23,50 @@ export const normalizeUrlForMatching = (url: string): string => {
         return url;
     }
 
-    const authorityStart = schemeEnd + 3;
-    let authorityEnd = url.length;
-    for (let i = authorityStart; i < url.length; i++) {
-        const char = url[i];
-        if (char === '/' || char === '\\' || char === '?' || char === '#') {
-            authorityEnd = i;
-            break;
+    const authorityEnd = findFirstOf(url, schemeEnd + 3, '/\\?#');
+    const pathEnd = findFirstOf(url, authorityEnd, '?#');
+
+    return (
+        url.slice(0, authorityEnd).toLowerCase() +
+        normalizePath(url.slice(authorityEnd, pathEnd)) +
+        url.slice(pathEnd)
+    );
+};
+
+const findFirstOf = (url: string, from: number, chars: string): number => {
+    for (let i = from; i < url.length; i++) {
+        if (chars.includes(url[i])) {
+            return i;
         }
     }
+    return url.length;
+};
 
-    return url.slice(0, authorityEnd).toLowerCase() + url.slice(authorityEnd);
+const normalizePath = (path: string): string => {
+    // Fast path: nothing to resolve
+    if (!/[.\\%]/.test(path)) {
+        return path;
+    }
+
+    const segments = path.replace(/\\/g, '/').slice(1).split('/');
+    const output: string[] = [];
+
+    segments.forEach((segment, index) => {
+        const isLast = index === segments.length - 1;
+        const lowered = segment.toLowerCase();
+        if (DOUBLE_DOT_SEGMENTS.has(lowered)) {
+            output.pop();
+            if (isLast) {
+                output.push('');
+            }
+        } else if (SINGLE_DOT_SEGMENTS.has(lowered)) {
+            if (isLast) {
+                output.push('');
+            }
+        } else {
+            output.push(segment);
+        }
+    });
+
+    return `/${output.join('/')}`;
 };

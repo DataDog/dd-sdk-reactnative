@@ -16,10 +16,60 @@ describe('normalizeUrlForMatching', () => {
         ['https://API.example.com?Q=A', 'https://api.example.com?Q=A'],
         ['https://API.example.com#Top', 'https://api.example.com#Top'],
         ['https://api.example.com/v2', 'https://api.example.com/v2'],
-        ['https://API.example.com\\Path', 'https://api.example.com\\Path']
+        [
+            'https://User:Pass@API.example.com/Path',
+            'https://user:pass@api.example.com/Path'
+        ]
     ])('lowercases only scheme and authority of %s', (url, expected) => {
         expect(normalizeUrlForMatching(url)).toBe(expected);
     });
+
+    it.each([
+        [
+            'https://api.example.com/public/../private',
+            'https://api.example.com/private'
+        ],
+        [
+            'https://api.example.com/public/%2e%2e/private',
+            'https://api.example.com/private'
+        ],
+        [
+            'https://api.example.com/public/%2E./private',
+            'https://api.example.com/private'
+        ],
+        [
+            'https://api.example.com/v1/../v2/users',
+            'https://api.example.com/v2/users'
+        ],
+        [
+            'https://api.example.com/a/./b/%2e/c',
+            'https://api.example.com/a/b/c'
+        ],
+        ['https://api.example.com/a/..', 'https://api.example.com/'],
+        ['https://api.example.com/a/.', 'https://api.example.com/a/'],
+        ['https://api.example.com/../../a', 'https://api.example.com/a'],
+        [
+            'https://api.example.com\\Path\\To',
+            'https://api.example.com/Path/To'
+        ],
+        [
+            'https://api.example.com/a/../b?x=/../y#/..',
+            'https://api.example.com/b?x=/../y#/..'
+        ],
+        [
+            'https://api.example.com/v1.2/file.json',
+            'https://api.example.com/v1.2/file.json'
+        ],
+        [
+            'https://api.example.com/a%20b/..c',
+            'https://api.example.com/a%20b/..c'
+        ]
+    ])(
+        'resolves dot segments and backslashes in the path of %s',
+        (url, expected) => {
+            expect(normalizeUrlForMatching(url)).toBe(expected);
+        }
+    );
 
     it('returns URLs without a scheme unchanged', () => {
         expect(normalizeUrlForMatching('/Relative/Path')).toBe(

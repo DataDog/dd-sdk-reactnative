@@ -36,4 +36,17 @@
         "source.fixAll.eslint": "explicit"
     },
     "typescript.tsdk": "node_modules/typescript/lib",
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#580F33",
+        "titleBar.activeBackground": "#7C1648",
+        "titleBar.activeForeground": "#FEFCFD",
+        "titleBar.inactiveBackground": "#580F33",
+        "titleBar.inactiveForeground": "#FEFCFD",
+        "statusBar.background": "#580F33",
+        "statusBar.foreground": "#FEFCFD",
+        "statusBar.debuggingBackground": "#580F33",
+        "statusBar.debuggingForeground": "#FEFCFD",
+        "statusBar.noFolderBackground": "#580F33",
+        "statusBar.noFolderForeground": "#FEFCFD"
+    },
 }
