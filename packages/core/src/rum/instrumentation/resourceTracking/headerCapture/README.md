@@ -18,6 +18,19 @@ DatadogProvider.initialize({
 });
 ```
 
+With `FileBasedConfiguration`, set the same value under `rumConfiguration` in your JSON configuration file:
+
+```json
+{
+  "configuration": {
+    "rumConfiguration": {
+      "trackResources": true,
+      "headerCaptureRules": "defaults"
+    }
+  }
+}
+```
+
 ### Modes
 
 | Value | What gets captured |

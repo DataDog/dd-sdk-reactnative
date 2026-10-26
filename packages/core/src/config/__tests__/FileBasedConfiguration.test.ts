@@ -55,7 +55,20 @@ describe('FileBasedConfiguration', () => {
                         ],
                       },
                     ],
-                    "headerCaptureRules": undefined,
+                    "headerCaptureRules": [
+                      {
+                        "type": "defaults",
+                      },
+                      {
+                        "forURLs": [
+                          "api.example.com",
+                        ],
+                        "headers": [
+                          "x-request-id",
+                        ],
+                        "type": "matchResponseHeaders",
+                      },
+                    ],
                     "initialResourceThreshold": 456,
                     "longTaskThresholdMs": 44,
                     "nativeCrashReportEnabled": true,
@@ -347,6 +360,56 @@ describe('FileBasedConfiguration', () => {
             expect(
                 config.rumConfiguration?.nativeIosResourceTrackingDisallowList
             ).toEqual(disallowList);
+        });
+
+        it('leaves headerCaptureRules undefined when not set', () => {
+            const config = new FileBasedConfiguration({
+                configuration: {
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id'
+                    }
+                }
+            });
+            expect(config.rumConfiguration?.headerCaptureRules).toBeUndefined();
+        });
+
+        it('passes the headerCaptureRules defaults preset through', () => {
+            const config = new FileBasedConfiguration({
+                configuration: {
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id',
+                        headerCaptureRules: 'defaults'
+                    }
+                }
+            });
+            expect(config.rumConfiguration?.headerCaptureRules).toBe(
+                'defaults'
+            );
+        });
+
+        it('passes headerCaptureRules rules through', () => {
+            const rules = [
+                {
+                    type: 'matchRequestHeaders',
+                    headers: ['x-device-id'],
+                    forURLs: ['api.example.com/v2']
+                }
+            ];
+            const config = new FileBasedConfiguration({
+                configuration: {
+                    env: 'fake-env',
+                    clientToken: 'fake-client-token',
+                    rumConfiguration: {
+                        applicationId: 'fake-app-id',
+                        headerCaptureRules: rules
+                    }
+                }
+            });
+            expect(config.rumConfiguration?.headerCaptureRules).toEqual(rules);
         });
 
         it('applies event mappers to configuration when provided', () => {

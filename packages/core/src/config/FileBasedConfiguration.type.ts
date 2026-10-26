@@ -6,6 +6,7 @@
 import type { FirstPartyHost } from '../rum/types';
 
 import type { CoreConfigurationOptions } from './features/CoreConfiguration.type';
+import type { HeaderCaptureRule } from './features/RumConfiguration.type';
 import type {
     BatchProcessingLevel,
     BatchSize,
@@ -40,6 +41,7 @@ export interface JsonConfiguration extends CoreConfigurationOptions {
         actionNameAttribute?: string;
         appHangThreshold?: number;
         firstPartyHosts?: FirstPartyHost[];
+        headerCaptureRules?: 'defaults' | HeaderCaptureRule[];
         initialResourceThreshold?: number;
         trackMemoryWarnings?: boolean;
         nativeCrashReportEnabled?: boolean;

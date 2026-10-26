@@ -25,6 +25,14 @@
                     ]
                 }
             ],
+            "headerCaptureRules": [
+                { "type": "defaults" },
+                {
+                    "type": "matchResponseHeaders",
+                    "headers": ["x-request-id"],
+                    "forURLs": ["api.example.com"]
+                }
+            ],
             "initialResourceThreshold": 456,
             "nativeViewTracking": true,
             "nativeInteractionTracking": true,
