@@ -20,8 +20,8 @@ const SENSITIVE_HEADER_PATTERN = /(?:token|cookie|secret|authorization|password|
  * Sensitive headers (authorization, cookies, tokens, API keys, etc.) must
  * never be captured regardless of configuration mode.
  *
- * Silent filtering — no debug log for blocked headers (these are expected
- * normal behavior, not warnings).
+ * Blocked headers are expected behavior, so they never produce WARN or ERROR
+ * logs; the capture pipeline only reports them at DEBUG verbosity.
  *
  * @param headerName - The header name to check (case-insensitive via regex /i flag).
  * @returns `true` if the header is sensitive and must be blocked.

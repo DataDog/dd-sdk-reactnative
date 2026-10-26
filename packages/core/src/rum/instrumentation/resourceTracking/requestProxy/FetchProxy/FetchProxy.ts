@@ -246,6 +246,15 @@ const reportFetch = async ({
     response: Response;
     resourceReporter: ResourceReporter;
 }): Promise<void> => {
+    // Snapshot before any await: some Fetch implementations expose mutable
+    // response headers that the app could change while the body is parsed.
+    const capturedHeaders = finalizeCapturedHeaders({
+        state: context.headerCapture,
+        url: context.url,
+        statusCode: response.status,
+        responseHeaders: () => fetchHeadersToRecord(response.headers)
+    });
+
     // Only extract GraphQL errors if operationType is set AND error tracking is enabled
     if (context.graphql.operationType && context.graphql.trackErrors) {
         try {
@@ -276,12 +285,7 @@ const reportFetch = async ({
         },
         graphqlAttributes: context.graphql,
         tracingAttributes: context.tracingAttributes,
-        ...finalizeCapturedHeaders({
-            state: context.headerCapture,
-            url: context.url,
-            statusCode: response.status,
-            responseHeaders: () => fetchHeadersToRecord(response.headers)
-        }),
+        ...capturedHeaders,
         response: {
             statusCode: response.status,
             size: getResponseSize(response)

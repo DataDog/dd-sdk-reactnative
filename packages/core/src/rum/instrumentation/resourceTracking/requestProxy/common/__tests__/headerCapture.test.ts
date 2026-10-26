@@ -84,6 +84,25 @@ describe('headerCapture', () => {
             ).toEqual({});
         });
 
+        it.each([200, 0])(
+            'releases the request header store (status %s)',
+            statusCode => {
+                const state = createHeaderCaptureState(
+                    compileHeaderCaptureConfig('defaults')
+                );
+                recordRequestHeader(state, 'Content-Type', 'application/json');
+
+                finalizeCapturedHeaders({
+                    state,
+                    url: URL,
+                    statusCode,
+                    responseHeaders: () => ({})
+                });
+
+                expect(state.requestHeaders).toBeUndefined();
+            }
+        );
+
         it('filters by rules and enforces size limits', () => {
             const state = createHeaderCaptureState(
                 compileHeaderCaptureConfig('defaults')

@@ -37,6 +37,8 @@ export const createHeaderCaptureState = (
 /**
  * Records a user-set request header. Datadog internal headers are ignored,
  * sensitive headers are dropped before being stored.
+ * Values are stringified the same way XHR and Fetch coerce them, since
+ * untyped callers can pass `null`, numbers, etc.
  */
 export const recordRequestHeader = (
     state: HeaderCaptureState,
@@ -49,12 +51,14 @@ export const recordRequestHeader = (
     ) {
         return;
     }
-    accumulateRequestHeader(state.requestHeaders, header, value);
+    accumulateRequestHeader(state.requestHeaders, header, String(value));
 };
 
 /**
  * Applies rule filtering and size limits to the headers of a completed request.
  * Nothing is reported for aborted or network-error requests (status 0).
+ * The request header store is released, so a retained request object does not
+ * keep unreported or untruncated header values alive.
  *
  * @param responseHeaders - Response headers keyed by lowercased name.
  */
@@ -69,16 +73,19 @@ export const finalizeCapturedHeaders = ({
     statusCode: number;
     responseHeaders: () => Record<string, string>;
 }): CapturedHeaders => {
+    const requestHeaders = state.requestHeaders;
+    state.requestHeaders = undefined;
+
     if (
         state.config === null ||
-        state.requestHeaders === undefined ||
+        requestHeaders === undefined ||
         statusCode === 0
     ) {
         return {};
     }
 
     const limited = enforceSizeLimits(
-        filterRequestHeadersByMode(state.requestHeaders, url, state.config),
+        filterRequestHeadersByMode(requestHeaders, url, state.config),
         filterResponseHeaders(responseHeaders(), url, state.config)
     );
 

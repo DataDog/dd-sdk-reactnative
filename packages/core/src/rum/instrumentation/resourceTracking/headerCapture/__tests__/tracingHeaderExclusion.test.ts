@@ -7,7 +7,7 @@
 import { isTracingHeader } from '../tracingHeaderExclusion';
 
 describe('isTracingHeader', () => {
-    describe('MUST EXCLUDE all 12 tracing headers (returns true)', () => {
+    describe('MUST EXCLUDE all SDK-injected tracing headers (returns true)', () => {
         const tracingHeaders = [
             'x-datadog-sampling-priority',
             'x-datadog-origin',
@@ -20,7 +20,8 @@ describe('isTracingHeader', () => {
             'b3',
             'x-b3-traceid',
             'x-b3-spanid',
-            'x-b3-sampled'
+            'x-b3-sampled',
+            'x-datadog-tracked-by'
         ];
 
         it.each(tracingHeaders)('excludes "%s"', (headerName: string) => {

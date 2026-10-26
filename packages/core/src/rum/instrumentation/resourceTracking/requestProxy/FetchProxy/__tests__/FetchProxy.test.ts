@@ -617,6 +617,50 @@ describe('FetchProxy', () => {
             expect(resource.capturedResponseHeaders).toBeUndefined();
         });
 
+        it('captures response headers before the GraphQL body is parsed', async () => {
+            const headers = new HeadersMock({ 'cache-control': 'max-age=60' });
+            let resolveBody: (body: unknown) => void = () => {};
+            const response = ({
+                status: 200,
+                headers,
+                clone() {
+                    return response;
+                },
+                json: () =>
+                    new Promise(resolve => {
+                        resolveBody = resolve;
+                    })
+            } as unknown) as Response;
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(response) as jest.MockedFunction<
+                typeof fetch
+            >;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getHeaderCaptureOptions('defaults'));
+
+            await fetchGlobal.fetch('https://api.example.com/graphql', {
+                headers: {
+                    [DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]: 'query',
+                    [DATADOG_GRAPH_QL_ERROR_HEADER]: 'true'
+                }
+            });
+            // The app mutates the response headers while the body is parsed
+            headers.delete('cache-control');
+            headers.set('etag', '"later"');
+            resolveBody({ data: {} });
+            await flushPromises();
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.capturedResponseHeaders).toEqual({
+                'Cache-Control': 'max-age=60'
+            });
+        });
+
         it('still reports request headers when response headers cannot be iterated', async () => {
             const response = ({
                 status: 200,

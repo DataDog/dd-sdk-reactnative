@@ -8,6 +8,7 @@ import { InternalLog } from '../../../../InternalLog';
 import { SdkVerbosity } from '../../../../config/types';
 
 import { isHeaderAllowed } from './isHeaderAllowed';
+import { normalizeUrlForMatching } from './normalizeUrlForMatching';
 import { parseResponseHeaders } from './parseResponseHeaders';
 import type {
     CompiledHeaderCaptureConfig,
@@ -218,7 +219,9 @@ export const accumulateRequestHeader = (
     if (isHeaderAllowed(lowered)) {
         // Remove any existing entry with different casing for same header
         // (last-value-wins: both value and casing from latest call)
-        for (const existing of Object.keys(accumulator)) {
+        // for...in avoids allocating a keys array on the request hot path
+        // eslint-disable-next-line guard-for-in
+        for (const existing in accumulator) {
             if (existing.toLowerCase() === lowered) {
                 delete accumulator[existing];
                 break;
@@ -322,9 +325,10 @@ export const filterResponseHeaders = (
     }
 
     // Merge all matching rules' response header sets (union)
+    const matchUrl = normalizeUrlForMatching(url);
     const allowedHeaders = mergeMatchingHeaderNames(
         config,
-        url,
+        matchUrl,
         'responseHeaderNames'
     );
 
@@ -336,7 +340,7 @@ export const filterResponseHeaders = (
         return undefined;
     }
 
-    const casingMap = mergeCasingMaps(config, url, 'responseHeaderCasing');
+    const casingMap = mergeCasingMaps(config, matchUrl, 'responseHeaderCasing');
     const result = filterWithCasing(
         securityFiltered,
         allowedHeaders,
@@ -391,9 +395,10 @@ export const filterRequestHeadersByMode = (
     const accumulatedCount = Object.keys(headers).length;
 
     // Merge all matching rules' request header sets (union)
+    const matchUrl = normalizeUrlForMatching(url);
     const allowedHeaders = mergeMatchingHeaderNames(
         config,
-        url,
+        matchUrl,
         'requestHeaderNames'
     );
 
@@ -405,7 +410,7 @@ export const filterRequestHeadersByMode = (
         return undefined;
     }
 
-    const casingMap = mergeCasingMaps(config, url, 'requestHeaderCasing');
+    const casingMap = mergeCasingMaps(config, matchUrl, 'requestHeaderCasing');
     const result = filterWithCasing(headers, allowedHeaders, casingMap);
 
     if (result === undefined) {

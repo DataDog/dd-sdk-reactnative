@@ -13,6 +13,7 @@ import {
     CANONICAL_RESPONSE_HEADERS
 } from '../captureHeaders';
 import { compileHeaderCaptureConfig } from '../compileHeaderConfig';
+import { normalizeUrlForMatching } from '../normalizeUrlForMatching';
 
 jest.mock('../../../../../InternalLog', () => ({
     InternalLog: {
@@ -219,6 +220,19 @@ describe('compileHeaderCaptureConfig', () => {
             expect(isScoped).toBe(false);
         });
 
+        it('forURLs containing "*" alongside other patterns is catch-all', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchHeaders',
+                    headers: ['x-foo'],
+                    forURLs: ['*', 'api.example.com']
+                }
+            ]);
+            const { urlRegex, isScoped } = (result ?? [])[0];
+            expect(isScoped).toBe(false);
+            expect(urlRegex.test('https://other.com/path')).toBe(true);
+        });
+
         it('specific forURLs patterns produce isScoped: true', () => {
             const result = compileHeaderCaptureConfig([
                 {
@@ -257,6 +271,102 @@ describe('compileHeaderCaptureConfig', () => {
             expect(urlRegex.test('https://apiXexampleYcom/v2/users')).toBe(
                 false
             );
+        });
+
+        it('forURLs path prefix ends on a path segment boundary', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['api.example.com/v2']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            expect(urlRegex.test('https://api.example.com/v2')).toBe(true);
+            expect(urlRegex.test('https://api.example.com/v2?page=1')).toBe(
+                true
+            );
+            expect(urlRegex.test('https://api.example.com/v2#top')).toBe(true);
+            expect(urlRegex.test('https://api.example.com/v22/users')).toBe(
+                false
+            );
+            expect(urlRegex.test('https://api.example.com/v2-beta')).toBe(
+                false
+            );
+        });
+
+        it('forURLs matches the host case-insensitively and the path case-sensitively', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['API.Example.com/Public']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            const matches = (url: string) =>
+                urlRegex.test(normalizeUrlForMatching(url));
+
+            expect(matches('https://api.example.com/Public/users')).toBe(true);
+            expect(matches('HTTPS://API.EXAMPLE.COM/Public/users')).toBe(true);
+            expect(matches('https://api.example.com/public/users')).toBe(false);
+            expect(matches('https://api.example.com/PUBLIC/users')).toBe(false);
+        });
+
+        it('forURLs path prefix ending with a slash matches nested paths', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['api.example.com/v2/']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            expect(urlRegex.test('https://api.example.com/v2/users')).toBe(
+                true
+            );
+            expect(urlRegex.test('https://api.example.com/v2')).toBe(false);
+        });
+
+        it('forURLs matches subdomains but not hostnames in the path, query or userinfo', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['api.example.com']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            expect(urlRegex.test('https://cdn.api.example.com/users')).toBe(
+                true
+            );
+            expect(urlRegex.test('https://a.b.api.example.com:8443/x')).toBe(
+                true
+            );
+            expect(
+                urlRegex.test(
+                    'https://unrelated.test/assets.api.example.com/users'
+                )
+            ).toBe(false);
+            expect(
+                urlRegex.test(
+                    'https://unrelated.test/?next=cdn.api.example.com/users'
+                )
+            ).toBe(false);
+            expect(
+                urlRegex.test('https://unrelated.test#x.api.example.com')
+            ).toBe(false);
+            expect(
+                urlRegex.test('https://user.api.example.com@unrelated.test/')
+            ).toBe(false);
+            expect(urlRegex.test('https://api.example.com.evil.test/')).toBe(
+                false
+            );
+            expect(urlRegex.test('https://notapi.example.com/')).toBe(false);
+            // URL parsers treat '\\' as '/', so this request goes to unrelated.test
+            expect(
+                urlRegex.test('https://unrelated.test\\.api.example.com/users')
+            ).toBe(false);
         });
 
         it('forURLs: [] (empty) skips the rule with WARN log', () => {
@@ -345,6 +455,53 @@ describe('compileHeaderCaptureConfig', () => {
             expect(result).not.toBeNull();
             expect(result).toHaveLength(1);
             expect(mockLog).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('malformed rules', () => {
+        it.each([
+            ['null', null],
+            ['a string', 'defaults'],
+            ['a rule without type', { headers: ['etag'] }],
+            ['a rule with an unknown type', { type: 'all', headers: ['etag'] }],
+            ['a match rule without headers', { type: 'matchHeaders' }],
+            [
+                'a match rule with non-string headers',
+                { type: 'matchRequestHeaders', headers: ['etag', 42] }
+            ],
+            [
+                'a rule with null forURLs',
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: null
+                }
+            ],
+            [
+                'a rule with non-array forURLs',
+                { type: 'defaults', forURLs: 'api.example.com' }
+            ]
+        ])('skips %s with a WARN log instead of throwing', (_, rule) => {
+            const result = compileHeaderCaptureConfig([
+                rule,
+                { type: 'matchResponseHeaders', headers: ['etag'] }
+            ] as any);
+
+            expect(result).toHaveLength(1);
+            expect(result?.[0].responseHeaderNames).toEqual(new Set(['etag']));
+            expect(mockLog).toHaveBeenCalledWith(
+                expect.stringContaining('Skipping invalid rule'),
+                SdkVerbosity.WARN
+            );
+        });
+
+        it('returns null when every rule is malformed', () => {
+            expect(
+                compileHeaderCaptureConfig([
+                    null,
+                    { type: 'matchHeaders' }
+                ] as any)
+            ).toBeNull();
         });
     });
 
