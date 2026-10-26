@@ -43,6 +43,7 @@ import {
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../../../graphql/graphqlHeaders';
+import { compileHeaderCaptureConfig } from '../../../headerCapture/compileHeaderConfig';
 import { ResourceReporter } from '../../common/ResourceReporter';
 import { XHRProxy } from '../XHRProxy';
 import {
@@ -2886,6 +2887,87 @@ describe('XHRProxy', () => {
             ).toEqual({
                 'cache-control': 'no-cache'
             });
+        });
+    });
+
+    describe('header capture with request reuse', () => {
+        it('reports the headers of the completed request when the XHR is reused during GraphQL body extraction', async () => {
+            // GIVEN
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([]),
+                headerCaptureConfig: compileHeaderCaptureConfig('defaults')
+            });
+
+            const xhr = new XMLHttpRequestMock();
+            xhr.open('POST', 'https://api.example.com/graphql');
+            xhr.setRequestHeader(
+                DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                'query'
+            );
+            xhr.setRequestHeader(DATADOG_GRAPH_QL_ERROR_HEADER, 'true');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.getAllResponseHeaders.mockReturnValue(
+                'cache-control: max-age=60\r\n'
+            );
+            const body = JSON.stringify({ errors: [{ message: 'boom' }] });
+            xhr.responseText = body;
+
+            // WHEN the request completes, then the app reuses the XHR
+            // before the GraphQL body has been read
+            xhr.complete(200, body);
+            xhr.status = 0;
+            xhr.getAllResponseHeaders.mockReturnValue('etag: "other"\r\n');
+            await flushPromises();
+
+            // THEN
+            const [
+                ,
+                statusCode,
+                ,
+                ,
+                context
+            ] = DdNativeRum.stopResource.mock.calls[0];
+            expect(statusCode).toBe(200);
+            expect(context['_dd.request_headers']).toEqual({
+                'Content-Type': 'application/json'
+            });
+            expect(context['_dd.response_headers']).toEqual({
+                'Cache-Control': 'max-age=60'
+            });
+        });
+
+        it('does not capture the SDK tracked-by header even when a rule names it', async () => {
+            // GIVEN
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([]),
+                headerCaptureConfig: compileHeaderCaptureConfig([
+                    {
+                        type: 'matchRequestHeaders',
+                        headers: [TRACKED_BY_HEADER_KEY, 'x-request-id']
+                    }
+                ])
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open('GET', 'https://api.example.com/v2/user');
+            xhr.setRequestHeader('X-Request-Id', 'abc');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN the header was sent but not captured
+            expect(xhr.requestHeaders.get(TRACKED_BY_HEADER_KEY)).toBe(
+                TRACKED_BY_HEADER_VALUE
+            );
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4]['_dd.request_headers']
+            ).toEqual({ 'X-Request-Id': 'abc' });
         });
     });
 

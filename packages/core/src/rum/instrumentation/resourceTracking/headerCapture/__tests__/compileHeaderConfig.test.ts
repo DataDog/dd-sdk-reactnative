@@ -13,6 +13,7 @@ import {
     CANONICAL_RESPONSE_HEADERS
 } from '../captureHeaders';
 import { compileHeaderCaptureConfig } from '../compileHeaderConfig';
+import { normalizeUrlForMatching } from '../normalizeUrlForMatching';
 
 jest.mock('../../../../../InternalLog', () => ({
     InternalLog: {
@@ -279,6 +280,24 @@ describe('compileHeaderCaptureConfig', () => {
             expect(urlRegex.test('https://api.example.com/v2-beta')).toBe(
                 false
             );
+        });
+
+        it('forURLs matches the host case-insensitively and the path case-sensitively', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['API.Example.com/Public']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            const matches = (url: string) =>
+                urlRegex.test(normalizeUrlForMatching(url));
+
+            expect(matches('https://api.example.com/Public/users')).toBe(true);
+            expect(matches('HTTPS://API.EXAMPLE.COM/Public/users')).toBe(true);
+            expect(matches('https://api.example.com/public/users')).toBe(false);
+            expect(matches('https://api.example.com/PUBLIC/users')).toBe(false);
         });
 
         it('forURLs path prefix ending with a slash matches nested paths', () => {

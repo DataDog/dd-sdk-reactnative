@@ -16,11 +16,12 @@ import {
     B3_HEADER_KEY,
     B3_MULTI_TRACE_ID_HEADER_KEY,
     B3_MULTI_SPAN_ID_HEADER_KEY,
-    B3_MULTI_SAMPLED_HEADER_KEY
+    B3_MULTI_SAMPLED_HEADER_KEY,
+    TRACKED_BY_HEADER_KEY
 } from '../distributedTracing/headers';
 
 /**
- * Set of all SDK-injected distributed tracing header names, lowercased.
+ * Set of all SDK-injected distributed tracing (and tracking) header names, lowercased.
  *
  * Built once at module load time from the canonical header constants in
  * `distributedTracing/headers.ts`. The B3 multi-headers have mixed case
@@ -39,7 +40,8 @@ const TRACING_HEADERS: Set<string> = new Set(
         B3_HEADER_KEY,
         B3_MULTI_TRACE_ID_HEADER_KEY,
         B3_MULTI_SPAN_ID_HEADER_KEY,
-        B3_MULTI_SAMPLED_HEADER_KEY
+        B3_MULTI_SAMPLED_HEADER_KEY,
+        TRACKED_BY_HEADER_KEY
     ].map(h => h.toLowerCase())
 );
 

@@ -28,7 +28,8 @@ import type {
  * Subdomains are restricted to hostname characters, so a hostname appearing in
  * the path or query of another URL never matches. The path prefix (if any) must
  * end on a path segment boundary: `api.example.com/v2` matches `/v2` and `/v2/users`,
- * but not `/v22`.
+ * but not `/v22`. The host is matched case-insensitively (URLs go through
+ * normalizeUrlForMatching first), the path prefix case-sensitively.
  *
  * Returns null if the pattern is invalid (e.g. contains unescaped regex metacharacters that
  * result in an invalid expression).
@@ -43,7 +44,9 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
     const hostname = slashIndex === -1 ? match : match.slice(0, slashIndex);
     const pathPrefix = slashIndex === -1 ? '' : match.slice(slashIndex);
 
-    const escapedHost = escapeRegExp(hostname);
+    // Hostnames are case-insensitive: the pattern host is lowercased and URLs are
+    // normalized with normalizeUrlForMatching. Paths stay case-sensitive.
+    const escapedHost = escapeRegExp(hostname.toLowerCase());
     // Host and path prefix must be followed by /, ?, # or end-of-string.
     // A path prefix ending with '/' is already on a segment boundary.
     const boundary = '(/|\\?|#|$)';
@@ -54,8 +57,7 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
     try {
         // Regex matches full URL strings: scheme + optional subdomains + host + optional port + path
         const regex = new RegExp(
-            `^https?://([^/?#@:]+\\.)?${escapedHost}(:\\d+)?${pathSuffix}`,
-            'i'
+            `^https?://([^/?#@:]+\\.)?${escapedHost}(:\\d+)?${pathSuffix}`
         );
         // Validate the final regex is well-formed
         regex.test('validation_probe');
@@ -115,7 +117,7 @@ const buildForURLsRegex = (forURLs: string[] | undefined): ForURLsResult => {
     }
 
     try {
-        return { regex: new RegExp(patterns.join('|'), 'i'), isScoped: true };
+        return { regex: new RegExp(patterns.join('|')), isScoped: true };
     } catch (_e) {
         return null;
     }

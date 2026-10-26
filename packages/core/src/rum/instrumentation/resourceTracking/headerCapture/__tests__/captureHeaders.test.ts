@@ -13,6 +13,7 @@ import {
     captureResponseHeaders,
     filterRequestHeadersByMode
 } from '../captureHeaders';
+import { compileHeaderCaptureConfig } from '../compileHeaderConfig';
 import type { CompiledHeaderCaptureConfig } from '../types';
 
 describe('captureHeaders', () => {
@@ -222,6 +223,39 @@ describe('captureHeaders', () => {
         });
 
         describe('scoped rules', () => {
+            it('matches forURLs hosts case-insensitively and paths case-sensitively', () => {
+                const config = compileHeaderCaptureConfig([
+                    {
+                        type: 'matchResponseHeaders',
+                        headers: ['etag'],
+                        forURLs: ['api.example.com/Public']
+                    }
+                ]);
+                const raw = 'etag: abc\r\n';
+
+                expect(
+                    captureResponseHeaders(
+                        raw,
+                        'HTTPS://API.EXAMPLE.COM/Public/users',
+                        config
+                    )
+                ).toEqual({ etag: 'abc' });
+                expect(
+                    captureResponseHeaders(
+                        raw,
+                        'https://api.example.com/public/users',
+                        config
+                    )
+                ).toBeUndefined();
+                expect(
+                    filterRequestHeadersByMode(
+                        { etag: 'abc' },
+                        'https://api.example.com/public/users',
+                        config
+                    )
+                ).toBeUndefined();
+            });
+
             it('captures only headers from matching rule', () => {
                 const config: CompiledHeaderCaptureConfig = [
                     {

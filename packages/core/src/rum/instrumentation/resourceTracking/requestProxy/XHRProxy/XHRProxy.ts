@@ -195,6 +195,16 @@ const reportXhr = async (
     }
 
     const key = getResourceKey(context);
+    // Snapshot before any await: the app may reopen this XHR from its
+    // completion handler while the GraphQL body is being read.
+    const statusCode = xhrProxy.status;
+    const capturedHeaders = finalizeCapturedHeaders({
+        state: context.headerCapture,
+        url: context.url,
+        statusCode,
+        responseHeaders: () =>
+            parseResponseHeaders(xhrProxy.getAllResponseHeaders())
+    });
 
     context.timer.stop();
 
@@ -228,15 +238,9 @@ const reportXhr = async (
         },
         graphqlAttributes: context.graphql,
         tracingAttributes: context.tracingAttributes,
-        ...finalizeCapturedHeaders({
-            state: context.headerCapture,
-            url: context.url,
-            statusCode: xhrProxy.status,
-            responseHeaders: () =>
-                parseResponseHeaders(xhrProxy.getAllResponseHeaders())
-        }),
+        ...capturedHeaders,
         response: {
-            statusCode: xhrProxy.status,
+            statusCode,
             size: responseSize
         },
         timings: {
