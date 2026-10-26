@@ -9,8 +9,8 @@ import { NativeModules } from 'react-native';
 import { BufferSingleton } from '../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
 import { firstPartyHostsRegexMapBuilder } from '../../distributedTracing/firstPartyHosts';
-import { ResourceReporter } from '../../requestProxy/common/ResourceReporter';
 import { XHRProxy } from '../../requestProxy/XHRProxy/XHRProxy';
+import { ResourceReporter } from '../../requestProxy/common/ResourceReporter';
 import {
     DEFAULT_REQUEST_HEADERS,
     DEFAULT_RESPONSE_HEADERS,

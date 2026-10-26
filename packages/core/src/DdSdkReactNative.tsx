@@ -518,12 +518,8 @@ export class DdSdkReactNative {
         const resourceTraceSampleRate =
             configuration.rumConfiguration?.resourceTraceSampleRate ||
             RUM_DEFAULTS.resourceTraceSampleRate;
-        const trackResourceHeaders =
-            configuration.rumConfiguration?.trackResourceHeaders ||
-            RUM_DEFAULTS.trackResourceHeaders;
         const headerCaptureRules =
-            configuration.rumConfiguration?.headerCaptureRules ||
-            RUM_DEFAULTS.headerCaptureRules;
+            configuration.rumConfiguration?.headerCaptureRules;
         const logEventMapper = configuration.logsConfiguration?.logEventMapper;
         const errorEventMapper =
             configuration.rumConfiguration?.errorEventMapper;
@@ -559,9 +555,9 @@ export class DdSdkReactNative {
             });
         }
 
-        if (trackResourceHeaders && !trackResources) {
+        if (!trackResources && headerCaptureRules != null) {
             InternalLog.log(
-                'trackResourceHeaders is set but trackResources is false. Header capture will be disabled.',
+                'headerCaptureRules is set but trackResources is false. Header capture will be disabled.',
                 SdkVerbosity.WARN
             );
         }
@@ -571,9 +567,7 @@ export class DdSdkReactNative {
                 resourceTraceSampleRate,
                 firstPartyHosts,
                 trackFetchResources,
-                headerCaptureRules: trackResourceHeaders
-                    ? headerCaptureRules
-                    : undefined
+                headerCaptureRules
             });
         }
 
