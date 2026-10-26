@@ -195,6 +195,10 @@ const reportXhr = async (
     }
 
     const key = getResourceKey(context);
+
+    // Stop before header processing so it is not counted in the resource duration
+    context.timer.stop();
+
     // Snapshot before any await: the app may reopen this XHR from its
     // completion handler while the GraphQL body is being read.
     const statusCode = xhrProxy.status;
@@ -205,8 +209,6 @@ const reportXhr = async (
         responseHeaders: () =>
             parseResponseHeaders(xhrProxy.getAllResponseHeaders())
     });
-
-    context.timer.stop();
 
     // Only extract GraphQL errors if operationType is set AND error tracking is enabled
     if (context.graphql.operationType && context.graphql.trackErrors) {
@@ -267,10 +269,13 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
             return originalXhrSetRequestHeader.apply(this, [header, value]);
         }
 
+        // XHR coerces values to strings: do it once so the sent and the
+        // captured values are identical
+        const stringValue = String(value);
         const processedHeader = processRequestHeader({
             context: this._datadog_xhr,
             header,
-            value
+            value: stringValue
         });
 
         if (processedHeader.type === 'send') {
@@ -278,7 +283,11 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
                 processedHeader.header,
                 processedHeader.value
             ]);
-            recordRequestHeader(this._datadog_xhr.headerCapture, header, value);
+            recordRequestHeader(
+                this._datadog_xhr.headerCapture,
+                header,
+                stringValue
+            );
             return result;
         }
     };

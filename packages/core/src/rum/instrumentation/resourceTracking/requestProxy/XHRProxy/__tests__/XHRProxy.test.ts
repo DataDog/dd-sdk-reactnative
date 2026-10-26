@@ -10,6 +10,7 @@ import { Platform, NativeModules } from 'react-native';
 import { InternalLog } from '../../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../../config/types';
 import { BufferSingleton } from '../../../../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import { Timer } from '../../../../../../utils/Timer';
 import { DdRum } from '../../../../../DdRum';
 import {
     setCachedSessionId,
@@ -2962,11 +2963,42 @@ describe('XHRProxy', () => {
             xhr.complete(200, 'ok');
             await flushPromises();
 
-            // THEN
+            // THEN the same string is sent and captured
+            expect(xhr.requestHeaders.get('x-count')).toBe('42');
+            expect(xhr.requestHeaders.get('x-empty')).toBe('null');
             expect(DdNativeRum.stopResource).toHaveBeenCalledTimes(1);
             expect(
                 DdNativeRum.stopResource.mock.calls[0][4]['_dd.request_headers']
             ).toEqual({ 'x-count': '42', 'x-empty': 'null' });
+        });
+
+        it('stops the resource timer before processing captured headers', async () => {
+            // GIVEN
+            const timerStop = jest.spyOn(Timer.prototype, 'stop');
+            xhrProxy.onTrackingStart({
+                tracingSamplingRate: 100,
+                firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder([]),
+                headerCaptureConfig: compileHeaderCaptureConfig('defaults')
+            });
+
+            // WHEN
+            const xhr = new XMLHttpRequestMock();
+            xhr.open('GET', 'https://api.example.com/v2/user');
+            xhr.send();
+            xhr.notifyResponseArrived();
+            xhr.getAllResponseHeaders.mockReturnValue(
+                'cache-control: no-cache\r\n'
+            );
+            xhr.complete(200, 'ok');
+            await flushPromises();
+
+            // THEN
+            expect(timerStop).toHaveBeenCalledTimes(1);
+            expect(xhr.getAllResponseHeaders).toHaveBeenCalled();
+            expect(timerStop.mock.invocationCallOrder[0]).toBeLessThan(
+                xhr.getAllResponseHeaders.mock.invocationCallOrder[0]
+            );
+            timerStop.mockRestore();
         });
 
         it('does not capture the SDK tracked-by header even when a rule names it', async () => {

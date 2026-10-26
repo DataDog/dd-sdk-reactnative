@@ -98,7 +98,7 @@ The optional `forURLs` field scopes a rule to specific URL patterns. Supports ho
 - A hostname matches itself and its subdomains (`api.example.com` matches `cdn.api.example.com`), but never a hostname that only appears in the path or query of another URL.
 - A path prefix matches whole path segments: `api.example.com/v2` matches `/v2` and `/v2/users`, but not `/v22`.
 
-**Rule precedence:** when multiple rules match a URL, their header sets are merged. However, if at least one scoped rule (with explicit `forURLs` patterns) matches, catch-all rules (no `forURLs` / `['*']`) are ignored for that URL.
+**Rule precedence:** when multiple rules match a URL, their header sets are merged. However, if at least one scoped rule (with explicit `forURLs` patterns) matches, catch-all rules (no `forURLs`, or a `forURLs` list containing `'*'`) are ignored for that URL. For example, `[{ type: 'defaults' }, { type: 'matchResponseHeaders', headers: ['x-request-id'], forURLs: ['api.example.com'] }]` captures only `x-request-id` on `api.example.com`, and the default headers everywhere else.
 
 ## Output
 
