@@ -3221,8 +3221,8 @@ __metadata:
   linkType: hard
 
 "@npmcli/arborist@npm:^9.1.8":
-  version: 9.9.2
-  resolution: "@npmcli/arborist@npm:9.9.2"
+  version: 9.9.3
+  resolution: "@npmcli/arborist@npm:9.9.3"
   dependencies:
     "@gar/promise-retry": ^1.0.0
     "@isaacs/string-locale-compare": ^1.1.0
@@ -3260,7 +3260,7 @@ __metadata:
     walk-up-path: ^4.0.0
   bin:
     arborist: bin/index.js
-  checksum: f6f8e646db1c490f3a9623a972553607e038ed83cf5ad4edd3240b73774acfcdbdc739e5555cff20b79838d091767038db642d4c1a06bc3715968faaf98dfd6d
+  checksum: ab7dbd565bfc7787aa3a6830315ce7e817ec26c38aed65aeaba724a7800b9c7e60271b19d53df79684c63880255c3dfb831cec307c3a0a76632c5dd573ec7f53
   languageName: node
   linkType: hard
 
@@ -6488,15 +6488,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:1.18.0":
-  version: 1.18.0
-  resolution: "axios@npm:1.18.0"
+"axios@npm:^1.20.0":
+  version: 1.20.0
+  resolution: "axios@npm:1.20.0"
   dependencies:
     follow-redirects: ^1.16.0
-    form-data: ^4.0.5
+    form-data: ^4.0.6
     https-proxy-agent: ^5.0.1
     proxy-from-env: ^2.1.0
-  checksum: 87e66c8583f69f3aec2d03d2840e4074d71c67d0e06a5c33de8926b0f11c9d31a8509adc6814167cc1fc470bc3f24f99a10fcb6632843192126567340dd1a8ce
+  checksum: 58ff916938e317352e0c3483496a4609fd528da4823a8580969821748284bea2add069a39f2285a161020ce0886f33a982a162ebb49b5403c51a6977a1d50627
   languageName: node
   linkType: hard
 
@@ -7088,9 +7088,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001806":
-  version: 1.0.30001815
-  resolution: "caniuse-lite@npm:1.0.30001815"
-  checksum: eab81396e1dc5434c05ae105e91a8f1b9e1070d702a014ac7056ab6a3e1870f567efe387456d5cc087b4c7c83bc13e55292f0a066327cd668321ea739aefa2ed
+  version: 1.0.30001819
+  resolution: "caniuse-lite@npm:1.0.30001819"
+  checksum: 61bff4e61e4021edb3508a4c1a4eaae5ed18918a6bf0025745deb7a3f65e5498e882845652fff58f5a24d722bcc7c9f6d33cd346df1304c9ddfe02cb9c778c17
   languageName: node
   linkType: hard
 
@@ -8566,9 +8566,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.393":
-  version: 1.5.452
-  resolution: "electron-to-chromium@npm:1.5.452"
-  checksum: 4855b93fa1e328afb013ad96d8f86bacd2148868795ce378204538d524f7021c5c259a279f68296f030f225caa6e428566538c551aecd3d3b96f884346f3a94e
+  version: 1.5.464
+  resolution: "electron-to-chromium@npm:1.5.464"
+  checksum: a3ea3be2b39c95d55bc5ea9640a3d621b804c48260db19300ac69774dde032486f7662e6691b7e0890d5e56b70fcc19858ec64592ef05c888a7b3983b749d34f
   languageName: node
   linkType: hard
 
@@ -9514,21 +9514,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-uri@npm:3.1.6":
-  version: 3.1.6
-  resolution: "fast-uri@npm:3.1.6"
-  checksum: 5c895df5b50d91d8e8e8a8b6cfa4e8ca3f3d76ec17c8fcff34f5d68a3fb5494c35166599e4a35506934ff290167286469b2b4c7ececd17ae8d70927199477f1c
+"fast-uri@npm:^3.1.9":
+  version: 3.1.9
+  resolution: "fast-uri@npm:3.1.9"
+  checksum: 4f882cff34cb1c4099b07285e5c7a628c62ff06d91f1a5b0aeb12d8ec002080bd2095ce5eec0855949d649dd8aeeff959a6f1db0f584f29b2e3e08fbb99d37fc
   languageName: node
   linkType: hard
 
-"fast-xml-parser@npm:4.5.5":
-  version: 4.5.5
-  resolution: "fast-xml-parser@npm:4.5.5"
+"fast-xml-parser@npm:^4.5.7":
+  version: 4.5.7
+  resolution: "fast-xml-parser@npm:4.5.7"
   dependencies:
     strnum: ^1.0.5
   bin:
     fxparser: src/cli/cli.js
-  checksum: bfbe4986fd7e00cd577039cb200cc6d34102f3baf839ba98cad4cc4ff777264d9d0630bc128e78c1a9f0de3ec72a278a479fe1cf4345719e23ea86b49a0192fc
+  checksum: 5d79fa19eb0f6e6f5e0cb660e91ccf695146b0333124fc4bd7d95a6ce0a07cee602532c1cdfc606fafbda6100d822df9247381a42f4b7156b5df17d1395e1fb7
   languageName: node
   linkType: hard
 
@@ -9767,13 +9767,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:1.16.0":
-  version: 1.16.0
-  resolution: "follow-redirects@npm:1.16.0"
+"follow-redirects@npm:^1.16.1":
+  version: 1.16.2
+  resolution: "follow-redirects@npm:1.16.2"
   peerDependenciesMeta:
     debug:
       optional: true
-  checksum: e90dce4607b1f6b8b9883287f912585573c19088209ad82341d550a795b4ba514522b73b1b340cf618279df27975cd46504d09149be60291ba6767384c1fd8f8
+  checksum: 08f5c20c94945cd35d1b135b560cce7eb597c5f7b758f196467ac75b99ab7c28cb4fe28030467ed5ba386499a48030d804d47f559d32f103ad11336ed5402086
   languageName: node
   linkType: hard
 
@@ -12001,16 +12001,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"joi@npm:17.13.6":
-  version: 17.13.6
-  resolution: "joi@npm:17.13.6"
+"joi@npm:^17.13.8":
+  version: 17.13.8
+  resolution: "joi@npm:17.13.8"
   dependencies:
     "@hapi/hoek": ^9.3.0
     "@hapi/topo": ^5.1.0
     "@sideway/address": ^4.1.5
     "@sideway/formula": ^3.0.1
     "@sideway/pinpoint": ^2.0.0
-  checksum: 30182384072943dcf2d90a0a413ff73e4ec262962304c2673432281b4030c54eac3eeb4a810f3e45ca5beec5ff1499036693b5ee16f233e033379fb7a03b0f9f
+  checksum: 8ba537317e0a972b053edb0f656c4bb4207e3869d585b9d7fe92c8f4ba07812780d67dd727346611d2d3aa9b499c7d7af8cfd4d8c08c3453e03d6890f2fa61ac
   languageName: node
   linkType: hard
 
@@ -13937,9 +13937,9 @@ __metadata:
   linkType: hard
 
 "node-releases@npm:^2.0.51":
-  version: 2.0.58
-  resolution: "node-releases@npm:2.0.58"
-  checksum: 37045b20bbdd9e3bd7103ada92601566c4ed8ec3d0270c4006a6c21a55acb167d21027e65a1cbf39ed64bb63c392bdc12c5a140e2366e1246656d6c0cf8554be
+  version: 2.0.60
+  resolution: "node-releases@npm:2.0.60"
+  checksum: 643463b9e82fb61bbca559e61477904f07616bcb80f92f7fa15d9f4d07141330004858dfc644dc5ae2913c9d4a700a9261d7d71a0a8614521a1fbf963937be8b
   languageName: node
   linkType: hard
 
@@ -15047,13 +15047,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-selector-parser@npm:7.1.3":
-  version: 7.1.3
-  resolution: "postcss-selector-parser@npm:7.1.3"
+"postcss-selector-parser@npm:^7.1.7":
+  version: 7.1.7
+  resolution: "postcss-selector-parser@npm:7.1.7"
   dependencies:
     cssesc: ^3.0.0
     util-deprecate: ^1.0.2
-  checksum: 3ec6e2d35873b9615f55bfede12bb46fe3dbb002dda28f6a913d5fd31d38489588e2768d6f5b1a395788f07c4c1ef86394d24b49211d6c810330b9837da432a0
+  checksum: 0fdba8bd705b04e2a5831e9a2990bed8f30d39811e985a02267c2d43fbbd0a8ab5a375ff4a7a8a6b9c48aa45978c7104837f43c20997f4dd7cd372f7899fbcb6
   languageName: node
   linkType: hard
 
@@ -16788,10 +16788,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shell-quote@npm:1.9.0":
-  version: 1.9.0
-  resolution: "shell-quote@npm:1.9.0"
-  checksum: 2ec85fb903121c684c3536d051e377e98746cf88525e08c298baaa7b42c168de75c3201cef00db66556e89e340a8cf26bd4c18e7a3fd78799449a21cac43da2e
+"shell-quote@npm:^1.12.0":
+  version: 1.12.0
+  resolution: "shell-quote@npm:1.12.0"
+  checksum: bbb3b6b244069da4114c5c0d2192786ff146123e1c29c298348871a3b8219cf45bdc9540c2f948e8874e2f7309186480a7ac0097159d0958aaafec25c5074731
   languageName: node
   linkType: hard
 
