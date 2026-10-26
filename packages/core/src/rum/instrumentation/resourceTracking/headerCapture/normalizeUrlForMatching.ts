@@ -4,12 +4,20 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+// URL parsers ignore leading/trailing C0 control characters and spaces, and
+// remove ASCII tabs and newlines anywhere in the URL.
+// eslint-disable-next-line no-control-regex
+const LEADING_TRAILING_C0_OR_SPACE = /^[\u0000-\u0020]+|[\u0000-\u0020]+$/g;
+const TAB_OR_NEWLINE = /[\t\n\r]/g;
+
 const SINGLE_DOT_SEGMENTS = new Set(['.', '%2e']);
 const DOUBLE_DOT_SEGMENTS = new Set(['..', '.%2e', '%2e.', '%2e%2e']);
 
 /**
  * Normalizes a URL for `forURLs` scope matching, following the URL parsing
  * semantics of HTTP clients:
+ * - leading/trailing control characters and spaces are trimmed, and tabs,
+ *   CRs and LFs are removed;
  * - the scheme and authority are lowercased (hosts match case-insensitively);
  * - in the path, backslashes are treated as slashes and dot segments
  *   (`.`, `..`, and their `%2e` encodings) are resolved;
@@ -17,7 +25,10 @@ const DOUBLE_DOT_SEGMENTS = new Set(['..', '.%2e', '%2e.', '%2e%2e']);
  *
  * Example: `HTTPS://API.Example.com/Public/../Private?Q=1` -> `https://api.example.com/Private?Q=1`
  */
-export const normalizeUrlForMatching = (url: string): string => {
+export const normalizeUrlForMatching = (rawUrl: string): string => {
+    const url = rawUrl
+        .replace(LEADING_TRAILING_C0_OR_SPACE, '')
+        .replace(TAB_OR_NEWLINE, '');
     const schemeEnd = url.indexOf('://');
     if (schemeEnd === -1) {
         return url;

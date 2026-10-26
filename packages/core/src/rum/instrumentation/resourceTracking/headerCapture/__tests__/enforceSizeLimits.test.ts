@@ -11,6 +11,12 @@ import {
     MAX_TOTAL_BYTES
 } from '../enforceSizeLimits';
 
+// Node's encoder is the reference: lone surrogates are encoded as U+FFFD (3 bytes)
+const bytesOf = (value: string) => Buffer.byteLength(value, 'utf8');
+
+const truncateValue = (value: string): string =>
+    enforceSizeLimits({ h: value }, undefined).requestHeaders?.h ?? '';
+
 describe('enforceSizeLimits', () => {
     describe('constants', () => {
         it('exports MAX_HEADER_VALUE_BYTES as 128', () => {
@@ -66,6 +72,84 @@ describe('enforceSizeLimits', () => {
                 y: longValue
             });
             expect(result.responseHeaders?.['y']).toBe('b'.repeat(128));
+        });
+    });
+
+    describe('UTF-8 value truncation', () => {
+        it.each([
+            ['2-byte characters exactly at the limit', 'é'.repeat(64), 64],
+            ['3-byte characters below the limit', '€'.repeat(42), 42],
+            [
+                'an emoji ending exactly at the limit',
+                `${'a'.repeat(124)}😀`,
+                126
+            ],
+            [
+                'a lone high surrogate ending at the limit',
+                `${'a'.repeat(125)}\uD800`,
+                126
+            ],
+            [
+                'a lone low surrogate ending at the limit',
+                `${'a'.repeat(125)}\uDC00`,
+                126
+            ]
+        ])('keeps %s intact', (_, value, expectedLength) => {
+            expect(bytesOf(value)).toBeLessThanOrEqual(MAX_HEADER_VALUE_BYTES);
+            expect(truncateValue(value)).toBe(value);
+            expect(value).toHaveLength(expectedLength);
+        });
+
+        it.each([
+            [
+                'a 2-byte character crossing the limit',
+                `a${'é'.repeat(64)}`,
+                `a${'é'.repeat(63)}`
+            ],
+            [
+                'a 3-byte character crossing the limit',
+                '€'.repeat(43),
+                '€'.repeat(42)
+            ],
+            [
+                'an emoji crossing the limit',
+                `${'a'.repeat(126)}😀`,
+                'a'.repeat(126)
+            ],
+            [
+                'an emoji starting right after the limit',
+                `${'a'.repeat(128)}😀`,
+                'a'.repeat(128)
+            ],
+            [
+                'a lone high surrogate crossing the limit',
+                `${'a'.repeat(126)}\uD800`,
+                'a'.repeat(126)
+            ],
+            [
+                'a lone low surrogate crossing the limit',
+                `${'a'.repeat(126)}\uDC00`,
+                'a'.repeat(126)
+            ]
+        ])('drops %s without splitting it', (_, value, expected) => {
+            const truncated = truncateValue(value);
+            expect(truncated).toBe(expected);
+            expect(bytesOf(truncated)).toBeLessThanOrEqual(
+                MAX_HEADER_VALUE_BYTES
+            );
+        });
+
+        it('never leaves a dangling high surrogate after truncation', () => {
+            for (let prefix = 120; prefix <= 128; prefix++) {
+                const truncated = truncateValue(
+                    `${'a'.repeat(prefix)}${'😀'.repeat(4)}`
+                );
+                const lastCode = truncated.charCodeAt(truncated.length - 1);
+                expect(lastCode >= 0xd800 && lastCode <= 0xdbff).toBe(false);
+                expect(bytesOf(truncated)).toBeLessThanOrEqual(
+                    MAX_HEADER_VALUE_BYTES
+                );
+            }
         });
     });
 
@@ -187,6 +271,31 @@ describe('enforceSizeLimits', () => {
                 result.responseHeaders
             );
             expect(totalBytes).toBeLessThanOrEqual(2048);
+        });
+    });
+
+    describe('total size budget with multi-byte values', () => {
+        it('measures the budget in UTF-8 bytes, not UTF-16 code units', () => {
+            // 20 headers of 3 + 126 = 129 UTF-8 bytes (45 UTF-16 code units each):
+            // 900 code units in total, but 2580 bytes
+            const responseHeaders: Record<string, string> = {};
+            for (let i = 0; i < 20; i++) {
+                responseHeaders[`h${String(i).padStart(2, '0')}`] = '€'.repeat(
+                    42
+                );
+            }
+
+            const result = enforceSizeLimits(undefined, responseHeaders);
+            const kept = Object.entries(result.responseHeaders ?? {});
+            const keptBytes = kept.reduce(
+                (total, [name, value]) =>
+                    total + bytesOf(name) + bytesOf(value),
+                0
+            );
+
+            expect(kept).toHaveLength(15);
+            expect(keptBytes).toBe(15 * 129);
+            expect(keptBytes).toBeLessThanOrEqual(MAX_TOTAL_BYTES);
         });
     });
 

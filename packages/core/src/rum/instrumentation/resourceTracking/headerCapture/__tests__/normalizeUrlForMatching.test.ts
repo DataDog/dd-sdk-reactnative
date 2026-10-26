@@ -71,6 +71,27 @@ describe('normalizeUrlForMatching', () => {
         }
     );
 
+    it.each([
+        ['a tab', '\t'],
+        ['a carriage return', '\r'],
+        ['a line feed', '\n']
+    ])('removes %s before resolving dot segments', (_, char) => {
+        expect(
+            normalizeUrlForMatching(
+                `https://api.example.com/public/${char}../private`
+            )
+        ).toBe('https://api.example.com/private');
+        expect(
+            normalizeUrlForMatching(`https://api.exa${char}mple.com/v2`)
+        ).toBe('https://api.example.com/v2');
+    });
+
+    it('trims leading and trailing control characters and spaces', () => {
+        expect(
+            normalizeUrlForMatching('  \u0000https://API.example.com/v2 \u001f')
+        ).toBe('https://api.example.com/v2');
+    });
+
     it('returns URLs without a scheme unchanged', () => {
         expect(normalizeUrlForMatching('/Relative/Path')).toBe(
             '/Relative/Path'

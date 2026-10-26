@@ -333,6 +333,9 @@ describe('compileHeaderCaptureConfig', () => {
             expect(
                 matches('https://api.example.com/public/%2e%2e/private')
             ).toBe(false);
+            expect(matches('https://api.example.com/public/\t../private')).toBe(
+                false
+            );
             expect(matches('https://api.example.com/other/../public/x')).toBe(
                 true
             );
