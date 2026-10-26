@@ -218,7 +218,9 @@ export const accumulateRequestHeader = (
     if (isHeaderAllowed(lowered)) {
         // Remove any existing entry with different casing for same header
         // (last-value-wins: both value and casing from latest call)
-        for (const existing of Object.keys(accumulator)) {
+        // for...in avoids allocating a keys array on the request hot path
+        // eslint-disable-next-line guard-for-in
+        for (const existing in accumulator) {
             if (existing.toLowerCase() === lowered) {
                 delete accumulator[existing];
                 break;

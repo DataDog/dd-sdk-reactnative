@@ -9,13 +9,26 @@ Header capture is **disabled by default** and requires `trackResources: true`.
 Set `headerCaptureRules` in your RUM configuration:
 
 ```typescript
-import { DatadogProvider } from '@datadog/mobile-react-native';
+import {
+  DatadogProvider,
+  DatadogProviderConfiguration,
+  TrackingConsent
+} from '@datadog/mobile-react-native';
 
-DatadogProvider.initialize({
-  // ...
-  trackResources: true,
-  headerCaptureRules: 'defaults',
-});
+const config = new DatadogProviderConfiguration(
+  '<CLIENT_TOKEN>',
+  '<ENVIRONMENT_NAME>',
+  TrackingConsent.GRANTED,
+  {
+    rumConfiguration: {
+      applicationId: '<RUM_APPLICATION_ID>',
+      trackResources: true,
+      headerCaptureRules: 'defaults'
+    }
+  }
+);
+
+// <DatadogProvider configuration={config}>...</DatadogProvider>
 ```
 
 With `FileBasedConfiguration`, set the same value under `rumConfiguration` in your JSON configuration file:
@@ -81,6 +94,9 @@ Each rule has a `type`:
 | `'matchResponseHeaders'` | Response only |
 
 The optional `forURLs` field scopes a rule to specific URL patterns. Supports hostname-only (`api.example.com`) or hostname + path prefix (`api.example.com/v2`). Omit it (or use `['*']`) to match all URLs.
+
+- A hostname matches itself and its subdomains (`api.example.com` matches `cdn.api.example.com`), but never a hostname that only appears in the path or query of another URL.
+- A path prefix matches whole path segments: `api.example.com/v2` matches `/v2` and `/v2/users`, but not `/v22`.
 
 **Rule precedence:** when multiple rules match a URL, their header sets are merged. However, if at least one scoped rule (with explicit `forURLs` patterns) matches, catch-all rules (no `forURLs` / `['*']`) are ignored for that URL.
 

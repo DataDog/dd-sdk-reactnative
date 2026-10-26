@@ -24,8 +24,11 @@ import type {
  * Builds a URL-matching RegExp from a user-supplied `match` string.
  *
  * The regex is applied to full URL strings (e.g. "https://api.example.com/v2/users").
- * Pattern: `^https?://(.*\.)*${escapedHost}(:\d+)?${pathSuffix}`
- * where pathSuffix anchors at end-of-host when no path is given, or matches the path prefix.
+ * Pattern: `^https?://([^/?#@:]+\.)?${escapedHost}(:\d+)?${pathSuffix}`
+ * Subdomains are restricted to hostname characters, so a hostname appearing in
+ * the path or query of another URL never matches. The path prefix (if any) must
+ * end on a path segment boundary: `api.example.com/v2` matches `/v2` and `/v2/users`,
+ * but not `/v22`.
  *
  * Returns null if the pattern is invalid (e.g. contains unescaped regex metacharacters that
  * result in an invalid expression).
@@ -41,14 +44,17 @@ const buildUrlMatchRegex = (match: string): RegExp | null => {
     const pathPrefix = slashIndex === -1 ? '' : match.slice(slashIndex);
 
     const escapedHost = escapeRegExp(hostname);
-    // If a path prefix is given, escape it and match as prefix.
-    // If hostname-only, accept /, ?, # or end-of-string as valid URL terminators.
-    const pathSuffix = pathPrefix ? escapeRegExp(pathPrefix) : '(/|\\?|#|$)';
+    // Host and path prefix must be followed by /, ?, # or end-of-string.
+    // A path prefix ending with '/' is already on a segment boundary.
+    const boundary = '(/|\\?|#|$)';
+    const pathSuffix = pathPrefix.endsWith('/')
+        ? escapeRegExp(pathPrefix)
+        : `${escapeRegExp(pathPrefix)}${boundary}`;
 
     try {
         // Regex matches full URL strings: scheme + optional subdomains + host + optional port + path
         const regex = new RegExp(
-            `^https?://(.*\\.)*${escapedHost}(:\\d+)?${pathSuffix}`,
+            `^https?://([^/?#@:]+\\.)?${escapedHost}(:\\d+)?${pathSuffix}`,
             'i'
         );
         // Validate the final regex is well-formed
@@ -115,17 +121,55 @@ const buildForURLsRegex = (forURLs: string[] | undefined): ForURLsResult => {
     }
 };
 
+const isStringArray = (value: unknown): value is string[] =>
+    Array.isArray(value) && value.every(item => typeof item === 'string');
+
+/**
+ * Checks the shape of a user-supplied rule at runtime. Rules coming from
+ * file-based configuration are not type-checked, so malformed entries must
+ * be skipped instead of throwing during compilation.
+ */
+const getRuleValidationError = (rule: unknown): string | null => {
+    if (typeof rule !== 'object' || rule === null) {
+        return 'rule is not an object';
+    }
+    const { type, headers, forURLs } = rule as Record<string, unknown>;
+    if (forURLs !== undefined && !isStringArray(forURLs)) {
+        return '`forURLs` must be an array of strings';
+    }
+    switch (type) {
+        case 'defaults':
+            return null;
+        case 'matchHeaders':
+        case 'matchRequestHeaders':
+        case 'matchResponseHeaders':
+            return isStringArray(headers)
+                ? null
+                : '`headers` must be an array of strings';
+        default:
+            return `unknown type "${String(type)}"`;
+    }
+};
+
 /**
  * Compiles an array of composable `HeaderCaptureRule` entries into compiled rules.
  * Each rule variant type produces a different set of request/response header names.
  * Each compiled rule carries an `isScoped` flag from its forURLs resolution.
  */
-const compileRules = (
-    rules: HeaderCaptureRule[]
-): CompiledHeaderCaptureRule[] => {
+const compileRules = (rules: unknown[]): CompiledHeaderCaptureRule[] => {
     const compiled: CompiledHeaderCaptureRule[] = [];
 
-    for (const rule of rules) {
+    for (const candidate of rules) {
+        const validationError = getRuleValidationError(candidate);
+        if (validationError !== null) {
+            InternalLog.log(
+                `[DatadogRUM] headerCaptureRules: Skipping invalid rule (${validationError}).`,
+                SdkVerbosity.WARN
+            );
+            continue;
+        }
+        const rule = candidate as HeaderCaptureRule;
+
         // Build URL regex from forURLs
         const urlResult = buildForURLsRegex(rule.forURLs);
 
@@ -217,12 +261,7 @@ const compileRules = (
                 break;
 
             default:
-                InternalLog.log(
-                    `[DatadogRUM] headerCaptureRules: Skipping rule with unknown type "${
-                        (rule as { type: string }).type
-                    }".`,
-                    SdkVerbosity.WARN
-                );
+                // Unknown types are rejected by getRuleValidationError
                 break;
         }
     }
