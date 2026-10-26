@@ -18,7 +18,7 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-native-session-replay
 ```
 
-**iOS setup**: the native iOS SDK is resolved through Swift Package Manager, which requires React Native 0.75 or higher. Pods can be linked statically (React Native's default) with Xcode 26 or later; with older Xcode versions, link them as dynamic frameworks (`use_frameworks! :linkage => :dynamic` in your `Podfile`).
+**iOS setup**: the native iOS SDK is resolved through Swift Package Manager, which requires React Native 0.75 or higher.
 
 ## Enable Session Replay
 

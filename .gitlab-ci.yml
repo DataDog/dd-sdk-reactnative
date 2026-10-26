@@ -45,12 +45,6 @@ stages:
         - echo y | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --install "$ANDROID_EMULATOR_IMAGE"
         - yes | ~/android_sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
         - echo "no" | ~/android_sdk/cmdline-tools/latest/bin/avdmanager --verbose create avd --force --name "$EMULATOR_NAME" --package "$ANDROID_EMULATOR_IMAGE"
-    # example/ links pods statically, which needs Xcode 26: with older versions the native SDK's Swift
-    # packages fail to link with duplicate symbols. Apps uploaded to the App Store must be built with
-    # Xcode 26 since April 2026, and example-new-architecture/ keeps covering Xcode 16 with dynamic frameworks.
-    select-xcode-26:
-        - export DEVELOPER_DIR="$(ls -d /Applications/Xcode-26*.app | sort -V | tail -1)/Contents/Developer"
-        - xcodebuild -version
 
 # TESTS
 
@@ -110,7 +104,6 @@ test:native-ios:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
-        - !reference [.snippets, select-xcode-26]
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" | xcbeautify
@@ -122,7 +115,6 @@ test:native-ios-sr:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
-        - !reference [.snippets, select-xcode-26]
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNativeSessionReplay test -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" | xcbeautify
@@ -171,7 +163,6 @@ build-examples:ios:
         - if: '$BUILD_BENCHMARK != "true"'
     timeout: 1h
     script:
-        - !reference [.snippets, select-xcode-26]
         - yarn
         - (cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install --repo-update)
         - set -o pipefail && xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DdSdkReactNativeExample -configuration Debug -sdk iphonesimulator -destination "$IOS_SIMULATOR_DESTINATION" -derivedDataPath "$IOS_DERIVED_DATA_PATH" build | xcbeautify

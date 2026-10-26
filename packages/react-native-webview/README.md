@@ -20,7 +20,7 @@ Set up the RUM Browser SDK on the web page you want rendered on your mobile Reac
 
 Add `react-native-webview` to your application following the [official installation documentation][4].
 
-**iOS setup**: the native iOS SDK is resolved through Swift Package Manager, which requires React Native 0.75 or higher. Pods can be linked statically (React Native's default) with Xcode 26 or later; with older Xcode versions, link them as dynamic frameworks (`use_frameworks! :linkage => :dynamic` in your `Podfile`).
+**iOS setup**: the native iOS SDK is resolved through Swift Package Manager, which requires React Native 0.75 or higher.
 
 ### Instrument your web views
 
