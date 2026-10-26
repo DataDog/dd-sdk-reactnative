@@ -105,7 +105,7 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
         # Universal archive: ar only reads thin archives, so work on each architecture's slice.
         mkdir -p "${DERIVED_FILE_DIR}"
         found=false
-        slices=""
+        set --
         for arch in ${archs}; do
           slice="${DERIVED_FILE_DIR}/datadog-dedupe-${arch}.a"
           lipo -thin "${arch}" "${archive}" -output "${slice}"
@@ -114,10 +114,10 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
             found=true
             dedupe "${slice}"
           fi
-          slices="${slices} ${slice}"
+          set -- "$@" "${slice}"
         done
         [ "${found}" = true ] || exit 0
-        lipo -create ${slices} -output "${archive}"
+        lipo -create "$@" -output "${archive}"
       SH
       phase.always_out_of_date = '1'
       target.build_phases << phase
