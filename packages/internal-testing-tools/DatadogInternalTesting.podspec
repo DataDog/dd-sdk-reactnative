@@ -16,11 +16,9 @@ end
 
 # Only with dynamic frameworks does Xcode build DatadogInternal as a framework of its own. When pods
 # are linked statically its code is in DatadogSDKReactNative's archive instead, which requests
-# every Datadog product then (see DatadogSDKReactNative.podspec). The Podfile is read as well as
-# USE_FRAMEWORKS because apps can call `use_frameworks!` without setting the env var.
-podfile = Pod::Config.instance.podfile rescue nil
-uses_dynamic_frameworks = ENV['USE_FRAMEWORKS'] == 'dynamic' ||
-  (!podfile.nil? && podfile.target_definition_list.any? { |target| target.build_type.dynamic_framework? })
+# every Datadog product then (see DatadogSDKReactNative.podspec). React Native's
+# `use_react_native!` records how the app's target links pods in USE_FRAMEWORKS.
+uses_dynamic_frameworks = ENV['USE_FRAMEWORKS'] == 'dynamic'
 
 Pod::Spec.new do |s|
   s.name         = "DatadogInternalTesting"
