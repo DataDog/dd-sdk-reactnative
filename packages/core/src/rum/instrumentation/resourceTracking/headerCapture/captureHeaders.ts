@@ -265,7 +265,28 @@ export const captureResponseHeaders = (
         return undefined;
     }
 
-    const allHeaders = parseResponseHeaders(rawHeaders);
+    return filterResponseHeaders(parseResponseHeaders(rawHeaders), url, config);
+};
+
+/**
+ * Filters already-parsed response headers (lowercased names) the same way
+ * as {@link captureResponseHeaders}. Used by request proxies whose response
+ * headers are not exposed as a raw string (e.g. Fetch `Headers`).
+ *
+ * @param allHeaders - Response headers keyed by lowercased name.
+ * @param url        - The full request URL for rule matching.
+ * @param config     - The compiled header capture configuration.
+ * @returns Filtered response headers, or undefined.
+ */
+export const filterResponseHeaders = (
+    allHeaders: Record<string, string>,
+    url: string,
+    config: CompiledHeaderCaptureConfig
+): Record<string, string> | undefined => {
+    if (config === null) {
+        return undefined;
+    }
+
     const allCount = Object.keys(allHeaders).length;
     if (allCount === 0) {
         InternalLog.log(

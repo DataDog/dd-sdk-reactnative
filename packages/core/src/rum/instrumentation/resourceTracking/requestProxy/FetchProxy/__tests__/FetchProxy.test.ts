@@ -16,6 +16,7 @@ import {
     DATADOG_GRAPH_QL_ERROR_HEADER,
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER
 } from '../../../graphql/graphqlHeaders';
+import { compileHeaderCaptureConfig } from '../../../headerCapture/compileHeaderConfig';
 import type { ResourceReporter } from '../../common/ResourceReporter';
 import type { RUMResource } from '../../interfaces/RumResource';
 import { FetchProxy } from '../FetchProxy';
@@ -417,6 +418,235 @@ describe('FetchProxy', () => {
             expect(cloneSpy).not.toHaveBeenCalled();
             const resource = reportResource.mock.calls[0][0] as RUMResource;
             expect(resource.graphqlAttributes?.errors).toBeUndefined();
+        });
+    });
+
+    describe('header capture', () => {
+        const getHeaderCaptureOptions = (
+            rules: Parameters<typeof compileHeaderCaptureConfig>[0]
+        ) => ({
+            ...getOptions(),
+            headerCaptureConfig: compileHeaderCaptureConfig(rules)
+        });
+
+        it('does not report headers when header capture is disabled', async () => {
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(
+                    createResponse({ headers: { 'cache-control': 'no-cache' } })
+                ) as jest.MockedFunction<typeof fetch>;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getOptions());
+
+            await fetchGlobal.fetch('https://api.example.com/users', {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            await flushPromises();
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.capturedRequestHeaders).toBeUndefined();
+            expect(resource.capturedResponseHeaders).toBeUndefined();
+        });
+
+        it('captures default request and response headers', async () => {
+            const originalFetch = jest.fn().mockResolvedValue(
+                createResponse({
+                    headers: {
+                        'cache-control': 'max-age=60',
+                        etag: '"abc"',
+                        'set-cookie': 'session=secret',
+                        'x-custom': 'value'
+                    }
+                })
+            ) as jest.MockedFunction<typeof fetch>;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getHeaderCaptureOptions('defaults'));
+
+            await fetchGlobal.fetch('https://api.example.com/users', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer secret',
+                    'X-Custom': 'value'
+                }
+            });
+            await flushPromises();
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.capturedRequestHeaders).toEqual({
+                'Content-Type': 'application/json'
+            });
+            expect(resource.capturedResponseHeaders).toEqual({
+                'Cache-Control': 'max-age=60',
+                ETag: '"abc"'
+            });
+        });
+
+        it('does not capture headers injected by the SDK', async () => {
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(createResponse()) as jest.MockedFunction<
+                typeof fetch
+            >;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(
+                getHeaderCaptureOptions([
+                    {
+                        type: 'matchRequestHeaders',
+                        headers: [
+                            SAMPLING_PRIORITY_HEADER_KEY,
+                            PARENT_ID_HEADER_KEY,
+                            TRACKED_BY_HEADER_KEY,
+                            DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER,
+                            'x-request-id'
+                        ]
+                    }
+                ])
+            );
+
+            await fetchGlobal.fetch('https://api.example.com/graphql', {
+                headers: {
+                    [DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER]: 'query',
+                    'X-Request-Id': 'abc'
+                }
+            });
+            await flushPromises();
+
+            // Fetch Headers lowercase names, so the casing comes from the rule
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.capturedRequestHeaders).toEqual({
+                'x-request-id': 'abc'
+            });
+        });
+
+        it('captures headers set on a Request-like input', async () => {
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(
+                    createResponse({ headers: { 'x-cache': 'HIT' } })
+                ) as jest.MockedFunction<typeof fetch>;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getHeaderCaptureOptions('defaults'));
+
+            await fetchGlobal.fetch(({
+                url: 'https://api.example.com/users',
+                method: 'GET',
+                headers: new HeadersMock({ 'cache-control': 'no-cache' })
+            } as unknown) as Request);
+            await flushPromises();
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.capturedRequestHeaders).toEqual({
+                'Cache-Control': 'no-cache'
+            });
+            expect(resource.capturedResponseHeaders).toEqual({
+                'X-Cache': 'HIT'
+            });
+        });
+
+        it('applies URL-scoped rules', async () => {
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(
+                    createResponse({ headers: { 'x-request-id': 'abc' } })
+                ) as jest.MockedFunction<typeof fetch>;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(
+                getHeaderCaptureOptions([
+                    {
+                        type: 'matchResponseHeaders',
+                        headers: ['x-request-id'],
+                        forURLs: ['api.example.com']
+                    }
+                ])
+            );
+
+            await fetchGlobal.fetch('https://api.example.com/users');
+            await fetchGlobal.fetch('https://other.example.org/users');
+            await flushPromises();
+
+            const [matched, unmatched] = reportResource.mock.calls.map(
+                call => call[0] as RUMResource
+            );
+            expect(matched.capturedResponseHeaders).toEqual({
+                'x-request-id': 'abc'
+            });
+            expect(unmatched.capturedResponseHeaders).toBeUndefined();
+        });
+
+        it('does not report headers for failed requests', async () => {
+            const originalFetch = jest
+                .fn()
+                .mockRejectedValue(
+                    new Error('network failed')
+                ) as jest.MockedFunction<typeof fetch>;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getHeaderCaptureOptions('defaults'));
+
+            await expect(
+                fetchGlobal.fetch('https://api.example.com/users', {
+                    headers: { 'Content-Type': 'application/json' }
+                })
+            ).rejects.toThrow('network failed');
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.capturedRequestHeaders).toBeUndefined();
+            expect(resource.capturedResponseHeaders).toBeUndefined();
+        });
+
+        it('still reports request headers when response headers cannot be iterated', async () => {
+            const response = ({
+                status: 200,
+                headers: { get: () => null },
+                clone() {
+                    return response;
+                }
+            } as unknown) as Response;
+            const originalFetch = jest
+                .fn()
+                .mockResolvedValue(response) as jest.MockedFunction<
+                typeof fetch
+            >;
+            const reportResource = jest.fn();
+            const { fetchGlobal, proxy } = createProxy({
+                originalFetch,
+                reportResource
+            });
+            proxy.onTrackingStart(getHeaderCaptureOptions('defaults'));
+
+            await fetchGlobal.fetch('https://api.example.com/users', {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            await flushPromises();
+
+            const resource = reportResource.mock.calls[0][0] as RUMResource;
+            expect(resource.capturedRequestHeaders).toEqual({
+                'Content-Type': 'application/json'
+            });
+            expect(resource.capturedResponseHeaders).toBeUndefined();
         });
     });
 });

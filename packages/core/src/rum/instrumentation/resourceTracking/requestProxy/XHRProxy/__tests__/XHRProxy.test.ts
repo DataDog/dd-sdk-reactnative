@@ -2618,7 +2618,7 @@ describe('XHRProxy', () => {
     });
 
     describe('header capture', () => {
-        it('disabled mode: does not accumulate request headers', async () => {
+        it('disabled mode: does not report request headers', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -2639,7 +2639,7 @@ describe('XHRProxy', () => {
 
             // THEN
             expect(
-                (xhr as any)._datadog_xhr.capturedRequestHeaders
+                DdNativeRum.stopResource.mock.calls[0][4]['_dd.request_headers']
             ).toBeUndefined();
         });
 
@@ -2666,7 +2666,9 @@ describe('XHRProxy', () => {
 
             // THEN
             expect(
-                (xhr as any)._datadog_xhr.capturedResponseHeaders
+                DdNativeRum.stopResource.mock.calls[0][4][
+                    '_dd.response_headers'
+                ]
             ).toBeUndefined();
         });
 
@@ -2691,7 +2693,9 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN — content-type is in defaults, x-custom is not
-            expect((xhr as any)._datadog_xhr.capturedRequestHeaders).toEqual({
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4]['_dd.request_headers']
+            ).toEqual({
                 'Content-Type': 'application/json'
             });
         });
@@ -2718,7 +2722,11 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN — content-type, cache-control in defaults; x-custom not
-            expect((xhr as any)._datadog_xhr.capturedResponseHeaders).toEqual({
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4][
+                    '_dd.response_headers'
+                ]
+            ).toEqual({
                 'Content-Type': 'text/html',
                 'Cache-Control': 'no-cache'
             });
@@ -2745,9 +2753,11 @@ describe('XHRProxy', () => {
             xhr.complete(0, undefined);
             await flushPromises();
 
-            // THEN — status 0 means response capture is skipped
+            // THEN — status 0 means header capture is skipped
             expect(
-                (xhr as any)._datadog_xhr.capturedResponseHeaders
+                DdNativeRum.stopResource.mock.calls[0][4][
+                    '_dd.response_headers'
+                ]
             ).toBeUndefined();
         });
 
@@ -2789,16 +2799,22 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN — only rule-matched headers appear
-            expect((xhr as any)._datadog_xhr.capturedRequestHeaders).toEqual({
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4]['_dd.request_headers']
+            ).toEqual({
                 'X-Request-Id': 'abc'
             });
-            expect((xhr as any)._datadog_xhr.capturedResponseHeaders).toEqual({
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4][
+                    '_dd.response_headers'
+                ]
+            ).toEqual({
                 etag: 'abc123',
                 'x-cache': 'HIT'
             });
         });
 
-        it('security: sensitive request headers are never accumulated', async () => {
+        it('security: sensitive request headers are never reported', async () => {
             // GIVEN
             const method = 'GET';
             const url = 'https://api.example.com/v2/user';
@@ -2819,7 +2835,9 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN — authorization blocked by security filter
-            expect((xhr as any)._datadog_xhr.capturedRequestHeaders).toEqual({
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4]['_dd.request_headers']
+            ).toEqual({
                 'Content-Type': 'application/json'
             });
         });
@@ -2861,7 +2879,11 @@ describe('XHRProxy', () => {
             await flushPromises();
 
             // THEN — set-cookie blocked by isSensitiveHeader; only cache-control appears
-            expect((xhr as any)._datadog_xhr.capturedResponseHeaders).toEqual({
+            expect(
+                DdNativeRum.stopResource.mock.calls[0][4][
+                    '_dd.response_headers'
+                ]
+            ).toEqual({
                 'cache-control': 'no-cache'
             });
         });
