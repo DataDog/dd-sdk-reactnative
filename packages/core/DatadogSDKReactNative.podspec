@@ -64,6 +64,36 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
       end
     end
 
+    # Xcode versions before 26 hand each package object to libtool twice when they archive a pod that
+    # requests package products, so the core pod's static archive holds two copies of every Datadog
+    # object, and the -ObjC flag CocoaPods links apps and tests with loads both: duplicate symbols.
+    # This drops the extra copies once the archive is built. Xcode 26 archives each object once, so
+    # it finds nothing to remove there.
+    def datadog_dedupe_static_archive(installer)
+      core = installer.pod_targets.find { |pod| pod.name == 'DatadogSDKReactNative' }
+      return if core.nil? || core.build_as_dynamic?
+
+      phase_name = '[Datadog] Remove duplicate Swift package objects'
+      target = installer.pods_project.targets.find { |t| t.name == 'DatadogSDKReactNative' }
+      return if target.nil? || target.shell_script_build_phases.any? { |phase| phase.name == phase_name }
+
+      phase = installer.pods_project.new(Xcodeproj::Project::Object::PBXShellScriptBuildPhase)
+      phase.name = phase_name
+      phase.shell_script = <<~'SH'
+        archive="${TARGET_BUILD_DIR}/${EXECUTABLE_PATH}"
+        [ -n "$(ar -t "${archive}" | sort | uniq -d)" ] || exit 0
+        ar -t "${archive}" | sort | uniq -c | while read -r count member; do
+          while [ "${count}" -gt 1 ]; do
+            ar -d "${archive}" "${member}"
+            count=$((count - 1))
+          done
+        done
+        ranlib "${archive}"
+      SH
+      phase.always_out_of_date = '1'
+      target.build_phases << phase
+    end
+
     # CocoaPods numbers the Pods project's UUIDs from a counter without checking for collisions,
     # which only holds while it creates every object itself. By the time post-install hooks run it
     # has made the UUIDs deterministic, and once the batch it had left runs out the counter
@@ -78,6 +108,7 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
     def apply_on_post_install(installer)
       datadog_reserve_unique_uuids(installer.pods_project)
       datadog_request_static_products_from_core(installer)
+      datadog_dedupe_static_archive(installer)
       super
       embed = <<~'SH'
         # Embeds the Datadog Swift package frameworks that Xcode builds dynamically. Looks where Xcode
@@ -103,7 +134,12 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
         embed_datadog_spm_frameworks "DatadogInternal"
         embed_datadog_spm_frameworks "Datadog*_PackageProduct"
       SH
-      anchor = /^if \[ "\$\{COCOAPODS_PARALLEL_CODE_SIGN\}" == "true" \]; then$/
+      # The embed phase's file lists only name the pod frameworks. Listing the package requirement makes
+      # an SDK version change rewrite this script, an input of the phase, so Xcode runs it again and
+      # copies the new frameworks, as React Native does for the frameworks it embeds itself.
+      requirements = (instance_variable_get(:@dependencies_by_pod) || {}).fetch('DatadogSDKReactNative', [])
+        .map { |dependency| "# #{dependency[:url]} #{dependency[:requirement]}\n" }.uniq.join
+      anchor =/^if \[ "\$\{COCOAPODS_PARALLEL_CODE_SIGN\}" == "true" \]; then$/
       installer.aggregate_targets.each do |target|
         next unless target.pod_targets.any? { |pod| pod.name == 'DatadogSDKReactNative' }
         script_path = target.embed_frameworks_script_path
@@ -114,7 +150,7 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
           raise "Datadog: could not add the native iOS SDK frameworks to #{script_path}, " \
                 "so the app would crash at launch in Release builds."
         end
-        File.write(script_path, script.sub(anchor) { "#{embed}#{$&}" })
+        File.write(script_path, script.sub(anchor) { "#{embed}#{requirements}#{$&}" })
       end
     end
   end)
