@@ -67,8 +67,9 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
     # Xcode versions before 26 hand each package object to libtool twice when they archive a pod that
     # requests package products, so the core pod's static archive holds two copies of every Datadog
     # object, and the -ObjC flag CocoaPods links apps and tests with loads both: duplicate symbols.
-    # This drops the extra copies once the archive is built. Xcode 26 archives each object once, so
-    # it finds nothing to remove there.
+    # This drops the extra copies once the archive is built, slice by slice when it is a universal
+    # archive, which ar cannot read. Xcode 26 archives each object once, so it finds nothing to remove
+    # there and leaves the archive untouched.
     def datadog_dedupe_static_archive(installer)
       core = installer.pod_targets.find { |pod| pod.name == 'DatadogSDKReactNative' }
       return if core.nil? || core.build_as_dynamic?
@@ -80,15 +81,43 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
       phase = installer.pods_project.new(Xcodeproj::Project::Object::PBXShellScriptBuildPhase)
       phase.name = phase_name
       phase.shell_script = <<~'SH'
+        set -e
         archive="${TARGET_BUILD_DIR}/${EXECUTABLE_PATH}"
-        [ -n "$(ar -t "${archive}" | sort | uniq -d)" ] || exit 0
-        ar -t "${archive}" | sort | uniq -c | while read -r count member; do
-          while [ "${count}" -gt 1 ]; do
-            ar -d "${archive}" "${member}"
-            count=$((count - 1))
+        has_duplicates() {
+          [ -n "$(ar -t "$1" | sort | uniq -d)" ]
+        }
+        dedupe() {
+          ar -t "$1" | sort | uniq -c | while read -r count member; do
+            while [ "${count}" -gt 1 ]; do
+              ar -d "$1" "${member}"
+              count=$((count - 1))
+            done
           done
+          ranlib "$1"
+        }
+        archs="$(lipo -archs "${archive}")"
+        if [ "$(echo ${archs} | wc -w)" -eq 1 ]; then
+          ar -t "${archive}" > /dev/null
+          has_duplicates "${archive}" || exit 0
+          dedupe "${archive}"
+          exit 0
+        fi
+        # Universal archive: ar only reads thin archives, so work on each architecture's slice.
+        mkdir -p "${DERIVED_FILE_DIR}"
+        found=false
+        slices=""
+        for arch in ${archs}; do
+          slice="${DERIVED_FILE_DIR}/datadog-dedupe-${arch}.a"
+          lipo -thin "${arch}" "${archive}" -output "${slice}"
+          ar -t "${slice}" > /dev/null
+          if has_duplicates "${slice}"; then
+            found=true
+            dedupe "${slice}"
+          fi
+          slices="${slices} ${slice}"
         done
-        ranlib "${archive}"
+        [ "${found}" = true ] || exit 0
+        lipo -create ${slices} -output "${archive}"
       SH
       phase.always_out_of_date = '1'
       target.build_phases << phase
