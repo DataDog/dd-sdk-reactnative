@@ -10,6 +10,10 @@
 const LEADING_TRAILING_C0_OR_SPACE = /^[\u0000-\u0020]+|[\u0000-\u0020]+$/g;
 const TAB_OR_NEWLINE = /[\t\n\r]/g;
 
+// Percent-encoded characters that can appear in a valid ASCII hostname
+const ENCODED_HOST_CHARACTER = /%([0-9a-fA-F]{2})/g;
+const HOST_CHARACTER = /^[A-Za-z0-9.-]$/;
+
 const SINGLE_DOT_SEGMENTS = new Set(['.', '%2e']);
 const DOUBLE_DOT_SEGMENTS = new Set(['..', '.%2e', '%2e.', '%2e%2e']);
 
@@ -18,7 +22,9 @@ const DOUBLE_DOT_SEGMENTS = new Set(['..', '.%2e', '%2e.', '%2e%2e']);
  * semantics of HTTP clients:
  * - leading/trailing control characters and spaces are trimmed, and tabs,
  *   CRs and LFs are removed;
- * - the scheme and authority are lowercased (hosts match case-insensitively);
+ * - the scheme and authority are lowercased (hosts match case-insensitively),
+ *   and percent-encoded hostname characters are decoded (`%61pi` -> `api`);
+ * - an omitted path is treated as `/`;
  * - in the path, backslashes are treated as slashes and dot segments
  *   (`.`, `..`, and their `%2e` encodings) are resolved;
  * - path case, query and fragment are left untouched.
@@ -38,10 +44,32 @@ export const normalizeUrlForMatching = (rawUrl: string): string => {
     const pathEnd = findFirstOf(url, authorityEnd, '?#');
 
     return (
-        url.slice(0, authorityEnd).toLowerCase() +
+        normalizeAuthority(url.slice(0, authorityEnd)) +
         normalizePath(url.slice(authorityEnd, pathEnd)) +
         url.slice(pathEnd)
     );
+};
+
+/**
+ * Lowercases the scheme and authority and decodes percent-encoded hostname
+ * characters. Userinfo (before the last `@`) is lowercased but not decoded, so
+ * an encoded `@` can never move the host boundary. Encodings that would not be
+ * valid in a hostname are left as-is.
+ */
+const normalizeAuthority = (schemeAndAuthority: string): string => {
+    const userinfoEnd = schemeAndAuthority.lastIndexOf('@');
+    const hostStart =
+        userinfoEnd === -1
+            ? schemeAndAuthority.indexOf('://') + 3
+            : userinfoEnd + 1;
+    const host = schemeAndAuthority
+        .slice(hostStart)
+        .replace(ENCODED_HOST_CHARACTER, (encoded, hex: string) => {
+            const char = String.fromCharCode(parseInt(hex, 16));
+            return HOST_CHARACTER.test(char) ? char : encoded;
+        });
+
+    return `${schemeAndAuthority.slice(0, hostStart)}${host}`.toLowerCase();
 };
 
 const findFirstOf = (url: string, from: number, chars: string): number => {
@@ -54,6 +82,11 @@ const findFirstOf = (url: string, from: number, chars: string): number => {
 };
 
 const normalizePath = (path: string): string => {
+    // HTTP requests without a path are sent to `/`
+    if (path === '') {
+        return '/';
+    }
+
     // Fast path: nothing to resolve
     if (!/[.\\%]/.test(path)) {
         return path;

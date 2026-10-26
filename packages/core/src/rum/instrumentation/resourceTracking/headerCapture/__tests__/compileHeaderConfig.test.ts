@@ -359,6 +359,25 @@ describe('compileHeaderCaptureConfig', () => {
             expect(matches('https://api.example.com/PUBLIC/users')).toBe(false);
         });
 
+        it('forURLs root path scope matches requests without a path', () => {
+            const result = compileHeaderCaptureConfig([
+                {
+                    type: 'matchResponseHeaders',
+                    headers: ['etag'],
+                    forURLs: ['api.example.com/']
+                }
+            ]);
+            const { urlRegex } = (result ?? [])[0];
+            const matches = (url: string) =>
+                urlRegex.test(normalizeUrlForMatching(url));
+
+            expect(matches('https://api.example.com')).toBe(true);
+            expect(matches('https://api.example.com?view=home')).toBe(true);
+            expect(matches('https://api.example.com#top')).toBe(true);
+            expect(matches('https://api.example.com/users')).toBe(true);
+            expect(matches('https://other.example.com')).toBe(false);
+        });
+
         it('forURLs path prefix ending with a slash matches nested paths', () => {
             const result = compileHeaderCaptureConfig([
                 {

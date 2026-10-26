@@ -223,6 +223,26 @@ describe('captureHeaders', () => {
         });
 
         describe('scoped rules', () => {
+            it('applies a scoped rule over catch-all rules for percent-encoded hosts', () => {
+                const config = compileHeaderCaptureConfig([
+                    { type: 'defaults' },
+                    {
+                        type: 'matchResponseHeaders',
+                        headers: ['x-request-id'],
+                        forURLs: ['api.example.com/v2']
+                    }
+                ]);
+                const raw = 'cache-control: no-cache\r\nx-request-id: abc\r\n';
+
+                expect(
+                    captureResponseHeaders(
+                        raw,
+                        'https://%61pi.example.com/v2/users',
+                        config
+                    )
+                ).toEqual({ 'x-request-id': 'abc' });
+            });
+
             it('matches forURLs hosts case-insensitively and paths case-sensitively', () => {
                 const config = compileHeaderCaptureConfig([
                     {

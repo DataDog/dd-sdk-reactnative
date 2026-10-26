@@ -12,9 +12,9 @@ describe('normalizeUrlForMatching', () => {
             'HTTPS://API.Example.com/Public/Users?Q=A#Top',
             'https://api.example.com/Public/Users?Q=A#Top'
         ],
-        ['https://API.example.com:8443', 'https://api.example.com:8443'],
-        ['https://API.example.com?Q=A', 'https://api.example.com?Q=A'],
-        ['https://API.example.com#Top', 'https://api.example.com#Top'],
+        ['https://API.example.com:8443', 'https://api.example.com:8443/'],
+        ['https://API.example.com?Q=A', 'https://api.example.com/?Q=A'],
+        ['https://API.example.com#Top', 'https://api.example.com/#Top'],
         ['https://api.example.com/v2', 'https://api.example.com/v2'],
         [
             'https://User:Pass@API.example.com/Path',
@@ -90,6 +90,30 @@ describe('normalizeUrlForMatching', () => {
         expect(
             normalizeUrlForMatching('  \u0000https://API.example.com/v2 \u001f')
         ).toBe('https://api.example.com/v2');
+    });
+
+    it.each([
+        ['https://%61pi.example.com/v2', 'https://api.example.com/v2'],
+        ['https://API.%45xample.com/V2', 'https://api.example.com/V2'],
+        [
+            'https://api%2Eexample%2ecom:8443/x',
+            'https://api.example.com:8443/x'
+        ],
+        [
+            'https://us%65r@%61pi.example.com/x',
+            'https://us%65r@api.example.com/x'
+        ],
+        [
+            'https://api.example.com%2f.evil/x',
+            'https://api.example.com%2f.evil/x'
+        ],
+        [
+            'https://api.example.com%40evil.test/x',
+            'https://api.example.com%40evil.test/x'
+        ],
+        ['https://api.ex%zzample.com/x', 'https://api.ex%zzample.com/x']
+    ])('decodes percent-encoded hostname characters in %s', (url, expected) => {
+        expect(normalizeUrlForMatching(url)).toBe(expected);
     });
 
     it('returns URLs without a scheme unchanged', () => {
