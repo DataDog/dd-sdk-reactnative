@@ -7,12 +7,23 @@ datadog_ios_version = '3.16.1'
 datadog_ios_spm_url = 'https://github.com/DataDog/dd-sdk-ios.git'
 
 # The native iOS SDK is resolved through Swift Package Manager, using React Native's
-# `spm_dependency` podspec helper. This requires React Native >= 0.75 and an app that links
-# pods as dynamic frameworks (`use_frameworks! :linkage => :dynamic`).
+# `spm_dependency` podspec helper. This requires React Native >= 0.75. Pods can be linked statically
+# or as frameworks (see DatadogSDKReactNative.podspec for how static linkage is handled).
 if !respond_to?(:spm_dependency, true)
   raise "Datadog: the native iOS SDK is resolved through Swift Package Manager, which requires " \
         "React Native >= 0.75 -- the first version to ship the `spm_dependency` podspec helper."
 end
+
+# How the app links pods (`use_frameworks!`). The Podfile is read as well as USE_FRAMEWORKS because
+# apps can call `use_frameworks!` without setting the env var.
+podfile = Pod::Config.instance.podfile rescue nil
+uses_frameworks = !ENV['USE_FRAMEWORKS'].nil? ||
+  (!podfile.nil? && podfile.target_definition_list.any? { |target| target.build_type.framework? })
+# Only with dynamic frameworks does Xcode build DatadogInternal as a framework of its own. When pods
+# are linked statically its code is in DatadogSDKReactNative's archive instead, which requests
+# every Datadog product then (see DatadogSDKReactNative.podspec).
+uses_dynamic_frameworks = ENV['USE_FRAMEWORKS'] == 'dynamic' ||
+  (!podfile.nil? && podfile.target_definition_list.any? { |target| target.build_type.dynamic_framework? })
 
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNativeWebView"
@@ -34,8 +45,12 @@ Pod::Spec.new do |s|
   # Our headers subclass RNCWebViewImpl / RNCWebViewManager. Under framework linkage those headers
   # are only reachable as <react_native_webview/...>, which requires react-native-webview to be a
   # declared dependency so that CocoaPods puts its build directory on this target's
-  # FRAMEWORK_SEARCH_PATHS.
-  s.dependency "react-native-webview"
+  # FRAMEWORK_SEARCH_PATHS. Static libraries find them through HEADER_SEARCH_PATHS below instead,
+  # and declaring it there fails `pod install`: react-native-webview does not define modules, which
+  # a Swift static library's dependencies must.
+  if uses_frameworks
+    s.dependency "react-native-webview"
+  end
 
   # DatadogInternal was previously declared explicitly here, but it is an internal target of
   # dd-sdk-ios rather than an exported SPM product, so it cannot be requested. Making it
@@ -60,10 +75,12 @@ Pod::Spec.new do |s|
 
     # The tests reach DatadogInternal directly, which is not on this target's link line because it
     # is a target of dd-sdk-ios rather than one of the SPM products this pod requests.
-    test_spec.pod_target_xcconfig = {
-      'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
-      'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
-    }
+    if uses_dynamic_frameworks
+      test_spec.pod_target_xcconfig = {
+        'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
+        'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
+      }
+    end
   end
 
   # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so
@@ -86,9 +103,11 @@ Pod::Spec.new do |s|
   }
 
   xcconfig = {
-    "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/react-native-webview/**",
-    "OTHER_LDFLAGS" => "$(inherited) -framework DatadogInternal"
+    "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/react-native-webview/**"
   }
+  if uses_dynamic_frameworks
+    xcconfig["OTHER_LDFLAGS"] = "$(inherited) -framework DatadogInternal"
+  end
 
   xcconfig.merge!(datadog_spm_xcconfig)
   

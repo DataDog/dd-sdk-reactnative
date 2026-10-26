@@ -7,12 +7,23 @@ datadog_ios_version = '3.16.1'
 datadog_ios_spm_url = 'https://github.com/DataDog/dd-sdk-ios.git'
 
 # The native iOS SDK is resolved through Swift Package Manager, using React Native's
-# `spm_dependency` podspec helper. This requires React Native >= 0.75 and an app that links
-# pods as dynamic frameworks (`use_frameworks! :linkage => :dynamic`).
+# `spm_dependency` podspec helper. This requires React Native >= 0.75. Pods can be linked statically
+# or as frameworks (see DatadogSDKReactNative.podspec for how static linkage is handled).
 if !respond_to?(:spm_dependency, true)
   raise "Datadog: the native iOS SDK is resolved through Swift Package Manager, which requires " \
         "React Native >= 0.75 -- the first version to ship the `spm_dependency` podspec helper."
 end
+
+# How the app links pods (`use_frameworks!`). The Podfile is read as well as USE_FRAMEWORKS because
+# apps can call `use_frameworks!` without setting the env var.
+podfile = Pod::Config.instance.podfile rescue nil
+uses_frameworks = !ENV['USE_FRAMEWORKS'].nil? ||
+  (!podfile.nil? && podfile.target_definition_list.any? { |target| target.build_type.framework? })
+# Only with dynamic frameworks does Xcode build DatadogInternal as a framework of its own. When pods
+# are linked statically its code is in DatadogSDKReactNative's archive instead, which requests
+# every Datadog product then (see DatadogSDKReactNative.podspec).
+uses_dynamic_frameworks = ENV['USE_FRAMEWORKS'] == 'dynamic' ||
+  (!podfile.nil? && podfile.target_definition_list.any? { |target| target.build_type.dynamic_framework? })
 
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNativeSessionReplay"
@@ -42,10 +53,13 @@ Pod::Spec.new do |s|
 
   s.dependency "React-Core"
   # RCTTextExtractor.mm references RCTTextView and the RCTText shadow view classes directly, so
-  # this pod has always had a link-time dependency on React-RCTText. It was only declared on the
-  # test spec, which went unnoticed while pods were linked statically and undefined symbols were
-  # deferred to the app link.
-  s.dependency "React-RCTText"
+  # this pod has a link-time dependency on React-RCTText. A framework has to resolve it when it is
+  # linked, so declare it then. Static libraries defer it to the app link, and declaring it there
+  # fails `pod install`: React-RCTText does not define modules, which a Swift static library's
+  # dependencies must.
+  if uses_frameworks
+    s.dependency "React-RCTText"
+  end
   s.dependency 'DatadogSDKReactNative'
 
   # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so it
@@ -57,19 +71,22 @@ Pod::Spec.new do |s|
     products: ['DatadogSessionReplay']
   )
 
-  # React-RCTText is not repeated here: it is declared on the main spec above, which the test spec
-  # inherits.
+  # The tests reference the React-RCTText classes directly. The main spec only declares it when
+  # pods are built as frameworks, so declare it here too.
   s.test_spec 'Tests' do |test_spec|
+    test_spec.dependency "React-RCTText"
     test_spec.source_files = 'ios/Tests/*.swift'
     test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
 
     # The tests reference DatadogInternal protocol descriptors (Storage, Telemetry) directly. Unlike
     # the SPM products, DatadogInternal is not on this target's link line, so name it explicitly --
     # and point the linker at PackageFrameworks, where SwiftPM writes non-product targets.
-    test_spec.pod_target_xcconfig = {
-      'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
-      'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
-    }
+    if uses_dynamic_frameworks
+      test_spec.pod_target_xcconfig = {
+        'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
+        'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
+      }
+    end
   end
 
   header_paths = %W[

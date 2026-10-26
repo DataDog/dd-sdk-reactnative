@@ -7,12 +7,20 @@ datadog_ios_version = '3.16.1'
 datadog_ios_spm_url = 'https://github.com/DataDog/dd-sdk-ios.git'
 
 # The native iOS SDK is resolved through Swift Package Manager, using React Native's
-# `spm_dependency` podspec helper. This requires React Native >= 0.75 and an app that links
-# pods as dynamic frameworks (`use_frameworks! :linkage => :dynamic`).
+# `spm_dependency` podspec helper. This requires React Native >= 0.75. Pods can be linked statically
+# or as frameworks (see DatadogSDKReactNative.podspec for how static linkage is handled).
 if !respond_to?(:spm_dependency, true)
   raise "Datadog: the native iOS SDK is resolved through Swift Package Manager, which requires " \
         "React Native >= 0.75 -- the first version to ship the `spm_dependency` podspec helper."
 end
+
+# Only with dynamic frameworks does Xcode build DatadogInternal as a framework of its own. When pods
+# are linked statically its code is in DatadogSDKReactNative's archive instead, which requests
+# every Datadog product then (see DatadogSDKReactNative.podspec). The Podfile is read as well as
+# USE_FRAMEWORKS because apps can call `use_frameworks!` without setting the env var.
+podfile = Pod::Config.instance.podfile rescue nil
+uses_dynamic_frameworks = ENV['USE_FRAMEWORKS'] == 'dynamic' ||
+  (!podfile.nil? && podfile.target_definition_list.any? { |target| target.build_type.dynamic_framework? })
 
 Pod::Spec.new do |s|
   s.name         = "DatadogInternalTesting"
@@ -50,10 +58,12 @@ Pod::Spec.new do |s|
     # its own -- true here since test specs don't get the per-pod-target override main pod targets
     # do. DatadogInternal needs the explicit help below because it is not a product: it lives one
     # level down, in PackageFrameworks/.
-    test_spec.pod_target_xcconfig = {
-      'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
-      'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
-    }
+    if uses_dynamic_frameworks
+      test_spec.pod_target_xcconfig = {
+        'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
+        'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
+      }
+    end
   end
 
   # This guard prevents installing the dependencies when we run `pod install` in the old architecture.
