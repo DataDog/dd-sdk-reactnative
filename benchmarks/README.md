@@ -101,7 +101,7 @@ Android:
 adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=profiling\&runType=instrumented_profiling_native' com.benchmarkrunner
 ```
 
-Note: native profiling only takes effect on Android 15 (API 35) and above; on lower API levels the native profiling call is a no-op.
+Note: Native profiling only takes effect on Android 15 (API 35) and above; on lower API levels the native profiling call is a no-op.
 
 ## Stop a test scenario
 
