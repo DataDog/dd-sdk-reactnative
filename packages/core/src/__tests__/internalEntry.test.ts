@@ -1,5 +1,3 @@
-import { TurboModuleRegistry } from 'react-native';
-
 describe('./internal entry', () => {
     it('exports the internals react-native-vega needs', () => {
         // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
@@ -24,13 +22,5 @@ describe('./internal entry', () => {
         }
     });
 
-    it('is import-safe (no native lookup at import)', () => {
-        const getSpy = jest.spyOn(TurboModuleRegistry, 'get');
-        jest.isolateModules(() => {
-            // eslint-disable-next-line global-require
-            require('../internal');
-        });
-        expect(getSpy).not.toHaveBeenCalled();
-        getSpy.mockRestore();
-    });
+    // Import safety of this entry point is covered in wrapperImportSafety.test.ts.
 });
