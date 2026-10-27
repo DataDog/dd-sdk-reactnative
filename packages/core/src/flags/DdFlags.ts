@@ -19,7 +19,9 @@ const FLAGS_MODULE = 'com.datadog.reactnative.flags';
  * Implementation class for {@link DdFlagsType}. Please see the interface for documentation.
  */
 class DdFlagsWrapper implements DdFlagsType {
-    private nativeFlags: DdNativeFlagsType = getNativeDdFlags() as DdNativeFlagsType;
+    private get nativeFlags(): DdNativeFlagsType {
+        return getNativeDdFlags() as DdNativeFlagsType;
+    }
 
     private isFeatureEnabled = false;
 

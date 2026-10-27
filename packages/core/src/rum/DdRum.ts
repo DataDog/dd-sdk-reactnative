@@ -78,7 +78,9 @@ const touchDataFromEvent = (
 };
 
 class DdRumWrapper implements DdRumType {
-    private nativeRum: DdNativeRumType = getNativeDdRum() as DdNativeRumType;
+    private get nativeRum(): DdNativeRumType {
+        return getNativeDdRum() as DdNativeRumType;
+    }
     private lastActionData?: { type: RumActionType; name: string };
     private errorEventMapper = generateErrorEventMapper(undefined);
     private resourceEventMapper = generateResourceEventMapper(undefined);
