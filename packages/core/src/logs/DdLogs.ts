@@ -11,10 +11,9 @@ import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
 import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
+import { getNativeDdLogs } from '../specs/NativeDdLogs';
 import type { ErrorSource, LogEventMapper } from '../types';
 import { getGlobalInstance } from '../utils/singletonUtils';
-
-import { getNativeDdLogs } from '../specs/NativeDdLogs';
 
 import { generateEventMapper } from './eventMapper';
 import type {

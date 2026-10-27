@@ -15,6 +15,7 @@ import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
+import { getNativeDdRum } from '../specs/NativeDdRum';
 import type { ErrorSource, FeatureOperationFailure } from '../types';
 import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
@@ -40,8 +41,6 @@ import {
     getTracingContext,
     getTracingContextForPropagators
 } from './instrumentation/resourceTracking/distributedTracing/distributedTracingHeaders';
-import { getNativeDdRum } from '../specs/NativeDdRum';
-
 import type {
     DdRumType,
     FirstPartyHost,
