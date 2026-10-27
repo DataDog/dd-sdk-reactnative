@@ -15,6 +15,7 @@ describe('native spec modules are import-safe (lazy)', () => {
             const getSpy = jest.spyOn(TurboModuleRegistry, 'get');
             let mod: any;
             jest.isolateModules(() => {
+                // eslint-disable-next-line global-require, import/no-dynamic-require
                 mod = require(modulePath);
             });
             expect(getSpy).not.toHaveBeenCalled(); // not at import
@@ -30,12 +31,13 @@ describe('DdSdkInternal is import-safe', () => {
         const getSpy = jest.spyOn(TurboModuleRegistry, 'get');
         let internal: any;
         jest.isolateModules(() => {
+            // eslint-disable-next-line global-require
             internal = require('../sdk/DdSdkInternal');
         });
         expect(getSpy).not.toHaveBeenCalled(); // import-safe
-        // Touch a property on the proxy -> now it resolves
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        internal.NativeDdSdk.getConstants;
+        const sdk = new internal.DdSdkWrapper();
+        expect(getSpy).not.toHaveBeenCalled();
+        sdk.getConstants();
         expect(getSpy).toHaveBeenCalledWith('DdSdk');
         getSpy.mockRestore();
     });
@@ -45,6 +47,7 @@ describe('public barrel is import-safe', () => {
     it('importing the package index performs no native TurboModule lookup', () => {
         const getSpy = jest.spyOn(TurboModuleRegistry, 'get');
         jest.isolateModules(() => {
+            // eslint-disable-next-line global-require
             require('../index');
         });
         expect(getSpy).not.toHaveBeenCalled();
