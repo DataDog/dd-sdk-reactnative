@@ -43,8 +43,8 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
     # requests all of their products, and the others keep only the package reference and the
     # include path they compile against.
     def datadog_request_static_products_from_core(installer)
-      core = installer.pod_targets.find { |pod| pod.name == 'DatadogSDKReactNative' }
-      return if core.nil? || core.build_as_dynamic?
+      cores = datadog_core_pod_targets(installer)
+      return if cores.empty? || cores.all?(&:build_as_dynamic?)
 
       dependencies_by_pod = instance_variable_get(:@dependencies_by_pod)
       if dependencies_by_pod.nil?
@@ -70,12 +70,11 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
     # This drops the extra copies once the archive is built, slice by slice when it is a universal
     # archive, which ar cannot read. Xcode 26 archives each object once, so it finds nothing to remove
     # there and leaves the archive untouched.
-    def datadog_dedupe_static_archive(installer)
-      core = installer.pod_targets.find { |pod| pod.name == 'DatadogSDKReactNative' }
-      return if core.nil? || core.build_as_dynamic?
+    def datadog_dedupe_static_archive(installer, core)
+      return if core.build_as_dynamic?
 
       phase_name = '[Datadog] Remove duplicate Swift package objects'
-      target = installer.pods_project.targets.find { |t| t.name == 'DatadogSDKReactNative' }
+      target = installer.pods_project.targets.find { |t| t.name == core.label }
       return if target.nil? || target.shell_script_build_phases.any? { |phase| phase.name == phase_name }
 
       phase = installer.pods_project.new(Xcodeproj::Project::Object::PBXShellScriptBuildPhase)
@@ -134,11 +133,40 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
       Xcodeproj::Project.instance_method(:generate_available_uuid_list).bind(project).call(100)
     end
 
+    # CocoaPods names a pod's target after the pod, but when one Podfile builds the pod in more than
+    # one way, e.g. for an iOS and a tvOS app target, it builds one target per variant and adds a
+    # suffix to each name: DatadogSDKReactNative-iOS and DatadogSDKReactNative-tvOS. So the core pod
+    # can have more than one target.
+    def datadog_core_pod_targets(installer)
+      installer.pod_targets.select { |pod| pod.pod_name == 'DatadogSDKReactNative' }
+    end
+
+    # React Native finds the target that each package dependency goes to by the pod's name, which
+    # finds no target once CocoaPods has added a suffix to it, and `pod install` then fails with
+    # "undefined method `package_product_dependencies' for nil". So during its step the dependencies
+    # are listed under the name of every target built for the pod, which is the pod's own name when
+    # it has a single target, and they are listed under the pod names again afterwards.
+    def datadog_with_dependencies_by_target_name(installer)
+      dependencies_by_pod = instance_variable_get(:@dependencies_by_pod)
+      return yield if dependencies_by_pod.nil?
+
+      dependencies_by_target_name = {}
+      dependencies_by_pod.each do |pod_name, dependencies|
+        target_names = installer.pod_targets.select { |pod| pod.pod_name == pod_name }.map(&:label)
+        target_names = [pod_name] if target_names.empty?
+        target_names.each { |target_name| dependencies_by_target_name[target_name] = dependencies }
+      end
+      instance_variable_set(:@dependencies_by_pod, dependencies_by_target_name)
+      yield
+    ensure
+      instance_variable_set(:@dependencies_by_pod, dependencies_by_pod)
+    end
+
     def apply_on_post_install(installer)
       datadog_reserve_unique_uuids(installer.pods_project)
       datadog_request_static_products_from_core(installer)
-      datadog_dedupe_static_archive(installer)
-      super
+      datadog_core_pod_targets(installer).each { |core| datadog_dedupe_static_archive(installer, core) }
+      datadog_with_dependencies_by_target_name(installer) { super(installer) }
       embed = <<~'SH'
         # Embeds the Datadog Swift package frameworks that Xcode builds dynamically. Looks where Xcode
         # writes them: the products dir, PackageFrameworks, or UninstalledProducts when archiving.
@@ -170,7 +198,7 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
         .map { |dependency| "# #{dependency[:url]} #{dependency[:requirement]}\n" }.uniq.join
       anchor =/^if \[ "\$\{COCOAPODS_PARALLEL_CODE_SIGN\}" == "true" \]; then$/
       installer.aggregate_targets.each do |target|
-        next unless target.pod_targets.any? { |pod| pod.name == 'DatadogSDKReactNative' }
+        next unless target.pod_targets.any? { |pod| pod.pod_name == 'DatadogSDKReactNative' }
         script_path = target.embed_frameworks_script_path
         next unless File.exist?(script_path)
         script = File.read(script_path)
