@@ -85,7 +85,7 @@ xcrun simctl openurl booted "benchmark://start?scenario=navigation&runType=instr
 adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=navigation\&runType=instrumented' com.benchmarkrunner
 ```
 
-### Example: profiling scenario
+### Example: Profiling scenario
 
 The profiling scenario enables native profiling when `runType` is `instrumented_profiling_native`. With `instrumented`, it only initializes the SDK.
 
