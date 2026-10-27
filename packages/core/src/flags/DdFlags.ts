@@ -7,9 +7,8 @@
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
-import { getGlobalInstance } from '../utils/singletonUtils';
-
 import { getNativeDdFlags } from '../specs/NativeDdFlags';
+import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { FlagsClient } from './FlagsClient';
 import type { DdFlagsType, FlagsConfiguration } from './types';

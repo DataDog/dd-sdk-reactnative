@@ -6,6 +6,7 @@
 import { NativeModules } from 'react-native';
 
 import { getNativeDdSdk } from '../../specs/NativeDdSdk';
+
 import { DatadogBatchedBridgeEventEmitter } from './DatadogBatchedBridgeEventEmitter';
 import type { DatadogEventEmitter } from './DatadogEventEmitter';
 import { DatadogNativeEventEmitter } from './DatadogNativeEventEmitter';

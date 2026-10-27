@@ -11,9 +11,7 @@
  * native-free at import (must not call TurboModuleRegistry / NativeModules at
  * module load).
  */
-export {
-    addDefaultValuesToAutoInstrumentationConfiguration
-} from './config/async/AutoInstrumentationConfiguration';
+export { addDefaultValuesToAutoInstrumentationConfiguration } from './config/async/AutoInstrumentationConfiguration';
 export { buildConfigurationFromPartialConfiguration } from './config/async/asyncInitializationHelper';
 export { DdSdkNativeConfiguration } from './config/features/CoreConfigurationNative';
 export { RUM_DEFAULTS } from './config/features/RumConfiguration';
