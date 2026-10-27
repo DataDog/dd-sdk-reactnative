@@ -52,3 +52,56 @@ describe('SDK wrappers are import-safe', () => {
         expect(requireCountingLookups('../internal').lookups).toEqual([]);
     });
 });
+
+describe('SDK wrappers do not rely on Proxy', () => {
+    // Older Android JSC and Hermes versions supported by the SDK lack Proxy.
+    it.each(['../sdk/DdSdkInternal', '../index', '../internal'])(
+        'importing %s works without Proxy',
+        modulePath => {
+            const g = globalThis as Record<string, unknown>;
+            const originalProxy = g.Proxy;
+            try {
+                delete g.Proxy;
+                expect(() => requireCountingLookups(modulePath)).not.toThrow();
+            } finally {
+                g.Proxy = originalProxy;
+            }
+        }
+    );
+
+    it('DdSdkWrapper forwards every method to the native module', () => {
+        jest.isolateModules(() => {
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const { TurboModuleRegistry } = require('react-native');
+            const nativeModule: Record<string, jest.Mock> = {};
+            jest.spyOn(TurboModuleRegistry, 'get').mockReturnValue(
+                nativeModule
+            );
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const { DdSdkWrapper } = require('../sdk/DdSdkInternal');
+            const sdk = new DdSdkWrapper();
+            const methods = Object.getOwnPropertyNames(
+                DdSdkWrapper.prototype
+            ).filter(
+                name =>
+                    name !== 'constructor' &&
+                    !name.startsWith('_') &&
+                    typeof Object.getOwnPropertyDescriptor(
+                        DdSdkWrapper.prototype,
+                        name
+                    )?.value === 'function'
+            );
+            for (const name of methods) {
+                nativeModule[name] = jest.fn().mockReturnValue(name);
+            }
+
+            for (const name of methods) {
+                const arg =
+                    name === 'initialize' ? { attributeEncoders: [] } : 'arg';
+                expect(sdk[name](arg)).toBe(name);
+                expect(nativeModule[name]).toHaveBeenCalledTimes(1);
+            }
+            expect(methods.length).toBeGreaterThan(15);
+        });
+    });
+});
