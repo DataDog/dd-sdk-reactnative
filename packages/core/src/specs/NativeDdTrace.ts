@@ -39,15 +39,16 @@ export interface Spec extends TurboModule {
     ): Promise<void>;
 }
 
-let cachedModule: Spec | null | undefined;
+let cachedModule: Spec | null = null;
 
 /**
- * Lazily resolves the native TurboModule on first call and caches the result.
+ * Lazily resolves the native TurboModule on first call and caches it once found.
+ * A missing module is not cached, so later calls retry the lookup.
  * Resolving lazily (instead of at module load) keeps this package importable on
  * platforms where the native module is absent (e.g. Vega).
  */
 export const getNativeDdTrace = (): Spec | null => {
-    if (cachedModule === undefined) {
+    if (!cachedModule) {
         cachedModule = TurboModuleRegistry.get<Spec>('DdTrace');
     }
     return cachedModule;

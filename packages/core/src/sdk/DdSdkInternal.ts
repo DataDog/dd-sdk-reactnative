@@ -10,13 +10,10 @@ import { getNativeDdSdk } from '../specs/NativeDdSdk';
 
 import type { AttributeEncoder } from './AttributesEncoding/types';
 
-let cachedNativeDdSdk: DdNativeSdkType | null | undefined;
-const resolveNativeDdSdk = (): DdNativeSdkType | null => {
-    if (cachedNativeDdSdk === undefined) {
-        cachedNativeDdSdk = getNativeDdSdk() as DdNativeSdkType | null;
-    }
-    return cachedNativeDdSdk;
-};
+// `getNativeDdSdk` handles caching, so a module that is missing on first use
+// is picked up once it becomes available.
+const resolveNativeDdSdk = (): DdNativeSdkType | null =>
+    getNativeDdSdk() as DdNativeSdkType | null;
 
 // Lazily-backed handle. Resolution happens on first property access (runtime),
 // never at import — so importing this module is safe on platforms without the
