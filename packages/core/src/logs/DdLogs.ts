@@ -45,7 +45,9 @@ const isLogWithError = (
 };
 
 class DdLogsWrapper implements DdLogsType {
-    private nativeLogs: DdNativeLogsType = getNativeDdLogs() as DdNativeLogsType;
+    private get nativeLogs(): DdNativeLogsType {
+        return getNativeDdLogs() as DdNativeLogsType;
+    }
     private logEventMapper = generateEventMapper(undefined);
 
     debug = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {

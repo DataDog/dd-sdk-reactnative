@@ -22,7 +22,9 @@ const TRACE_MODULE = 'com.datadog.reactnative.trace';
 const timeProvider = new DefaultTimeProvider();
 
 class DdTraceWrapper implements DdTraceType {
-    private nativeTrace: DdNativeTraceType = getNativeDdTrace() as DdNativeTraceType;
+    private get nativeTrace(): DdNativeTraceType {
+        return getNativeDdTrace() as DdNativeTraceType;
+    }
 
     startSpan = (
         operation: string,
