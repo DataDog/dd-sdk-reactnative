@@ -36,12 +36,34 @@ describe('SDK wrappers are import-safe', () => {
     });
 
     it.each([
-        ['../rum/DdRum', 'DdRum'],
-        ['../logs/DdLogs', 'DdLogs'],
-        ['../trace/DdTrace', 'DdTrace'],
-        ['../flags/DdFlags', 'DdFlags']
+        '../specs/NativeDdSdk',
+        '../specs/NativeDdRum',
+        '../specs/NativeDdLogs',
+        '../specs/NativeDdTrace',
+        '../specs/NativeDdFlags',
+        '../sdk/DdSdkInternal',
+        '../rum/DdRum',
+        '../logs/DdLogs',
+        '../trace/DdTrace',
+        '../flags/DdFlags'
     ])('importing %s performs no native lookup', modulePath => {
         expect(requireCountingLookups(modulePath).lookups).toEqual([]);
+    });
+
+    it('DdSdkWrapper only resolves the native module when a method is used', () => {
+        jest.isolateModules(() => {
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const { TurboModuleRegistry } = require('react-native');
+            const getSpy = jest.spyOn(TurboModuleRegistry, 'get');
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const { DdSdkWrapper } = require('../sdk/DdSdkInternal');
+
+            const sdk = new DdSdkWrapper();
+            expect(getSpy).not.toHaveBeenCalled();
+
+            sdk.getConstants();
+            expect(getSpy).toHaveBeenCalledWith('DdSdk');
+        });
     });
 
     it('importing the public barrel performs no native lookup', () => {
