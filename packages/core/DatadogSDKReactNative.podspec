@@ -67,9 +67,9 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
     # Xcode versions before 26 hand each package object to libtool twice when they archive a pod that
     # requests package products, so the core pod's static archive holds two copies of every Datadog
     # object, and the -ObjC flag CocoaPods links apps and tests with loads both: duplicate symbols.
-    # This drops the extra copies once the archive is built, slice by slice when it is a universal
-    # archive, which ar cannot read. Xcode 26 archives each object once, so it finds nothing to remove
-    # there and leaves the archive untouched.
+    # This drops the extra byte-identical copies once the archive is built, slice by slice when it is
+    # a universal archive, which ar cannot read. Xcode 26 archives each object once, so it finds
+    # nothing to remove there and leaves the archive untouched.
     def datadog_dedupe_static_archive(installer, core)
       return if core.build_as_dynamic?
 
@@ -85,16 +85,42 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
         has_duplicates() {
           [ -n "$(ar -t "$1" | sort | uniq -d)" ]
         }
+        # Pulls every copy of each repeated member out of the archive and puts back one copy of each
+        # distinct object, so only byte-identical duplicates go: a same-named object with other code
+        # stays.
         dedupe() {
-          ar -t "$1" | sort | uniq -c | while read -r count member; do
-            while [ "${count}" -gt 1 ]; do
+          work="$(mktemp -d "${DERIVED_FILE_DIR}/datadog-dedupe.XXXXXX")"
+          ar -t "$1" | sort | uniq -d | while read -r member; do
+            count=0
+            while ar -t "$1" | grep -qxF "${member}"; do
+              count=$((count + 1))
+              mkdir "${work}/${count}"
+              ar -p "$1" "${member}" > "${work}/${count}/${member}"
               ar -d "$1" "${member}"
-              count=$((count - 1))
             done
+            kept=""
+            copy=1
+            while [ "${copy}" -le "${count}" ]; do
+              distinct=true
+              for other in ${kept}; do
+                if cmp -s "${work}/${copy}/${member}" "${work}/${other}/${member}"; then
+                  distinct=false
+                  break
+                fi
+              done
+              if [ "${distinct}" = true ]; then
+                ar -q "$1" "${work}/${copy}/${member}"
+                kept="${kept} ${copy}"
+              fi
+              copy=$((copy + 1))
+            done
+            rm -rf "${work:?}"/*
           done
+          rm -rf "${work}"
           ranlib "$1"
         }
         archs="$(lipo -archs "${archive}")"
+        mkdir -p "${DERIVED_FILE_DIR}"
         if [ "$(echo ${archs} | wc -w)" -eq 1 ]; then
           ar -t "${archive}" > /dev/null
           has_duplicates "${archive}" || exit 0
@@ -102,7 +128,6 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
           exit 0
         fi
         # Universal archive: ar only reads thin archives, so work on each architecture's slice.
-        mkdir -p "${DERIVED_FILE_DIR}"
         found=false
         set --
         for arch in ${archs}; do
