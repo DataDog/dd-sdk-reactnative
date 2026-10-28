@@ -27,7 +27,6 @@
         "lib/module/**",
         "lib/typescript/react-native-vega/**",
         "dist/kepler/**",
-        "!dist/kepler/*-debug/**",
         "!dist/kepler/**/*.so.debug",
         "kepler/AutoLinkInit.cpp",
         "kepler/turbo-modules/*.cpp",
@@ -49,6 +48,7 @@
     },
     "scripts": {
         "test": "jest",
+        "test:packaging": "node --test scripts/__tests__/prepare-package.test.cjs",
         "lint": "eslint .",
         "prepare": "rm -rf lib && yarn bob build",
         "prepack": "node scripts/prepare-package.js",
