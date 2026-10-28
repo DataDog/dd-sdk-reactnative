@@ -194,6 +194,7 @@ export function getAssignmentNode(
  * @param t - Babel types helper.
  * @param state - Plugin state (used for error context).
  * @param params - Original function parameters.
+ * @param generateUid - Optional allocator for collision-free destructuring placeholders.
  * @returns `{ callArgs, preCallStatements, wrapperParams }`.
  * @throws If a parameter type is unsupported.
  */
@@ -204,7 +205,8 @@ export function getArgumentsFromParams(
         | Babel.types.Identifier
         | Babel.types.Pattern
         | Babel.types.RestElement
-    )[]
+    )[],
+    generateUid?: (name: string) => Babel.types.Identifier
 ) {
     const callArgs: (Babel.types.Expression | Babel.types.SpreadElement)[] = [];
     const preCallStatements: Babel.types.Statement[] = [];
@@ -225,7 +227,9 @@ export function getArgumentsFromParams(
             wrapperParams.push(param);
         } else if (t.isObjectPattern(param) || t.isArrayPattern(param)) {
             // If it's function 'destructured' param  (ex:. handler({ eventData }){})
-            const synthetic = t.identifier(`_dd_arg${index}`);
+            const synthetic = generateUid
+                ? generateUid('ddArg')
+                : t.identifier(`_dd_arg${index}`);
 
             callArgs.push(synthetic);
             wrapperParams.push(synthetic);

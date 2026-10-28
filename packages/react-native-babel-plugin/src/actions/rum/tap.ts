@@ -5,10 +5,13 @@
  */
 
 import type * as Babel from '@babel/core';
+import traverse from '@babel/traverse';
 
 import { RumAction, RumActionConstants } from '../../constants';
 import type { PluginPassState, RumActionResult } from '../../types';
 import { getArgumentsFromParams, getNodeName, toExpression } from '../../utils';
+
+type HandlerParams = Parameters<typeof getArgumentsFromParams>[2];
 
 type MemoArgsObjects = Record<
     'useCallback' | 'useMemo',
@@ -64,25 +67,6 @@ export function handleTapAction(
         ? getNamedFunctionNode(path, t, expression, 'Component')
         : { fName: null, fNode: null };
 
-    const handlerArgs =
-        isArrowFunc && expression?.params && expression.params.length > 0
-            ? t.arrayExpression(
-                  getArgumentsFromParams(t, state, expression.params).callArgs
-              )
-            : t.arrayExpression([t.spreadElement(t.identifier('args'))]);
-
-    if (path.node?.extra?.ddValues) {
-        (path.node.extra.ddValues as any)['handlerArgs'] = handlerArgs;
-    }
-
-    if (path.node?.extra?.hoistedDdValues) {
-        (path.node.extra.hoistedDdValues as any)['handlerArgs'] = handlerArgs;
-    }
-
-    if (path.node?.extra?.factoryDdValues) {
-        (path.node.extra.factoryDdValues as any)['handlerArgs'] = handlerArgs;
-    }
-
     const getArgsObject = (ddValues: unknown) =>
         t.objectExpression([
             ...Object.entries(ddValues || {}).map(([key, value]) => {
@@ -127,36 +111,15 @@ export function handleTapAction(
                   handler?.mode
               );
 
-    let returnExpression: Babel.types.Expression | null = null;
-
-    if (handler && handler?.mode === 'delayed') {
-        returnExpression = expression;
-    } else {
-        const isArrowFuncWithParams =
-            isArrowFunc && expression.params.length > 0;
-        returnExpression = isArrowFuncWithParams
-            ? t.callExpression(
-                  expression,
-                  getArgumentsFromParams(t, state, expression.params).callArgs
-              )
-            : t.optionalCallExpression(
-                  expression,
-                  [t.spreadElement(t.identifier('args'))],
-                  true
-              );
-    }
-
     state.hasValidTapAction = true;
-
-    const expressionParams = 'params' in expression ? expression.params : null;
 
     return !isMemoized
         ? getActionWrapperNode(
               t,
+              path,
               state,
               expression,
-              expressionParams,
-              returnExpression,
+              isArrowFunc ? expression.params : null,
               argsObject,
               handler?.mode
           )
@@ -316,37 +279,14 @@ function handleMemoization(
             | Babel.types.Identifier
             | Babel.types.FunctionExpression
             | Babel.types.ArrowFunctionExpression,
-        params: (
-            | Babel.types.Identifier
-            | Babel.types.RestElement
-            | Babel.types.Pattern
-        )[]
+        params: HandlerParams | null
     ) => {
-        const { callArgs } = getArgumentsFromParams(t, state, params);
-        const returnExpression =
-            mode === 'delayed'
-                ? callback
-                : t.optionalCallExpression(callback, callArgs, true);
-
-        // Update handlerArgs in argsObject to match the actual callback params
-        // instead of the default [...args] computed from the outer identifier
-        const handlerArgsProp = argsObject.properties.find(
-            prop =>
-                t.isObjectProperty(prop) &&
-                t.isStringLiteral(prop.key) &&
-                prop.key.value === 'handlerArgs'
-        );
-
-        if (handlerArgsProp && t.isObjectProperty(handlerArgsProp)) {
-            handlerArgsProp.value = t.arrayExpression(callArgs);
-        }
-
         const actionWrapper = getActionWrapperFunction(
             t,
+            path,
             state,
             callback,
             params,
-            returnExpression,
             argsObject,
             mode
         );
@@ -389,23 +329,11 @@ function handleMemoization(
             return true;
         }
 
-        const params: (
-            | Babel.types.Identifier
-            | Babel.types.RestElement
-            | Babel.types.Pattern
-        )[] = [];
-
-        if (t.isFunctionDeclaration(node)) {
-            params.push(...node.params);
-        }
-
-        if (
-            t.isVariableDeclarator(node) &&
-            t.isArrowFunctionExpression(node.init)
-        ) {
-            params.push(...node.init?.params);
-        }
-
+        const params = t.isFunctionDeclaration(node)
+            ? node.params
+            : t.isVariableDeclarator(node) && t.isFunction(node.init)
+            ? node.init.params
+            : null;
         handleWrapping(callbackFn, params);
     }
 
@@ -413,91 +341,124 @@ function handleMemoization(
 }
 
 /**
- * Builds a JSXExpressionContainer containing an arrow function wrapper for the handler.
- *
- * This simply delegates to `getActionWrapperFunction` and then wraps the result
- * as a JSX expression for use directly as a prop value.
- *
- * @param t - Babel types helper.
- * @param state - Plugin state.
- * @param expression - The original handler expression (arrow fn or identifier/member).
- * @param expressionParams - Parameters of the original function, if known.
- * @param returnExpression - Expression to execute when not using the RUM wrapper (fallback).
- * @param argsObject - Datadog-specific args object (ddValues/options).
- * @param mode - Optional handler mode; when `'delayed'`, wrapper invocation is deferred.
- * @returns A JSXExpressionContainer that evaluates to the wrapped handler arrow function.
+ * Wraps the generated handler function in a JSX expression container.
  */
 function getActionWrapperNode(
     t: typeof Babel.types,
+    path: Babel.NodePath<Babel.types.JSXAttribute>,
     state: PluginPassState,
     expression: Babel.types.Expression,
-    expressionParams:
-        | (
-              | Babel.types.Identifier
-              | Babel.types.RestElement
-              | Babel.types.Pattern
-          )[]
-        | null,
-    returnExpression: Babel.types.Expression,
+    params: HandlerParams | null,
     argsObject: Babel.types.ObjectExpression,
     mode?: string
 ) {
-    const actionWrapperFunction = getActionWrapperFunction(
-        t,
-        state,
-        expression,
-        expressionParams,
-        returnExpression,
-        argsObject,
-        mode
+    return t.jsxExpressionContainer(
+        getActionWrapperFunction(
+            t,
+            path,
+            state,
+            expression,
+            params,
+            argsObject,
+            mode
+        )
     );
-    return t.jsxExpressionContainer(actionWrapperFunction);
 }
 
 /**
- * Constructs the actual wrapper arrow function that:
- *  - computes/normalizes parameters and pre-call statements,
- *  - attempts to call the RUM wrapper if the runtime instance is available,
- *  - otherwise falls back to calling the original handler directly.
- *
- * In 'delayed' mode, returns a function that defers invocation — the RUM wrapper
- * returns a callable which is later called with `callArgs`. Otherwise, it invokes
- * the wrapper immediately with `callArgs`.
- *
- * @param t - Babel types helper.
- * @param state - Plugin state (used by argument computation utilities).
- * @param expression - Original handler expression (arrow/name/member).
- * @param expressionParams - Original handler parameters, if known. If null, uses `...args`.
- * @param returnExpression - Fallback: direct call (or the function itself in delayed mode).
- * @param argsObject - Datadog-specific args object (ddValues/options).
- * @param mode - Optional handler mode; when `'delayed'`, wrapper invocation is deferred.
- * @returns An ArrowFunctionExpression that implements the described behavior.
+ * Retains parameter defaults and declared-argument selection, but gives wrapper
+ * bindings fresh names before tracking expressions or the original handler are
+ * inserted. Renaming within a temporary function also updates defaults that
+ * reference preceding parameters, without changing customer JSX bindings.
+ */
+function getWrapperArguments(
+    t: typeof Babel.types,
+    path: Babel.NodePath<Babel.types.JSXAttribute>,
+    state: PluginPassState,
+    params: HandlerParams | null
+) {
+    const reserved = new Set(
+        (params || []).flatMap(param =>
+            Object.keys(t.getBindingIdentifiers(param))
+        )
+    );
+    const generateUid = (hint: string) => {
+        let id = path.scope.generateUidIdentifier(hint);
+        while (reserved.has(id.name)) {
+            id = path.scope.generateUidIdentifier(hint);
+        }
+        reserved.add(id.name);
+        return id;
+    };
+    const originalParams = params?.length
+        ? params.map(param => t.cloneNode(param, true))
+        : [t.restElement(generateUid('ddArgs'))];
+    const { wrapperParams, callArgs } = getArgumentsFromParams(
+        t,
+        state,
+        originalParams,
+        generateUid
+    );
+    const args = t.arrayExpression(callArgs.map(arg => t.cloneNode(arg, true)));
+    const wrapper = t.arrowFunctionExpression(wrapperParams, args);
+
+    // Keep metadata and the original handler out of this temporary scope: only
+    // the copied parameters and references in the forwarding arguments may change.
+    traverse(t.file(t.program([t.expressionStatement(wrapper)])), {
+        ArrowFunctionExpression(wrapperPath) {
+            if (wrapperPath.node === wrapper) {
+                for (const name of Object.keys(wrapperPath.scope.bindings)) {
+                    wrapperPath.scope.rename(name, generateUid('ddArg').name);
+                }
+                wrapperPath.stop();
+            }
+        }
+    });
+
+    return {
+        wrapperParams: wrapper.params,
+        getCallArgs: () =>
+            args.elements.map(arg =>
+                t.cloneNode(
+                    arg as Babel.types.Expression | Babel.types.SpreadElement,
+                    true
+                )
+            )
+    };
+}
+
+/**
+ * Forwards normalized arguments through collision-free wrapper parameters.
+ * Destructuring runs only in the original handler; simple parameter defaults run
+ * in the wrapper and their resolved values are forwarded to tracking and the handler.
+ * Delayed mode returns the tracked/original function without invoking it.
  */
 function getActionWrapperFunction(
     t: typeof Babel.types,
+    path: Babel.NodePath<Babel.types.JSXAttribute>,
     state: PluginPassState,
     expression: Babel.types.Expression,
-    expressionParams:
-        | (
-              | Babel.types.Identifier
-              | Babel.types.RestElement
-              | Babel.types.Pattern
-          )[]
-        | null,
-    returnExpression: Babel.types.Expression,
+    params: HandlerParams | null,
     argsObject: Babel.types.ObjectExpression,
     mode?: string
 ) {
-    const params =
-        expressionParams && expressionParams.length > 0
-            ? expressionParams
-            : [t.restElement(t.identifier('args'))];
+    const { wrapperParams, getCallArgs } = getWrapperArguments(
+        t,
+        path,
+        state,
+        params
+    );
+    argsObject.properties.push(
+        t.objectProperty(
+            t.stringLiteral('handlerArgs'),
+            t.arrayExpression(getCallArgs())
+        )
+    );
 
-    const {
-        wrapperParams,
-        preCallStatements,
-        callArgs
-    } = getArgumentsFromParams(t, state, params);
+    const returnExpression =
+        mode === 'delayed'
+            ? expression
+            : t.optionalCallExpression(expression, getCallArgs(), true);
 
     const wrapperExpression = t.callExpression(
         t.memberExpression(
@@ -513,18 +474,14 @@ function getActionWrapperFunction(
         [expression, t.stringLiteral(RumAction.TAP), argsObject]
     );
 
-    const wrapperExpressionImmediate = t.callExpression(
-        wrapperExpression,
-        callArgs
-    );
-
     const outputExpression =
-        mode === 'delayed' ? wrapperExpression : wrapperExpressionImmediate;
+        mode === 'delayed'
+            ? wrapperExpression
+            : t.callExpression(wrapperExpression, getCallArgs());
 
     return t.arrowFunctionExpression(
         wrapperParams,
         t.blockStatement([
-            ...preCallStatements,
             t.ifStatement(
                 t.callExpression(
                     t.memberExpression(
