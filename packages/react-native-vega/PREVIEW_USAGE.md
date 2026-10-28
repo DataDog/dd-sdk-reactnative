@@ -43,6 +43,13 @@ The core and Vega preview packages must be installed together. They contain matc
 unreleased APIs and should not be mixed with a public version of
 `@datadog/mobile-react-native`.
 
+The Vega archive must include both Debug and Release native libraries and matching
+manifest entries for the target architecture. Debug variants are also required to
+build the development app used with Metro and Fast Refresh. If an older preview
+fails with "Could not find a corresponding manifest configuration", replace it
+with an archive containing both variants; changing Babel or Metro settings does
+not supply missing native libraries.
+
 When replacing a preview archive, use a new filename or clear the Yarn cache before
 installing it. Yarn 1 can otherwise reuse the previous contents of a local archive with
 the same filename.

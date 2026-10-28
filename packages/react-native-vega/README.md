@@ -35,6 +35,7 @@ yarn workspace @datadog/mobile-react-native prepare
 (cd packages/core && npm --cache /tmp/dd-sdk-reactnative-npm-cache pack)
 
 (cd packages/react-native-vega && vega build -b Release)
+(cd packages/react-native-vega && vega build -b Debug)
 yarn workspace @datadog/mobile-react-native-vega prepare
 (cd packages/react-native-vega && npm --cache /tmp/dd-sdk-reactnative-npm-cache pack)
 
@@ -45,9 +46,12 @@ yarn workspace @datadog/mobile-react-navigation prepare
 (cd packages/react-navigation && npm --cache /tmp/dd-sdk-reactnative-npm-cache pack)
 ```
 
-The Vega package's `prepack` validation requires Release libraries for `aarch64`,
-`armv7`, and `x86_64`. It excludes local build output, Debug libraries, and
-`CMakeUserPresets.json` from the tarball.
+The Vega package's `prepack` validation requires both Release and Debug libraries
+and matching native manifest entries for `aarch64`, `armv7`, and `x86_64`. Both
+variants are included in tarballs and npm releases so consuming apps can build in
+either mode, including Debug builds used with Metro and Fast Refresh. Packing
+preserves the native manifest. Local build output, separate `.so.debug` symbol
+files, and `CMakeUserPresets.json` are excluded.
 
 In a consuming Vega app, install the generated core and Vega tarballs together so the exact
 `@datadog/mobile-react-native@3.5.4-vega.0` dependency is satisfied by the preview
@@ -384,6 +388,7 @@ vega device stop-port-forwarding --port 8081 --forward false
 
 ```sh
 yarn jest packages/react-native-vega --runInBand --no-watchman
+yarn workspace @datadog/mobile-react-native-vega test:packaging
 cd example-vega
 yarn jest --config jest.config.json --runInBand --no-watchman
 ```
