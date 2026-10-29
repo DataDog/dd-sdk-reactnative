@@ -138,9 +138,9 @@ android {
   sourceSets {
     main {
       if (isNewArchitectureEnabled()) {
-        java.srcDirs += ['src/newarch/kotlin']
+        kotlin.srcDirs += ['src/newarch/kotlin']
       } else {
-        java.srcDirs += ['src/oldarch/kotlin']
+        kotlin.srcDirs += ['src/oldarch/kotlin']
       }
     }
     test {
