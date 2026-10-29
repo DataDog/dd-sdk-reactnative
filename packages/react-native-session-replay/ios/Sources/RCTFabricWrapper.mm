@@ -7,7 +7,6 @@
 #import "RCTFabricWrapper.h"
 
 #if RCT_NEW_ARCH_ENABLED
-#import "RCTVersion.h"
 #import "ParagraphProps.h"
 
 #if RCT_VERSION_MINOR >= 87
