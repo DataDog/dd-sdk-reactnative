@@ -4,14 +4,15 @@ include:
 # GLOBAL VARIABLES
 variables:
   GIT_DEPTH: 5
-  NODE_VERSION: '22.5.1'
+  NODE_VERSION: '22.23.4'
   ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
   EMULATOR_NAME: 'android_emulator'
   ANDROID_ARCH: 'arm64-v8a'
   ANDROID_API: '35'
+  ANDROID_COMPILE_API: '37'
   ANDROID_EMULATOR_IMAGE: 'system-images;android-$ANDROID_API;google_apis;${ANDROID_ARCH}'
-  ANDROID_PLATFORM: 'platforms;android-$ANDROID_API'
-  ANDROID_BUILD_TOOLS: 'build-tools;$ANDROID_API.0.0'
+  ANDROID_PLATFORM: 'platforms;android-$ANDROID_COMPILE_API'
+  ANDROID_BUILD_TOOLS: 'build-tools;$ANDROID_COMPILE_API.0.0'
 
 stages:
   - build-and-upload
