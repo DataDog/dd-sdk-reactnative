@@ -128,6 +128,58 @@ export const stopCollectingVitals = async () => {
     await BenchmarkVitals?.stopCollectingVitals();
 };
 
+/**
+ * Reports the time from process start until now as the time to fully displayed (TTFD).
+ *
+ * It is measured natively, independently from the Datadog SDK, so that it is the same
+ * for every run type. Resolves with the measured duration in milliseconds.
+ */
+export const reportFullyDisplayed = async (testConfig?: TestConfig): Promise<number | undefined> => {
+    const datadogConfig = testConfig?.datadogConfig ?? getDatadogConfig();
+    const nativeTestConfig: NativeTestConfig = {
+        scenario: testConfig?.scenario,
+        runType: testConfig?.runType,
+        clientToken: datadogConfig.clientToken,
+        applicationID: datadogConfig.applicationID,
+        apiKey: datadogConfig.apiKey,
+        env: datadogConfig.env,
+    };
+
+    return BenchmarkVitals?.reportFullyDisplayed(nativeTestConfig);
+};
+
+/**
+ * Saves the cold start test config, to run it on the next launch of the app.
+ *
+ * The cold start scenario is measured from process start, so it can't be started by a deep link
+ * opened in a running app: it is armed instead, and runs once the app is restarted.
+ */
+export const armColdStart = async (testConfig: TestConfig) => {
+    await BenchmarkVitals?.armColdStart({
+        scenario: testConfig.scenario,
+        runType: testConfig.runType,
+    });
+};
+
+/**
+ * Returns the cold start test config armed before the app was restarted, if any.
+ */
+export const consumeColdStartConfig = async (): Promise<TestConfig | undefined> => {
+    const config = (await BenchmarkVitals?.consumeColdStartConfig()) as
+        | { scenario?: Scenario; runType?: RunType }
+        | null
+        | undefined;
+    if (!config?.scenario) {
+        return undefined;
+    }
+
+    return {
+        command: Command.Start,
+        scenario: config.scenario,
+        runType: config.runType || RunType.BASELINE,
+    };
+};
+
 export const instrument = async (): Promise<void> => {
     const datadogConfig = getDatadogConfig();
     return initializeDatadog(datadogConfig.clientToken, datadogConfig.env, datadogConfig.applicationID);
