@@ -46,7 +46,10 @@ export declare type Route<
  * Navigation Container
  */
 
-export declare type NavigationContainerRef = EventConsumer<NavigationContainerEventMap> & {
+// Tracking only consumes state events; other events vary between implementations.
+export declare type NavigationContainerRef = EventConsumer<
+    Pick<NavigationContainerEventMap, 'state'>
+> & {
     canGoBack(): boolean;
     getCurrentRoute(): Route<string> | undefined;
 };
