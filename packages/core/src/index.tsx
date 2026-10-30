@@ -117,6 +117,13 @@ export {
     __ddEnrichEvaluationContextWithRumUser
 };
 export type {
+    HeaderCaptureRule,
+    DefaultsRule,
+    MatchHeadersRule,
+    MatchRequestHeadersRule,
+    MatchResponseHeadersRule
+} from './config/features/RumConfiguration.type';
+export type {
     Timestamp,
     FirstPartyHost,
     AutoInstrumentationConfiguration,

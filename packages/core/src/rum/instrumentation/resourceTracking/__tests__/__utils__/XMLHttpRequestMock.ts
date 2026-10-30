@@ -27,7 +27,7 @@ export class XMLHttpRequestMock implements XMLHttpRequest {
     timeout: number = -1;
     upload: XMLHttpRequestUpload = {} as XMLHttpRequestUpload;
     withCredentials: boolean = false;
-    getAllResponseHeaders = jest.fn();
+    getAllResponseHeaders = jest.fn().mockReturnValue('');
     overrideMimeType = jest.fn();
     DONE = 4 as const;
     HEADERS_RECEIVED = 2 as const;

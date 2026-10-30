@@ -83,7 +83,8 @@ export default function App() {
 
 `trackFetchResources` tracks calls made through the Expo-installed global
 `fetch`. Direct imports retained from `expo/fetch` are not intercepted. XHR
-tracking remains enabled for clients such as axios.
+tracking remains enabled for clients such as axios. Resource header capture
+(`headerCaptureRules`) applies to both XHR and Fetch resources.
 
 GraphQL error extraction (via `DatadogLink({ trackErrors: true })`) for
 requests made through `expo/fetch` requires Expo SDK 56 or later, as older

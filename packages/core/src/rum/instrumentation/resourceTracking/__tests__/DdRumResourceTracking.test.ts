@@ -193,6 +193,52 @@ describe('DdRumResourceTracking', () => {
         );
     });
 
+    it('captures headers once on an XHR-backed Fetch when header capture is enabled', async () => {
+        const fetchResponse = ({
+            status: 200,
+            headers: new Headers({ 'cache-control': 'max-age=60' })
+        } as unknown) as Response;
+        const xhrBackedFetch = jest.fn(
+            (input: RequestInfo | URL, init?: RequestInit) => {
+                const xhr = new XMLHttpRequestMock();
+                xhr.open(init?.method ?? 'GET', String(input));
+                new Headers(init?.headers).forEach((value, header) => {
+                    xhr.setRequestHeader(header, value);
+                });
+                xhr.send();
+                xhr.notifyResponseArrived();
+                xhr.getAllResponseHeaders.mockReturnValue(
+                    'cache-control: max-age=60\r\n'
+                );
+                xhr.complete(200, 'ok');
+                return Promise.resolve(fetchResponse);
+            }
+        ) as jest.MockedFunction<typeof fetch>;
+        global.fetch = xhrBackedFetch;
+
+        DdRumResourceTracking.startTracking({
+            resourceTraceSampleRate: 100,
+            firstPartyHosts: [],
+            trackFetchResources: true,
+            headerCaptureRules: 'defaults'
+        });
+
+        await global.fetch('https://api.example.com/fetch', {
+            headers: { 'Content-Type': 'application/json' }
+        });
+        await flushPromises();
+
+        expect(DdRum.stopResource).toHaveBeenCalledTimes(1);
+        const [, , kind, , context] = DdRum.stopResource.mock.calls[0];
+        expect(kind).toBe('fetch');
+        expect(context['_dd.request_headers']).toEqual({
+            'Content-Type': 'application/json'
+        });
+        expect(context['_dd.response_headers']).toEqual({
+            'Cache-Control': 'max-age=60'
+        });
+    });
+
     describe('updateTrackingContext', () => {
         beforeEach(() => {
             DdRumResourceTracking.stopTracking();
