@@ -2,6 +2,26 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
+# /!\ Remember to keep this version in sync with DatadogSDKReactNative.podspec
+datadog_ios_version = '3.16.1'
+datadog_ios_spm_url = 'https://github.com/DataDog/dd-sdk-ios.git'
+
+# The native iOS SDK is resolved through Swift Package Manager, using React Native's
+# `spm_dependency` podspec helper. This requires React Native >= 0.75. Pods can be linked statically
+# or as frameworks (see DatadogSDKReactNative.podspec for how static linkage is handled).
+if !respond_to?(:spm_dependency, true)
+  raise "Datadog: the native iOS SDK is resolved through Swift Package Manager, which requires " \
+        "React Native >= 0.75 -- the first version to ship the `spm_dependency` podspec helper."
+end
+
+# How the app links pods (`use_frameworks!`): React Native's `use_react_native!` records it for the
+# app's target in USE_FRAMEWORKS, which React Native's own podspecs read too.
+uses_frameworks = !ENV['USE_FRAMEWORKS'].nil?
+# Only with dynamic frameworks does Xcode build DatadogInternal as a framework of its own. When pods
+# are linked statically its code is in DatadogSDKReactNative's archive instead, which requests
+# every Datadog product then (see DatadogSDKReactNative.podspec).
+uses_dynamic_frameworks = ENV['USE_FRAMEWORKS'] == 'dynamic'
+
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNativeWebView"
   s.version      = package["version"]
@@ -17,27 +37,76 @@ Pod::Spec.new do |s|
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
   
   s.dependency "React-Core"
+  s.dependency 'DatadogSDKReactNative'
 
-  if ENV['USE_FRAMEWORKS'] == 'static'
+  # Our headers subclass RNCWebViewImpl / RNCWebViewManager. Under framework linkage those headers
+  # are only reachable as <react_native_webview/...>, which requires react-native-webview to be a
+  # declared dependency so that CocoaPods puts its build directory on this target's
+  # FRAMEWORK_SEARCH_PATHS. Static libraries find them through HEADER_SEARCH_PATHS below instead,
+  # and declaring it there fails `pod install`: react-native-webview does not define modules, which
+  # a Swift static library's dependencies must.
+  if uses_frameworks
     s.dependency "react-native-webview"
   end
 
-  # /!\ Remember to keep the version in sync with DatadogSDKReactNative.podspec
-  s.dependency 'DatadogWebViewTracking', '3.16.1'
-  s.dependency 'DatadogInternal', '3.16.1'
-  s.dependency 'DatadogSDKReactNative'
+  # DatadogInternal was previously declared explicitly here, but it is an internal target of
+  # dd-sdk-ios rather than an exported SPM product, so it cannot be requested. Making it
+  # importable takes an extra search path -- see the FRAMEWORK_SEARCH_PATHS note below. Compiling
+  # is not enough to link it, though: unlike DatadogCore and DatadogSessionReplay, the
+  # DatadogWebViewTracking product's own autolink metadata does not pull DatadogInternal onto this
+  # target's link line, so RCTDatadogWebViewTracking.swift's direct references to
+  # DatadogInternal.CoreRegistry and DatadogCoreProtocol are left unresolved at link time
+  # ("Undefined symbols ... DatadogInternal.CoreRegistry...") unless we link it explicitly too.
+  spm_dependency(s,
+    url: datadog_ios_spm_url,
+    requirement: { kind: 'exactVersion', version: datadog_ios_version },
+    products: ['DatadogWebViewTracking']
+  )
 
   s.test_spec 'Tests' do |test_spec|
     test_spec.dependency "react-native-webview"
     test_spec.dependency "React-RCTText"
-    
+
     test_spec.source_files = 'ios/Tests/*.swift'
     test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+
+    # The tests reach DatadogInternal directly, which is not on this target's link line because it
+    # is a target of dd-sdk-ios rather than one of the SPM products this pod requests.
+    if uses_dynamic_frameworks
+      test_spec.pod_target_xcconfig = {
+        'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks"',
+        'OTHER_LDFLAGS' => '$(inherited) -framework DatadogInternal'
+      }
+    end
   end
+
+  # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so
+  # SwiftPM builds it into PackageFrameworks/ instead of emitting a bare .swiftmodule alongside
+  # the products. React Native's `spm_dependency` helper only appends the products directory to
+  # SWIFT_INCLUDE_PATHS, which leaves the module invisible to the compiler. Our sources import it
+  # for AnyEncodable, CoreRegistry, DatadogCoreProtocol and FeatureScope, so add the directory
+  # holding the package frameworks explicitly.
+  #
+  # Note this cannot be written against BUILT_PRODUCTS_DIR: CocoaPods gives every pod target its
+  # own CONFIGURATION_BUILD_DIR, so for this target BUILT_PRODUCTS_DIR is
+  # <symroot>/<config><platform>/DatadogSDKReactNative, one level below where SwiftPM actually
+  # writes PackageFrameworks/. Spelling it as SYMROOT/CONFIGURATION+EFFECTIVE_PLATFORM_NAME
+  # matches what `spm_dependency` itself uses for SWIFT_INCLUDE_PATHS.
+  #
+  # Archive builds lay this out differently: PackageFrameworks/ stays empty and the package
+  # frameworks are linked straight into the products directory itself, so search that too.
+  datadog_spm_xcconfig = {
+    'FRAMEWORK_SEARCH_PATHS' => '$(inherited) "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)/PackageFrameworks" "$(SYMROOT)/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)"'
+  }
 
   xcconfig = {
     "HEADER_SEARCH_PATHS" => "$(PODS_ROOT)/react-native-webview/**"
   }
+  if uses_dynamic_frameworks
+    xcconfig["OTHER_LDFLAGS"] = "$(inherited) -framework DatadogInternal"
+  end
+
+  xcconfig.merge!(datadog_spm_xcconfig)
   
   # This guard prevents installing the dependencies when we run `pod install` in the old architecture.
   # The `install_modules_dependencies` function is only available from RN 0.71, the new architecture is not
@@ -50,8 +119,13 @@ Pod::Spec.new do |s|
       "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
     })
 
-    install_modules_dependencies(s)
-  end
+    # Assign before install_modules_dependencies: the helper reads the spec's current
+    # pod_target_xcconfig, merges React Native's own header search paths and C++ settings into it
+    # and assigns the result back, so assigning afterwards would drop everything it added.
+    s.pod_target_xcconfig = xcconfig
 
-  s.pod_target_xcconfig = xcconfig
+    install_modules_dependencies(s)
+  else
+    s.pod_target_xcconfig = xcconfig
+  end
 end

@@ -20,6 +20,8 @@ Set up the RUM Browser SDK on the web page you want rendered on your mobile Reac
 
 Add `react-native-webview` to your application following the [official installation documentation][4].
 
+**iOS setup**: the native iOS SDK is resolved through Swift Package Manager, which requires React Native 0.75 or higher.
+
 ### Instrument your web views
 
 Import `WebView` from `@datadog/mobile-react-native-webview` instead of `react-native-webview`:
