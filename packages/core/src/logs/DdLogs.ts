@@ -11,6 +11,7 @@ import { debugId } from '../metro/debugIdResolver';
 import type { DdNativeLogsType } from '../nativeModulesTypes';
 import { encodeAttributes } from '../sdk/AttributesEncoding/attributesEncoding';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
+import { getNativeDdLogs } from '../specs/NativeDdLogs';
 import type { ErrorSource, LogEventMapper } from '../types';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
@@ -44,9 +45,9 @@ const isLogWithError = (
 };
 
 class DdLogsWrapper implements DdLogsType {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeLogs: DdNativeLogsType = require('../specs/NativeDdLogs')
-        .default;
+    private get nativeLogs(): DdNativeLogsType {
+        return getNativeDdLogs() as DdNativeLogsType;
+    }
     private logEventMapper = generateEventMapper(undefined);
 
     debug = (...args: LogArguments | LogWithErrorArguments): Promise<void> => {

@@ -44,6 +44,11 @@
             "require": "./lib/commonjs/index.js",
             "types": "./lib/typescript/index.d.ts"
         },
+        "./internal": {
+            "import": "./lib/module/internal.js",
+            "require": "./lib/commonjs/internal.js",
+            "types": "./lib/typescript/internal.d.ts"
+        },
         "./metro": {
             "import": "./lib/module/metro.js",
             "require": "./lib/commonjs/metro.js",

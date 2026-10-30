@@ -15,6 +15,7 @@ import type { Attributes } from '../sdk/AttributesSingleton/types';
 import { bufferVoidNativeCall } from '../sdk/DatadogProvider/Buffer/bufferNativeCall';
 import { DdSdk } from '../sdk/DdSdk';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
+import { getNativeDdRum } from '../specs/NativeDdRum';
 import type { ErrorSource, FeatureOperationFailure } from '../types';
 import { getGlobalInstance } from '../utils/singletonUtils';
 import { DefaultTimeProvider } from '../utils/time-provider/DefaultTimeProvider';
@@ -77,9 +78,9 @@ const touchDataFromEvent = (
 };
 
 class DdRumWrapper implements DdRumType {
-    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-    private nativeRum: DdNativeRumType = require('../specs/NativeDdRum')
-        .default;
+    private get nativeRum(): DdNativeRumType {
+        return getNativeDdRum() as DdNativeRumType;
+    }
     private lastActionData?: { type: RumActionType; name: string };
     private errorEventMapper = generateErrorEventMapper(undefined);
     private resourceEventMapper = generateResourceEventMapper(undefined);

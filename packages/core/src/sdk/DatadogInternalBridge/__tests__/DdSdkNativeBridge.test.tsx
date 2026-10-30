@@ -66,7 +66,9 @@ describe('DdSdkNativeBridge', () => {
             })
         );
 
-        jest.mock('../../../specs/NativeDdSdk', () => mockNativeDdSdkSpec);
+        jest.mock('../../../specs/NativeDdSdk', () => ({
+            getNativeDdSdk: jest.fn(() => mockNativeDdSdkSpec)
+        }));
     });
 
     afterEach(() => {
@@ -96,8 +98,39 @@ describe('DdSdkNativeBridge', () => {
             expect(ddBridge.hasNativeBridge()).toBe(true);
         });
 
+        it('falls back to the spec getter when NativeModules.DdSdk is missing', () => {
+            const { NativeModules } = require('react-native');
+            const legacyModule = NativeModules.DdSdk;
+            delete NativeModules.DdSdk;
+            try {
+                const {
+                    DatadogNativeEventEmitter
+                } = require('../../DatadogEventEmitter/DatadogNativeEventEmitter');
+                const ddBridge = require('../DdSdkInternalNativeBridge');
+                const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
+                mockNativeEventEmitter.initialize.mockReturnValueOnce(true);
+
+                ddBridge.registerNativeBridge(
+                    new defaultEventEmitter.DatadogDefaultEventEmitter(
+                        mockErrorHandler
+                    )
+                );
+
+                expect(DatadogNativeEventEmitter).toHaveBeenCalledWith(
+                    mockNativeDdSdkSpec,
+                    mockErrorHandler
+                );
+                expect(mockErrorHandler).not.toHaveBeenCalled();
+                expect(ddBridge.hasNativeBridge()).toBe(true);
+            } finally {
+                NativeModules.DdSdk = legacyModule;
+            }
+        });
+
         it('catches errors when native event emitter init fails', () => {
-            jest.mock('../../../specs/NativeDdSdk', () => undefined);
+            jest.mock('../../../specs/NativeDdSdk', () => ({
+                getNativeDdSdk: jest.fn(() => null)
+            }));
 
             const ddBridge = require('../DdSdkInternalNativeBridge');
             const defaultEventEmitter = require('../../DatadogEventEmitter/DatadogDefaultEventEmitter');
