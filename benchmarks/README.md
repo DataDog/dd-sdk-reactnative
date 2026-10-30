@@ -6,20 +6,6 @@
 2. From the iOS folder, run `pod install`.
 3. From the root folder, run `yarn ios` or `yarn android`.
 
-## Enable old architecture
-
-The Benchmark app uses React Native's New Architecture by default. However, you may need to switch to the Old Architecture to compare performance between the two systems or reproduce bugs that are specific to legacy environments.
-
-### iOS
-
-```
-RCT_NEW_ARCH_ENABLED=0 pod install
-```
-
-### Android
-
-Set `newArchEnabled=false` in `benchmarks/android/gradle.properties`.
-
 ## ENV config
 
 The `.env` config file contains a configuration for the Datadog API, as well as a test scenario that you can launch when the app boots up. If it doesn't contain a test scenario, the app waits for a deep link to trigger a test scenario instead.
@@ -102,6 +88,38 @@ xcrun simctl openurl booted "benchmark://stop"
 ```
 adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://stop' com.benchmarkrunner
 ```
+
+## Cold start scenario (TTFD)
+
+The `coldStart` scenario measures the impact of the SDK initialization on cold start, as the time to fully displayed (TTFD):
+
+- **baseline**: the app renders its first screen without the Datadog SDK.
+- **instrumented**: the app is wrapped in `DatadogProvider` and tracks views with React Navigation. It calls `DdRum.reportAppFullyDisplayed()` once the first screen is laid out and the SDK has finished initializing.
+
+For both run types, the `BenchmarkVitals` native module measures the time from process start to the moment the app is fully displayed. It submits the value once, as the `rn.ios.benchmark.ttfd` / `rn.android.benchmark.ttfd` distribution metrics (in milliseconds), tagged with `run` and `scenario`. Because the measure is independent from the SDK, the two run types can be compared, and the TTFD reported by the SDK in RUM can be checked against it.
+
+The measure starts at process start, and the app may already be running when a deep link is opened. So a `coldStart` deep link doesn't run the scenario: it **arms** it, and the scenario runs once, on the next launch of the app. Open the deep link, then restart the app:
+
+### iOS
+
+```
+APP_ID="com.datadog.react.native.--PRODUCT-NAME-rfc1034identifier-" # simulator builds
+xcrun simctl openurl booted "benchmark://start?scenario=coldStart&runType=instrumented"
+xcrun simctl terminate booted "$APP_ID"
+xcrun simctl launch --console booted "$APP_ID"
+```
+
+### Android
+
+```
+adb shell am start -W -a android.intent.action.VIEW -d 'benchmark://start?scenario=coldStart\&runType=instrumented' com.benchmarkrunner
+adb shell am force-stop com.benchmarkrunner
+adb shell am start -W -n com.benchmarkrunner/.MainActivity
+```
+
+In Synthetics, each sample is an `Open deep link` step followed by a `Restart application` step, and a test can repeat them to collect several samples per run.
+
+On iOS, launches pre-warmed by the system are not reported, since their process start time is not related to the moment the app was opened.
 
 ## Adding a new scenario to benchmarks
 

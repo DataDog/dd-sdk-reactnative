@@ -35,4 +35,19 @@ class BenchmarkVitalsModule(
   fun stopCollectingVitals(promise: Promise) {
     impl.stopCollectingVitals(promise)
   }
+
+  @ReactMethod
+  fun reportFullyDisplayed(config: ReadableMap, promise: Promise) {
+    impl.reportFullyDisplayed(config, promise)
+  }
+
+  @ReactMethod
+  fun armColdStart(config: ReadableMap, promise: Promise) {
+    impl.armColdStart(config, promise)
+  }
+
+  @ReactMethod
+  fun consumeColdStartConfig(promise: Promise) {
+    impl.consumeColdStartConfig(promise)
+  }
 }

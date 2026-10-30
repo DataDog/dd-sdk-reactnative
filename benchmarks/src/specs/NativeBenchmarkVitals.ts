@@ -10,6 +10,9 @@ import { TurboModuleRegistry } from "react-native";
 export interface Spec extends TurboModule {
     startCollectingVitals(config: Object): Promise<boolean>;
     stopCollectingVitals(): Promise<boolean>;
+    reportFullyDisplayed(config: Object): Promise<number>;
+    armColdStart(config: Object): Promise<boolean>;
+    consumeColdStartConfig(): Promise<Object | null>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BenchmarkVitals');

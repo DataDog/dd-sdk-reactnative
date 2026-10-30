@@ -8,6 +8,7 @@ package com.benchmarkvitals
 
 import android.content.Context
 import com.benchmarkrunner.BuildConfig
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReadableMap
 import com.datadog.android.Datadog
@@ -43,5 +44,47 @@ class BenchmarkVitalsModuleImpl(private val context: Context) {
   fun stopCollectingVitals(promise: Promise) {
     vitalsMeter.stopMeasuring()
     promise.resolve(true)
+  }
+
+  fun reportFullyDisplayed(config: ReadableMap, promise: Promise) {
+    // Read the end timestamp first, so that nothing below is included in the measure
+    val durationMs = FullyDisplayed.elapsedSinceProcessStartMs()
+
+    FullyDisplayed.submit(
+      durationMs = durationMs,
+      metric = "rn.android.benchmark.ttfd",
+      context = FullyDisplayed.MetricContext(
+        apiKey = config.getString("apiKey") ?: "",
+        run = config.getString("runType") ?: "",
+        scenario = config.getString("scenario") ?: "",
+        env = BuildConfig.BUILD_TYPE,
+        applicationId = BuildConfig.APPLICATION_ID
+      )
+    )
+
+    promise.resolve(durationMs.toDouble())
+  }
+
+  fun armColdStart(config: ReadableMap, promise: Promise) {
+    FullyDisplayed.armColdStart(
+      context,
+      scenario = config.getString("scenario") ?: "",
+      runType = config.getString("runType") ?: ""
+    )
+    promise.resolve(true)
+  }
+
+  fun consumeColdStartConfig(promise: Promise) {
+    val pendingConfig = FullyDisplayed.consumeColdStartConfig(context)
+    if (pendingConfig == null) {
+      promise.resolve(null)
+    } else {
+      promise.resolve(
+        Arguments.createMap().apply {
+          putString("scenario", pendingConfig.first)
+          putString("runType", pendingConfig.second)
+        }
+      )
+    }
   }
 }
