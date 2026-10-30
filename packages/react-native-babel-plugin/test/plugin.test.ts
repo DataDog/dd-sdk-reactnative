@@ -201,8 +201,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             import { Button } from 'react-native';
             /*#__PURE__*/React.createElement(Button, {
               color: "red",
-              onPress: (..._ddArg) => {
-                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func, "TAP", {
+              onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                   "options": {
                     "useContent": true,
                     "useNamePrefix": true
@@ -212,8 +212,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "componentName": "Button",
                   "handlerArgs": [..._ddArg]
-                })(..._ddArg);else return func?.(..._ddArg);
-              }
+                })(..._ddArg);else return _ddHandler?.(..._ddArg);
+              })(func)
             });"
         `);
     });
@@ -667,8 +667,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             };
             /*#__PURE__*/React.createElement(Pressable, {
               color: "red",
-              onPress: (..._ddArg) => {
-                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func, "TAP", {
+              onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                   "options": {
                     "useContent": true,
                     "useNamePrefix": true
@@ -678,8 +678,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "componentName": "Pressable",
                   "handlerArgs": [..._ddArg]
-                })(..._ddArg);else return func?.(..._ddArg);
-              }
+                })(..._ddArg);else return _ddHandler?.(..._ddArg);
+              })(func)
             });"
         `);
     });
@@ -702,8 +702,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             }
             /*#__PURE__*/React.createElement(Pressable, {
               color: "red",
-              onPress: (..._ddArg) => {
-                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func3, "TAP", {
+              onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                   "options": {
                     "useContent": true,
                     "useNamePrefix": true
@@ -713,8 +713,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "componentName": "Pressable",
                   "handlerArgs": [..._ddArg]
-                })(..._ddArg);else return func3?.(..._ddArg);
-              }
+                })(..._ddArg);else return _ddHandler?.(..._ddArg);
+              })(func3)
             });"
         `);
     });
@@ -736,8 +736,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               console.log(event, data, rest);
             }
             /*#__PURE__*/React.createElement(Pressable, {
-              onPress: (..._ddArg) => {
-                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(a, "TAP", {
+              onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                   "options": {
                     "useContent": true,
                     "useNamePrefix": true
@@ -747,8 +747,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "componentName": "Pressable",
                   "handlerArgs": [..._ddArg]
-                })(..._ddArg);else return a?.(..._ddArg);
-              }
+                })(..._ddArg);else return _ddHandler?.(..._ddArg);
+              })(a)
             });"
         `);
     });
@@ -927,8 +927,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             function MyComponent() {
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: (..._ddArg) => {
-                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(handler, "TAP", {
+                onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                     "options": {
                       "useContent": true,
                       "useNamePrefix": true
@@ -938,8 +938,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "componentName": "Pressable",
                     "handlerArgs": [..._ddArg]
-                  })(..._ddArg);else return handler?.(..._ddArg);
-                }
+                  })(..._ddArg);else return _ddHandler?.(..._ddArg);
+                })(handler)
               });
             }"
         `);
@@ -964,8 +964,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             function MyComponent() {
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: (..._ddArg) => {
-                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(handler, "TAP", {
+                onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                     "options": {
                       "useContent": true,
                       "useNamePrefix": true
@@ -975,8 +975,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "componentName": "Pressable",
                     "handlerArgs": [..._ddArg]
-                  })(..._ddArg);else return handler?.(..._ddArg);
-                }
+                  })(..._ddArg);else return _ddHandler?.(..._ddArg);
+                })(handler)
               });
             }"
         `);
@@ -1001,8 +1001,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             function MyComponent() {
               return /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: (..._ddArg) => {
-                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(globalThis.handler, "TAP", {
+                onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                     "options": {
                       "useContent": true,
                       "useNamePrefix": true
@@ -1012,8 +1012,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "componentName": "Pressable",
                     "handlerArgs": [..._ddArg]
-                  })(..._ddArg);else return globalThis.handler?.(..._ddArg);
-                }
+                  })(..._ddArg);else return _ddHandler?.(..._ddArg);
+                })(globalThis.handler)
               });
             }"
         `);
@@ -1042,8 +1042,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             function MyComponent(props) {
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: (..._ddArg) => {
-                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(props.onPress, "TAP", {
+                onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                     "options": {
                       "useContent": true,
                       "useNamePrefix": true
@@ -1053,8 +1053,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "componentName": "Pressable",
                     "handlerArgs": [..._ddArg]
-                  })(..._ddArg);else return props.onPress?.(..._ddArg);
-                }
+                  })(..._ddArg);else return _ddHandler?.(..._ddArg);
+                })(props.onPress)
               }));
             }"
         `);
@@ -1086,8 +1086,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
             }) {
               return /*#__PURE__*/React.createElement(View, null, /*#__PURE__*/React.createElement(Pressable, {
                 color: "red",
-                onPress: (..._ddArg) => {
-                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(onPress, "TAP", {
+                onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                  if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                     "options": {
                       "useContent": true,
                       "useNamePrefix": true
@@ -1097,8 +1097,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                     },
                     "componentName": "Pressable",
                     "handlerArgs": [..._ddArg]
-                  })(..._ddArg);else return onPress?.(..._ddArg);
-                }
+                  })(..._ddArg);else return _ddHandler?.(..._ddArg);
+                })(onPress)
               }));
             }"
         `);
@@ -1243,8 +1243,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   }
                 }, /*#__PURE__*/React.createElement(Button, {
                   title: "Press Me",
-                  onPress: (..._ddArg) => {
-                    if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(this.handlePress, "TAP", {
+                  onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                    if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                       "options": {
                         "useContent": true,
                         "useNamePrefix": true
@@ -1254,8 +1254,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                       },
                       "componentName": "Button",
                       "handlerArgs": [..._ddArg]
-                    })(..._ddArg);else return this.handlePress?.(..._ddArg);
-                  }
+                    })(..._ddArg);else return _ddHandler?.(..._ddArg);
+                  })(this.handlePress)
                 }));
               }
             }"
@@ -1282,8 +1282,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
               "example-button-prop": "action-name-attr-button",
               accessibilityLabel: "accessibility-action-button",
               color: "red",
-              onPress: (..._ddArg) => {
-                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(func, "TAP", {
+              onPress: (_ddHandler => _ddHandler == null ? _ddHandler : (..._ddArg) => {
+                if (DdBabelInteractionTracking.getInstance()) return DdBabelInteractionTracking.getInstance().wrapRumAction(_ddHandler, "TAP", {
                   "options": {
                     "useContent": true,
                     "useNamePrefix": true
@@ -1296,8 +1296,8 @@ describe('Babel plugin: wrap interaction handlers for RUM', () => {
                   },
                   "componentName": "Button",
                   "handlerArgs": [..._ddArg]
-                })(..._ddArg);else return func?.(..._ddArg);
-              }
+                })(..._ddArg);else return _ddHandler?.(..._ddArg);
+              })(func)
             });"
         `);
     });
@@ -1319,9 +1319,9 @@ describe('Babel plugin: optional handler guard (undefined handler safety)', () =
         `;
         const output = transformCode(input);
         // The branch when the SDK is not initialized must use optional chaining
-        expect(output).toMatch(/onPress\?\.\(\.\.\.[\w$]+\)/);
+        expect(output).toMatch(/_ddHandler\?\.\(\.\.\.[\w$]+\)/);
         // The branch when the SDK is initialized should pass the handler to wrapRumAction
-        expect(output).toContain('wrapRumAction(onPress,');
+        expect(output).toContain('wrapRumAction(_ddHandler,');
     });
 
     it('should generate optional chaining in fallback branch for Pressable with arrow function handler', () => {

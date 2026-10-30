@@ -352,16 +352,42 @@ function getActionWrapperNode(
     argsObject: Babel.types.ObjectExpression,
     mode?: string
 ) {
+    const isReference =
+        t.isIdentifier(expression) || t.isMemberExpression(expression);
+    const handler = isReference
+        ? path.scope.generateUidIdentifier('ddHandler')
+        : expression;
+    const wrapper = getActionWrapperFunction(
+        t,
+        path,
+        state,
+        handler,
+        params,
+        argsObject,
+        mode
+    );
+
+    // Components can change behavior based on a handler's presence (e.g.
+    // Pressable suppresses onPress when onLongPress is set). Preserve nullish
+    // references and evaluate the original prop only once, including getters.
     return t.jsxExpressionContainer(
-        getActionWrapperFunction(
-            t,
-            path,
-            state,
-            expression,
-            params,
-            argsObject,
-            mode
-        )
+        isReference && t.isIdentifier(handler)
+            ? t.callExpression(
+                  t.arrowFunctionExpression(
+                      [t.cloneNode(handler)],
+                      t.conditionalExpression(
+                          t.binaryExpression(
+                              '==',
+                              t.cloneNode(handler),
+                              t.nullLiteral()
+                          ),
+                          t.cloneNode(handler),
+                          wrapper
+                      )
+                  ),
+                  [expression]
+              )
+            : wrapper
     );
 }
 
