@@ -36,7 +36,16 @@ apply plugin: 'com.android.library'
 if (isNewArchitectureEnabled()) {
   apply plugin: 'com.facebook.react'
 }
-apply plugin: 'kotlin-android'
+// AGP 9 ships built-in Kotlin support and registers the `kotlin` extension
+// itself. Applying the Kotlin plugin on top of it fails configuration with
+// "Cannot add extension with name 'kotlin'". Asking for the extension covers
+// every way built-in Kotlin can be turned on -- the global default, the
+// android.builtInKotlin property, and the per-module com.android.built-in-kotlin
+// plugin -- without reading an AGP version number.
+if (project.extensions.findByName('kotlin') == null) {
+  apply plugin: 'kotlin-android'
+}
+
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
 
@@ -136,7 +145,7 @@ android {
   sourceSets {
     main {
       if (isNewArchitectureEnabled()) {
-        java.srcDirs += ['src/newarch/kotlin']
+        kotlin.srcDirs += ['src/newarch/kotlin']
       } else {
         // `oldarchCommon` holds everything shared by all old-architecture RN versions.
         // Version-specific pieces (currently just heatmap tap-to-view resolution, whose
@@ -146,11 +155,11 @@ android {
         // always means "newer than the highest split defined" (today: RN > 65); if a future RN
         // release breaks another old-arch API, split off the next `oldarch<N>` the same way and
         // `oldarch` keeps that same "later than the highest split" meaning.
-        java.srcDirs += ['src/oldarchCommon/kotlin']
+        kotlin.srcDirs += ['src/oldarchCommon/kotlin']
         if (reactNativeMajorVersion == 0 && reactNativeMinorVersion <= 65) {
-          java.srcDirs += ['src/oldarch65/kotlin']
+          kotlin.srcDirs += ['src/oldarch65/kotlin']
         } else {
-          java.srcDirs += ['src/oldarch/kotlin']
+          kotlin.srcDirs += ['src/oldarch/kotlin']
         }
       }
     }

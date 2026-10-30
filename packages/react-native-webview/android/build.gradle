@@ -32,7 +32,16 @@ apply plugin: 'com.android.library'
 if (isNewArchitectureEnabled()) {
   apply plugin: 'com.facebook.react'
 }
-apply plugin: 'kotlin-android'
+// AGP 9 ships built-in Kotlin support and registers the `kotlin` extension
+// itself. Applying the Kotlin plugin on top of it fails configuration with
+// "Cannot add extension with name 'kotlin'". Asking for the extension covers
+// every way built-in Kotlin can be turned on -- the global default, the
+// android.builtInKotlin property, and the per-module com.android.built-in-kotlin
+// plugin -- without reading an AGP version number.
+if (project.extensions.findByName('kotlin') == null) {
+  apply plugin: 'kotlin-android'
+}
+
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 apply plugin: "io.gitlab.arturbosch.detekt"
 
@@ -127,9 +136,9 @@ android {
   sourceSets {
     main {
       if (isNewArchitectureEnabled()) {
-        java.srcDirs += ['src/newarch']
+        kotlin.srcDirs += ['src/newarch']
       } else {
-        java.srcDirs += ['src/oldarch']
+        kotlin.srcDirs += ['src/oldarch']
       }
     }
 
@@ -137,9 +146,9 @@ android {
       java.srcDir('src/test/kotlin')
 
       if (isNewArchitectureEnabled()) {
-        java.srcDirs += ['src/testNewArch/kotlin']
+        kotlin.srcDirs += ['src/testNewArch/kotlin']
       } else {
-        java.srcDirs += ['src/testOldArch/kotlin']
+        kotlin.srcDirs += ['src/testOldArch/kotlin']
       }
     }
   }
