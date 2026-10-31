@@ -188,7 +188,8 @@ actualRN.NativeModules.DdRum = {
 const DdFlags: DdNativeFlagsType = {
     enable: jest.fn(() => Promise.resolve()),
     setEvaluationContext: jest.fn(() => Promise.resolve({})),
-    trackEvaluation: jest.fn(() => Promise.resolve())
+    trackEvaluation: jest.fn(() => Promise.resolve()),
+    trackEvaluationWithTelemetryTargetingKey: jest.fn(() => Promise.resolve())
 };
 actualRN.NativeModules.DdFlags = DdFlags;
 

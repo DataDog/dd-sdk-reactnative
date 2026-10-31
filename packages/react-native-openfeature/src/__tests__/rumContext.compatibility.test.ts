@@ -10,7 +10,7 @@ import { OpenFeature } from '@openfeature/web-sdk';
 import { DatadogOpenFeatureProvider, enrichWithRumUser } from '../index';
 
 const mockFlagsClient = {
-    setEvaluationContext: jest.fn(() => Promise.resolve()),
+    __ddSetEvaluationContext: jest.fn(() => Promise.resolve()),
     getBooleanDetails: jest.fn(() => ({
         value: true,
         reason: 'TARGETING_MATCH',
@@ -47,10 +47,13 @@ describe('RUM context core compatibility', () => {
             plan: 'pro'
         });
 
-        expect(mockFlagsClient.setEvaluationContext).toHaveBeenCalledWith({
-            targetingKey: 'explicit-user',
-            attributes: { plan: 'pro' }
-        });
+        expect(mockFlagsClient.__ddSetEvaluationContext).toHaveBeenCalledWith(
+            {
+                targetingKey: 'explicit-user',
+                attributes: { plan: 'pro' }
+            },
+            true
+        );
     });
 
     it('returns the context unchanged and warns when the helper and InternalLog are missing', () => {
@@ -92,10 +95,13 @@ describe('RUM context core compatibility', () => {
         await OpenFeature.setProviderAndWait(new DatadogOpenFeatureProvider());
 
         expect(OpenFeature.getContext()).toStrictEqual(context);
-        expect(mockFlagsClient.setEvaluationContext).toHaveBeenCalledWith({
-            targetingKey: 'application-user',
-            attributes: { plan: 'pro', email: undefined }
-        });
+        expect(mockFlagsClient.__ddSetEvaluationContext).toHaveBeenCalledWith(
+            {
+                targetingKey: 'application-user',
+                attributes: { plan: 'pro', email: undefined }
+            },
+            true
+        );
         expect(
             OpenFeature.getClient().getBooleanValue('test-flag', false)
         ).toBe(true);

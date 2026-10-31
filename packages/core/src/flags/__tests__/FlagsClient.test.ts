@@ -197,25 +197,28 @@ describe('FlagsClient', () => {
                         reason: errorCode ? 'ERROR' : 'TARGETING_MATCH',
                         errorCode
                     },
-                    exposure: { flag, context }
+                    exposure: { flag, context, hasTargetingKey: true }
                 })
             }));
             expect(client.getBooleanDetails('flag', false).errorCode).toBe(
                 'TYPE_MISMATCH'
             );
             expect(
-                NativeModules.DdFlags.trackEvaluation
+                NativeModules.DdFlags.trackEvaluationWithTelemetryTargetingKey
             ).not.toHaveBeenCalled();
             errorCode = undefined;
             client.getBooleanDetails('flag', false);
-            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+            expect(
+                NativeModules.DdFlags.trackEvaluationWithTelemetryTargetingKey
+            ).toHaveBeenCalledWith(
                 'delegate-tracking',
                 'flag',
                 flag,
                 'user',
                 {
                     country: 'US'
-                }
+                },
+                'user'
             );
         });
     });
@@ -337,7 +340,7 @@ describe('FlagsClient', () => {
             });
             jest.spyOn(
                 NativeModules.DdFlags,
-                'trackEvaluation'
+                'trackEvaluationWithTelemetryTargetingKey'
             ).mockImplementationOnce(() => {
                 throw new Error('native bridge unavailable');
             });
@@ -606,7 +609,7 @@ describe('FlagsClient', () => {
             });
             // No exposure is tracked while serving defaults.
             expect(
-                NativeModules.DdFlags.trackEvaluation
+                NativeModules.DdFlags.trackEvaluationWithTelemetryTargetingKey
             ).not.toHaveBeenCalled();
         });
 
@@ -764,12 +767,15 @@ describe('FlagsClient', () => {
 
             // The exposure must be attributed to B's embedded context (user-2), not A's — a
             // regression that updated the flags but kept A's context would misattribute here.
-            expect(NativeModules.DdFlags.trackEvaluation).toHaveBeenCalledWith(
+            expect(
+                NativeModules.DdFlags.trackEvaluationWithTelemetryTargetingKey
+            ).toHaveBeenCalledWith(
                 'default',
                 'flag-b',
                 expect.any(Object),
                 'user-2',
-                {}
+                {},
+                'user-2'
             );
         });
 
@@ -937,7 +943,7 @@ describe('FlagsClient', () => {
             ).not.toHaveBeenCalled();
             // Defaults are served, so no exposure is tracked.
             expect(
-                NativeModules.DdFlags.trackEvaluation
+                NativeModules.DdFlags.trackEvaluationWithTelemetryTargetingKey
             ).not.toHaveBeenCalled();
         });
 
