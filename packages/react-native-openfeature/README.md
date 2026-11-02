@@ -338,11 +338,17 @@ precomputed-only `configurationFromString` helper.
   `Error`. Loading a usable configuration after an error emits `Ready`, followed by
   `ConfigurationChanged`.
 
-### Optional tracking with DatadogCoreProvider
+### Optional tracking with DatadogCoreProvider (Android only)
 
 Register exposure, evaluation, and RUM hooks independently with the evaluation-only
 `DatadogCoreProvider`. Do not add these hooks to `DatadogOpenFeatureProvider` or
 `DatadogOfflineOpenFeatureProvider`, which already track automatically.
+
+Independent tracking hooks are currently supported only on Android, using native SDK
+3.16.0. In shared application code, guard this setup with `Platform.OS === 'android'`.
+On iOS, `initialize()` warns once per hook and leaves it inactive; flag evaluation and
+the existing providers' automatic tracking remain unchanged. No iOS dependency upgrade,
+deployment-target change, or CocoaPods override is required for this release.
 
 The exposure and evaluation hooks require the core Datadog SDK to be initialized and
 `DdFlags.enable()` to have completed. The RUM hook also uses a native Flags client to enforce
@@ -416,10 +422,8 @@ Use matching core and OpenFeature package releases containing the tracking APIs.
 package is missing a required tracking helper, `initialize()` warns once per hook and leaves
 that hook inactive; flag evaluation continues. Repeated evaluations do not repeat the warning.
 
-These hooks depend on the separate native tracking APIs being introduced in the iOS and Android
-SDKs. Until those APIs are released and the RN native dependencies are updated, test them with
-the corresponding local native SDK builds; the currently pinned native releases do not contain
-these APIs.
+iOS support for these independent hooks is deferred to a follow-up. The shared native bridge
+methods reject direct iOS calls with `UNSUPPORTED_PLATFORM`; they do not report successful tracking.
 
 ### Offline initialization
 
