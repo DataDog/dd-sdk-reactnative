@@ -194,23 +194,78 @@ describe('generated handler bindings', () => {
         }
     );
 
-    it.each(['null', 'undefined'])(
-        'keeps an optional %s handler safe when tracking is unavailable',
-        value => {
+    describe.each([true, false])(
+        'optional handlers with tracking available=%s',
+        trackingAvailable => {
+            it.each(['null', 'undefined'])(
+                'preserves %s for identifiers and members in both modes',
+                value => {
+                    for (const mode of ['default', 'delayed'] as const) {
+                        for (const reference of ['handler', 'props.onPress']) {
+                            const fixture = renderHandler(
+                                `
+                                import { CustomButton } from './CustomButton';
+                                export function render() {
+                                    const handler = ${value};
+                                    const props = { get onPress() { return handler; } };
+                                    return <CustomButton onPress={${reference}} />;
+                                }
+                            `,
+                                { trackingAvailable, mode }
+                            );
+                            expect(fixture.handler).toBe(
+                                value === 'null' ? null : undefined
+                            );
+                            expect(fixture.captured).toEqual([]);
+                        }
+                    }
+                }
+            );
+        }
+    );
+
+    it.each([true, false])(
+        'evaluates a member handler once with tracking available=%s',
+        trackingAvailable => {
             const fixture = renderHandler(
                 `
                 import { Button } from 'react-native';
+                export let reads = 0;
+                export const calls = [];
                 export function render() {
-                    const handler = ${value};
-                    return <Button onPress={handler} />;
+                    const props = {
+                        get onPress() {
+                            reads++;
+                            return (...args) => { calls.push(args); return args; };
+                        }
+                    };
+                    return <Button onPress={props.onPress} />;
                 }
             `,
-                { trackingAvailable: false }
+                { trackingAvailable }
             );
-            expect(
-                fixture.handler({ nativeEvent: { target: 1 } })
-            ).toBeUndefined();
-            expect(fixture.captured).toEqual([]);
+            expect(fixture.exports.reads).toBe(1);
+            expect(fixture.handler('first', 2)).toEqual(['first', 2]);
+            expect(fixture.exports.reads).toBe(1);
+            expect(fixture.exports.calls).toEqual([['first', 2]]);
+            expect(fixture.captured).toHaveLength(trackingAvailable ? 1 : 0);
+        }
+    );
+
+    it.each([true, false])(
+        'captures the handler value at render with tracking available=%s',
+        trackingAvailable => {
+            const fixture = renderHandler(
+                `
+                import { Button } from 'react-native';
+                let handler = () => 'original';
+                export function changeHandler() { handler = () => 'replacement'; }
+                export function render() { return <Button onPress={handler} />; }
+            `,
+                { trackingAvailable }
+            );
+            fixture.exports.changeHandler();
+            expect(fixture.handler()).toBe('original');
         }
     );
 
