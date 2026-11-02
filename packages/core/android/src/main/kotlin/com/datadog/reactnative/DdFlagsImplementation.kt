@@ -130,6 +130,15 @@ class DdFlagsImplementation(
         promise.resolve(null)
     }
 
+    /**
+     * Track a flag exposure without recording an evaluation event or updating RUM.
+     * @param clientName The name of the client.
+     * @param key The key of the flag.
+     * @param rawFlag The flag assignment from JavaScript.
+     * @param targetingKey The targeting key.
+     * @param attributes The attributes for the evaluation context.
+     * @param promise The promise to resolve after the native call, without waiting for upload.
+     */
     @Suppress("LongParameterList")
     fun trackExposure(
         clientName: String,
@@ -147,6 +156,16 @@ class DdFlagsImplementation(
         promise.resolve(null)
     }
 
+    /**
+     * Track an evaluation event without recording an exposure or updating RUM.
+     * @param clientName The name of the client.
+     * @param key The key of the flag.
+     * @param rawFlag The flag assignment from JavaScript, if available.
+     * @param targetingKey The targeting key.
+     * @param attributes The attributes for the evaluation context.
+     * @param errorCode The evaluation error code, or null for a successful evaluation.
+     * @param promise The promise to resolve after the native call, without waiting for upload.
+     */
     @Suppress("LongParameterList")
     fun trackEvaluationEvent(
         clientName: String,
@@ -166,6 +185,15 @@ class DdFlagsImplementation(
         promise.resolve(null)
     }
 
+    /**
+     * Associate a flag evaluation with RUM without recording an exposure or evaluation event.
+     * @param clientName The name of the client.
+     * @param key The key of the flag.
+     * @param variant The evaluated flag variant.
+     * @param targetingKey The targeting key.
+     * @param attributes The attributes for the evaluation context.
+     * @param promise The promise to resolve after the native call, without waiting for upload.
+     */
     @Suppress("LongParameterList")
     fun trackRumEvaluation(
         clientName: String,
