@@ -12,7 +12,7 @@ import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
 
 // Rules parsing loads Protobuf-ES. Keep it behind this entry, as the browser SDK does.
 export { configurationFromString as coreConfigurationFromString } from '@datadog/flagging-core/rules-based';
-export type { FlagsConfiguration } from '@datadog/flagging-core';
+export type { FlagSelection, FlagsConfiguration } from '@datadog/flagging-core';
 export { fetchRulesConfiguration } from './fetchRulesConfiguration';
 export type { RulesConfigurationFetchOptions } from './fetchRulesConfiguration';
 

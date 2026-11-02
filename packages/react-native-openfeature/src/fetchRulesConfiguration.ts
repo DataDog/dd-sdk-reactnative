@@ -5,9 +5,10 @@
  */
 
 import { configurationFromRulesBinary } from '@datadog/flagging-core/rules-based';
-import type { FlagsConfiguration } from '@datadog/flagging-core';
+import type { FlagSelection, FlagsConfiguration } from '@datadog/flagging-core';
 import { timeStampNow } from '@datadog/flagging-core';
 
+import { applyFlagSelection, reportSelectionError } from './flagSelection';
 import { version } from './version';
 
 const supportedSites = new Set([
@@ -26,6 +27,10 @@ export interface RulesConfigurationFetchOptions {
     env: string;
     /** Datadog site domain, such as 'datadoghq.eu'. Defaults to 'datadoghq.com'. */
     site?: string;
+    /** Request flags matching any of these tags or key patterns. Invalid or over-limit selections are not sent. */
+    flagSelection?: FlagSelection;
+    /** Reports dropped or server-ignored selections. Defaults to console. */
+    logger?: { error(message: string): void };
     fetch?: typeof globalThis.fetch;
     signal?: AbortSignal;
 }
@@ -40,9 +45,15 @@ export async function fetchRulesConfiguration(
     }
 
     // RN's built-in URLSearchParams.set is not implemented on supported versions.
-    const url = `https://ufc-client.ff-cdn.${site}/api/v2/feature-flagging/config/rules-based/client?dd_env=${encodeURIComponent(
+    const baseUrl = `https://ufc-client.ff-cdn.${site}/api/v2/feature-flagging/config/rules-based/client?dd_env=${encodeURIComponent(
         options.env
     )}`;
+    const logger = options.logger ?? console;
+    const { url, selected } = applyFlagSelection(
+        baseUrl,
+        options.flagSelection,
+        logger
+    );
     const fetchedAt = timeStampNow();
     const fetchImplementation = options.fetch ?? globalThis.fetch;
     const response = await fetchImplementation(url, {
@@ -61,6 +72,16 @@ export async function fetchRulesConfiguration(
                 response
             )}`
         );
+    }
+
+    if (selected) {
+        const reason = response.headers.get('DD-Flag-Selection-Ignored');
+        if (reason) {
+            reportSelectionError(
+                logger,
+                `flagSelection was ignored by the server (${reason}). Loaded the full flag configuration.`
+            );
+        }
     }
 
     const configuration = configurationFromRulesBinary(
