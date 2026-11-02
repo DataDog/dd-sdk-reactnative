@@ -5,12 +5,17 @@
  */
 
 import { OpenFeature } from '@openfeature/web-sdk';
+import { URL as NodeURL } from 'url';
 
 import { version } from '../../package.json';
 import { DatadogCoreProvider, fetchRulesConfiguration } from '../rules-based';
-import type { RulesConfigurationFetchOptions } from '../rules-based';
+import type {
+    FlagSelection,
+    RulesConfigurationFetchOptions
+} from '../rules-based';
 
 import { matchingContext, rulesWire } from './__utils__/coreConfiguration';
+import selectionVectors from './__utils__/flag-selection/selection-vectors.json';
 
 jest.mock('@datadog/mobile-react-native', () => {
     throw new Error('Fetching rules must not load the native SDK');
@@ -23,6 +28,8 @@ const options: RulesConfigurationFetchOptions = {
 const rulesBytes = Uint8Array.from(
     Buffer.from(JSON.parse(rulesWire).rules.response, 'base64')
 );
+const baseUrl =
+    'https://ufc-client.ff-cdn.datadoghq.com/api/v2/feature-flagging/config/rules-based/client?dd_env=';
 
 function response(overrides: Partial<Response> = {}): Response {
     return {
@@ -41,6 +48,377 @@ describe('fetchRulesConfiguration', () => {
         await OpenFeature.clearContext();
         jest.restoreAllMocks();
         jest.useRealTimers();
+    });
+
+    describe('flag selection', () => {
+        const logger = { error: jest.fn() };
+
+        beforeEach(() => {
+            logger.error.mockReset();
+            jest.spyOn(globalThis, 'URL').mockImplementation(() => {
+                throw new Error('URL is unavailable');
+            });
+            jest.spyOn(globalThis, 'URLSearchParams').mockImplementation(() => {
+                throw new Error('URLSearchParams is unavailable');
+            });
+        });
+
+        const sdkCases = selectionVectors.cases.filter(vector => vector.sdk);
+
+        it('includes all pinned SDK vectors', () => {
+            expect(sdkCases).toHaveLength(38);
+        });
+
+        it.each(sdkCases)(
+            'matches the shared SDK vector: $name',
+            async vector => {
+                const fetch = jest.fn().mockResolvedValue(response());
+                const configuration = await fetchRulesConfiguration({
+                    ...options,
+                    flagSelection: {
+                        tags: vector.query?.selected_flag_tags,
+                        keyPatterns: vector.query?.selected_flag_key_patterns
+                    },
+                    fetch,
+                    logger
+                });
+                expect(fetch).toHaveBeenCalledTimes(1);
+                const url = new NodeURL(fetch.mock.calls[0][0]);
+                const expected: [string, string][] = [['dd_env', options.env]];
+                if (vector.sdk?.dropped) {
+                    expect(logger.error).toHaveBeenCalledTimes(1);
+                    expect(logger.error).toHaveBeenCalledWith(
+                        expect.stringContaining(
+                            `flagSelection was not sent (${vector.sdk.dropped}: `
+                        )
+                    );
+                } else {
+                    expected.push(
+                        ...(vector.sdk?.selection?.tags ?? []).map(
+                            tag =>
+                                ['selected_flag_tags', tag] as [string, string]
+                        ),
+                        ...(vector.sdk?.selection?.keyPatterns ?? []).map(
+                            pattern =>
+                                ['selected_flag_key_patterns', pattern] as [
+                                    string,
+                                    string
+                                ]
+                        )
+                    );
+                    expect(logger.error).not.toHaveBeenCalled();
+                }
+                expect(Array.from(url.searchParams.entries())).toEqual(
+                    expected
+                );
+                expect(fetch.mock.calls[0][1].headers['dd-client-token']).toBe(
+                    options.clientToken
+                );
+                expect(url.toString()).not.toContain(options.clientToken);
+                expect(configuration.rules?.response).toBeDefined();
+            }
+        );
+
+        it('RFC 3986 encodes selection values without mutating the input', async () => {
+            const flagSelection: FlagSelection = Object.freeze({
+                tags: Object.freeze([" team:checkout &a=1/+%!'() ", 'mobile']),
+                keyPatterns: Object.freeze(['checkout-*', 'checkout-*'])
+            });
+            const fetch = jest.fn().mockResolvedValue(response());
+            await fetchRulesConfiguration({
+                ...options,
+                flagSelection,
+                fetch,
+                logger
+            });
+            expect(fetch.mock.calls[0][0]).toBe(
+                `${baseUrl}production&selected_flag_tags=mobile&selected_flag_tags=team%3Acheckout%20%26a%3D1%2F%2B%25%21%27%28%29&selected_flag_key_patterns=checkout-%2A`
+            );
+            expect(logger.error).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            undefined,
+            null,
+            {},
+            { tags: [], keyPatterns: [] },
+            { tags: [' ', '\u0085'] }
+        ])('omits empty selection quietly: %j', async flagSelection => {
+            const fetch = jest.fn().mockResolvedValue(response());
+            await fetchRulesConfiguration({
+                ...options,
+                flagSelection: flagSelection as FlagSelection,
+                fetch,
+                logger
+            });
+            expect(fetch).toHaveBeenCalledTimes(1);
+            expect(fetch.mock.calls[0][0]).toBe(`${baseUrl}production`);
+            expect(logger.error).not.toHaveBeenCalled();
+        });
+
+        it.each([
+            true,
+            'checkout',
+            [],
+            { tags: 'checkout' },
+            { keyPatterns: [1] },
+            { tags: ['\ud800'], keyPatterns: ['valid-*'] },
+            { tags: new Array(1) }
+        ])(
+            'drops the entire malformed selection with a diagnostic: %j',
+            async flagSelection => {
+                const fetch = jest.fn().mockResolvedValue(response());
+                await fetchRulesConfiguration({
+                    ...options,
+                    flagSelection: flagSelection as FlagSelection,
+                    fetch,
+                    logger
+                });
+                expect(fetch).toHaveBeenCalledTimes(1);
+                expect(fetch.mock.calls[0][0]).toBe(`${baseUrl}production`);
+                expect(logger.error).toHaveBeenCalledTimes(1);
+                expect(logger.error).toHaveBeenCalledWith(
+                    expect.stringContaining(
+                        'flagSelection was not sent (malformed_selection: '
+                    )
+                );
+            }
+        );
+
+        it.each(['getter', 'proxy', 'unstable item'])(
+            'safely drops a throwing %s without exposing input data',
+            async kind => {
+                let flagSelection: FlagSelection;
+                if (kind === 'getter') {
+                    flagSelection = {
+                        get tags(): string[] {
+                            throw new Error(options.clientToken);
+                        }
+                    };
+                } else if (kind === 'proxy') {
+                    const { proxy, revoke } = Proxy.revocable({}, {});
+                    revoke();
+                    flagSelection = proxy;
+                } else {
+                    let reads = 0;
+                    const tags = ['valid'];
+                    Object.defineProperty(tags, 0, {
+                        get: () => (++reads === 1 ? 'valid' : '\ud800')
+                    });
+                    flagSelection = { tags };
+                }
+                const fetch = jest.fn().mockResolvedValue(response());
+                await fetchRulesConfiguration({
+                    ...options,
+                    flagSelection,
+                    fetch,
+                    logger
+                });
+                expect(fetch).toHaveBeenCalledTimes(1);
+                expect(fetch.mock.calls[0][0]).toBe(`${baseUrl}production`);
+                expect(logger.error).toHaveBeenCalledTimes(1);
+                expect(logger.error).toHaveBeenCalledWith(
+                    expect.stringContaining('(malformed_selection: ')
+                );
+                expect(logger.error.mock.calls[0][0]).not.toContain(
+                    options.clientToken
+                );
+            }
+        );
+
+        it.each([8192, 8193])(
+            'enforces the encoded URL limit at %i bytes',
+            async length => {
+                const suffix =
+                    '&selected_flag_tags=mobile&selected_flag_key_patterns=checkout-%2A';
+                const env = 'e'.repeat(length - baseUrl.length - suffix.length);
+                const fetch = jest.fn().mockResolvedValue(response());
+                await fetchRulesConfiguration({
+                    ...options,
+                    env,
+                    flagSelection: {
+                        tags: ['mobile'],
+                        keyPatterns: ['checkout-*']
+                    },
+                    fetch,
+                    logger
+                });
+                expect(fetch).toHaveBeenCalledTimes(1);
+                if (length === 8192) {
+                    expect(fetch.mock.calls[0][0]).toBe(
+                        `${baseUrl}${env}${suffix}`
+                    );
+                    expect(logger.error).not.toHaveBeenCalled();
+                } else {
+                    expect(fetch.mock.calls[0][0]).toBe(`${baseUrl}${env}`);
+                    expect(logger.error).toHaveBeenCalledTimes(1);
+                    expect(logger.error).toHaveBeenCalledWith(
+                        expect.stringContaining(
+                            'the request URL is at most 8192 bytes'
+                        )
+                    );
+                }
+            }
+        );
+
+        it.each(['too_many_values', 'future_reason', '', null])(
+            'handles an ignored-selection header: %s',
+            async reason => {
+                const headers = new Headers();
+                if (reason !== null) {
+                    headers.set('DD-Flag-Selection-Ignored', reason);
+                }
+                const fetch = jest
+                    .fn()
+                    .mockResolvedValue(response({ headers }));
+                const configuration = await fetchRulesConfiguration({
+                    ...options,
+                    flagSelection: { tags: ['not-in-fixture'] },
+                    fetch,
+                    logger
+                });
+                const provider = new DatadogCoreProvider();
+                provider.setConfiguration(configuration);
+                await OpenFeature.setProviderAndWait(
+                    'selection-ignored',
+                    provider,
+                    matchingContext
+                );
+                expect(
+                    OpenFeature.getClient('selection-ignored').getBooleanValue(
+                        'test-flag',
+                        false
+                    )
+                ).toBe(true);
+                expect(fetch).toHaveBeenCalledTimes(1);
+                if (reason) {
+                    expect(logger.error).toHaveBeenCalledTimes(1);
+                    expect(logger.error).toHaveBeenCalledWith(
+                        `flagSelection was ignored by the server (${reason}). Loaded the full flag configuration.`
+                    );
+                } else {
+                    expect(logger.error).not.toHaveBeenCalled();
+                }
+            }
+        );
+
+        it('does not report server-ignored selection when no selection was sent', async () => {
+            const fetch = jest.fn().mockResolvedValue(
+                response({
+                    headers: new Headers({
+                        'DD-Flag-Selection-Ignored': 'future_reason'
+                    })
+                })
+            );
+            await fetchRulesConfiguration({ ...options, fetch, logger });
+            expect(logger.error).not.toHaveBeenCalled();
+            await fetchRulesConfiguration({
+                ...options,
+                flagSelection: ({
+                    tags: 'invalid'
+                } as unknown) as FlagSelection,
+                fetch,
+                logger
+            });
+            expect(logger.error).toHaveBeenCalledTimes(1);
+            expect(logger.error).toHaveBeenCalledWith(
+                expect.stringContaining('flagSelection was not sent')
+            );
+        });
+
+        it('uses console diagnostics by default', async () => {
+            const error = jest
+                .spyOn(console, 'error')
+                .mockImplementation(() => {});
+            const fetch = jest.fn().mockResolvedValue(response());
+            await fetchRulesConfiguration({
+                ...options,
+                flagSelection: ({
+                    tags: 'invalid'
+                } as unknown) as FlagSelection,
+                fetch
+            });
+            expect(error).toHaveBeenCalledTimes(1);
+        });
+
+        it('loads a server-ignored response even when the logger throws', async () => {
+            logger.error.mockImplementation(() => {
+                throw new Error('logger failed');
+            });
+            const fetch = jest.fn().mockResolvedValue(
+                response({
+                    headers: new Headers({
+                        'DD-Flag-Selection-Ignored': 'future_reason'
+                    })
+                })
+            );
+            await expect(
+                fetchRulesConfiguration({
+                    ...options,
+                    flagSelection: { tags: ['mobile'] },
+                    fetch,
+                    logger
+                })
+            ).resolves.toHaveProperty('rules');
+            expect(fetch).toHaveBeenCalledTimes(1);
+            expect(logger.error).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not report a full configuration load for a failed HTTP response', async () => {
+            const fetch = jest.fn().mockResolvedValue(
+                response({
+                    ok: false,
+                    status: 503,
+                    statusText: 'Unavailable',
+                    headers: new Headers({
+                        'DD-Flag-Selection-Ignored': 'future_reason'
+                    })
+                })
+            );
+            await expect(
+                fetchRulesConfiguration({
+                    ...options,
+                    flagSelection: { tags: ['mobile'] },
+                    fetch,
+                    logger
+                })
+            ).rejects.toThrow(
+                'Failed to fetch flag configuration: Unavailable'
+            );
+            expect(fetch).toHaveBeenCalledTimes(1);
+            expect(logger.error).not.toHaveBeenCalled();
+        });
+
+        it('does not let a throwing logger interrupt fallback or replace an HTTP failure', async () => {
+            logger.error.mockImplementation(() => {
+                throw new Error('logger failed');
+            });
+            const fetch = jest
+                .fn()
+                .mockResolvedValueOnce(response())
+                .mockResolvedValueOnce(
+                    response({
+                        ok: false,
+                        status: 503,
+                        statusText: 'Unavailable'
+                    })
+                );
+            const fetchOptions = {
+                ...options,
+                flagSelection: ({
+                    tags: 'invalid'
+                } as unknown) as FlagSelection,
+                fetch,
+                logger
+            };
+            await expect(
+                fetchRulesConfiguration(fetchOptions)
+            ).resolves.toHaveProperty('rules');
+            await expect(fetchRulesConfiguration(fetchOptions)).rejects.toThrow(
+                'Failed to fetch flag configuration: Unavailable'
+            );
+            expect(fetch).toHaveBeenCalledTimes(2);
+        });
     });
 
     it('fetches and decodes client rules with RN headers and a retrieval timestamp', async () => {
