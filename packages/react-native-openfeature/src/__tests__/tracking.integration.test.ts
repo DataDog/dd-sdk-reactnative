@@ -6,6 +6,7 @@
 
 import { DdRum } from '@datadog/mobile-react-native';
 import { ErrorCode, OpenFeature } from '@openfeature/web-sdk';
+import { Platform } from 'react-native';
 
 import NativeDdFlags from '../../../core/src/specs/NativeDdFlags';
 import type { DatadogTrackingHook, DatadogTrackingHooks } from '../index';
@@ -65,6 +66,7 @@ async function configuredClient(
 describe('optional native tracking hooks', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        jest.replaceProperty(Platform, 'OS', 'android');
         jest.spyOn(DdRum, 'addFeatureFlagEvaluation').mockImplementation(
             () => new Promise(() => {})
         );
@@ -87,6 +89,19 @@ describe('optional native tracking hooks', () => {
         expect(rum).not.toHaveBeenCalled();
     });
 
+    it('does not warn or track for an iOS client without optional hooks', async () => {
+        jest.replaceProperty(Platform, 'OS', 'ios');
+        jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const { client } = await configuredClient();
+
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        expect(console.warn).not.toHaveBeenCalled();
+        expect(native.trackExposure).not.toHaveBeenCalled();
+        expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+        expect(native.trackRumEvaluation).not.toHaveBeenCalled();
+        expect(native.trackEvaluation).not.toHaveBeenCalled();
+    });
+
     it.each([
         ['exposure', createDatadogExposureLoggingHook, 1, 0, 0],
         ['evaluation', createDatadogEvaluationLoggingHook, 0, 1, 0],
@@ -106,6 +121,42 @@ describe('optional native tracking hooks', () => {
             expect(native.setEvaluationContext).not.toHaveBeenCalled();
         }
     );
+
+    describe.each([false, true])('iOS with rules configuration: %s', rules => {
+        it.each([
+            ['exposure', createDatadogExposureLoggingHook],
+            ['evaluation', createDatadogEvaluationLoggingHook],
+            ['RUM', createDatadogRumTrackingHook]
+        ] as const)(
+            'disables %s without affecting evaluation',
+            async (_name, create) => {
+                jest.replaceProperty(Platform, 'OS', 'ios');
+                jest.spyOn(console, 'warn').mockImplementation(() => {});
+                const tracking = create();
+                const { client } = await configuredClient(tracking, rules);
+                const flagKey = rules ? 'test-flag' : 'boolean-flag';
+
+                await tracking.initialize();
+                for (let i = 0; i < 10; i++) {
+                    expect(client.getBooleanValue(flagKey, false)).toBe(true);
+                }
+                await tracking.shutdown();
+                await tracking.initialize();
+                expect(client.getBooleanValue(flagKey, false)).toBe(true);
+
+                expect(console.warn).toHaveBeenCalledTimes(1);
+                expect(console.warn).toHaveBeenCalledWith(
+                    expect.stringContaining('supported only on Android')
+                );
+                expect(native.trackExposure).not.toHaveBeenCalled();
+                expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+                expect(native.trackRumEvaluation).not.toHaveBeenCalled();
+                expect(native.trackEvaluation).not.toHaveBeenCalled();
+                expect(native.enable).not.toHaveBeenCalled();
+                expect(native.setEvaluationContext).not.toHaveBeenCalled();
+            }
+        );
+    });
 
     it('submits each record immediately, without JS batching or deduplication', async () => {
         const tracking = composeDatadogTrackingHooks(

@@ -89,7 +89,7 @@ export interface FlagsConfiguration {
      */
     customExposureEndpoint?: string;
     /**
-     * Custom server URL for sending aggregated flag evaluation data.
+     * Android-only custom server URL for sending aggregated flag evaluation data. Ignored on iOS.
      *
      * The provided value should only include the base URL, and the endpoint will be appended automatically.
      * For example, 'https://flags.example.com' becomes 'https://flags.example.com/api/v2/flagevaluation'.

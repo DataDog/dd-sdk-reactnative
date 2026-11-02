@@ -6,6 +6,7 @@
 
 import * as DatadogSdk from '@datadog/mobile-react-native';
 import { OpenFeature } from '@openfeature/web-sdk';
+import { Platform } from 'react-native';
 
 import { DatadogCoreProvider } from '../rules-based';
 import {
@@ -23,6 +24,7 @@ jest.mock('@datadog/mobile-react-native', () => ({ __esModule: true }));
 
 describe('tracking hook core compatibility', () => {
     beforeEach(() => {
+        jest.replaceProperty(Platform, 'OS', 'android');
         jest.spyOn(console, 'warn').mockImplementation(() => {});
     });
 
