@@ -391,6 +391,34 @@ export class DdSdkReactNativeVega {
         return NativeDdSdk.clearAllData();
     };
 
+    private static getDefaultApplicationVersion = (): string | undefined => {
+        try {
+            // Resolve lazily so an unavailable system module does not prevent imports
+            // or initialization with an explicitly configured version.
+            /* eslint-disable global-require, @typescript-eslint/no-var-requires */
+            const {
+                getVersion
+            } = require('@amazon-devices/react-native-device-info');
+            /* eslint-enable global-require, @typescript-eslint/no-var-requires */
+            const applicationVersion: unknown = getVersion();
+            if (
+                typeof applicationVersion === 'string' &&
+                applicationVersion.trim() &&
+                applicationVersion !== 'unknown'
+            ) {
+                return applicationVersion;
+            }
+        } catch {
+            // Keep initialization working if Vega cannot provide package metadata.
+        }
+
+        InternalLog.log(
+            'Unable to read the Vega application version. Set configuration.version to report an application version.',
+            SdkVerbosity.WARN
+        );
+        return undefined;
+    };
+
     private static buildConfiguration = (
         configuration: CoreConfiguration,
         params: {
@@ -407,18 +435,23 @@ export class DdSdkReactNativeVega {
             DdSdkReactNativeVega.DD_SDK_VERSION
         ] = sdkVersion;
 
-        if (configuration.version) {
+        const applicationVersion =
+            configuration.version ||
+            DdSdkReactNativeVega.getDefaultApplicationVersion();
+        if (applicationVersion) {
             configuration.additionalConfiguration[
                 DdSdkReactNativeVega.DD_VERSION
-            ] = `${configuration.version}${
+            ] = `${applicationVersion}${
                 configuration.versionSuffix
                     ? `-${configuration.versionSuffix}`
                     : ''
             }`;
+            delete configuration.additionalConfiguration[
+                DdSdkReactNativeVega.DD_VERSION_SUFFIX
+            ];
         }
-        // If both version and version suffix are provided, we merge them into the version field.
-        // To avoid adding it in again the native part, we only set it if the version isn't set.
-        if (configuration.versionSuffix && !configuration.version) {
+        // Only send a separate suffix if a base application version is unavailable.
+        if (configuration.versionSuffix && !applicationVersion) {
             configuration.additionalConfiguration[
                 DdSdkReactNativeVega.DD_VERSION_SUFFIX
             ] = `-${configuration.versionSuffix}`;

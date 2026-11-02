@@ -4,14 +4,34 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DdRumErrorTracking } from '@datadog/mobile-react-native/internal';
-import { DdRum as CoreDdRum } from '@datadog/mobile-react-native';
+import { getVersion } from '@amazon-devices/react-native-device-info';
+import {
+    DdRumErrorTracking,
+    GlobalState,
+    version as sdkVersion
+} from '@datadog/mobile-react-native/internal';
+import {
+    CoreConfiguration,
+    DdRum as CoreDdRum
+} from '@datadog/mobile-react-native';
 
 import { DdSdkReactNativeVega } from '../src/DdSdkReactNativeVega';
+import NativeDdSdk from '../src/turbo-modules/NativeDdSdk';
+
+jest.mock('../src/HttpProxy', () => ({ startHttpProxy: jest.fn() }));
+jest.mock(
+    '@amazon-devices/react-native-device-info',
+    () => ({
+        getVersion: jest.fn()
+    }),
+    { virtual: true }
+);
 
 jest.mock('../src/turbo-modules/NativeDdSdk', () => ({
     __esModule: true,
-    default: {}
+    default: {
+        initialize: jest.fn(() => Promise.resolve())
+    }
 }));
 
 jest.mock('../src/turbo-modules/NativeDdRum', () => ({
@@ -57,5 +77,116 @@ describe('DdSdkReactNativeVega error tracking', () => {
         });
 
         expect(startTracking).not.toHaveBeenCalled();
+    });
+});
+
+describe('DdSdkReactNativeVega version configuration', () => {
+    const createConfiguration = () =>
+        new CoreConfiguration('client-token', 'test', undefined, {
+            rumConfiguration: {
+                applicationId: 'application-id',
+                trackInteractions: false,
+                trackResources: false,
+                trackErrors: false
+            }
+        });
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        (getVersion as jest.Mock).mockReset().mockReturnValue('0.1.0');
+        GlobalState.isInitialized = false;
+        (DdSdkReactNativeVega as any).wasAutoInstrumented = false;
+    });
+
+    afterEach(() => {
+        GlobalState.isInitialized = false;
+    });
+
+    it.each([
+        { version: '1.2.3', versionSuffix: undefined, expected: '1.2.3' },
+        {
+            version: '1.2.3',
+            versionSuffix: 'preview',
+            expected: '1.2.3-preview'
+        },
+        { version: undefined, versionSuffix: undefined, expected: '0.1.0' },
+        {
+            version: undefined,
+            versionSuffix: 'preview',
+            expected: '0.1.0-preview'
+        }
+    ])(
+        'passes RN version metadata to native initialization: %j',
+        async ({ version, versionSuffix, expected }) => {
+            const configuration = createConfiguration();
+            configuration.version = version;
+            configuration.versionSuffix = versionSuffix;
+
+            await DdSdkReactNativeVega.initialize(configuration);
+
+            const nativeConfiguration = (NativeDdSdk.initialize as jest.Mock)
+                .mock.calls[0][0];
+            expect(nativeConfiguration.additionalConfiguration).toEqual(
+                expect.objectContaining({ '_dd.sdk_version': sdkVersion })
+            );
+            expect(
+                nativeConfiguration.additionalConfiguration['_dd.version']
+            ).toBe(expected);
+            expect(
+                nativeConfiguration.additionalConfiguration[
+                    '_dd.version_suffix'
+                ]
+            ).toBeUndefined();
+            expect(nativeConfiguration).not.toHaveProperty('version');
+            expect(configuration.version).toBe(version);
+            expect(getVersion).toHaveBeenCalledTimes(version ? 0 : 1);
+        }
+    );
+
+    it.each(['', '   ', 'unknown', undefined, null])(
+        'does not report an unavailable package version: %j',
+        async unavailableVersion => {
+            (getVersion as jest.Mock).mockReturnValue(unavailableVersion);
+            await DdSdkReactNativeVega.initialize(createConfiguration());
+
+            const nativeConfiguration = (NativeDdSdk.initialize as jest.Mock)
+                .mock.calls[0][0];
+            expect(
+                nativeConfiguration.additionalConfiguration['_dd.version']
+            ).toBeUndefined();
+            expect(
+                nativeConfiguration.additionalConfiguration['_dd.sdk_version']
+            ).toBe(sdkVersion);
+        }
+    );
+
+    it('initializes when the system version lookup fails', async () => {
+        (getVersion as jest.Mock).mockImplementation(() => {
+            throw new Error('DeviceInfoModule is unavailable');
+        });
+
+        await expect(
+            DdSdkReactNativeVega.initialize(createConfiguration())
+        ).resolves.toBeUndefined();
+        expect(NativeDdSdk.initialize).toHaveBeenCalledTimes(1);
+    });
+
+    it('clears a previously separate suffix after resolving the package version', async () => {
+        const configuration = createConfiguration();
+        configuration.versionSuffix = 'preview';
+        configuration.additionalConfiguration = {
+            '_dd.version_suffix': '-preview'
+        };
+
+        await DdSdkReactNativeVega.initialize(configuration);
+
+        const nativeConfiguration = (NativeDdSdk.initialize as jest.Mock).mock
+            .calls[0][0];
+        expect(nativeConfiguration.additionalConfiguration['_dd.version']).toBe(
+            '0.1.0-preview'
+        );
+        expect(
+            nativeConfiguration.additionalConfiguration['_dd.version_suffix']
+        ).toBeUndefined();
     });
 });

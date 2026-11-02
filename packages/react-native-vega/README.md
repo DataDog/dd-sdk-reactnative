@@ -142,14 +142,23 @@ native bridge applies:
 | Configuration      | Current Vega behavior                                                                                                           |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
 | Core               | Applies client token, environment, service, site, tracking consent, batch size, upload frequency, and batch processing level.   |
+| Version metadata   | Detects the packaged application version, applies an optional override/suffix, and forwards the shared React Native SDK version. |
 | RUM registration   | Applies application ID, session sample rate, and native crash reporting.                                                        |
 | JS instrumentation | Applies interaction tracking, accessibility-label naming, resource tracking, resource trace sample rate, and first-party hosts. |
 | Logs               | The presence of `logsConfiguration` enables Logging, and `bundleLogsWithRum` controls RUM-context enrichment.                   |
 | Trace              | `traceConfiguration` is accepted by the shared type but currently has no native effect.                                         |
 
-Application version metadata, proxy configuration, custom intake endpoints,
-`bundleLogsWithTraces`, and most native performance options are not currently applied
-by the Vega C++ bridge.
+Proxy configuration, custom intake endpoints, `bundleLogsWithTraces`, and most native
+performance options are not currently applied by the Vega C++ bridge.
+
+The application version defaults to the running Vega package's version, retrieved
+through the transitive `@amazon-devices/react-native-device-info` dependency. As with
+the React Native SDK, `configuration.version` overrides that value and
+`configuration.versionSuffix` is appended once to either the override or the default.
+The npm package version is not used as the application version. SDK version metadata
+is forwarded separately from the shared React Native package. If package metadata is
+unavailable, initialization continues and logs a warning; an explicit version still
+works. See the [version verification steps](PREVIEW_USAGE.md#verify-application-version-metadata).
 
 ### Send Logs
 
