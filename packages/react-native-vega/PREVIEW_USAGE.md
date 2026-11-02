@@ -97,6 +97,29 @@ Only include `logsConfiguration` when the application needs to send logs. Its pr
 enables native Logging. `bundleLogsWithRum` defaults to `true`, which adds the active RUM
 context to log events.
 
+## Configure Application Version
+
+The SDK automatically reads the running Vega package's application version through
+the transitive device-info dependency. No version configuration is required for this
+default. Use the same optional overrides as the React Native SDK before initializing
+or mounting the provider:
+
+```ts
+configuration.version = '1.2.3';
+configuration.versionSuffix = 'preview'; // optional: reports 1.2.3-preview
+```
+
+`version` identifies your application's release. The Datadog SDK version is reported
+separately and is supplied by the matching core preview package. Neither value is
+the Amazon Vega SDK or OS version.
+
+When only `versionSuffix` is set, it is appended to the detected package version.
+For example, a package version of `0.1.0` with suffix `preview` reports
+`0.1.0-preview`. The detected value comes from the installed package, including any
+build-time version override, rather than the application's npm `package.json`.
+If Vega cannot supply package metadata, initialization continues and logs a warning;
+set `version` explicitly in that environment.
+
 ## Configure JavaScript Source Maps
 
 Wrap the app's merged Metro configuration so the application bundle and source map
@@ -317,6 +340,41 @@ Run the generated package whose architecture matches the target device. For exam
 ```sh
 vega run-app build/aarch64-release/examplevega_aarch64.vpkg
 ```
+
+### Verify Application Version Metadata
+
+1. Rebuild and pack the Vega SDK using the [repository build instructions](README.md#preview-packages).
+   Install the updated archive in the sample app using a new filename, then run
+   `yarn install`. This fix changes native code, so restarting Metro alone is not
+   sufficient.
+2. First run the sample without either version field. Newly generated events should
+   report the installed Vega package version (`0.1.0` for the sample's default
+   manifest). Then, in `example-vega/src/App.tsx`, add the existing fields before the
+   provider mounts:
+
+   ```ts
+   datadogConfiguration.version = '1.2.3';
+   datadogConfiguration.versionSuffix = 'version-check';
+   ```
+
+3. Build the sample with `yarn build:release` and run the resulting `.vpkg` on a
+   connected device or Vega virtual device. Navigate between screens and use
+   **Feature Actions** to send an info log. Filter new RUM events and logs by the
+   sample's environment and service in Datadog.
+4. Check that the RUM event's `version` is `1.2.3-version-check` and that the log's
+   `version` tag has the same value. The `sdk_version` tag and the log's
+   `logger.version` should match the installed core package version,
+   such as `3.5.4-vega.0`.
+5. Remove `versionSuffix`, rebuild, and relaunch. New events should report `1.2.3`.
+   Remove `version` and keep the suffix: new events should report the packaged version
+   with `-version-check` appended. Remove both fields and repeat: the packaged
+   application version and the separate Datadog SDK version should both be present.
+
+For a before/after comparison, repeat these steps with an SDK archive built from
+the commit before this fix. Keep the app configuration identical. That build
+does not detect or forward the application version and reports the underlying
+C++ SDK version instead of the React Native SDK version. Compare only newly
+generated events after each full application restart.
 
 ## Preview Feedback
 

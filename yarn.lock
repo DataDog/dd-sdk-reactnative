@@ -122,7 +122,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@amazon-devices/keplerscript-turbomodule-api@npm:*":
+"@amazon-devices/keplerscript-turbomodule-api@npm:*, @amazon-devices/keplerscript-turbomodule-api@npm:^1.0.0":
   version: 1.2.5
   resolution: "@amazon-devices/keplerscript-turbomodule-api@npm:1.2.5"
   dependencies:
@@ -135,6 +135,19 @@ __metadata:
   bin:
     keplerscript-turbomodule-api: cli.js
   checksum: ef9031c441f81025b1a2399d71a1730e104762f2b8eee2e93f55a7e882067df571d879438ab7870718201677bb1d37aff813fc48aa6d08fb8484631836cf03c7
+  languageName: node
+  linkType: hard
+
+"@amazon-devices/react-native-device-info@npm:~2.0.0":
+  version: 2.0.1758683737
+  resolution: "@amazon-devices/react-native-device-info@npm:2.0.1758683737"
+  dependencies:
+    "@amazon-devices/keplerscript-turbomodule-api": ^1.0.0
+  peerDependencies:
+    "@amazon-devices/react-native-kepler": ^2.0.0
+    react: 18.2.0
+    react-native: 0.72.0
+  checksum: a678f478e0ec64fdecc3fe1a603a1a12a2862d2ee68261bc2f9128aec2bba908cc25f7146e4e32810e425a8e78a91acdb9813957faf429240975e02982296026
   languageName: node
   linkType: hard
 
@@ -3128,9 +3141,11 @@ __metadata:
   resolution: "@datadog/mobile-react-native-vega@workspace:packages/react-native-vega"
   dependencies:
     "@amazon-devices/keplerscript-turbomodule-api": "*"
+    "@amazon-devices/react-native-device-info": ~2.0.0
     "@datadog/mobile-react-native": "workspace:3.11.0"
     react-native-builder-bob: 0.26.0
   peerDependencies:
+    "@amazon-devices/react-native-kepler": ^2.0.0
     "@datadog/mobile-react-native": 3.11.0
     react: ">=16.13.1"
     react-native: ">=0.63.4 <1.0"

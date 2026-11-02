@@ -135,14 +135,25 @@ com::amazon::kepler::turbomodule::Promise DdSdk::initialize(
                 getStringFromJSObject(configuration, "uploadFrequency");
             const std::string batchProcessingLevel =
                 getStringFromJSObject(configuration, "batchProcessingLevel");
-            const std::string version =
-                getStringFromJSObject(configuration, "version");
+            // Shared RN configuration puts version metadata in additionalConfiguration.
+            // The JS layer has already merged an explicit version and its suffix.
+            const JSObject* additionalConfiguration =
+                getObjectFromJSObject(configuration, "additionalConfiguration");
+            const std::string version = additionalConfiguration
+                ? getStringFromJSObject(*additionalConfiguration, "_dd.version")
+                : "";
+            const std::string sdkVersion = additionalConfiguration
+                ? getStringFromJSObject(*additionalConfiguration, "_dd.sdk_version")
+                : "";
 
             // Build CoreConfig
             datadog::CoreConfig coreConfig(clientToken, serviceName, env);
 
             // Override source to match React Native SDK conventions
             coreConfig.Internal_SetSource("react-native");
+            if (!sdkVersion.empty()) {
+                coreConfig.Internal_SetSdkVersion(sdkVersion);
+            }
 
             if (!site.empty()) {
                 coreConfig.SetSite(datadog_rn_vega::parseSite(site));
