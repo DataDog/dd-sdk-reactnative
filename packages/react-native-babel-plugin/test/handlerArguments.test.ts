@@ -13,7 +13,7 @@ import plugin from '../src';
 
 jest.mock('../../core/src/specs/NativeDdSdk', () => ({
     __esModule: true,
-    default: { sendTelemetryLog: jest.fn() }
+    getNativeDdSdk: jest.fn().mockReturnValue({ sendTelemetryLog: jest.fn() })
 }));
 
 const nodeRequire = createRequire(__filename);

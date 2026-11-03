@@ -38,6 +38,50 @@ describe('native spec getters', () => {
         }
     );
 
+    it('FlagsClient retries a missing module and uses it for fetching and tracking', async () => {
+        await jest.isolateModulesAsync(async () => {
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const { TurboModuleRegistry } = require('react-native');
+            const nativeModule = {
+                setEvaluationContext: jest.fn().mockResolvedValue({
+                    feature: { key: 'feature', value: true, reason: 'STATIC' }
+                }),
+                trackEvaluation: jest.fn().mockResolvedValue(undefined)
+            };
+            const getSpy = jest
+                .spyOn(TurboModuleRegistry, 'get')
+                .mockReturnValueOnce(null)
+                .mockReturnValue(nativeModule);
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const { FlagsClient } = require('../flags/FlagsClient');
+            const client = new FlagsClient('late-native');
+            const context = { targetingKey: 'user', attributes: {} };
+
+            expect(getSpy).not.toHaveBeenCalled();
+            await expect(
+                client.setEvaluationContext(context)
+            ).rejects.toThrow();
+            await expect(
+                client.setEvaluationContext(context)
+            ).resolves.toBeUndefined();
+            expect(nativeModule.setEvaluationContext).toHaveBeenCalledWith(
+                'late-native',
+                'user',
+                {}
+            );
+            expect(client.getBooleanValue('feature', false)).toBe(true);
+            expect(nativeModule.trackEvaluation).toHaveBeenCalledWith(
+                'late-native',
+                'feature',
+                expect.objectContaining({ value: true }),
+                'user',
+                {}
+            );
+            expect(getSpy).toHaveBeenCalledTimes(2);
+            expect(getSpy).toHaveBeenCalledWith('DdFlags');
+        });
+    });
+
     it('DdSdkWrapper picks up a module that was missing on first use', () => {
         jest.isolateModules(() => {
             // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires

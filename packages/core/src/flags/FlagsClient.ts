@@ -83,7 +83,9 @@ interface OfflineFlagsEvaluator {
 }
 
 export class FlagsClient {
-    private nativeFlags: DdNativeFlagsType = getNativeDdFlags() as DdNativeFlagsType;
+    private get nativeFlags(): DdNativeFlagsType {
+        return getNativeDdFlags() as DdNativeFlagsType;
+    }
 
     private clientName: string;
 
