@@ -5,11 +5,8 @@
  */
 
 import type * as Babel from '@babel/core';
-import * as parser from '@babel/parser';
-import traverse from '@babel/traverse';
 import { jsxIdentifier, stringLiteral } from '@babel/types';
 import { createHash } from 'crypto';
-import glob from 'fast-glob';
 import fs from 'fs';
 import pathN from 'path';
 import { optimize } from 'svgo';
@@ -17,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { getNodeName } from '../../utils';
 
+import { scanProjectForSvgs } from './buildSvgMap';
 import { HandlerResolver } from './handlers/HandlerResolver';
 import { writeAssetToDisk } from './processing/fs';
 
@@ -100,96 +98,13 @@ export class ReactNativeSVG {
             }
         }
 
-        // TODO: Support aliased paths (RUM-12185)
-        const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
-            cwd: this.rootDir,
-            absolute: true,
-            ignore: this.scanIgnorePatterns,
-            followSymbolicLinks: this.followSymlinks
+        scanProjectForSvgs({
+            t: this.t,
+            rootDir: this.rootDir,
+            scanIgnorePatterns: this.scanIgnorePatterns,
+            followSymlinks: this.followSymlinks,
+            localSvgMap: this.localSvgMap
         });
-
-        for (const file of files) {
-            try {
-                const code = fs.readFileSync(file, 'utf8');
-                if (!code) {
-                    continue;
-                }
-
-                const ast = parser.parse(code, {
-                    sourceType: 'module',
-                    plugins: [
-                        'jsx',
-                        'typescript',
-                        'exportDefaultFrom',
-                        'classProperties',
-                        'dynamicImport'
-                    ]
-                });
-
-                traverse(ast, {
-                    ImportDeclaration: path => {
-                        if (!this.t) {
-                            return;
-                        }
-                        const source = path.node.source.value;
-                        if (!source.endsWith('.svg')) {
-                            return;
-                        }
-
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
-                        for (const spec of path.node.specifiers) {
-                            const name = getNodeName(this.t, spec.local.name);
-                            if (name) {
-                                this.localSvgMap[name] = {
-                                    path: resolved
-                                };
-                            }
-                        }
-                    },
-                    ExportNamedDeclaration: path => {
-                        if (!this.t) {
-                            return;
-                        }
-                        const source = path.node.source?.value;
-                        if (!source?.endsWith('.svg')) {
-                            return;
-                        }
-
-                        const resolved = pathN.resolve(
-                            pathN.dirname(file),
-                            source
-                        );
-                        for (const spec of path.node.specifiers) {
-                            if (spec.type === 'ExportSpecifier') {
-                                // spec.exported is the name consumers import under
-                                // ('default' would be wrong for `export { default as Logo }`)
-                                const exported = spec.exported;
-                                const name = getNodeName(
-                                    this.t,
-                                    this.t.isStringLiteral(exported)
-                                        ? exported.value
-                                        : exported.name
-                                );
-                                if (name) {
-                                    this.localSvgMap[name] = {
-                                        path: resolved
-                                    };
-                                }
-                            } else {
-                                console.warn(
-                                    `[buildSvgMap]: Unhandled export specifier type: ${spec.type}`
-                                );
-                            }
-                        }
-                    }
-                });
-            } catch (err) {
-                console.error(`[buildSvgMap]: \n File: ${file}\n`, err);
-            }
-        }
 
         // Save the mapping to disk if requested
         if (this.saveSvgMapToDisk) {
