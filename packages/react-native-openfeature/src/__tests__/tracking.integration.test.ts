@@ -4,13 +4,17 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { configurationToString } from '@datadog/flagging-core/rules-based';
 import { DdRum } from '@datadog/mobile-react-native';
 import { ErrorCode, OpenFeature } from '@openfeature/web-sdk';
 import { Platform } from 'react-native';
 
 import NativeDdFlags from '../../../core/src/specs/NativeDdFlags';
 import type { DatadogTrackingHook, DatadogTrackingHooks } from '../index';
-import { DatadogCoreProvider } from '../rules-based';
+import {
+    coreConfigurationFromString,
+    DatadogCoreProvider
+} from '../rules-based';
 import {
     composeDatadogTrackingHooks,
     createDatadogEvaluationLoggingHook,
@@ -88,6 +92,174 @@ describe('optional native tracking hooks', () => {
         expect(native.trackEvaluation).not.toHaveBeenCalled();
         expect(rum).not.toHaveBeenCalled();
     });
+
+    it.each([
+        { rules: false, doLog: false },
+        { rules: false, doLog: true },
+        { rules: true, doLog: false },
+        { rules: true, doLog: true }
+    ])(
+        'preserves assigned DEFAULT results with rules=$rules and doLog=$doLog',
+        async ({ rules, doLog }) => {
+            const { client, provider } = await configuredClient(
+                composeDatadogTrackingHooks(
+                    createDatadogExposureLoggingHook(),
+                    createDatadogEvaluationLoggingHook(),
+                    createDatadogRumTrackingHook()
+                ),
+                rules
+            );
+            const key = rules ? 'test-flag' : 'boolean-flag';
+            if (rules) {
+                const configuration = rulesConfiguration();
+                configuration.rules.response.flags[
+                    key
+                ].allocations[0].splits[0].reason = 4;
+                configuration.rules.response.flags[
+                    key
+                ].allocations[0].logExposureEvent = doLog;
+                provider.setConfiguration(
+                    coreConfigurationFromString(
+                        configurationToString(configuration)
+                    )
+                );
+            } else {
+                const configuration = precomputedConfiguration();
+                configuration.precomputed.response.data.attributes.flags[
+                    key
+                ].reason = 'DEFAULT';
+                configuration.precomputed.response.data.attributes.flags[
+                    key
+                ].doLog = doLog;
+                provider.setConfiguration(configuration);
+            }
+
+            expect(client.getBooleanDetails(key, false)).toMatchObject({
+                value: true,
+                reason: 'DEFAULT',
+                variant: 'on'
+            });
+            expect(native.trackExposure).toHaveBeenCalledTimes(doLog ? 1 : 0);
+            expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
+                'default',
+                key,
+                expect.objectContaining({
+                    allocationKey: 'allocation',
+                    variationKey: 'on',
+                    doLog
+                }),
+                'user-1',
+                { country: 'US' },
+                null
+            );
+            expect(rum).toHaveBeenCalledTimes(1);
+        }
+    );
+
+    it('keeps an assignment-free coded default unassigned', async () => {
+        const { client, provider } = await configuredClient(
+            composeDatadogTrackingHooks(
+                createDatadogExposureLoggingHook(),
+                createDatadogEvaluationLoggingHook(),
+                createDatadogRumTrackingHook()
+            ),
+            true
+        );
+        const configuration = rulesConfiguration();
+        configuration.rules.response.flags['test-flag'].allocations = [];
+        provider.setConfiguration(
+            coreConfigurationFromString(configurationToString(configuration))
+        );
+
+        expect(client.getBooleanDetails('test-flag', false)).toMatchObject({
+            value: false,
+            reason: 'DEFAULT'
+        });
+        expect(native.trackExposure).not.toHaveBeenCalled();
+        expect(rum).not.toHaveBeenCalled();
+        expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
+            'default',
+            'test-flag',
+            null,
+            'user-1',
+            { country: 'US' },
+            null
+        );
+    });
+
+    it('treats ERROR without an error code as GENERAL despite assignment metadata', async () => {
+        const { client, provider } = await configuredClient(
+            composeDatadogTrackingHooks(
+                createDatadogExposureLoggingHook(),
+                createDatadogEvaluationLoggingHook(),
+                createDatadogRumTrackingHook()
+            )
+        );
+        const configuration = precomputedConfiguration();
+        configuration.precomputed.response.data.attributes.flags[
+            'boolean-flag'
+        ].reason = 'ERROR';
+        provider.setConfiguration(configuration);
+        expect(client.getBooleanDetails('boolean-flag', false)).toMatchObject({
+            value: true,
+            reason: 'ERROR'
+        });
+        expect(native.trackExposure).not.toHaveBeenCalled();
+        expect(rum).not.toHaveBeenCalled();
+        expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
+            'default',
+            'boolean-flag',
+            null,
+            'user-1',
+            { country: 'US' },
+            'GENERAL'
+        );
+    });
+
+    it.each([false, true])(
+        'does not serialize unused object values with doLog: %s',
+        async doLog => {
+            const { client, provider } = await configuredClient(
+                composeDatadogTrackingHooks(
+                    createDatadogExposureLoggingHook(),
+                    createDatadogEvaluationLoggingHook()
+                )
+            );
+            const configuration = precomputedConfiguration();
+            const flag =
+                configuration.precomputed.response.data.attributes.flags[
+                    'object-flag'
+                ];
+            flag.doLog = doLog;
+            flag.variationValue = { payload: 'x'.repeat(64 * 1024) };
+            provider.setConfiguration(configuration);
+            const stringify = jest.spyOn(JSON, 'stringify');
+            const value = client.getObjectValue('object-flag', {});
+            expect(value).toEqual(flag.variationValue);
+            expect(
+                stringify.mock.calls.filter(([input]) => input === value)
+            ).toHaveLength(0);
+            expect(native.trackExposure).toHaveBeenCalledTimes(doLog ? 1 : 0);
+            expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
+                'default',
+                'object-flag',
+                expect.objectContaining({
+                    allocationKey: 'allocation',
+                    variationKey: 'settings',
+                    doLog
+                }),
+                'user-1',
+                { country: 'US' },
+                null
+            );
+            expect(
+                native.trackEvaluationEvent.mock.calls[0][2]
+            ).not.toHaveProperty('value');
+            expect(
+                native.trackEvaluationEvent.mock.calls[0][2]
+            ).not.toHaveProperty('variationValue');
+        }
+    );
 
     it('does not warn or track for an iOS client without optional hooks', async () => {
         jest.replaceProperty(Platform, 'OS', 'ios');
@@ -178,12 +350,9 @@ describe('optional native tracking hooks', () => {
             'native-owner',
             'boolean-flag',
             expect.objectContaining({
-                value: true,
                 allocationKey: 'allocation',
                 variationKey: 'on',
-                doLog: true,
-                variationType: 'boolean',
-                variationValue: 'true'
+                doLog: true
             }),
             'user-1',
             { country: 'US' }
@@ -434,7 +603,6 @@ describe('optional native tracking hooks', () => {
         expect(second.client.getBooleanValue('test-flag', false)).toBe(true);
 
         const assignment = expect.objectContaining({
-            value: true,
             allocationKey: 'allocation',
             variationKey: 'on',
             doLog: true

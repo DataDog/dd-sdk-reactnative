@@ -161,7 +161,12 @@ internal class DdFlagsImplementationTest {
                 DdFlagsImplementation(mock()).trackExposure(
                     "tracking",
                     "flag",
-                    rawFlag(),
+                    mapOf(
+                        "allocationKey" to "allocation",
+                        "variationKey" to "on",
+                        "doLog" to true,
+                        "serialId" to "9007199254740993"
+                    ).toReadableMap(),
                     "user",
                     mapOf("country" to "US").toReadableMap(),
                     mockPromise
@@ -191,7 +196,12 @@ internal class DdFlagsImplementationTest {
                 DdFlagsImplementation(mock()).trackEvaluationEvent(
                     "tracking",
                     "flag",
-                    rawFlag(),
+                    mapOf(
+                        "allocationKey" to "allocation",
+                        "variationKey" to "on",
+                        "doLog" to true,
+                        "serialId" to "9007199254740993"
+                    ).toReadableMap(),
                     "user",
                     mapOf("country" to "US").toReadableMap(),
                     null,
