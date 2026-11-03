@@ -187,13 +187,10 @@ const valueMatchesVariationType = (
         case 'string':
             return typeof value === 'string';
         case 'number':
+        case 'integer':
         case 'float':
             // Reject NaN/Infinity: native parsers can't round-trip them.
             return typeof value === 'number' && Number.isFinite(value);
-        case 'integer':
-            // A fractional value under an integer flag would be truncated/mis-parsed
-            // natively, so require a whole number.
-            return Number.isInteger(value);
         case 'object':
             // The `object` variation type carries JSON. ffe-service enforces a top-level object at
             // the API layer, so in practice the value is an object; that is not a storage
