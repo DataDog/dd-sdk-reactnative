@@ -128,3 +128,50 @@ of your [application sandbox][4], which can't be read by any other app installed
 [2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
 [3]: https://source.android.com/security/app-sandbox
 [4]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
+
+## Shared precomputed response tests
+
+The Flags module uses the JSON contract from [ffe-system-test-data](https://github.com/DataDog/ffe-system-test-data/tree/main/precomputed-assignments).
+This keeps response behavior consistent across mobile SDKs. The snapshot is test data only.
+It adds no runtime dependency and requires no Git submodule.
+
+The generated snapshot is at `packages/core/src/flags/__tests__/fixtures/precomputed`. `SOURCE.json` records the source commit and file digests.
+The runner discovers all nested JSON cases.
+Adding a case requires an upstream fixture change and snapshot refresh. It requires no runner or filename-list change.
+Missing or empty fixtures fail the suite. Shared `_include` and `_skip` fields describe API applicability.
+Do not add local exclusions to hide failures.
+
+Native Integer getters accept `integer`. Native Double getters accept `float`.
+Legacy `number` accepts Double reads and representable integral Integer reads.
+A whole-valued `float` still fails an Integer read with `TYPE_MISMATCH`.
+React Native's Number API has no separate integer type.
+These rules do not enable a new server wire format. Sending specific numeric types requires compatible capability negotiation.
+
+Cases cover values, defaults, errors, reasons, variants, emission gates, duplicate evaluations, and numeric boundaries.
+Obfuscation cases cover fixed digests, salts, Unicode, whitespace, malformed metadata, and plaintext event identity.
+React Native has one Number getter. Cross-type Integer/Double cases are excluded by the shared contract. The suite checks the real decoder, public getters, and native tracking arguments. It does not validate native event serialization or delivery. Encoded responses are rejected because this decoder does not support key obfuscation.
+
+Run from the repository root:
+
+```sh
+python3 ci/sync-precomputed-fixtures.py --verify
+yarn jest --runInBand --runTestsByPath packages/core/src/flags/__tests__/CanonicalPrecomputed.test.ts
+```
+
+Refresh the snapshot from a reviewed upstream commit:
+
+```sh
+python3 ci/sync-precomputed-fixtures.py --ref <full-upstream-sha>
+python3 ci/sync-precomputed-fixtures.py --check
+```
+
+The importer copies committed bytes, regenerates the index, and removes deleted cases.
+It preserves Unity asset GUIDs where applicable. Do not edit imported JSON or its checksums.
+Use `--source <local-checkout> --ref <commit>` to test an upstream fixture branch before publication.
+`--verify` checks local integrity without networking. `--check` also compares the recorded upstream commit.
+
+The weekly `Precomputed flag fixtures` workflow opens a draft update PR when fixture content changes.
+It uses a short-lived token restricted to the default branch and this workflow.
+It waits when an update PR is already open. Normal SDK CI must pass before merge.
+Merge the upstream fixture contract before merging its consumer PRs.
+The update workflow never merges or publishes an SDK release.

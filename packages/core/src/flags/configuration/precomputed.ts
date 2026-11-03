@@ -48,7 +48,15 @@ export const decodePrecomputedFlags = (
     // carries it. Read it defensively so obfuscated payloads are still rejected:
     // de-hashing keys / decoding values is not implemented here, so fail predictably
     // instead of mis-mapping hashed keys.
-    if ((attributes as { obfuscated?: boolean } | undefined)?.obfuscated) {
+    const encoding = attributes as
+        | { obfuscated?: unknown; obfuscation?: unknown }
+        | undefined;
+    if (
+        encoding &&
+        (Object.prototype.hasOwnProperty.call(encoding, 'obfuscation') ||
+            (Object.prototype.hasOwnProperty.call(encoding, 'obfuscated') &&
+                encoding.obfuscated !== false))
+    ) {
         throw new UnsupportedConfigurationError(
             'Obfuscated precomputed configurations are not supported.'
         );
