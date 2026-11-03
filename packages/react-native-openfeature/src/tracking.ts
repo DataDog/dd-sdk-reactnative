@@ -38,7 +38,10 @@ export function createDatadogExposureLoggingHook(
 ): DatadogTrackingHooks {
     const clientName = options.clientName ?? 'default';
     return createHook('__ddTrackFlagExposure', (context, details) => {
-        const flag = toAssignment(context, details);
+        if (details.flagMetadata?.doLog !== true) {
+            return;
+        }
+        const flag = toAssignment(details);
         if (!flag?.doLog) {
             return;
         }
@@ -60,7 +63,7 @@ export function createDatadogEvaluationLoggingHook(
         DatadogSdk.__ddTrackFlagEvaluationEvent(
             clientName,
             context.flagKey,
-            toAssignment(context, details),
+            toAssignment(details),
             toDdContext(context.context),
             details.errorCode ?? (details.reason === 'ERROR' ? 'GENERAL' : null)
         );
@@ -176,15 +179,11 @@ function createHook(
     };
 }
 
-function toAssignment(
-    context: HookContext,
-    details: EvaluationDetails<FlagValue>
-) {
+function toAssignment(details: EvaluationDetails<FlagValue>) {
     const allocationKey = details.flagMetadata?.allocationKey;
     if (
         details.errorCode ||
         details.reason === 'ERROR' ||
-        details.reason === 'DEFAULT' ||
         typeof allocationKey !== 'string' ||
         typeof details.variant !== 'string'
     ) {
@@ -192,18 +191,9 @@ function toAssignment(
     }
     const serialId = details.flagMetadata?.__dd_split_serial_id;
     return {
-        key: context.flagKey,
-        value: details.value,
         allocationKey,
         variationKey: details.variant,
-        variationType: context.flagValueType,
-        variationValue:
-            typeof details.value === 'object'
-                ? JSON.stringify(details.value)
-                : String(details.value),
-        reason: details.reason ?? 'UNKNOWN',
         doLog: details.flagMetadata?.doLog === true,
-        extraLogging: {},
         ...(typeof serialId === 'number' || typeof serialId === 'string'
             ? { serialId: String(serialId) }
             : {})

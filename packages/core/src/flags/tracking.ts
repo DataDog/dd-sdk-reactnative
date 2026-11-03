@@ -13,11 +13,16 @@ import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
 import type { EvaluationContext } from './types';
 
+type FlagTrackingAssignment = Pick<
+    FlagCacheEntry,
+    'allocationKey' | 'variationKey' | 'doLog' | 'serialId'
+>;
+
 /** @internal Used by the matching-version OpenFeature tracking hooks. */
 export function __ddTrackFlagExposure(
     clientName: string,
     key: string,
-    flag: FlagCacheEntry,
+    flag: FlagTrackingAssignment,
     context: EvaluationContext
 ): void {
     const captured = processEvaluationContext(context);
@@ -36,7 +41,7 @@ export function __ddTrackFlagExposure(
 export function __ddTrackFlagEvaluationEvent(
     clientName: string,
     key: string,
-    flag: FlagCacheEntry | null,
+    flag: FlagTrackingAssignment | null,
     context: EvaluationContext,
     errorCode: string | null
 ): void {
