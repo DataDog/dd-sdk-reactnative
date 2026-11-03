@@ -115,9 +115,9 @@ const toFlagCacheEntry = (
         allocationKey,
         reason,
         doLog,
-        extraLogging,
-        serialId
+        extraLogging
     } = flag as Partial<PrecomputedFlag>;
+    const { serialId } = flag as { serialId?: unknown };
 
     if (
         typeof variationType !== 'string' ||
