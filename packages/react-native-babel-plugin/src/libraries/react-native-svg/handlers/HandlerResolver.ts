@@ -16,7 +16,8 @@ type Dependencies = {
     t: typeof Babel.types;
     path: Babel.NodePath<Babel.types.JSXElement>;
     name: string;
-    localSvgMap: Record<string, { path: string; content?: string }>;
+    // Already disambiguated for this JSX binding by the caller.
+    localSvgEntry: { path: string; content?: string } | undefined;
 };
 
 export class HandlerResolver {
@@ -29,17 +30,18 @@ export class HandlerResolver {
      * with handler constructors that are parameterized with the provided Babel context and configuration.
      *
      * @param dependencies - Shared Babel-related dependencies and contextual information,
-     *                       including `types`, the current JSX `path`, tag `name`, and the `localSvgMap`.
+     *                       including `types`, the current JSX `path`, tag `name`, and the
+     *                       resolved `localSvgEntry` (if any) for this usage.
      */
     static configure(dependencies: Dependencies) {
         this.dependencies = dependencies;
-        const { t, path, name, localSvgMap } = dependencies;
+        const { t, path, name, localSvgEntry } = dependencies;
 
         HandlerResolver.registry = {
             RNSvgHandler: () => new RNSvgHandler(t, path, name),
             // UriSvgHandler: () => new UriSvgHandler(t, path, name),
             LocalSvgHandler: () =>
-                new LocalSvgHandler(t, path, name, localSvgMap)
+                new LocalSvgHandler(t, path, name, localSvgEntry)
         };
     }
 
@@ -54,7 +56,7 @@ export class HandlerResolver {
             throw new Error('HandlerResolver must be configured before use.');
         }
 
-        const { name, localSvgMap } = this.dependencies;
+        const { name, localSvgEntry } = this.dependencies;
 
         switch (name) {
             case 'Svg': {
@@ -66,7 +68,7 @@ export class HandlerResolver {
             // }
 
             default: {
-                return localSvgMap[name]
+                return localSvgEntry
                     ? HandlerResolver.registry.LocalSvgHandler()
                     : null;
             }

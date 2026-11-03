@@ -25,28 +25,30 @@ export class LocalSvgHandler implements SvgHandler {
         private types: typeof Babel.types,
         private path: Babel.NodePath<Babel.types.JSXElement>,
         private name: string,
-        private localSvgMap: Record<string, { path: string; content?: string }>
+        private svgEntry: { path: string; content?: string } | undefined
     ) {
         // no-op
     }
 
     /**
      * Retrieves and returns the contents of a local SVG file corresponding to the JSXElement tag name.
-     * If the file hasn't been read yet, it reads the SVG content from disk and caches it in `localSvgMap`.
+     * If the file hasn't been read yet, it reads the SVG content from disk and caches it on `svgEntry`
+     * (the same object instance `ReactNativeSVG` stores in its maps, so the cached content is visible
+     * to any later lookup of this same entry too).
      * Also extracts and stores width/height dimensions from the JSX attributes into the `dimensions` object.
      *
      * @param dimensions - Object to collect extracted width/height info.
-     * @returns Raw SVG string content from the local file, or undefined if the tag is not found in `localSvgMap`.
+     * @returns Raw SVG string content from the local file, or undefined if no entry was resolved for this usage.
      */
     transformSvgNode(dimensions: Record<string, string>) {
-        if (!this.localSvgMap[this.name]) {
+        if (!this.svgEntry) {
             return undefined;
         }
 
-        const { path, content } = this.localSvgMap[this.name];
+        const { path, content } = this.svgEntry;
 
         if (!content) {
-            this.localSvgMap[this.name].content = fs.readFileSync(path, 'utf8');
+            this.svgEntry.content = fs.readFileSync(path, 'utf8');
         }
 
         this.processAttributes(
@@ -56,7 +58,7 @@ export class LocalSvgHandler implements SvgHandler {
             dimensions
         );
 
-        return this.localSvgMap[this.name].content;
+        return this.svgEntry.content;
     }
 
     /**
