@@ -13,7 +13,27 @@ import pathN from 'path';
 
 import { getNodeName } from '../../utils';
 
+import { isBareSpecifier } from './pathAliasResolver';
+import type { PathAliasResolver } from './pathAliasResolver';
 import type { SvgBindingMap } from './svgBindingMap';
+
+function resolveSvgSource(
+    resolver: PathAliasResolver,
+    file: string,
+    source: string
+): string | null {
+    const alias = resolver.resolve(source, file);
+    if (alias) {
+        return alias.endsWith('.svg') &&
+            fs.existsSync(alias) &&
+            fs.statSync(alias).isFile()
+            ? alias
+            : null;
+    }
+    return isBareSpecifier(source)
+        ? null
+        : pathN.resolve(pathN.dirname(file), source);
+}
 
 export type ScanOptions = {
     t: typeof Babel.types;
@@ -21,6 +41,7 @@ export type ScanOptions = {
     scanIgnorePatterns: string[];
     followSymlinks: boolean;
     svgBindingMap: SvgBindingMap;
+    pathAliasResolver: PathAliasResolver;
 };
 
 export function scanProjectForSvgs({
@@ -28,7 +49,8 @@ export function scanProjectForSvgs({
     rootDir,
     scanIgnorePatterns,
     followSymlinks,
-    svgBindingMap
+    svgBindingMap,
+    pathAliasResolver
 }: ScanOptions): void {
     const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
         cwd: rootDir,
@@ -65,7 +87,14 @@ export function scanProjectForSvgs({
                         return;
                     }
 
-                    const resolved = pathN.resolve(pathN.dirname(file), source);
+                    const resolved = resolveSvgSource(
+                        pathAliasResolver,
+                        file,
+                        source
+                    );
+                    if (!resolved) {
+                        return;
+                    }
                     for (const spec of path.node.specifiers) {
                         const name = getNodeName(t, spec.local.name);
                         if (name) {
@@ -86,7 +115,14 @@ export function scanProjectForSvgs({
                         return;
                     }
 
-                    const resolved = pathN.resolve(pathN.dirname(file), source);
+                    const resolved = resolveSvgSource(
+                        pathAliasResolver,
+                        file,
+                        source
+                    );
+                    if (!resolved) {
+                        return;
+                    }
                     for (const spec of path.node.specifiers) {
                         if (spec.type === 'ExportSpecifier') {
                             // spec.exported is the name consumers import under

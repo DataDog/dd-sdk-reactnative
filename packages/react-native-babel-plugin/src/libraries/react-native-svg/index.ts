@@ -16,6 +16,7 @@ import { getNodeName } from '../../utils';
 import { scanProjectForSvgs } from './buildSvgMap';
 import { HandlerResolver } from './handlers/HandlerResolver';
 import { referencesModuleBinding } from './moduleBinding';
+import { PathAliasResolver } from './pathAliasResolver';
 import { writeAssetToDisk } from './processing/fs';
 import { SvgBindingMap } from './svgBindingMap';
 
@@ -43,6 +44,8 @@ const DEFAULT_SCAN_IGNORE_PATTERNS = [
  */
 export class ReactNativeSVG {
     private svgBindingMap = new SvgBindingMap();
+
+    private pathAliasResolver = new PathAliasResolver();
 
     // Preserve the public name-only map used by existing callers.
     get localSvgMap(): Record<string, { path: string; content?: string }> {
@@ -82,6 +85,7 @@ export class ReactNativeSVG {
             return;
         }
 
+        this.pathAliasResolver.reset();
         this.svgBindingMap.reset();
 
         scanProjectForSvgs({
@@ -89,7 +93,8 @@ export class ReactNativeSVG {
             rootDir: this.rootDir,
             scanIgnorePatterns: this.scanIgnorePatterns,
             followSymlinks: this.followSymlinks,
-            svgBindingMap: this.svgBindingMap
+            svgBindingMap: this.svgBindingMap,
+            pathAliasResolver: this.pathAliasResolver
         });
 
         if (this.saveSvgMapToDisk) {
