@@ -74,7 +74,7 @@ describe('DatadogCoreProvider', () => {
 
     it('pins the evaluator to the React Native-tested version without a semver range', () => {
         expect(packageJson.dependencies['@datadog/flagging-core']).toBe(
-            '3.1.1'
+            '3.3.0'
         );
     });
 

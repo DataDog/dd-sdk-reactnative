@@ -1963,13 +1963,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datadog/flagging-core@npm:3.1.1":
-  version: 3.1.1
-  resolution: "@datadog/flagging-core@npm:3.1.1"
+"@datadog/flagging-core@npm:3.3.0":
+  version: 3.3.0
+  resolution: "@datadog/flagging-core@npm:3.3.0"
   dependencies:
     "@bufbuild/protobuf": ^2.13.0
     spark-md5: ^3.0.2
-  checksum: e5ff0c5959366d278a2e07ec2c0851bbab3e8b514a02bf79f790e730145f5fd8ae52a14068e51a844142643140563a2f34d1b56a4c8e32c85fef2a14cfe21eb6
+  checksum: e9bdb9e836b4a68c00a3cf1a0ac29dc0c25dc889de0ee7e8db908d7262f8012cc1db7a53e3fc35970c2f65249122c009575263f6e42cfd1ff1df9e95db9b0c48
   languageName: node
   linkType: hard
 
@@ -2085,11 +2085,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@datadog/mobile-react-native-openfeature@workspace:packages/react-native-openfeature"
   dependencies:
-    "@datadog/flagging-core": 3.1.1
+    "@datadog/flagging-core": 3.3.0
     "@datadog/mobile-react-native": ^3.11.0
     "@openfeature/core": ^1.9.2
     "@openfeature/web-sdk": ^1.8.0
     "@testing-library/react-native": 7.0.2
+    genversion: 3.0.2
     react-native-builder-bob: 0.26.0
     react-native-gesture-handler: 1.10.3
   peerDependencies:
