@@ -6,20 +6,6 @@
 2. From the iOS folder, run `pod install`.
 3. From the root folder, run `yarn ios` or `yarn android`.
 
-## Enable old architecture
-
-The Benchmark app uses React Native's New Architecture by default. However, you may need to switch to the Old Architecture to compare performance between the two systems or reproduce bugs that are specific to legacy environments.
-
-### iOS
-
-```
-RCT_NEW_ARCH_ENABLED=0 pod install
-```
-
-### Android
-
-Set `newArchEnabled=false` in `benchmarks/android/gradle.properties`.
-
 ## ENV config
 
 The `.env` config file contains a configuration for the Datadog API, as well as a test scenario that you can launch when the app boots up. If it doesn't contain a test scenario, the app waits for a deep link to trigger a test scenario instead.

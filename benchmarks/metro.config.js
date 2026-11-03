@@ -1,6 +1,5 @@
 const path = require('path');
 const pakCore = require('../packages/core/package.json');
-const exclusionList = require('metro-config/src/defaults/exclusionList');
 const escape = require('escape-string-regexp');
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 
@@ -29,9 +28,9 @@ const config = {
         babelTransformerPath: require.resolve('react-native-svg-transformer')
     },
     // We need to make sure that only one version is loaded for peerDependencies
-    // So we denylist them at the root, and alias them to the versions in example's node_modules
+    // So we block them at the root, and alias them to the versions in benchmarks' node_modules
     // This block is very important, because otherwise things like React can be packed multiple times
-    // while it should be only one React instance in the runtime. exclusionList relies on the modules which are
+    // while it should be only one React instance in the runtime. blockList relies on the modules which are
     // declared as peer dependencies in the core package.
     resolver: {
         // Remove svg from asset extensions and add it to source extensions so Metro
@@ -39,13 +38,11 @@ const config = {
         assetExts: defaultConfig.resolver.assetExts.filter(ext => ext !== 'svg'),
         sourceExts: [...defaultConfig.resolver.sourceExts, 'svg'],
 
-        blacklistRE: exclusionList(
-            modules.map(
-                m =>
-                    new RegExp(
-                        `^${escape(path.join(root, 'node_modules', m))}\\/.*$`
-                    )
-            )
+        blockList: modules.map(
+            m =>
+                new RegExp(
+                    `^${escape(path.join(root, 'node_modules', m))}\\/.*$`
+                )
         ),
         extraNodeModules: modules.reduce((acc, name) => {
             acc[name] = path.join(__dirname, 'node_modules', name);
