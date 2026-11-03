@@ -16,7 +16,7 @@ import type {
     ParsedFlagsConfiguration,
     ParsedPrecomputedConfiguration
 } from './configuration';
-import { processEvaluationContext } from './internal';
+import { processEvaluationContext, telemetryTargetingKey } from './internal';
 import type { FlagCacheEntry } from './internal';
 import type { JsonValue, EvaluationContext, FlagDetails } from './types';
 
@@ -77,7 +77,11 @@ interface OfflineFlagsEvaluator {
         type: 'boolean' | 'string' | 'number' | 'object'
     ): {
         details: FlagDetails<T>;
-        exposure?: { flag: FlagCacheEntry; context: EvaluationContext };
+        exposure?: {
+            flag: FlagCacheEntry;
+            context: EvaluationContext;
+            hasTargetingKey?: boolean;
+        };
     };
 }
 
@@ -102,6 +106,8 @@ export class FlagsClient {
     // The effective context evaluation and exposure tracking run against: the external override
     // when set, otherwise the loaded configuration's embedded context.
     private evaluationContext: EvaluationContext | undefined = undefined;
+
+    private evaluationTelemetryTargetingKey: string | null = null;
 
     // The servable flag cache. On the online path it holds the native-fetched flags; on the
     // offline path it mirrors the decoded snapshot when the configuration is servable. A Map
@@ -151,9 +157,20 @@ export class FlagsClient {
      * const flagValue = flagsClient.getBooleanValue('new-feature', false);
      * ```
      */
-    setEvaluationContext = async (
-        context: EvaluationContext
+    setEvaluationContext = (context: EvaluationContext): Promise<void> =>
+        this.__ddSetEvaluationContext(
+            context,
+            typeof context.targetingKey === 'string'
+        );
+
+    /** @internal Preserve subject presence before OpenFeature normalizes its context. */
+    __ddSetEvaluationContext = async (
+        context: EvaluationContext,
+        hasTargetingKey: boolean
     ): Promise<void> => {
+        const capturedTelemetryKey = telemetryTargetingKey(
+            hasTargetingKey ? context.targetingKey : null
+        );
         // Make sure to process the incoming context because we don't support nested object values in context.
         const processedContext = processEvaluationContext(context);
 
@@ -185,8 +202,9 @@ export class FlagsClient {
             );
 
             this.externalContext = processedContext;
-            this.externalContextHasTargetingKey = true;
+            this.externalContextHasTargetingKey = hasTargetingKey;
             this.evaluationContext = processedContext;
+            this.evaluationTelemetryTargetingKey = capturedTelemetryKey;
             this.flagsCache = new Map(Object.entries(result));
 
             // A successful online fetch is authoritative: reset to the clean online state so a
@@ -427,6 +445,13 @@ export class FlagsClient {
         // context (a context-agnostic configuration falls back to an empty context).
         this.evaluationContext =
             this.externalContext ?? this.embeddedContext(configuration);
+        this.evaluationTelemetryTargetingKey = telemetryTargetingKey(
+            this.externalContext
+                ? this.externalContextHasTargetingKey
+                    ? this.externalContext.targetingKey
+                    : null
+                : configuration.context?.targetingKey
+        );
         this.flagsCache = flags;
         this.configurationStatus = 'ready';
         this.configurationError = undefined;
@@ -456,17 +481,22 @@ export class FlagsClient {
         return { status: 'error', errorCode };
     };
 
-    private track = (flag: FlagCacheEntry, context: EvaluationContext) => {
+    private track = (
+        flag: FlagCacheEntry,
+        context: EvaluationContext,
+        telemetryKey: string | null
+    ) => {
         // A non-blocking call; don't await this. A tracking failure, synchronous or not, must
         // never change the evaluation result.
         try {
             this.nativeFlags
-                .trackEvaluation(
+                .trackEvaluationWithTelemetryTargetingKey(
                     this.clientName,
                     flag.key,
                     flag,
                     context.targetingKey,
-                    context.attributes ?? {}
+                    context.attributes ?? {},
+                    telemetryKey
                 )
                 .catch(this.logTrackingError);
         } catch (error) {
@@ -495,7 +525,15 @@ export class FlagsClient {
                 type
             );
             if (!details.errorCode && exposure) {
-                this.track(exposure.flag, exposure.context);
+                this.track(
+                    exposure.flag,
+                    exposure.context,
+                    telemetryTargetingKey(
+                        exposure.hasTargetingKey
+                            ? exposure.context.targetingKey
+                            : null
+                    )
+                );
             }
             return details;
         }
@@ -547,7 +585,11 @@ export class FlagsClient {
             };
         }
 
-        this.track(flag, this.evaluationContext);
+        this.track(
+            flag,
+            this.evaluationContext,
+            this.evaluationTelemetryTargetingKey
+        );
 
         const details: FlagDetails<T> = {
             key: flag.key,

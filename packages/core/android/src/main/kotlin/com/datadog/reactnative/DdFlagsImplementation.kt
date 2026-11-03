@@ -120,12 +120,27 @@ class DdFlagsImplementation(
         attributes: ReadableMap,
         promise: Promise,
     ) {
+        trackEvaluationWithTelemetryTargetingKey(
+            clientName, key, rawFlag, targetingKey, attributes, targetingKey, promise
+        )
+    }
+
+    @Suppress("LongParameterList")
+    fun trackEvaluationWithTelemetryTargetingKey(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        telemetryTargetingKey: String?,
+        promise: Promise,
+    ) {
         val client = getClient(clientName)
         val internalClient = _FlagsInternalProxy(client)
 
         val flag = convertMapToUnparsedFlag(rawFlag.toMap())
         val evaluationContext = buildEvaluationContext(targetingKey, attributes)
-        internalClient.trackFlagSnapshotEvaluation(key, flag, evaluationContext)
+        internalClient.trackFlagSnapshotEvaluation(key, flag, evaluationContext, telemetryTargetingKey)
 
         promise.resolve(null)
     }

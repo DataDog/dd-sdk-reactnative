@@ -55,6 +55,8 @@ export class OfflineEvaluation implements OfflineEvaluator {
     private coreContext: OFEvaluationContext = {};
     // Whether the active context selects the precomputed snapshot. Fixed until the next reconcile.
     private servesPrecomputed = false;
+    private readonly embeddedContextHasTargetingKey: boolean;
+    private telemetryHasTargetingKey = false;
 
     constructor(
         configuration: FlagsConfiguration,
@@ -62,6 +64,8 @@ export class OfflineEvaluation implements OfflineEvaluator {
     ) {
         this.configuration = { ...configuration };
         const precomputed = configuration?.precomputed;
+        this.embeddedContextHasTargetingKey =
+            typeof precomputed?.context?.targetingKey === 'string';
         if (
             !precomputed &&
             !this.configuration.rules &&
@@ -141,6 +145,9 @@ export class OfflineEvaluation implements OfflineEvaluator {
         // An omitted override adopts the normalized embedded context. Rules-only configurations
         // must not invent an anonymous subject: missing and explicitly empty keys differ.
         const embedded = this.configuration.precomputed?.context;
+        this.telemetryHasTargetingKey = context
+            ? hasTargetingKey
+            : this.embeddedContextHasTargetingKey;
         this.context =
             context ??
             (embedded
@@ -188,7 +195,11 @@ export class OfflineEvaluation implements OfflineEvaluator {
         type: FlagValueType
     ): {
         details: FlagDetails<T>;
-        exposure?: { flag: FlagCacheEntry; context: EvaluationContext };
+        exposure?: {
+            flag: FlagCacheEntry;
+            context: EvaluationContext;
+            hasTargetingKey: boolean;
+        };
     } {
         const context = this.coreContext;
         const result = this.resolve(key, defaultValue, type, context);
@@ -238,7 +249,14 @@ export class OfflineEvaluation implements OfflineEvaluator {
                   ...serial
               };
         // Even doLog=false evaluations reach native code: RUM tracking is independent of exposures.
-        return { details, exposure: { flag, context: this.context } };
+        return {
+            details,
+            exposure: {
+                flag,
+                context: this.context,
+                hasTargetingKey: this.telemetryHasTargetingKey
+            }
+        };
     }
 
     private resolve<T>(

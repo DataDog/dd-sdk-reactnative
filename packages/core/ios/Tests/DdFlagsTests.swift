@@ -154,6 +154,77 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(mockClient.trackedEvaluation?.assignment.variationKey, "var")
     }
 
+    func testTrackEvaluationWithNullableTelemetryTargetingKey() throws {
+        for telemetryKey in [nil, "", "telemetry-user", "é", "\u{FFFD}"] as [String?] {
+            let expectation = self.expectation(description: "Nullable telemetry replay resolves")
+            let mockClient = MockFlagsClient()
+            implementation.clientProviders["test_client"] = { mockClient }
+            let rawFlag: NSDictionary = [
+                "allocationKey": "alloc",
+                "variationKey": "var",
+                "reason": "TARGETING_MATCH",
+                "doLog": true,
+                "value": true
+            ]
+
+            implementation.trackEvaluationWithTelemetryTargetingKey(
+                "test_client",
+                key: "feature_flag",
+                rawFlag: rawFlag,
+                targetingKey: "assignment-user",
+                attributes: ["tier": "pro", "dd_evaluation_telemetry_opt_out": true],
+                telemetryTargetingKey: telemetryKey,
+                resolve: { result in
+                    XCTAssertNil(result)
+                    expectation.fulfill()
+                },
+                reject: { code, _, _ in
+                    XCTFail("Should not reject: \(String(describing: code))")
+                    expectation.fulfill()
+                }
+            )
+            waitForExpectations(timeout: 1.0, handler: nil)
+
+            let replay = try XCTUnwrap(mockClient.trackedTelemetryEvaluation)
+            XCTAssertEqual(replay.key, "feature_flag")
+            XCTAssertEqual(replay.assignment.variationKey, "var")
+            XCTAssertEqual(replay.context.targetingKey, "assignment-user")
+            XCTAssertEqual(replay.context.attributes["tier"], .string("pro"))
+            XCTAssertEqual(replay.context.attributes["dd_evaluation_telemetry_opt_out"], .bool(true))
+            XCTAssertEqual(replay.telemetryTargetingKey, telemetryKey)
+            XCTAssertEqual(replay.observeFullEvaluationData, replay.assignment.observeFullEvaluationData)
+            XCTAssertFalse(replay.observeFullEvaluationData)
+            XCTAssertNil(replay.flagError)
+            XCTAssertNil(mockClient.trackedEvaluation)
+        }
+    }
+
+    func testTrackEvaluationWithNullableTelemetryTargetingKeyRejectsInvalidFlag() {
+        let expectation = self.expectation(description: "Nullable telemetry replay rejects invalid flag")
+        let mockClient = MockFlagsClient()
+        implementation.clientProviders["test_client"] = { mockClient }
+        implementation.trackEvaluationWithTelemetryTargetingKey(
+            "test_client",
+            key: "feature_flag",
+            rawFlag: ["allocationKey": "alloc"],
+            targetingKey: "assignment-user",
+            attributes: [:],
+            telemetryTargetingKey: nil,
+            resolve: { _ in
+                XCTFail("Should not resolve")
+                expectation.fulfill()
+            },
+            reject: { code, message, _ in
+                XCTAssertEqual(code, "INVALID_FLAG_ASSIGNMENT")
+                XCTAssertNotNil(message)
+                expectation.fulfill()
+            }
+        )
+        waitForExpectations(timeout: 1.0, handler: nil)
+        XCTAssertNil(mockClient.trackedTelemetryEvaluation)
+        XCTAssertNil(mockClient.trackedEvaluation)
+    }
+
     func testTrackEvaluationWithInvalidFlag() {
         let expectation = self.expectation(description: "TrackEvaluation rejects invalid flag")
 
@@ -422,6 +493,7 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
 
     var lastEvaluationContext: FlagsEvaluationContext?
     var trackedEvaluation: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
+    var trackedTelemetryEvaluation: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext, telemetryTargetingKey: String?, observeFullEvaluationData: Bool, flagError: String?)?
 
     func setEvaluationContext(_ context: DatadogFlags.FlagsEvaluationContext, completion: @escaping (Result<Void, DatadogFlags.FlagsError>) -> Void) {
         lastEvaluationContext = context
@@ -438,5 +510,16 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
 
     func sendFlagEvaluation(key: String, assignment: DatadogFlags.FlagAssignment, context: DatadogFlags.FlagsEvaluationContext) {
         trackedEvaluation = (key, assignment, context)
+    }
+
+    func sendFlagEvaluation(
+        key: String,
+        assignment: DatadogFlags.FlagAssignment,
+        context: DatadogFlags.FlagsEvaluationContext,
+        telemetryTargetingKey: String?,
+        observeFullEvaluationData: Bool,
+        flagError: String?
+    ) {
+        trackedTelemetryEvaluation = (key, assignment, context, telemetryTargetingKey, observeFullEvaluationData, flagError)
     }
 }

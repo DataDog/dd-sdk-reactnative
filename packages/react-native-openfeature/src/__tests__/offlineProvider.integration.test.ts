@@ -17,13 +17,15 @@ import { ErrorCode, OpenFeature, ProviderStatus } from '@openfeature/web-sdk';
 import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
 
 // Stub the native flags TurboModule (TurboModuleRegistry.get returns null under jest), so
-// ready-state evaluation can call trackEvaluation without throwing.
+// ready-state evaluation can call trackEvaluationWithTelemetryTargetingKey without throwing.
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
     default: {
         enable: jest.fn(() => Promise.resolve()),
         setEvaluationContext: jest.fn(() => Promise.resolve({})),
-        trackEvaluation: jest.fn(() => Promise.resolve())
+        trackEvaluationWithTelemetryTargetingKey: jest.fn(() =>
+            Promise.resolve()
+        )
     }
 }));
 

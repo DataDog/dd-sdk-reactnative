@@ -11,7 +11,9 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     default: {
         enable: jest.fn(() => Promise.resolve()),
         setEvaluationContext: jest.fn(() => Promise.resolve({})),
-        trackEvaluation: jest.fn(() => Promise.resolve())
+        trackEvaluationWithTelemetryTargetingKey: jest.fn(() =>
+            Promise.resolve()
+        )
     }
 }));
 

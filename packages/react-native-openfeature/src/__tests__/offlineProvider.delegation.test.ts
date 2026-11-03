@@ -36,7 +36,9 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     default: {
         enable: jest.fn(() => Promise.resolve()),
         setEvaluationContext: jest.fn(() => Promise.resolve({})),
-        trackEvaluation: jest.fn(() => Promise.resolve())
+        trackEvaluationWithTelemetryTargetingKey: jest.fn(() =>
+            Promise.resolve()
+        )
     }
 }));
 
@@ -109,8 +111,12 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 expect.any(Object)
             );
         }
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(4);
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledTimes(4);
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledWith(
             name,
             'object-flag',
             expect.objectContaining({
@@ -120,7 +126,8 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 doLog: false
             }),
             'user-1',
-            { country: 'US' }
+            { country: 'US' },
+            'user-1'
         );
         expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
     });
@@ -144,7 +151,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
             reason: 'SPLIT',
             flagMetadata: { allocationKey: 'fallback' }
         });
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenLastCalledWith(
             name,
             'test-flag',
             expect.objectContaining({
@@ -156,7 +165,8 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 serialId: '7'
             }),
             'user-1',
-            { country: 'CA' }
+            { country: 'CA' },
+            'user-1'
         );
 
         await OpenFeature.setContext(matchingContext);
@@ -166,7 +176,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
             variant: 'on',
             reason: 'TARGETING_MATCH'
         });
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenLastCalledWith(
             name,
             'test-flag',
             expect.objectContaining({
@@ -178,10 +190,13 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 serialId: '7'
             }),
             'user-1',
-            { country: 'US' }
+            { country: 'US' },
+            'user-1'
         );
         expect(resolve).toHaveBeenCalledTimes(2);
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(2);
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledTimes(2);
         expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
     });
 
@@ -211,7 +226,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 value: true,
                 errorCode: ErrorCode.TARGETING_KEY_MISSING
             });
-            expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
+            expect(
+                NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+            ).not.toHaveBeenCalled();
 
             await OpenFeature.setContext({ targetingKey: '', country: 'CA' });
             expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
@@ -219,13 +236,14 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 reason: 'SPLIT'
             });
             expect(
-                NativeDdFlags.trackEvaluation
+                NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
             ).toHaveBeenLastCalledWith(
                 expect.any(String),
                 'test-flag',
                 expect.objectContaining({ value: false }),
                 '',
-                { country: 'CA' }
+                { country: 'CA' },
+                ''
             );
             expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
         }
@@ -250,13 +268,14 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
             reason: 'TARGETING_MATCH'
         });
         expect(
-            NativeDdFlags.trackEvaluation
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
         ).toHaveBeenLastCalledWith(
             expect.any(String),
             'test-flag',
             expect.objectContaining({ value: true }),
             '',
-            { country: 'US' }
+            { country: 'US' },
+            null
         );
     });
 
@@ -363,13 +382,17 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(client.getObjectValue('object-flag', {})).toEqual({
             enabled: true
         });
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(3);
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledTimes(3);
         for (const [key, type, value] of [
             ['string-flag', 'string', 'hello'],
             ['number-flag', 'number', '3.14'],
             ['object-flag', 'object', '{"enabled":true}']
         ]) {
-            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            expect(
+                NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+            ).toHaveBeenCalledWith(
                 name,
                 key,
                 expect.objectContaining({
@@ -378,7 +401,8 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                     doLog: true
                 }),
                 'user-1',
-                { country: 'US' }
+                { country: 'US' },
+                'user-1'
             );
         }
     });
@@ -422,12 +446,15 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         const client = OpenFeature.getClient();
         expect(client.providerStatus).toBe(ProviderStatus.READY);
         expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenLastCalledWith(
             expect.any(String),
             'boolean-flag',
             expect.any(Object),
             'user-2',
-            {}
+            {},
+            'user-2'
         );
         await OpenFeature.setContext(matchingContext);
         expect(client.providerStatus).toBe(ProviderStatus.ERROR);
@@ -454,12 +481,15 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(
             OpenFeature.getClient().getBooleanValue('boolean-flag', false)
         ).toBe(true);
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenLastCalledWith(
             name,
             'boolean-flag',
             expect.objectContaining({ extraLogging: { source: 'legacy' } }),
             'user-1',
-            { country: 'US' }
+            { country: 'US' },
+            'user-1'
         );
     });
 
@@ -484,15 +514,18 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(client.getBooleanDetails('boolean-flag', false).errorCode).toBe(
             ErrorCode.FLAG_NOT_FOUND
         );
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(1);
         expect(
-            NativeDdFlags.trackEvaluation
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledTimes(1);
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
         ).toHaveBeenLastCalledWith(
             expect.any(String),
             'number-flag',
             expect.objectContaining({ variationType: 'float' }),
             'user-1',
-            { country: 'US' }
+            { country: 'US' },
+            'user-1'
         );
     });
 
@@ -511,7 +544,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(client.getBooleanDetails('boolean-flag', false).errorCode).toBe(
             ErrorCode.PARSE_ERROR
         );
-        expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).not.toHaveBeenCalled();
     });
 
     it('recovers from malformed rules, supports replacement rules, and only emits one configuration event', async () => {
@@ -562,7 +597,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         });
         expect(client.providerStatus).toBe(ProviderStatus.READY);
         expect(client.getStringValue('string-flag', 'default')).toBe('hello');
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(1);
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenCalledTimes(1);
     });
 
     it('reports PARSE_ERROR for a rules flag with an unsafe int64 value while the provider stays ready', async () => {
@@ -584,7 +621,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
             errorCode: ErrorCode.PARSE_ERROR
         });
         expect(client.providerStatus).toBe(ProviderStatus.READY);
-        expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).not.toHaveBeenCalled();
     });
 
     it('reports PARSE_ERROR on the error event when a running provider loads malformed rules', async () => {
@@ -620,7 +659,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         });
         const client = OpenFeature.getClient();
         expect(client.getBooleanValue('test-flag', false)).toBe(true);
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenLastCalledWith(
             name,
             'test-flag',
             expect.objectContaining({
@@ -630,11 +671,14 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 serialId: '7'
             }),
             'other-user',
-            { country: 'US' }
+            { country: 'US' },
+            'other-user'
         );
         await OpenFeature.clearContext();
         expect(client.getBooleanValue('test-flag', true)).toBe(false);
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenLastCalledWith(
             name,
             'test-flag',
             expect.objectContaining({
@@ -642,7 +686,8 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 allocationKey: 'snapshot-allocation'
             }),
             'user-1',
-            { country: 'US' }
+            { country: 'US' },
+            'user-1'
         );
     });
 
@@ -657,7 +702,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         const { provider, name } = setup(configuration);
         await OpenFeature.setProviderAndWait(provider);
         OpenFeature.getClient().getBooleanValue('boolean-flag', false);
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+        expect(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).toHaveBeenLastCalledWith(
             name,
             'boolean-flag',
             expect.objectContaining({
@@ -665,7 +712,8 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
                 serialId: '42'
             }),
             'user-1',
-            { country: 'US' }
+            { country: 'US' },
+            'user-1'
         );
     });
 
@@ -782,9 +830,9 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
     it('logs native tracking failures without changing the evaluated result', async () => {
         const log = jest.spyOn(InternalLog, 'log');
         const { flagsClient } = setup(precomputedConfiguration());
-        jest.mocked(NativeDdFlags.trackEvaluation).mockRejectedValueOnce(
-            new Error('tracking failed')
-        );
+        jest.mocked(
+            NativeDdFlags.trackEvaluationWithTelemetryTargetingKey
+        ).mockRejectedValueOnce(new Error('tracking failed'));
         expect(flagsClient.getBooleanValue('boolean-flag', false)).toBe(true);
         await Promise.resolve();
         expect(log).toHaveBeenCalledWith(
