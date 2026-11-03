@@ -113,6 +113,10 @@ describe(`canonical precompute ${source.commit}`, () => {
                 expect(actual.value).toEqual(expectedResult.value);
                 expect(actual).toMatchObject(expectedResult);
                 if (!details.errorCode) {
+                    const raw = fixture.response.data.attributes.flags[flag];
+                    const expectedSerialId =
+                        raw.serialId == null ? undefined : String(raw.serialId);
+                    expect(decoded.get(flag)?.serialId).toBe(expectedSerialId);
                     tracked += 1;
                     expect(
                         NativeModules.DdFlags.trackEvaluation

@@ -175,3 +175,7 @@ It uses a short-lived token restricted to the default branch and this workflow.
 It waits when an update PR is already open. Normal SDK CI must pass before merge.
 Merge the upstream fixture contract before merging its consumer PRs.
 The update workflow never merges or publishes an SDK release.
+
+The JavaScript decoder preserves safe numeric serial IDs as bridge strings, including zero.
+The Android bridge can forward them. The pinned iOS SDK (3.16.1) lacks serial-ID support.
+End-to-end serial-ID parity on iOS requires a native SDK release and bridge update.

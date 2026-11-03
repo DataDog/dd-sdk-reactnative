@@ -115,7 +115,8 @@ const toFlagCacheEntry = (
         allocationKey,
         reason,
         doLog,
-        extraLogging
+        extraLogging,
+        serialId
     } = flag as Partial<PrecomputedFlag>;
 
     if (
@@ -160,8 +161,6 @@ const toFlagCacheEntry = (
         return null;
     }
 
-    // The released decoder's payload omits serialId. The OpenFeature offline adapter adds it from
-    // the evaluator's metadata, for both precomputed and rules flags.
     return {
         key,
         value: variationValue,
@@ -171,7 +170,10 @@ const toFlagCacheEntry = (
         variationValue: stringifyValue(variationValue),
         reason,
         doLog,
-        extraLogging: extraLogging ?? {}
+        extraLogging: extraLogging ?? {},
+        ...(typeof serialId === 'number' && Number.isSafeInteger(serialId)
+            ? { serialId: String(serialId) }
+            : {})
     };
 };
 
