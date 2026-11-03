@@ -147,6 +147,8 @@ Fractional Integer reads, range overflow, and inexact conversions return `TYPE_M
 React Native exposes one Number getter. Its tests exclude cases that require a separate Integer getter or native integer precision.
 The service keeps sending `number`. This work adds no numeric capability.
 
+Upstream CI requires a generated obfuscated companion for each applicable plain fixture. It rejects missing, stale, or orphaned companions. Edit the plain case upstream and regenerate; do not maintain two sets of expectations. Dedicated malformed-encoding cases and fixed digest vectors remain separate.
+
 Cases cover values, defaults, errors, reasons, variants, emission gates, duplicate evaluations, and numeric boundaries.
 Obfuscation cases cover fixed digests, salts, Unicode, whitespace, malformed metadata, and plaintext event identity.
 React Native has one Number getter. Cross-type Integer/Double cases are excluded by the shared contract. The suite checks the real decoder, public getters, and native tracking arguments. It does not validate native event serialization or delivery. Encoded responses are rejected because this decoder does not support key obfuscation.
