@@ -192,6 +192,125 @@
                             "description": "The app hang threshold in seconds for non-fatal app hangs on iOS.",
                             "type": "number"
                         },
+                        "headerCaptureRules": {
+                            "description": "Controls which HTTP request and response headers are captured on RUM resource events. Omit to disable header capture (default). Use `\"defaults\"` to capture a predefined set of caching and content headers on all URLs, or an array of composable rules. Sensitive headers (cookies, authorization, tokens, ...) and SDK tracing headers are never captured. Only takes effect when resource tracking is enabled.",
+                            "oneOf": [
+                                {
+                                    "const": "defaults"
+                                },
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "oneOf": [
+                                            {
+                                                "description": "Captures the predefined set of caching and content headers from requests and responses.",
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "const": "defaults"
+                                                    },
+                                                    "forURLs": {
+                                                        "description": "URL patterns to scope this rule to. Supports hostname-only (`api.example.com`) or hostname + path prefix (`api.example.com/v2`). Omit (or use `[\"*\"]`) to match all URLs.",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "type"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            {
+                                                "description": "Captures the given headers from both requests and responses.",
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "const": "matchHeaders"
+                                                    },
+                                                    "headers": {
+                                                        "description": "Header names to capture. Compared case-insensitively; the casing provided here is used in the reported attributes.",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "forURLs": {
+                                                        "description": "URL patterns to scope this rule to. Supports hostname-only (`api.example.com`) or hostname + path prefix (`api.example.com/v2`). Omit (or use `[\"*\"]`) to match all URLs.",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "type",
+                                                    "headers"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            {
+                                                "description": "Captures the given headers from requests only.",
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "const": "matchRequestHeaders"
+                                                    },
+                                                    "headers": {
+                                                        "description": "Header names to capture. Compared case-insensitively; the casing provided here is used in the reported attributes.",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "forURLs": {
+                                                        "description": "URL patterns to scope this rule to. Supports hostname-only (`api.example.com`) or hostname + path prefix (`api.example.com/v2`). Omit (or use `[\"*\"]`) to match all URLs.",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "type",
+                                                    "headers"
+                                                ],
+                                                "additionalProperties": false
+                                            },
+                                            {
+                                                "description": "Captures the given headers from responses only.",
+                                                "type": "object",
+                                                "properties": {
+                                                    "type": {
+                                                        "const": "matchResponseHeaders"
+                                                    },
+                                                    "headers": {
+                                                        "description": "Header names to capture. Compared case-insensitively; the casing provided here is used in the reported attributes.",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "forURLs": {
+                                                        "description": "URL patterns to scope this rule to. Supports hostname-only (`api.example.com`) or hostname + path prefix (`api.example.com/v2`). Omit (or use `[\"*\"]`) to match all URLs.",
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "type",
+                                                    "headers"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        },
                         "initialResourceThreshold": {
                             "description": "The amount of time after a view starts where a Resource should be considered when calculating Time to Network-Settled (TNS).",
                             "type": "number"
