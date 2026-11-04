@@ -87,7 +87,6 @@ package/ios/Sources/RCTTextExtractor.mm
 package/ios/Sources/RCTTextPropertiesWrapper.h
 package/ios/Sources/RCTTextPropertiesWrapper.mm
 package/ios/Sources/RCTTextViewRecorder.swift
-package/ios/Sources/RCTVersion.h
 package/ios/Sources/SvgViewRecorder.swift
 package/ios/Sources/Utils/Bundle+SessionReplay.swift
 package/lib/commonjs/SessionReplay.js
@@ -189,7 +188,6 @@ package/lib/typescript/types/DdPrivacyView.d.ts.map
 package/metro.js
 package/package.json
 package/scripts/build-assets.js
-package/scripts/set-ios-rn-version.js
 package/src/SessionReplay.ts
 package/src/__tests__/SessionReplay.test.ts
 package/src/components/SessionReplayView/HideView.tsx
