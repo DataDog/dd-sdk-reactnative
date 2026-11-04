@@ -112,6 +112,16 @@ export interface SessionReplayConfiguration {
      * Default: `false`.
      */
     enableCompositionTreeRecording?: boolean;
+
+    /**
+     * Enables experimental adaptive capture scheduling to reduce capture CPU usage
+     * on screens with repeated draws, such as a blinking text cursor.
+     * Captures run after drawing and retain the latest pending update while the
+     * capture time budget recovers.
+     * Android only. This option has no effect on iOS.
+     * Default: `false`.
+     */
+    adaptiveCaptureSchedulingEnabled?: boolean;
 }
 
 type InternalBaseSessionReplayConfiguration = {
@@ -120,6 +130,7 @@ type InternalBaseSessionReplayConfiguration = {
     startRecordingImmediately: boolean;
     enableHeatmaps: boolean;
     enableCompositionTreeRecording: boolean;
+    adaptiveCaptureSchedulingEnabled: boolean;
 };
 
 type InternalPrivacySessionReplayConfiguration = {
@@ -139,7 +150,8 @@ const DEFAULTS: InternalSessionReplayConfiguration = {
     textAndInputPrivacyLevel: TextAndInputPrivacyLevel.MASK_ALL,
     startRecordingImmediately: true,
     enableHeatmaps: false,
-    enableCompositionTreeRecording: false
+    enableCompositionTreeRecording: false,
+    adaptiveCaptureSchedulingEnabled: false
 };
 
 export class SessionReplayWrapper {
@@ -158,7 +170,8 @@ export class SessionReplayWrapper {
             customEndpoint,
             startRecordingImmediately,
             enableHeatmaps,
-            enableCompositionTreeRecording
+            enableCompositionTreeRecording,
+            adaptiveCaptureSchedulingEnabled
         } = configuration;
 
         const baseConfig: InternalBaseSessionReplayConfiguration = {
@@ -181,7 +194,10 @@ export class SessionReplayWrapper {
             enableCompositionTreeRecording:
                 enableCompositionTreeRecording !== undefined
                     ? enableCompositionTreeRecording
-                    : DEFAULTS.enableCompositionTreeRecording
+                    : DEFAULTS.enableCompositionTreeRecording,
+            adaptiveCaptureSchedulingEnabled:
+                adaptiveCaptureSchedulingEnabled ??
+                DEFAULTS.adaptiveCaptureSchedulingEnabled
         };
 
         const privacyConfig: InternalPrivacySessionReplayConfiguration = {
@@ -210,7 +226,8 @@ export class SessionReplayWrapper {
             textAndInputPrivacyLevel,
             startRecordingImmediately,
             enableHeatmaps,
-            enableCompositionTreeRecording
+            enableCompositionTreeRecording,
+            adaptiveCaptureSchedulingEnabled
         } = this.buildConfiguration(configuration);
 
         return this.nativeSessionReplay.enable(
@@ -221,7 +238,8 @@ export class SessionReplayWrapper {
             textAndInputPrivacyLevel,
             startRecordingImmediately,
             enableHeatmaps,
-            enableCompositionTreeRecording
+            enableCompositionTreeRecording,
+            adaptiveCaptureSchedulingEnabled
         );
     };
 
