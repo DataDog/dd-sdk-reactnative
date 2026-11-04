@@ -13,12 +13,14 @@ import pathN from 'path';
 
 import { getNodeName } from '../../utils';
 
+import type { SvgBindingMap } from './svgBindingMap';
+
 export type ScanOptions = {
     t: typeof Babel.types;
     rootDir: string;
     scanIgnorePatterns: string[];
     followSymlinks: boolean;
-    localSvgMap: Record<string, { path: string; content?: string }>;
+    svgBindingMap: SvgBindingMap;
 };
 
 export function scanProjectForSvgs({
@@ -26,7 +28,7 @@ export function scanProjectForSvgs({
     rootDir,
     scanIgnorePatterns,
     followSymlinks,
-    localSvgMap
+    svgBindingMap
 }: ScanOptions): void {
     const files = glob.sync('**/*.{js,jsx,ts,tsx}', {
         cwd: rootDir,
@@ -67,9 +69,11 @@ export function scanProjectForSvgs({
                     for (const spec of path.node.specifiers) {
                         const name = getNodeName(t, spec.local.name);
                         if (name) {
-                            localSvgMap[name] = {
-                                path: resolved
-                            };
+                            svgBindingMap.setLocalSvgMapEntry(
+                                file,
+                                name,
+                                resolved
+                            );
                         }
                     }
                 },
@@ -95,9 +99,10 @@ export function scanProjectForSvgs({
                                     : exported.name
                             );
                             if (name) {
-                                localSvgMap[name] = {
-                                    path: resolved
-                                };
+                                svgBindingMap.setFlatSvgMapEntry(
+                                    name,
+                                    resolved
+                                );
                             }
                         } else {
                             console.warn(
