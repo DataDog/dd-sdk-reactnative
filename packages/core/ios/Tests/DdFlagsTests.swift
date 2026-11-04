@@ -174,6 +174,33 @@ class DdFlagsTests: XCTestCase {
         waitForExpectations(timeout: 1.0, handler: nil)
     }
 
+    func testIndependentTrackingRejectsUnsupportedPlatformWithoutUsingClient() {
+        var clientRequested = false
+        implementation.clientProviders["tracking"] = {
+            clientRequested = true
+            return MockFlagsClient()
+        }
+        let flag: NSDictionary = [
+            "allocationKey": "allocation", "variationKey": "on", "reason": "STATIC",
+            "doLog": true, "value": true
+        ]
+        var rejectionCount = 0
+        let reject: RCTPromiseReject = { code, message, error in
+            XCTAssertEqual(code, "UNSUPPORTED_PLATFORM")
+            XCTAssertEqual(message, "Independent flag tracking hooks are currently supported only on Android.")
+            XCTAssertNil(error)
+            rejectionCount += 1
+        }
+        let resolve: RCTPromiseResolve = { _ in XCTFail("Unsupported tracking must not report success") }
+
+        implementation.trackExposure("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: [:], resolve: resolve, reject: reject)
+        implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: [:], errorCode: nil, resolve: resolve, reject: reject)
+        implementation.trackRumEvaluation("tracking", key: "flag", variant: "on", targetingKey: "user", attributes: [:], resolve: resolve, reject: reject)
+
+        XCTAssertEqual(rejectionCount, 3)
+        XCTAssertFalse(clientRequested)
+    }
+
     // MARK: - AnyValue Tests
 
     func testAnyValueWrapUnwrapNull() {
