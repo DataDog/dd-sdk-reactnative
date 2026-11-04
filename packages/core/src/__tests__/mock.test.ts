@@ -22,9 +22,8 @@ import { DdLogs, DdRum, DdTrace, DdSdkReactNative } from '../index';
  */
 
 const privateProperties = {
-    DdTrace: ['nativeTrace'],
+    DdTrace: [],
     DdLogs: [
-        'nativeLogs',
         'logEventMapper',
         'printLogDroppedSdkNotInitialized',
         'printLogDroppedByMapper',
@@ -33,7 +32,6 @@ const privateProperties = {
         'logWithError'
     ],
     DdRum: [
-        'nativeRum',
         'errorEventMapper',
         'resourceEventMapper',
         'actionEventMapper',
