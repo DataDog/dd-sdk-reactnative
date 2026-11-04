@@ -162,6 +162,32 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
       Xcodeproj::Project.instance_method(:generate_available_uuid_list).bind(project).call(100)
     end
 
+    # React Native 0.87 and later build a statically linked pod that requests package products straight
+    # into the shared products directory, which moves its module map from <Pod>/<Module>.modulemap to
+    # <Module>.modulemap. React Native updates the app's references to it but not those of other pods,
+    # so the Datadog pods that import the core pod fail with "module map file ... not found". This
+    # updates their references too, and finds nothing to do on earlier versions or with frameworks.
+    def datadog_update_moved_module_map_references(installer)
+      datadog_pods = installer.pod_targets.select { |pod| pod.pod_name.start_with?('Datadog') }
+      moved = datadog_pods.select do |pod|
+        target = installer.pods_project.native_targets.find { |t| t.name == pod.label }
+        target && target.build_configurations.any? { |config| config.build_settings['CONFIGURATION_BUILD_DIR'] == '${PODS_CONFIGURATION_BUILD_DIR}' }
+      end
+      return if moved.empty?
+
+      datadog_pods.each do |pod|
+        Dir.glob(File.join(pod.support_files_dir, '*.xcconfig')).each do |path|
+          xcconfig = File.read(path)
+          updated = moved.reduce(xcconfig) do |acc, moved_pod|
+            module_name = moved_pod.product_module_name
+            acc.gsub("${PODS_CONFIGURATION_BUILD_DIR}/#{moved_pod.label}/#{module_name}.modulemap",
+                     "${PODS_CONFIGURATION_BUILD_DIR}/#{module_name}.modulemap")
+          end
+          File.write(path, updated) if updated != xcconfig
+        end
+      end
+    end
+
     # The package requirement written into the embed script, taken from this podspec rather than from
     # React Native's records of it.
     define_method(:datadog_package_requirement) do
@@ -183,6 +209,7 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
       datadog_dedupe_static_archive(installer, core) unless core.nil?
       super(installer)
       datadog_link_static_products_from_core(installer, core) unless core.nil?
+      datadog_update_moved_module_map_references(installer)
       embed = <<~'SH'
         # Embeds the Datadog Swift package frameworks that Xcode builds dynamically. Looks where Xcode
         # writes them: the products dir, PackageFrameworks, or UninstalledProducts when archiving.
