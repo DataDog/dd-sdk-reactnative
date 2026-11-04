@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { DEFAULT_ENV_TEST_CONFIG, getDatadogConfig, getTestConfigFromDeeplink, isValidScenario, startCollectingVitals, stopCollectingVitals } from './testSetup/testUtils';
+import { DEFAULT_ENV_TEST_CONFIG, armColdStart, consumeColdStartConfig, getDatadogConfig, getTestConfigFromDeeplink, isValidScenario, startCollectingVitals, stopCollectingVitals } from './testSetup/testUtils';
 import { Command, Scenario } from './testSetup/types/testConfig';
 import type { TestConfig } from './testSetup/types/testConfig';
 import DefaultScenario from './scenario/Default/defaultScenario';
@@ -21,12 +21,18 @@ import TracesScenario from './scenario/Traces/tracesScenario';
 import RUMManualScenario from './scenario/RUM/Manual/rumManualScenario';
 import RUMAutoScenario from './scenario/RUM/Auto/rumAutoScenario';
 import SessionReplayScenario from './scenario/SessionReplay/sessionReplayScenario';
+import ColdStartScenario from './scenario/ColdStart/coldStartScenario';
 
 function App(): React.JSX.Element {
   const [testConfig, setTestConfig] = useState<TestConfig | undefined>();
+  const [isColdStartArmed, setColdStartArmed] = useState(false);
 
   useEffect(() => {
     setupFromTestConfig(DEFAULT_ENV_TEST_CONFIG);
+
+    consumeColdStartConfig().then(coldStartConfig => {
+      setupFromTestConfig(coldStartConfig);
+    });
 
     Linking.getInitialURL().then(url => {
       setupFromUrl(url);
@@ -64,6 +70,14 @@ function App(): React.JSX.Element {
   const setupFromUrl = (url: string | null | undefined) => {
     if (url) {
       const newTestConfig = getTestConfigFromDeeplink(url);
+
+      if (newTestConfig?.command === Command.Start && newTestConfig.scenario === Scenario.ColdStart) {
+        // Cold start is measured from process start, which a deep link can't guarantee:
+        // arm the scenario instead, so it runs on the next launch of the app
+        armColdStart(newTestConfig).then(() => setColdStartArmed(true));
+        return;
+      }
+
       setupFromTestConfig(newTestConfig);
     }
   }
@@ -85,11 +99,13 @@ function App(): React.JSX.Element {
       return <RUMAutoScenario testConfig={testConfig}/>;
     case Scenario.SessionReplay:
       return <SessionReplayScenario testConfig={testConfig}/>;
+    case Scenario.ColdStart:
+      return <ColdStartScenario testConfig={testConfig}/>;
     // Add new scenarios here
     default:
       return (
         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-          <Text>No scenario loaded</Text>
+          <Text>{isColdStartArmed ? 'Cold start armed, restart the app' : 'No scenario loaded'}</Text>
         </View>
       );
   }

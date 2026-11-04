@@ -28,6 +28,26 @@ RCT_REMAP_METHOD(stopCollectingVitals, stopCollectingVitalswithResolve: (RCTProm
   [self stopCollectingVitals:resolve reject:reject];
 }
 
+RCT_REMAP_METHOD(reportFullyDisplayed, reportFullyDisplayedwithConfig:(NSDictionary *)config
+                                       withResolve: (RCTPromiseResolveBlock)resolve
+                                       withRejecter: (RCTPromiseRejectBlock)reject)
+{
+  [self reportFullyDisplayed:config resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(armColdStart, armColdStartwithConfig:(NSDictionary *)config
+                               withResolve: (RCTPromiseResolveBlock)resolve
+                               withRejecter: (RCTPromiseRejectBlock)reject)
+{
+  [self armColdStart:config resolve:resolve reject:reject];
+}
+
+RCT_REMAP_METHOD(consumeColdStartConfig, consumeColdStartConfigwithResolve: (RCTPromiseResolveBlock)resolve
+                 withRejecter: (RCTPromiseRejectBlock)reject)
+{
+  [self consumeColdStartConfig:resolve reject:reject];
+}
+
 #ifdef RCT_NEW_ARCH_ENABLED
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
@@ -51,6 +71,18 @@ RCT_REMAP_METHOD(stopCollectingVitals, stopCollectingVitalswithResolve: (RCTProm
 
 - (void)stopCollectingVitals:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.benchmarkVitalsImplementation stopCollectingVitalsWithResolve:resolve reject:reject];
+}
+
+- (void)reportFullyDisplayed:(NSDictionary *)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.benchmarkVitalsImplementation reportFullyDisplayedWithConfig:config resolve:resolve reject:reject];
+}
+
+- (void)armColdStart:(NSDictionary *)config resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.benchmarkVitalsImplementation armColdStartWithConfig:config resolve:resolve reject:reject];
+}
+
+- (void)consumeColdStartConfig:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.benchmarkVitalsImplementation consumeColdStartConfigWithResolve:resolve reject:reject];
 }
 
 @end

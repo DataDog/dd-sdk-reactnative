@@ -74,4 +74,46 @@ public class BenchmarkVitalsImplementation: NSObject {
       vitals = nil
       resolve(true)
   }
+
+  @objc
+  public func reportFullyDisplayed(config: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    // Read the end timestamp first, so that nothing below is included in the measure
+    let now = Date()
+
+    guard !FullyDisplayed.isPrewarmed else {
+      reject("PREWARMED", "The process was pre-warmed by iOS, the time to fully displayed is not relevant", nil)
+      return
+    }
+    guard let processStart = FullyDisplayed.processStartDate() else {
+      reject("NO_PROCESS_START", "Unable to read the process start time", nil)
+      return
+    }
+
+    let nativeConfig = NativeTestConfig(from: config)
+    let durationMs = now.timeIntervalSince(processStart) * 1_000
+
+    FullyDisplayed.submit(
+      durationMs: durationMs,
+      metric: "rn.ios.benchmark.ttfd",
+      context: FullyDisplayed.MetricContext(
+        apiKey: nativeConfig.apiKey,
+        run: nativeConfig.runType,
+        scenario: nativeConfig.scenario,
+        env: nativeConfig.env
+      )
+    )
+
+    resolve(durationMs)
+  }
+
+  @objc
+  public func armColdStart(config: NSDictionary, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    FullyDisplayed.armColdStart(config: config)
+    resolve(true)
+  }
+
+  @objc
+  public func consumeColdStartConfig(resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
+    resolve(FullyDisplayed.consumeColdStartConfig())
+  }
 }

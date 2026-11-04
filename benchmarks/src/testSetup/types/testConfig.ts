@@ -17,7 +17,8 @@ export enum Scenario {
     Traces = 'traces',
     RUMManual = 'rumManual',
     RUMAuto = 'rumAuto',
-    SessionReplay = 'sessionReplay'
+    SessionReplay = 'sessionReplay',
+    ColdStart = 'coldStart'
     // Add new scenarios here
 }
 

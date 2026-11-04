@@ -6,7 +6,7 @@
 
 import { DefaultTimeProvider, ErrorSource, RumActionType } from "@datadog/mobile-react-native";
 import type { DdRumType, ResourceKind } from "@datadog/mobile-react-native/lib/typescript/rum/types";
-import type { GestureResponderEvent } from "react-native/types";
+import type { GestureResponderEvent } from "react-native";
 
 const timeProvider = new DefaultTimeProvider();
 
