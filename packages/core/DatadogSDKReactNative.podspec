@@ -162,6 +162,56 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
       Xcodeproj::Project.instance_method(:generate_available_uuid_list).bind(project).call(100)
     end
 
+    # React Native 0.87 and later build every statically linked pod that requests package products straight
+    # into the shared products directory (see datadog_update_moved_module_map_references), and CocoaPods
+    # copies each Swift pod's module map and umbrella header into its build directory. With all the
+    # Datadog pods in one directory, clang lets only one umbrella module cover it: "Umbrella for module
+    # ... already covers this directory". Once datadog_link_static_products_from_core has moved every
+    # package product onto the core pod, the other pods request none, so React Native's reason to move
+    # them is gone: put them back into their own build directories, with the include path React Native
+    # gives the pods it does not move, and point the app's references back at their module maps. Finds
+    # nothing to do on earlier versions or with frameworks.
+    def datadog_restore_static_pod_build_dirs(installer, core)
+      return if core.build_as_dynamic?
+
+      products_dir = '${PODS_CONFIGURATION_BUILD_DIR}'
+      search_path = '${SYMROOT}/${CONFIGURATION}${EFFECTIVE_PLATFORM_NAME}/'
+      restored = installer.pod_targets.select do |pod|
+        next false if pod == core || !pod.pod_name.start_with?('Datadog')
+        target = installer.pods_project.native_targets.find { |t| t.name == pod.label }
+        next false if target.nil? || !target.package_product_dependencies.empty?
+        moved = target.build_configurations.select { |config| config.build_settings['CONFIGURATION_BUILD_DIR'] == products_dir }
+        moved.each do |config|
+          config.build_settings.delete('CONFIGURATION_BUILD_DIR')
+          include_paths = Array(config.build_settings['SWIFT_INCLUDE_PATHS'] || '$(inherited)')
+          include_paths << search_path unless include_paths.include?(search_path)
+          config.build_settings['SWIFT_INCLUDE_PATHS'] = include_paths
+        end
+        !moved.empty?
+      end
+      return if restored.empty?
+
+      # React Native rewrote these in the aggregate targets' in-memory xcconfigs, which later post-install
+      # steps save again, so edit the same objects rather than the files.
+      installer.aggregate_targets.each do |aggregate|
+        aggregate.xcconfigs.each do |config_name, xcconfig|
+          changed = false
+          %w[OTHER_CFLAGS OTHER_SWIFT_FLAGS].each do |key|
+            value = xcconfig.attributes[key]
+            next unless value
+            updated = restored.reduce(value) do |acc, pod|
+              module_name = pod.product_module_name
+              acc.gsub("#{products_dir}/#{module_name}.modulemap", "#{products_dir}/#{pod.label}/#{module_name}.modulemap")
+            end
+            next if updated == value
+            xcconfig.attributes[key] = updated
+            changed = true
+          end
+          xcconfig.save_as(aggregate.xcconfig_path(config_name)) if changed
+        end
+      end
+    end
+
     # React Native 0.87 and later build a statically linked pod that requests package products straight
     # into the shared products directory, which moves its module map from <Pod>/<Module>.modulemap to
     # <Module>.modulemap. React Native updates the app's references to it but not those of other pods,
@@ -209,6 +259,7 @@ unless SPM.singleton_class.method_defined?(:datadog_embeds_spm_frameworks?)
       datadog_dedupe_static_archive(installer, core) unless core.nil?
       super(installer)
       datadog_link_static_products_from_core(installer, core) unless core.nil?
+      datadog_restore_static_pod_build_dirs(installer, core) unless core.nil?
       datadog_update_moved_module_map_references(installer)
       embed = <<~'SH'
         # Embeds the Datadog Swift package frameworks that Xcode builds dynamically. Looks where Xcode
