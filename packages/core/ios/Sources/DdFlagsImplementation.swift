@@ -118,6 +118,26 @@ public class DdFlagsImplementation: NSObject {
         resolve(nil)
     }
 
+    @objc
+    public func trackExposure(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        rejectUnsupportedTracking(reject)
+    }
+
+    @objc
+    public func trackEvaluationEvent(_ clientName: String, key: String, rawFlag: NSDictionary?, targetingKey: String, attributes: NSDictionary, errorCode: String?, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        rejectUnsupportedTracking(reject)
+    }
+
+    @objc
+    public func trackRumEvaluation(_ clientName: String, key: String, variant: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        rejectUnsupportedTracking(reject)
+    }
+
+    // The shared TurboModule spec requires these methods, but iOS support is deferred.
+    private func rejectUnsupportedTracking(_ reject: RCTPromiseReject) {
+        reject("UNSUPPORTED_PLATFORM", "Independent flag tracking hooks are currently supported only on Android.", nil)
+    }
+
     /// Construct an `FlagsEvaluationContext` from a targeting key and a dictionary of attributes.
     private func buildEvaluationContext(targetingKey: String, attributes: NSDictionary) -> FlagsEvaluationContext {
         let dict = attributes as? [String: Any] ?? [:]
