@@ -48,7 +48,15 @@ export const decodePrecomputedFlags = (
     // carries it. Read it defensively so obfuscated payloads are still rejected:
     // de-hashing keys / decoding values is not implemented here, so fail predictably
     // instead of mis-mapping hashed keys.
-    if ((attributes as { obfuscated?: boolean } | undefined)?.obfuscated) {
+    const encoding = attributes as
+        | { obfuscated?: unknown; obfuscation?: unknown }
+        | undefined;
+    if (
+        encoding &&
+        (Object.prototype.hasOwnProperty.call(encoding, 'obfuscation') ||
+            (Object.prototype.hasOwnProperty.call(encoding, 'obfuscated') &&
+                encoding.obfuscated !== false))
+    ) {
         throw new UnsupportedConfigurationError(
             'Obfuscated precomputed configurations are not supported.'
         );
@@ -109,6 +117,7 @@ const toFlagCacheEntry = (
         doLog,
         extraLogging
     } = flag as Partial<PrecomputedFlag>;
+    const { serialId } = flag as { serialId?: unknown };
 
     if (
         typeof variationType !== 'string' ||
@@ -152,8 +161,6 @@ const toFlagCacheEntry = (
         return null;
     }
 
-    // The released decoder's payload omits serialId. The OpenFeature offline adapter adds it from
-    // the evaluator's metadata, for both precomputed and rules flags.
     return {
         key,
         value: variationValue,
@@ -163,7 +170,10 @@ const toFlagCacheEntry = (
         variationValue: stringifyValue(variationValue),
         reason,
         doLog,
-        extraLogging: extraLogging ?? {}
+        extraLogging: extraLogging ?? {},
+        ...(typeof serialId === 'number' && Number.isSafeInteger(serialId)
+            ? { serialId: String(serialId) }
+            : {})
     };
 };
 
@@ -177,13 +187,10 @@ const valueMatchesVariationType = (
         case 'string':
             return typeof value === 'string';
         case 'number':
+        case 'integer':
         case 'float':
             // Reject NaN/Infinity: native parsers can't round-trip them.
             return typeof value === 'number' && Number.isFinite(value);
-        case 'integer':
-            // A fractional value under an integer flag would be truncated/mis-parsed
-            // natively, so require a whole number.
-            return Number.isInteger(value);
         case 'object':
             // The `object` variation type carries JSON. ffe-service enforces a top-level object at
             // the API layer, so in practice the value is an object; that is not a storage

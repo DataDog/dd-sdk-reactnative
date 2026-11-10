@@ -219,15 +219,14 @@ describe('decodePrecomputedFlags', () => {
         expect(decodePrecomputedFlags(responseWith({})).size).toBe(0);
     });
 
-    it('omits an integer flag with a fractional value', () => {
+    it('preserves a numeric value independently of its integer label', () => {
         const cache = decodePrecomputedFlags(
             responseWith({
                 frac: flag({ variationType: 'integer', variationValue: 7.9 })
             })
         );
 
-        expect(cache.get('frac')).toBeUndefined();
-        expect(InternalLog.log).toHaveBeenCalled();
+        expect(cache.get('frac')?.value).toBe(7.9);
     });
 
     it('omits a number flag whose value is not finite', () => {
