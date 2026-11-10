@@ -6,7 +6,7 @@ include:
 variables:
     GIT_DEPTH: 5
     DEVELOP_BRANCH: 'develop'
-    DEVELOPER_DIR: '/Applications/Xcode-16.4.0.app/Contents/Developer'
+    DEVELOPER_DIR: '/Applications/Xcode-26.5.0.app/Contents/Developer'
     IOS_SIMULATOR_DESTINATION: 'platform=iOS Simulator,OS=18.5,name=iPhone 16 Pro Max'
     IOS_DERIVED_DATA_PATH: '$CI_PROJECT_DIR/DerivedData'
     ANDROID_SDK_VERSION: 'commandlinetools-mac-11076708_latest'
