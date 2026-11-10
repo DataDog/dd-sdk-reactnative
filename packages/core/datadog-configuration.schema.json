@@ -283,7 +283,7 @@
                             "type": "object",
                             "properties": {
                                 "collectTypes": {
-                                    "description": "The types of timeseries data to collect. Defaults to collecting all supported types when omitted.",
+                                    "description": "The types of timeseries data to collect. Required. Use [\"cpu\", \"memory\"] to collect the default set.",
                                     "type": "array",
                                     "items": {
                                         "description": "Type of timeseries data to collect.",
@@ -294,7 +294,10 @@
                                         ]
                                     }
                                 }
-                            }
+                            },
+                            "required": [
+                                "collectTypes"
+                            ]
                         }
                     },
                     "required": [
