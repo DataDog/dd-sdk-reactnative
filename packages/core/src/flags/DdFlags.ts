@@ -9,6 +9,7 @@ import { SdkVerbosity } from '../config/types/SdkVerbosity';
 import type { DdNativeFlagsType } from '../nativeModulesTypes';
 import { getNativeDdFlags } from '../specs/NativeDdFlags';
 import { getGlobalInstance } from '../utils/singletonUtils';
+import { version } from '../version';
 
 import { FlagsClient } from './FlagsClient';
 import type { DdFlagsType, FlagsConfiguration } from './types';
@@ -33,7 +34,12 @@ class DdFlagsWrapper implements DdFlagsType {
     private clients: Record<string, FlagsClient> = {};
 
     enable = async (configuration: FlagsConfiguration = {}): Promise<void> => {
-        await this.nativeFlags.enable({ enabled: true, ...configuration });
+        await this.nativeFlags.enable({
+            enabled: true,
+            ...configuration,
+            // The loaded bundle can differ from the compiled native bridge.
+            _ddFlagsSdkVersion: version
+        });
 
         this.isFeatureEnabled = true;
     };
