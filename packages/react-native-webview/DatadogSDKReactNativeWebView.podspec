@@ -22,6 +22,42 @@ uses_frameworks = !ENV['USE_FRAMEWORKS'].nil?
 # every Datadog product then (see DatadogSDKReactNative.podspec).
 uses_dynamic_frameworks = ENV['USE_FRAMEWORKS'] == 'dynamic'
 
+# USE_FRAMEWORKS says how the app asked pods to be linked, not how this pod ends up being built.
+# Expo 57 and later, with precompiled modules (the default), build every pod that depends on
+# React-Core as a static library even under `use_frameworks!` -- this one and react-native-webview
+# included -- and decide it in a pre-install step, after this podspec has been read. Expo 58 keeps
+# pods that use `spm_dependency` as dynamic frameworks, but only for dynamic linkage. When this pod
+# ends up a static library, the react-native-webview dependency declared below for frameworks fails
+# `pod install` ("The Swift pod `DatadogSDKReactNativeWebView` depends upon `react-native-webview`,
+# which does not define modules"), and it is not needed: a static library resolves the headers through
+# HEADER_SEARCH_PATHS and leaves linking to the app, as without `use_frameworks!`. So just before
+# CocoaPods validates the targets, when every pod's build type is final, drop that dependency from
+# this pod if it is built as a static library. A framework keeps it.
+unless Pod::Installer.method_defined?(:datadog_drop_static_webview_dependency)
+  Pod::Installer.prepend(Module.new do
+    def datadog_drop_static_webview_dependency
+      pod_targets.each do |target|
+        next unless target.pod_name == 'DatadogSDKReactNativeWebView' && !target.build_as_framework?
+
+        dependencies = target.dependent_targets_by_config
+        next unless dependencies.each_value.any? { |deps| deps.any? { |dep| dep.pod_name == 'react-native-webview' } }
+
+        target.dependent_targets_by_config = dependencies.transform_values do |deps|
+          deps.reject { |dep| dep.pod_name == 'react-native-webview' }
+        end
+        # CocoaPods caches the transitive dependencies, which later steps read.
+        target.remove_instance_variable(:@recursive_dependent_targets) if target.instance_variable_defined?(:@recursive_dependent_targets)
+        Pod::UI.puts "[Datadog] #{target.name} is built as a static library, so it does not depend on react-native-webview"
+      end
+    end
+
+    def validate_targets
+      datadog_drop_static_webview_dependency
+      super
+    end
+  end)
+end
+
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNativeWebView"
   s.version      = package["version"]
@@ -44,7 +80,8 @@ Pod::Spec.new do |s|
   # declared dependency so that CocoaPods puts its build directory on this target's
   # FRAMEWORK_SEARCH_PATHS. Static libraries find them through HEADER_SEARCH_PATHS below instead,
   # and declaring it there fails `pod install`: react-native-webview does not define modules, which
-  # a Swift static library's dependencies must.
+  # a Swift static library's dependencies must. Under `use_frameworks!` this pod can still end up a
+  # static library (Expo's precompiled modules): see datadog_drop_static_webview_dependency above.
   if uses_frameworks
     s.dependency "react-native-webview"
   end
