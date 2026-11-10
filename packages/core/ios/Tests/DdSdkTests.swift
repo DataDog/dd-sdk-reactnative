@@ -11,7 +11,7 @@ import XCTest
 @testable import DatadogCrashReporting
 @testable import DatadogInternal
 @testable import DatadogLogs
-@testable import DatadogRUM
+@testable @_spi(Experimental) import DatadogRUM
 @testable import DatadogSDKReactNative
 @testable import DatadogTrace
 
