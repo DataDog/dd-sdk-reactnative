@@ -22,6 +22,11 @@ import {
     ProxyType
 } from './config/types/ProxyConfiguration';
 import { SdkVerbosity } from './config/types/SdkVerbosity';
+import { defaultTimeseriesTypes } from './config/types/TimeseriesConfiguration';
+import type {
+    TimeseriesConfiguration,
+    TimeseriesType
+} from './config/types/TimeseriesConfiguration';
 import { TrackingConsent } from './config/types/TrackingConsent';
 import {
     BatchProcessingLevel,
@@ -97,6 +102,7 @@ export {
     TrackingConsent,
     SdkVerbosity,
     VitalsUpdateFrequency,
+    defaultTimeseriesTypes,
     PropagatorType,
     UploadFrequency,
     BatchSize,
@@ -123,6 +129,8 @@ export type {
     PartialInitializationConfiguration,
     CoreConfigurationOptions,
     RumConfigurationOptions,
+    TimeseriesConfiguration,
+    TimeseriesType,
     LogsConfigurationOptions,
     TraceConfigurationOptions,
     FlagsConfiguration,
