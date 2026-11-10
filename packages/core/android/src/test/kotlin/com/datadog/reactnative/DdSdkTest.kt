@@ -2376,7 +2376,7 @@ internal class DdSdkTest {
     ) {
         // Given
         val rumConfiguration = configuration.rumConfiguration?.copy(
-            timeseries = TimeseriesConfiguration(collectTypes = listOf("cpu"))
+            timeseries = TimeseriesConfiguration(collectTypes = listOf("cpu", "memory"))
         )
         val bridgeConfiguration = configuration.copy(
             rumConfiguration = rumConfiguration
@@ -2412,7 +2412,10 @@ internal class DdSdkTest {
             assertThat(rumConfigCaptor.firstValue)
                 .hasField("featureConfiguration") {
                     it.hasField("timeseriesConfiguration") { ts ->
-                        ts.hasFieldEqualTo("enabledTypes", setOf(TimeseriesType.CPU))
+                        ts.hasFieldEqualTo(
+                            "enabledTypes",
+                            setOf(TimeseriesType.CPU, TimeseriesType.MEMORY)
+                        )
                     }
                 }
         } finally {

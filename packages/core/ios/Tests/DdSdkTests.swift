@@ -1226,14 +1226,14 @@ class DdSdkTests: XCTestCase {
     func testBuildConfigurationEnabledTimeseries() {
         let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
         rumConfiguration.enableTimeseries = true
-        rumConfiguration.timeseriesCollectTypes = ["cpu"]
+        rumConfiguration.timeseriesCollectTypes = ["cpu", "memory"]
         let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
 
         let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
             configuration: configuration
         )
 
-        XCTAssertEqual(ddConfig.timeseries?.collectTypes, [.cpu])
+        XCTAssertEqual(ddConfig.timeseries?.collectTypes, [.cpu, .memory])
     }
 
     func testBuildConfigurationDisabledTimeseriesByDefault() {
