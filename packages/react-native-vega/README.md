@@ -152,6 +152,11 @@ native bridge applies:
 Proxy configuration, custom intake endpoints, `bundleLogsWithTraces`, and most native
 performance options are not currently applied by the Vega C++ bridge.
 
+The service name defaults to the host application's package identifier, retrieved
+through `@amazon-devices/react-native-device-info`. Set `configuration.service`
+to override it. If the identifier is unavailable, the service defaults to `vega`
+and the SDK logs a warning.
+
 The application version defaults to the running Vega package's version, retrieved
 through the transitive `@amazon-devices/react-native-device-info` dependency. As with
 the React Native SDK, `configuration.version` overrides that value and

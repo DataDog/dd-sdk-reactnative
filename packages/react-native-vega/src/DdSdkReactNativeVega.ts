@@ -391,6 +391,32 @@ export class DdSdkReactNativeVega {
         return NativeDdSdk.clearAllData();
     };
 
+    private static getDefaultService = (): string => {
+        try {
+            /* eslint-disable global-require, @typescript-eslint/no-var-requires */
+            const {
+                getBundleId
+            } = require('@amazon-devices/react-native-device-info');
+            /* eslint-enable global-require, @typescript-eslint/no-var-requires */
+            const applicationId: unknown = getBundleId();
+            if (
+                typeof applicationId === 'string' &&
+                applicationId.trim() &&
+                applicationId !== 'unknown'
+            ) {
+                return applicationId;
+            }
+        } catch {
+            // Keep initialization working if Vega cannot provide package metadata.
+        }
+
+        InternalLog.log(
+            'Unable to read the Vega application identifier. Using "vega" as the service name. Set configuration.service to override it.',
+            SdkVerbosity.WARN
+        );
+        return 'vega';
+    };
+
     private static getDefaultApplicationVersion = (): string | undefined => {
         try {
             // Resolve lazily so an unavailable system module does not prevent imports
@@ -495,7 +521,7 @@ export class DdSdkReactNativeVega {
             configuration.clientToken,
             configuration.env,
             configuration.site,
-            configuration.service,
+            configuration.service || DdSdkReactNativeVega.getDefaultService(),
             configuration.verbosity,
             configuration.trackingConsent,
             configuration.uploadFrequency,

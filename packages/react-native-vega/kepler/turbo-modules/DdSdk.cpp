@@ -122,9 +122,6 @@ com::amazon::kepler::turbomodule::Promise DdSdk::initialize(
             if (serviceName.empty()) {
                 serviceName = getStringFromJSObject(configuration, "serviceName");
             }
-            if (serviceName.empty()) {
-                serviceName = "com.datadog.reactnative.vega";
-            }
             const std::string site =
                 getStringFromJSObject(configuration, "site");
             const std::string trackingConsent =

@@ -4,7 +4,10 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { getVersion } from '@amazon-devices/react-native-device-info';
+import {
+    getBundleId,
+    getVersion
+} from '@amazon-devices/react-native-device-info';
 import {
     DdRumErrorTracking,
     GlobalState,
@@ -22,6 +25,7 @@ jest.mock('../src/HttpProxy', () => ({ startHttpProxy: jest.fn() }));
 jest.mock(
     '@amazon-devices/react-native-device-info',
     () => ({
+        getBundleId: jest.fn(() => 'com.example.vega'),
         getVersion: jest.fn()
     }),
     { virtual: true }
@@ -80,7 +84,7 @@ describe('DdSdkReactNativeVega error tracking', () => {
     });
 });
 
-describe('DdSdkReactNativeVega version configuration', () => {
+describe('DdSdkReactNativeVega configuration', () => {
     const createConfiguration = () =>
         new CoreConfiguration('client-token', 'test', undefined, {
             rumConfiguration: {
@@ -93,6 +97,9 @@ describe('DdSdkReactNativeVega version configuration', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        (getBundleId as jest.Mock)
+            .mockReset()
+            .mockReturnValue('com.example.vega');
         (getVersion as jest.Mock).mockReset().mockReturnValue('0.1.0');
         GlobalState.isInitialized = false;
         (DdSdkReactNativeVega as any).wasAutoInstrumented = false;
@@ -100,6 +107,59 @@ describe('DdSdkReactNativeVega version configuration', () => {
 
     afterEach(() => {
         GlobalState.isInitialized = false;
+    });
+
+    it.each([undefined, ''])(
+        'defaults service to the host application identifier when service is %j',
+        async service => {
+            const configuration = createConfiguration();
+            configuration.service = service;
+
+            await DdSdkReactNativeVega.initialize(configuration);
+
+            expect(NativeDdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({ service: 'com.example.vega' })
+            );
+            expect(configuration.service).toBe(service);
+        }
+    );
+
+    it('preserves an explicit service without looking up the application identifier', async () => {
+        const configuration = createConfiguration();
+        configuration.service = 'custom-service';
+
+        await DdSdkReactNativeVega.initialize(configuration);
+
+        expect(NativeDdSdk.initialize).toHaveBeenCalledWith(
+            expect.objectContaining({ service: 'custom-service' })
+        );
+        expect(getBundleId).not.toHaveBeenCalled();
+    });
+
+    it.each(['', '   ', 'unknown', undefined, null])(
+        'uses the platform service fallback when the application identifier is %j',
+        async applicationId => {
+            (getBundleId as jest.Mock).mockReturnValue(applicationId);
+
+            await DdSdkReactNativeVega.initialize(createConfiguration());
+
+            expect(NativeDdSdk.initialize).toHaveBeenCalledWith(
+                expect.objectContaining({ service: 'vega' })
+            );
+        }
+    );
+
+    it('initializes with the platform service fallback when identifier lookup throws', async () => {
+        (getBundleId as jest.Mock).mockImplementation(() => {
+            throw new Error('DeviceInfoModule is unavailable');
+        });
+
+        await expect(
+            DdSdkReactNativeVega.initialize(createConfiguration())
+        ).resolves.toBeUndefined();
+        expect(NativeDdSdk.initialize).toHaveBeenCalledWith(
+            expect.objectContaining({ service: 'vega' })
+        );
     });
 
     it.each([
