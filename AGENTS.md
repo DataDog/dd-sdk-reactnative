@@ -105,7 +105,7 @@ An internal nightly E2E pipeline builds `expo-datadog` against the SDK across Ex
 
 ## Native SDK Coupling
 
-- Native SDK versions are pinned in each podspec (`DatadogSDKReactNative*.podspec`) and in each Android `build.gradle`. All of them must match. Bump them only with `./bump-native-dd-sdk.sh <ios|android> <version>`. `NATIVE_SDK_VERSIONS.md` records the versions for each release.
+- Native SDK versions are pinned in each podspec (`DatadogSDKReactNative*.podspec`) and in each Android `build.gradle`. **Versions must match within a platform**: all podspecs pin the same `dd-sdk-ios` version, and all Gradle files pin the same `dd-sdk-android` version. iOS and Android are versioned independently and usually differ. Bump one platform at a time with `./bump-native-dd-sdk.sh <ios|android> <version>`. `NATIVE_SDK_VERSIONS.md` records both versions for each release.
 - The bridges use native internal APIs: `_InternalProxy` on Android and `._internal` on iOS. If one of them changes in `dd-sdk-android` or `dd-sdk-ios`, the bridge here must change too. Check the native SDK's changelog when you bump.
 - iOS dependencies go through CocoaPods today. An SPM migration is in progress; don't assume `Package.swift` exists on `develop`.
 
@@ -121,11 +121,19 @@ Run these from the repo root after `yarn install`.
 | One test file | `yarn jest packages/core/src/rum/__tests__/DdRum.test.ts` |
 | Lint (ESLint + Prettier) | `yarn lint` (auto-fix: `yarn eslint --fix <paths>`) |
 | Build all packages and type-check | `yarn prepare` |
-| Android native tests, ktlint, detekt | `(cd packages/core/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24)` |
-| iOS native tests (old arch) | `(cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install)`, then `xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme DatadogSDKReactNative test -destination 'platform=iOS Simulator,name=<simulator>'` |
+| iOS native tests (old arch) | `(cd example/ios && RCT_NEW_ARCH_ENABLED=0 pod install)`, then `xcodebuild -workspace example/ios/DdSdkReactNativeExample.xcworkspace -scheme <scheme> test -destination 'platform=iOS Simulator,name=<simulator>'` |
 
-- Session Replay and internal-testing-tools have the same Gradle command in their own `android/` folders (see `.gitlab-ci.yml`).
-- The iOS Session Replay scheme is `DatadogSDKReactNativeSessionReplay`.
+Native tests run per package. The Android command also runs ktlint and detekt. Packages other than core read their own `minSdkVersion` property, so they need both overrides:
+
+| Package | Android command | iOS scheme |
+|---|---|---|
+| core | `(cd packages/core/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24)` | `DatadogSDKReactNative` |
+| Session Replay | `(cd packages/react-native-session-replay/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogSDKReactNativeSessionReplay_minSdkVersion=24)` | `DatadogSDKReactNativeSessionReplay` |
+| WebView | none: the standalone build fails because `react-native-webview` needs `com.facebook.react:react-native:+`, which this build can't resolve | `DatadogSDKReactNativeWebView` |
+| internal-testing-tools | `(cd packages/internal-testing-tools/android && ./gradlew build -PDdSdkReactNative_minSdkVersion=24 -PDatadogInternalTesting_minSdkVersion=24)` | none: `ios/Tests` exists, but no example Podfile includes its test spec |
+
+- CI (`.gitlab-ci.yml`) runs the core, Session Replay and internal-testing-tools Android commands and the core and Session Replay iOS schemes. **CI doesn't run the WebView native tests.** When you change WebView native code, run the iOS scheme locally. For Android, say in the PR that its tests (`packages/react-native-webview/android/src/test*`) weren't run. The WebView and Session Replay test specs are only in `example/ios/Podfile`, so their schemes exist only in the old-architecture workspace.
+- The Android builds need JDK 17 and the Android SDK.
 - For the new architecture, use `example-new-architecture` with `RCT_NEW_ARCH_ENABLED=1`.
 - The sample apps need credentials in a gitignored `ddCredentials` file (see CONTRIBUTING.md).
 - **Worktree nested inside the repo** (for example `.worktrees/<name>`): the root `.eslintrc.js` doesn't set `root: true`, so ESLint also loads the parent checkout's config, and `yarn lint` fails with `couldn't find the config "prettier"`. Create worktrees outside the repo folder, or run `yarn eslint --no-eslintrc -c .eslintrc.js --ignore-path .eslintignore .` instead.

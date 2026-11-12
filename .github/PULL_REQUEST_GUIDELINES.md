@@ -1,6 +1,12 @@
 # Pull Request Writing Guidelines
 
-Follow these rules when you write or edit pull request titles and descriptions. They also apply to commit messages, code comments and review replies.
+Follow these rules when you write or edit pull request titles and descriptions.
+
+Two parts also apply outside PRs:
+- Section 0 (public repository) applies to everything: commit messages, branch names, code comments, test fixtures and review replies.
+- Sections 1 and 4 (writing style) apply to commit messages and review replies.
+
+The rest is specific to PRs (title format, template, labels, QA). Commit messages follow the convention in `AGENTS.md`.
 
 The goal is **concise, technical PR descriptions that are easy to review**. A reviewer should quickly understand what changed, why, how it works, and what needs attention.
 
