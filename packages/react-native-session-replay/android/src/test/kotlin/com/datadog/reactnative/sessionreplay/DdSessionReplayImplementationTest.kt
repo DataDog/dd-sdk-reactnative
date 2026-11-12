@@ -30,6 +30,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
@@ -132,13 +134,18 @@ internal class DdSessionReplayImplementationTest {
 
         // When
         testedSessionReplay.enable(
-            replaySampleRate,
-            customEndpoint,
-            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
-            startRecordingImmediately,
-            false,
-            false,
-            mockPromise
+            replaySampleRate = replaySampleRate,
+            customEndpoint = customEndpoint,
+            privacySettings = SessionReplayPrivacySettings(
+                imagePrivacyLevel = imagePrivacy,
+                touchPrivacyLevel = touchPrivacy,
+                textAndInputPrivacyLevel = textAndInputPrivacy
+            ),
+            startRecordingImmediately = startRecordingImmediately,
+            enableHeatmaps = false,
+            enableCompositionTreeRecording = false,
+            androidAdaptiveCaptureSchedulingEnabled = false,
+            promise = mockPromise
         )
 
         // Then
@@ -164,17 +171,18 @@ internal class DdSessionReplayImplementationTest {
 
         // When
         testedSessionReplay.enable(
-            replaySampleRate,
-            "",
-            SessionReplayPrivacySettings(
+            replaySampleRate = replaySampleRate,
+            customEndpoint = "",
+            privacySettings = SessionReplayPrivacySettings(
                 imagePrivacyLevel = imagePrivacy,
                 touchPrivacyLevel = touchPrivacy,
                 textAndInputPrivacyLevel = textAndInputPrivacy
             ),
-            startRecordingImmediately,
-            false,
-            false,
-            mockPromise
+            startRecordingImmediately = startRecordingImmediately,
+            enableHeatmaps = false,
+            enableCompositionTreeRecording = false,
+            androidAdaptiveCaptureSchedulingEnabled = false,
+            promise = mockPromise
         )
 
         // Then
@@ -184,6 +192,32 @@ internal class DdSessionReplayImplementationTest {
             .hasFieldEqualTo("privacy", SessionReplayPrivacy.MASK)
             .hasFieldEqualTo("startRecordingImmediately", startRecordingImmediately)
             .doesNotHaveField("customEndpointUrl")
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `M configure adaptive capture scheduling W enable`(enabled: Boolean) {
+        val sessionReplayConfigCaptor = argumentCaptor<SessionReplayConfiguration>()
+
+        testedSessionReplay.enable(
+            replaySampleRate = 100.0,
+            customEndpoint = "",
+            privacySettings = SessionReplayPrivacySettings(
+                imagePrivacyLevel = "MASK_ALL",
+                touchPrivacyLevel = "HIDE",
+                textAndInputPrivacyLevel = "MASK_ALL"
+            ),
+            startRecordingImmediately = true,
+            enableHeatmaps = false,
+            enableCompositionTreeRecording = false,
+            androidAdaptiveCaptureSchedulingEnabled = enabled,
+            promise = mockPromise
+        )
+
+        verify(mockSessionReplay).enable(sessionReplayConfigCaptor.capture(), any())
+        assertThat(sessionReplayConfigCaptor.firstValue)
+            .hasFieldEqualTo("adaptiveCaptureSchedulingEnabled", enabled)
+        verify(mockPromise).resolve(null)
     }
 
     // region enableHeatmaps flag
@@ -200,13 +234,18 @@ internal class DdSessionReplayImplementationTest {
 
         // When
         testedSessionReplay.enable(
-            replaySampleRate,
-            "",
-            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
-            startRecordingImmediately,
+            replaySampleRate = replaySampleRate,
+            customEndpoint = "",
+            privacySettings = SessionReplayPrivacySettings(
+                imagePrivacyLevel = imagePrivacy,
+                touchPrivacyLevel = touchPrivacy,
+                textAndInputPrivacyLevel = textAndInputPrivacy
+            ),
+            startRecordingImmediately = startRecordingImmediately,
             enableHeatmaps = true,
             enableCompositionTreeRecording = false,
-            mockPromise
+            androidAdaptiveCaptureSchedulingEnabled = false,
+            promise = mockPromise
         )
 
         // Then
@@ -226,13 +265,18 @@ internal class DdSessionReplayImplementationTest {
 
         // When
         testedSessionReplay.enable(
-            replaySampleRate,
-            "",
-            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
-            startRecordingImmediately,
+            replaySampleRate = replaySampleRate,
+            customEndpoint = "",
+            privacySettings = SessionReplayPrivacySettings(
+                imagePrivacyLevel = imagePrivacy,
+                touchPrivacyLevel = touchPrivacy,
+                textAndInputPrivacyLevel = textAndInputPrivacy
+            ),
+            startRecordingImmediately = startRecordingImmediately,
             enableHeatmaps = false,
             enableCompositionTreeRecording = false,
-            mockPromise
+            androidAdaptiveCaptureSchedulingEnabled = false,
+            promise = mockPromise
         )
 
         // Then
@@ -252,13 +296,18 @@ internal class DdSessionReplayImplementationTest {
 
         // When
         testedSessionReplay.enable(
-            replaySampleRate,
-            "",
-            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
-            startRecordingImmediately,
+            replaySampleRate = replaySampleRate,
+            customEndpoint = "",
+            privacySettings = SessionReplayPrivacySettings(
+                imagePrivacyLevel = imagePrivacy,
+                touchPrivacyLevel = touchPrivacy,
+                textAndInputPrivacyLevel = textAndInputPrivacy
+            ),
+            startRecordingImmediately = startRecordingImmediately,
             enableHeatmaps = true,
             enableCompositionTreeRecording = false,
-            mockPromise
+            androidAdaptiveCaptureSchedulingEnabled = false,
+            promise = mockPromise
         )
 
         // Then — heatmapsEnabled is true in the built SessionReplayConfiguration
@@ -280,13 +329,18 @@ internal class DdSessionReplayImplementationTest {
 
         // When
         testedSessionReplay.enable(
-            replaySampleRate,
-            "",
-            SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
-            startRecordingImmediately,
+            replaySampleRate = replaySampleRate,
+            customEndpoint = "",
+            privacySettings = SessionReplayPrivacySettings(
+                imagePrivacyLevel = imagePrivacy,
+                touchPrivacyLevel = touchPrivacy,
+                textAndInputPrivacyLevel = textAndInputPrivacy
+            ),
+            startRecordingImmediately = startRecordingImmediately,
             enableHeatmaps = false,
             enableCompositionTreeRecording = false,
-            mockPromise
+            androidAdaptiveCaptureSchedulingEnabled = false,
+            promise = mockPromise
         )
 
         // Then — heatmapsEnabled is false in the built SessionReplayConfiguration
@@ -309,13 +363,18 @@ internal class DdSessionReplayImplementationTest {
         // When / Then
         assertThrows(IllegalStateException::class.java) {
             testedSessionReplay.enable(
-                replaySampleRate,
-                "",
-                SessionReplayPrivacySettings(imagePrivacy, touchPrivacy, textAndInputPrivacy),
-                startRecordingImmediately,
+                replaySampleRate = replaySampleRate,
+                customEndpoint = "",
+                privacySettings = SessionReplayPrivacySettings(
+                    imagePrivacyLevel = imagePrivacy,
+                    touchPrivacyLevel = touchPrivacy,
+                    textAndInputPrivacyLevel = textAndInputPrivacy
+                ),
+                startRecordingImmediately = startRecordingImmediately,
                 enableHeatmaps = true,
                 enableCompositionTreeRecording = false,
-                mockPromise
+                androidAdaptiveCaptureSchedulingEnabled = false,
+                promise = mockPromise
             )
         }
 

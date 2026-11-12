@@ -21,6 +21,30 @@ function getRandomEnumValue<
     return values[randomIndex]; // Return the random value
 }
 
+function expectNativeEnableConfiguration(expected: {
+    replaySampleRate: number;
+    customEndpoint: string;
+    imagePrivacyLevel: string;
+    touchPrivacyLevel: string;
+    textAndInputPrivacyLevel: string;
+    startRecordingImmediately: boolean;
+    enableHeatmaps: boolean;
+    enableCompositionTreeRecording: boolean;
+    androidAdaptiveCaptureSchedulingEnabled: boolean;
+}): void {
+    expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
+        expected.replaySampleRate,
+        expected.customEndpoint,
+        expected.imagePrivacyLevel,
+        expected.touchPrivacyLevel,
+        expected.textAndInputPrivacyLevel,
+        expected.startRecordingImmediately,
+        expected.enableHeatmaps,
+        expected.enableCompositionTreeRecording,
+        expected.androidAdaptiveCaptureSchedulingEnabled
+    );
+}
+
 beforeEach(() => {
     NativeModules.DdSessionReplay.enable.mockClear();
 });
@@ -30,16 +54,17 @@ describe('SessionReplay', () => {
         it('calls native session replay with default configuration', () => {
             SessionReplay.enable();
 
-            expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
-                100,
-                '',
-                'MASK_ALL',
-                'HIDE',
-                'MASK_ALL',
-                true,
-                false,
-                false
-            );
+            expectNativeEnableConfiguration({
+                replaySampleRate: 100,
+                customEndpoint: '',
+                imagePrivacyLevel: 'MASK_ALL',
+                touchPrivacyLevel: 'HIDE',
+                textAndInputPrivacyLevel: 'MASK_ALL',
+                startRecordingImmediately: true,
+                enableHeatmaps: false,
+                enableCompositionTreeRecording: false,
+                androidAdaptiveCaptureSchedulingEnabled: false
+            });
         });
 
         it('calls native session replay with provided configuration { w custom endpoint }', () => {
@@ -48,33 +73,114 @@ describe('SessionReplay', () => {
                 customEndpoint: 'https://session-replay.example.com'
             });
 
-            expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
-                100,
-                'https://session-replay.example.com',
-                'MASK_ALL',
-                'HIDE',
-                'MASK_ALL',
-                true,
-                false,
-                false
-            );
+            expectNativeEnableConfiguration({
+                replaySampleRate: 100,
+                customEndpoint: 'https://session-replay.example.com',
+                imagePrivacyLevel: 'MASK_ALL',
+                touchPrivacyLevel: 'HIDE',
+                textAndInputPrivacyLevel: 'MASK_ALL',
+                startRecordingImmediately: true,
+                enableHeatmaps: false,
+                enableCompositionTreeRecording: false,
+                androidAdaptiveCaptureSchedulingEnabled: false
+            });
         });
+
+        it.each([true, false])(
+            'forwards Android adaptive capture scheduling configuration (%s) to native',
+            androidAdaptiveCaptureSchedulingEnabled => {
+                SessionReplay.enable({
+                    androidAdaptiveCaptureSchedulingEnabled
+                });
+
+                expectNativeEnableConfiguration({
+                    replaySampleRate: 100,
+                    customEndpoint: '',
+                    imagePrivacyLevel: 'MASK_ALL',
+                    touchPrivacyLevel: 'HIDE',
+                    textAndInputPrivacyLevel: 'MASK_ALL',
+                    startRecordingImmediately: true,
+                    enableHeatmaps: false,
+                    enableCompositionTreeRecording: false,
+                    androidAdaptiveCaptureSchedulingEnabled
+                });
+            }
+        );
+
+        it.each([
+            undefined,
+            {},
+            { androidAdaptiveCaptureSchedulingEnabled: undefined }
+        ])(
+            'does not retain an opt-in when the next configuration omits it (%p)',
+            configuration => {
+                SessionReplay.enable({
+                    androidAdaptiveCaptureSchedulingEnabled: true
+                });
+                NativeModules.DdSessionReplay.enable.mockClear();
+
+                SessionReplay.enable(configuration);
+
+                expectNativeEnableConfiguration({
+                    replaySampleRate: 100,
+                    customEndpoint: '',
+                    imagePrivacyLevel: 'MASK_ALL',
+                    touchPrivacyLevel: 'HIDE',
+                    textAndInputPrivacyLevel: 'MASK_ALL',
+                    startRecordingImmediately: true,
+                    enableHeatmaps: false,
+                    enableCompositionTreeRecording: false,
+                    androidAdaptiveCaptureSchedulingEnabled: false
+                });
+            }
+        );
+
+        it.each([true, false])(
+            'preserves other options with Android adaptive capture scheduling set to %s',
+            androidAdaptiveCaptureSchedulingEnabled => {
+                SessionReplay.enable({
+                    replaySampleRate: 37,
+                    customEndpoint: 'https://session-replay.example.com',
+                    imagePrivacyLevel: ImagePrivacyLevel.MASK_NONE,
+                    touchPrivacyLevel: TouchPrivacyLevel.SHOW,
+                    textAndInputPrivacyLevel:
+                        TextAndInputPrivacyLevel.MASK_SENSITIVE_INPUTS,
+                    startRecordingImmediately: false,
+                    enableHeatmaps: true,
+                    enableCompositionTreeRecording: true,
+                    androidAdaptiveCaptureSchedulingEnabled
+                });
+
+                expectNativeEnableConfiguration({
+                    replaySampleRate: 37,
+                    customEndpoint: 'https://session-replay.example.com',
+                    imagePrivacyLevel: 'MASK_NONE',
+                    touchPrivacyLevel: 'SHOW',
+                    textAndInputPrivacyLevel: 'MASK_SENSITIVE_INPUTS',
+                    startRecordingImmediately: false,
+                    enableHeatmaps: true,
+                    enableCompositionTreeRecording: true,
+                    androidAdaptiveCaptureSchedulingEnabled
+                });
+            }
+        );
 
         it('forwards composition tree recording configuration to native', () => {
             SessionReplay.enable({
                 enableCompositionTreeRecording: true
             });
 
-            expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
-                100,
-                '',
-                'MASK_ALL',
-                'HIDE',
-                'MASK_ALL',
-                true,
-                false,
-                true
-            );
+            expectNativeEnableConfiguration({
+                replaySampleRate: 100,
+                customEndpoint: '',
+                imagePrivacyLevel: 'MASK_ALL',
+                touchPrivacyLevel: 'HIDE',
+                textAndInputPrivacyLevel: 'MASK_ALL',
+                startRecordingImmediately: true,
+                enableHeatmaps: false,
+                enableCompositionTreeRecording: true,
+                androidAdaptiveCaptureSchedulingEnabled: false
+            });
         });
 
         it('calls native session replay with provided configuration { w random privacy levels }', () => {
@@ -93,18 +199,17 @@ describe('SessionReplay', () => {
                     textAndInputPrivacyLevel: textAndInput
                 });
 
-                expect(
-                    NativeModules.DdSessionReplay.enable
-                ).toHaveBeenCalledWith(
-                    100,
-                    'https://session-replay.example.com',
-                    image,
-                    touch,
-                    textAndInput,
-                    true,
-                    false,
-                    false
-                );
+                expectNativeEnableConfiguration({
+                    replaySampleRate: 100,
+                    customEndpoint: 'https://session-replay.example.com',
+                    imagePrivacyLevel: image,
+                    touchPrivacyLevel: touch,
+                    textAndInputPrivacyLevel: textAndInput,
+                    startRecordingImmediately: true,
+                    enableHeatmaps: false,
+                    enableCompositionTreeRecording: false,
+                    androidAdaptiveCaptureSchedulingEnabled: false
+                });
             }
         });
 
@@ -114,16 +219,17 @@ describe('SessionReplay', () => {
                 customEndpoint: ''
             });
 
-            expect(NativeModules.DdSessionReplay.enable).toHaveBeenCalledWith(
-                0,
-                '',
-                'MASK_ALL',
-                'HIDE',
-                'MASK_ALL',
-                true,
-                false,
-                false
-            );
+            expectNativeEnableConfiguration({
+                replaySampleRate: 0,
+                customEndpoint: '',
+                imagePrivacyLevel: 'MASK_ALL',
+                touchPrivacyLevel: 'HIDE',
+                textAndInputPrivacyLevel: 'MASK_ALL',
+                startRecordingImmediately: true,
+                enableHeatmaps: false,
+                enableCompositionTreeRecording: false,
+                androidAdaptiveCaptureSchedulingEnabled: false
+            });
         });
     });
 });

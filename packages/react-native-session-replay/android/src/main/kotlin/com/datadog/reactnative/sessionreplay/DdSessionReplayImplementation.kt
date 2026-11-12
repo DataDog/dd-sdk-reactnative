@@ -33,6 +33,7 @@ class DdSessionReplayImplementation(
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
      * @param enableHeatmaps Enables heatmap identifier computation.
      * @param enableCompositionTreeRecording Enables the Composition Tree recording pipeline.
+     * @param androidAdaptiveCaptureSchedulingEnabled Enables experimental adaptive capture scheduling on Android.
      */
     @SuppressLint("VisibleForTests")
     @Suppress("LongParameterList", "UNUSED_PARAMETER")
@@ -43,28 +44,30 @@ class DdSessionReplayImplementation(
         startRecordingImmediately: Boolean,
         enableHeatmaps: Boolean,
         enableCompositionTreeRecording: Boolean,
+        androidAdaptiveCaptureSchedulingEnabled: Boolean,
         promise: Promise
     ) {
         val sdkCore = Datadog.getInstance() as FeatureSdkCore
         val logger = sdkCore.internalLogger
         val textViewUtils = TextViewUtils.create(reactContext, logger)
         val internalCallback = ReactNativeInternalCallback(reactContext)
-        val configuration = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
+        val configurationBuilder = SessionReplayConfiguration.Builder(replaySampleRate.toFloat())
             .startRecordingImmediately(startRecordingImmediately)
             .setImagePrivacy(privacySettings.imagePrivacyLevel)
             .setTouchPrivacy(privacySettings.touchPrivacyLevel)
             .setTextAndInputPrivacy(privacySettings.textAndInputPrivacyLevel)
             .setHeatmapsEnabled(enableHeatmaps)
             .addExtensionSupport(ReactNativeSessionReplayExtensionSupport(textViewUtils, internalCallback))
-            .let {
-                _SessionReplayInternalProxy(it).setInternalCallback(internalCallback)
-            }
+
+        val internalProxy = _SessionReplayInternalProxy(configurationBuilder)
+        internalProxy.setInternalCallback(internalCallback)
+        internalProxy.setAdaptiveCaptureSchedulingEnabled(androidAdaptiveCaptureSchedulingEnabled)
 
         if (customEndpoint != "") {
-            configuration.useCustomEndpoint(customEndpoint)
+            configurationBuilder.useCustomEndpoint(customEndpoint)
         }
 
-        sessionReplayProvider().enable(configuration.build(), sdkCore)
+        sessionReplayProvider().enable(configurationBuilder.build(), sdkCore)
         HeatmapActionHandler.heatmapsEnabled = enableHeatmaps
 
         promise.resolve(null)

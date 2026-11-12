@@ -32,6 +32,7 @@ class DdSessionReplay(
      * @param startRecordingImmediately Whether the recording should start immediately when the feature is enabled.
      * @param enableHeatmaps Enables heatmap identifier computation.
      * @param enableCompositionTreeRecording Enables the Composition Tree recording pipeline.
+     * @param androidAdaptiveCaptureSchedulingEnabled Enables experimental adaptive capture scheduling on Android.
      */
     @Suppress("LongParameterList")
     @ReactMethod
@@ -44,20 +45,22 @@ class DdSessionReplay(
         startRecordingImmediately: Boolean,
         enableHeatmaps: Boolean,
         enableCompositionTreeRecording: Boolean,
+        androidAdaptiveCaptureSchedulingEnabled: Boolean,
         promise: Promise
     ) {
         implementation.enable(
-            replaySampleRate,
-            customEndpoint,
-            SessionReplayPrivacySettings(
+            replaySampleRate = replaySampleRate,
+            customEndpoint = customEndpoint,
+            privacySettings = SessionReplayPrivacySettings(
                 imagePrivacyLevel = imagePrivacyLevel,
                 touchPrivacyLevel = touchPrivacyLevel,
                 textAndInputPrivacyLevel = textAndInputPrivacyLevel
             ),
-            startRecordingImmediately,
-            enableHeatmaps,
-            enableCompositionTreeRecording,
-            promise
+            startRecordingImmediately = startRecordingImmediately,
+            enableHeatmaps = enableHeatmaps,
+            enableCompositionTreeRecording = enableCompositionTreeRecording,
+            androidAdaptiveCaptureSchedulingEnabled = androidAdaptiveCaptureSchedulingEnabled,
+            promise = promise
         )
     }
 
