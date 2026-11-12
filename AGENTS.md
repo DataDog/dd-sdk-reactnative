@@ -206,5 +206,6 @@ Take extra care, and add tests, when you touch:
 - All commits must be signed (see CONTRIBUTING.md).
 - Write commit messages as a short imperative summary, for example `Fix duplicated XHR resource keys`.
 - **Before you write or edit a PR title or description, read [`.github/PULL_REQUEST_GUIDELINES.md`](.github/PULL_REQUEST_GUIDELINES.md) and follow it.** It covers the title format (`[RUM-1234] fix: ...`, `[NOJIRA] ...`), how to fill the PR template, the writing style, and what must never appear in a public PR.
+- **Add the `flags` label to any PR that touches feature flags.** That includes `packages/core/src/flags/`, `packages/react-native-openfeature/`, `NativeDdFlags.ts` and the native `DdFlags*` files. The full path list is in the guidelines.
 - Keep PRs focused. Leave out unrelated refactors, formatting churn, debug leftovers and stray files.
 - Release PRs ("Bump to version x.y.z") come from `update-version.sh`. Don't make release-style changes in feature PRs.

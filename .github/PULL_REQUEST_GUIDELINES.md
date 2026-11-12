@@ -157,6 +157,14 @@ Over:
 | **Additional Notes** | **QA:** test commands, coverage, manual steps, and what is verified or not yet verified. **Blast Radius** (only when warranted): affected areas, risks, rollout considerations. **References** (only when useful): ticket IDs, public issues, dependency PRs. |
 | **Review checklist** | Leave it for the reviewers. |
 
+**Labels:** add the `flags` label to every PR that touches feature flags, including PRs where flags are only part of the change. That means any change to:
+
+- `packages/core/src/flags/`
+- `packages/react-native-openfeature/`
+- `packages/core/src/specs/NativeDdFlags.ts`
+- native `DdFlags*` files in `packages/core/ios/` or `packages/core/android/`
+- `example/src/flags/` or `example-new-architecture/flags/`
+
 **Don't force every PR into the full structure.** A small change gets a short description. A complex change gets enough detail for a meaningful review. Leave out sections that would be empty.
 
 ## 9. Avoid unnecessary content
