@@ -12,6 +12,11 @@ import { callOriginalFetch } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
 import { createRequestContext, getResourceKey } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
+import {
+    fetchHeadersToRecord,
+    finalizeCapturedHeaders,
+    recordRequestHeader
+} from '../common/headerCapture';
 import { filterDevResource } from '../common/internalDevResourceBlocklist';
 import {
     getInstrumentationHeaders,
@@ -202,7 +207,9 @@ const buildHeaders = ({
 
     originalHeaders.forEach(({ header }) => headers.delete(header));
     originalHeaders.forEach(({ header, value }) => {
-        applyHeader({ headers, context, header, value });
+        if (applyHeader({ headers, context, header, value })) {
+            recordRequestHeader(context.headerCapture, header, value);
+        }
     });
     getInstrumentationHeaders(context).forEach(({ header, value }) => {
         applyHeader({ headers, context, header, value });
@@ -221,11 +228,13 @@ const applyHeader = ({
     context: RequestContext;
     header: string;
     value: string;
-}) => {
+}): boolean => {
     const processedHeader = processRequestHeader({ context, header, value });
     if (processedHeader.type === 'send') {
         headers.set(processedHeader.header, processedHeader.value);
+        return true;
     }
+    return false;
 };
 
 const reportFetch = async ({
@@ -237,6 +246,15 @@ const reportFetch = async ({
     response: Response;
     resourceReporter: ResourceReporter;
 }): Promise<void> => {
+    // Snapshot before any await: some Fetch implementations expose mutable
+    // response headers that the app could change while the body is parsed.
+    const capturedHeaders = finalizeCapturedHeaders({
+        state: context.headerCapture,
+        url: context.url,
+        statusCode: response.status,
+        responseHeaders: () => fetchHeadersToRecord(response.headers)
+    });
+
     // Only extract GraphQL errors if operationType is set AND error tracking is enabled
     if (context.graphql.operationType && context.graphql.trackErrors) {
         try {
@@ -267,6 +285,7 @@ const reportFetch = async ({
         },
         graphqlAttributes: context.graphql,
         tracingAttributes: context.tracingAttributes,
+        ...capturedHeaders,
         response: {
             statusCode: response.status,
             size: getResponseSize(response)
