@@ -314,7 +314,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "12.0", :tvos => "12.0" }
+  s.platforms    = { :ios => "15.0", :tvos => "15.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
 
@@ -347,7 +347,7 @@ Pod::Spec.new do |s|
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'ios/Tests/**/*.{swift,json}'
     test_spec.resources = 'ios/Tests/Fixtures'
-    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+    test_spec.platforms = { :ios => "15.0", :tvos => "15.0" }
   end
 
   # DatadogInternal is an internal target of dd-sdk-ios rather than an exported product, so

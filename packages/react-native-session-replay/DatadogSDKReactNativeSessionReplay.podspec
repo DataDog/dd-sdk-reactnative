@@ -30,7 +30,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "12.0", :tvos => "12.0" }
+  s.platforms    = { :ios => "15.0", :tvos => "15.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/Sources/**/*.{h,m,mm,swift}"
@@ -73,7 +73,7 @@ Pod::Spec.new do |s|
   s.test_spec 'Tests' do |test_spec|
     test_spec.dependency "React-RCTText"
     test_spec.source_files = 'ios/Tests/*.swift'
-    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+    test_spec.platforms = { :ios => "15.0", :tvos => "15.0" }
 
     # The tests reference DatadogInternal protocol descriptors (Storage, Telemetry) directly. Unlike
     # the SPM products, DatadogInternal is not on this target's link line, so name it explicitly --

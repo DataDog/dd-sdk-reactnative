@@ -66,7 +66,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "12.0", :tvos => "12.0" }
+  s.platforms    = { :ios => "15.0", :tvos => "15.0" }
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
   
@@ -105,7 +105,7 @@ Pod::Spec.new do |s|
     test_spec.dependency "React-RCTText"
 
     test_spec.source_files = 'ios/Tests/*.swift'
-    test_spec.platforms = { :ios => "13.4", :tvos => "13.4" }
+    test_spec.platforms = { :ios => "15.0", :tvos => "15.0" }
 
     # The tests reach DatadogInternal directly, which is not on this target's link line because it
     # is a target of dd-sdk-ios rather than one of the SPM products this pod requests.
