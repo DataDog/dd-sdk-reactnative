@@ -2,6 +2,39 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
+# The native code branches on the React Native version at compile time (RCT_VERSION_* macros).
+# Read it from the React Native used by the app being installed, rather than from this package:
+# in a monorepo, this package can be shared by apps on different React Native versions.
+installation_root = Pod::Config.instance.installation_root
+rn_package_json = nil
+if ENV['REACT_NATIVE_PATH']
+  # Set by `use_react_native!` (RN >= 0.72) to the React Native configured in the Podfile.
+  # Relative to the installation root on older versions, absolute on newer ones.
+  rn_package_json = installation_root.join(ENV['REACT_NATIVE_PATH'], 'package.json').to_s
+end
+unless rn_package_json && File.exist?(rn_package_json)
+  # Autolinking loads this podspec before `use_react_native!` runs, so resolve react-native from
+  # the app like its Podfile does. The path is passed as an argument, so it is never parsed as code.
+  begin
+    rn_package_json = Pod::Executable.execute_command('node', [
+      '--print',
+      "require.resolve('react-native/package.json', {paths: [process.argv[1]]})",
+      installation_root.to_s
+    ], false).lines.map(&:strip).find { |line| File.exist?(line) }
+  rescue StandardError
+    rn_package_json = nil
+  end
+end
+
+if rn_package_json && File.exist?(rn_package_json)
+  rn_major, rn_minor, rn_patch = JSON.parse(File.read(rn_package_json))["version"].split(".").map(&:to_i)
+  rn_version_flags = "-DRCT_VERSION_MAJOR=#{rn_major} -DRCT_VERSION_MINOR=#{rn_minor} -DRCT_VERSION_PATCH=#{rn_patch}"
+else
+  # Don't fail here: this podspec is evaluated again once REACT_NATIVE_PATH is set.
+  Pod::UI.warn "DatadogSDKReactNativeSessionReplay: unable to find react-native from #{installation_root}."
+  rn_version_flags = ""
+end
+
 Pod::Spec.new do |s|
   s.name         = "DatadogSDKReactNativeSessionReplay"
   s.version      = package["version"]
@@ -48,7 +81,7 @@ Pod::Spec.new do |s|
   }
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
-    s.compiler_flags = "-DRCT_NEW_ARCH_ENABLED=1"
+    s.compiler_flags = "-DRCT_NEW_ARCH_ENABLED=1 #{rn_version_flags}"
 
     xcconfig.merge!({
       "DEFINES_MODULE" => "YES",
@@ -64,6 +97,7 @@ Pod::Spec.new do |s|
       Pod::UI.warn "Using Datadog React Native Session Replay with new architecture on RN < 0.71 is discouraged and not officially supported."
     end
   else
+    s.compiler_flags = rn_version_flags
     s.pod_target_xcconfig = xcconfig
   end
 end
