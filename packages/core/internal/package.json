@@ -1,5 +1,6 @@
 {
     "private": true,
+    "react-native": "../src/internal",
     "main": "../lib/commonjs/internal.js",
     "module": "../lib/module/internal.js",
     "types": "../lib/typescript/internal.d.ts"

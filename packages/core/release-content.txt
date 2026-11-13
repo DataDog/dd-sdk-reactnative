@@ -76,6 +76,7 @@ package/android/src/test/resources/mockito-extensions/org.mockito.plugins.MockMa
 package/datadog-configuration.gradle
 package/datadog-configuration.schema.json
 package/datadog-sourcemaps.gradle
+package/internal/package.json
 package/ios/DdSdkReactNative.xcodeproj/project.pbxproj
 package/ios/DdSdkReactNative.xcodeproj/project.xcworkspace/contents.xcworkspacedata
 package/ios/Sources/AnyEncodable.swift

@@ -19,6 +19,7 @@
     "files": [
         "src/**",
         "lib/**",
+        "internal",
         "scripts/**",
         "android/build.gradle",
         "android/detekt.yml",
@@ -40,11 +41,13 @@
     "module": "lib/module/index",
     "exports": {
         ".": {
+            "react-native": "./src/index.tsx",
             "import": "./lib/module/index.js",
             "require": "./lib/commonjs/index.js",
             "types": "./lib/typescript/index.d.ts"
         },
         "./internal": {
+            "react-native": "./src/internal.ts",
             "import": "./lib/module/internal.js",
             "require": "./lib/commonjs/internal.js",
             "types": "./lib/typescript/internal.d.ts"
