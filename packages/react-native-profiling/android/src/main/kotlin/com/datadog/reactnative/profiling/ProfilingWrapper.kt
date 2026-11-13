@@ -1,0 +1,36 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
+package com.datadog.reactnative.profiling
+
+import androidx.annotation.RequiresApi
+import com.datadog.android.api.feature.FeatureSdkCore
+import com.datadog.android.profiling.ExperimentalProfilingApi
+import com.datadog.android.profiling.ProfilingConfiguration
+
+/**
+ * Equivalent to `Build.VERSION_CODES.VANILLA_ICE_CREAM` (API 35, Android 15), the lowest API level
+ * on which the native profiler is supported. Inlined rather than referenced through
+ * `Build.VERSION_CODES` so that this module still compiles in applications whose `compileSdk` is
+ * below 35: React Native builds native modules from source inside the consuming application's
+ * Gradle build, so the constant would otherwise have to resolve against the customer's
+ * `compileSdk` rather than ours.
+ */
+internal const val MIN_PROFILING_API_LEVEL = 35
+
+/**
+ * Wraps calls to the native Profiling SDK, so they can be mocked in tests.
+ */
+interface ProfilingWrapper {
+    /**
+     * Enables the native Profiling feature on the given SDK instance.
+     * @param configuration The native profiling configuration.
+     * @param sdkCore The SDK instance to enable profiling on.
+     */
+    @RequiresApi(MIN_PROFILING_API_LEVEL)
+    @OptIn(ExperimentalProfilingApi::class)
+    fun enable(configuration: ProfilingConfiguration, sdkCore: FeatureSdkCore)
+}
