@@ -22,6 +22,7 @@ import { DdRumErrorTracking } from '../rum/instrumentation/DdRumErrorTracking';
 import { DdBabelInteractionTracking } from '../rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
 import { DdRumUserInteractionTracking } from '../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from '../rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { DistributedTracingSampling } from '../rum/instrumentation/resourceTracking/distributedTracing/distributedTracingSampling';
 import { PropagatorType, RumActionType } from '../rum/types';
 import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingleton';
 import { DdSdkWrapper } from '../sdk/DdSdkInternal';
@@ -817,6 +818,30 @@ describe('DdSdkReactNative', () => {
                 trackFetchResources: true,
                 headerCaptureRules: undefined
             });
+        });
+
+        it('rebases trace sampling on the session sample rate when initialize { resource tracking disabled }', async () => {
+            // GIVEN
+            const configuration = new CoreConfiguration('2', 'env');
+            configuration.rumConfiguration = new RumConfiguration(
+                '1',
+                false,
+                false,
+                false
+            );
+            configuration.rumConfiguration.sessionSampleRate = 40;
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            // The manual tracing context APIs use the sampler without resource tracking.
+            expect(DdRumResourceTracking.startTracking).not.toHaveBeenCalled();
+            expect(DistributedTracingSampling.sessionSampleRate).toBe(40);
+
+            DistributedTracingSampling.setSessionSampleRate(100);
         });
 
         it('does not enable header capture when headerCaptureRules is omitted', async () => {
