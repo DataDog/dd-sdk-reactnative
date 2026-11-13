@@ -17,14 +17,15 @@ export enum Scenario {
     Traces = 'traces',
     RUMManual = 'rumManual',
     RUMAuto = 'rumAuto',
-    SessionReplay = 'sessionReplay'
+    SessionReplay = 'sessionReplay',
+    Profiling = 'profiling'
     // Add new scenarios here
 }
 
 export enum RunType {
     BASELINE = 'baseline',
     INSTRUMENTED = 'instrumented',
-    PROFILING ='profiling'
+    INSTRUMENTED_PROFILING_NATIVE = 'instrumented_profiling_native',
 };
 
 export interface TestConfig {
