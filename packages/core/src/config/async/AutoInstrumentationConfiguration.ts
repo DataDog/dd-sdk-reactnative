@@ -54,6 +54,7 @@ export type AutoInstrumentationParameters = {
         readonly trackErrors: boolean;
         readonly actionNameAttribute?: string;
         readonly resourceTraceSampleRate?: number;
+        readonly sessionSampleRate?: number;
         readonly nativeCrashReportEnabled?: boolean;
         readonly nativeLongTaskThresholdMs?: number;
         readonly nativeViewTracking?: boolean;

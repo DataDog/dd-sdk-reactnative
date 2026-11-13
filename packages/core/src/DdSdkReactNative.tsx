@@ -33,6 +33,7 @@ import { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';
 import { DdBabelInteractionTracking } from './rum/instrumentation/interactionTracking/DdBabelInteractionTracking';
 import { DdRumUserInteractionTracking } from './rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { DdRumResourceTracking } from './rum/instrumentation/resourceTracking/DdRumResourceTracking';
+import { DistributedTracingSampling } from './rum/instrumentation/resourceTracking/distributedTracing/distributedTracingSampling';
 import { AccountInfoSingleton } from './sdk/AccountInfoSingleton/AccountInfoSingleton';
 import { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
 import type { Attributes } from './sdk/AttributesSingleton/types';
@@ -190,15 +191,27 @@ export class DdSdkReactNative {
             configuration
         );
 
-        // The XHRProxy was installed at provider mount with the features'
-        // default resourceTraceSampleRate; re-apply the resolved value so a
-        // resourceTraceSampleRate supplied via DatadogProvider.initialize
-        // takes effect on subsequent fetch/XHR calls.
-        DdRumResourceTracking.updateTrackingContext({
-            resourceTraceSampleRate:
-                builtConfiguration.rumConfiguration?.resourceTraceSampleRate ??
-                RUM_DEFAULTS.resourceTraceSampleRate
-        });
+        // A repeated initialization is rejected by initializeNativeSDK, so it
+        // must not change the JS sampling rates either: native keeps the first
+        // configuration.
+        if (!GlobalState.isInitialized) {
+            // The XHRProxy was installed at provider mount with the features'
+            // default resourceTraceSampleRate; re-apply the resolved value so a
+            // resourceTraceSampleRate supplied via DatadogProvider.initialize
+            // takes effect on subsequent fetch/XHR calls.
+            DdRumResourceTracking.updateTrackingContext({
+                resourceTraceSampleRate:
+                    builtConfiguration.rumConfiguration
+                        ?.resourceTraceSampleRate ??
+                    RUM_DEFAULTS.resourceTraceSampleRate
+            });
+            // Trace sampling is rebased on the RUM session sample rate, which
+            // is only known now in this initialization mode.
+            DistributedTracingSampling.setSessionSampleRate(
+                builtConfiguration.rumConfiguration?.sessionSampleRate ??
+                    RUM_DEFAULTS.sessionSampleRate
+            );
+        }
 
         return DdSdkReactNative.initializeNativeSDK(builtConfiguration, {
             initializationModeForTelemetry: 'PARTIAL'
@@ -546,6 +559,14 @@ export class DdSdkReactNative {
             );
             return;
         }
+
+        // Trace sampling (resource tracking and the manual tracing context
+        // APIs) is rebased on the RUM session sample rate. Until it is known
+        // (DatadogProvider.initialize), 100 keeps the trace rate alone.
+        DistributedTracingSampling.setSessionSampleRate(
+            configuration.rumConfiguration?.sessionSampleRate ??
+                RUM_DEFAULTS.sessionSampleRate
+        );
 
         if (trackInteractions && !globalThis.__DD_RN_BABEL_PLUGIN_ENABLED__) {
             DdRumUserInteractionTracking.startTracking({
