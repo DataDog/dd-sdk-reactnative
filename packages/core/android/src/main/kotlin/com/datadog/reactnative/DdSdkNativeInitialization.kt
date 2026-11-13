@@ -11,6 +11,8 @@ import android.content.pm.PackageManager
 import android.util.Log
 import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
+import com.datadog.android.api.feature.Feature
+import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.core.configuration.BatchProcessingLevel
 import com.datadog.android.core.configuration.BatchSize
 import com.datadog.android.core.configuration.Configuration
@@ -94,6 +96,32 @@ class DdSdkNativeInitialization internal constructor(
 
         if (traceConfiguration != null) {
             Trace.enable(traceConfiguration, Datadog.getInstance())
+        }
+
+        // React Native traces requests in JS, so native RUM can't learn the trace sample rate from
+        // the native instrumentation; publish it in the tracing feature context, where RUM reads it
+        // to report `_dd.configuration.trace_sample_rate`.
+        // Defaults to 100 when unset (e.g. a native-init JSON file without it), as JS and iOS do.
+        val resourceTraceSampleRate = ddSdkConfiguration.rumConfiguration?.resourceTraceSampleRate
+            ?: DefaultConfiguration.resourceTraceSampleRate
+        val sdkCore = Datadog.getInstance() as? FeatureSdkCore
+        if (rumConfiguration != null && sdkCore != null) {
+            // The core drops context writes to unregistered features, so register a no-op stand-in
+            // when Trace isn't enabled. If the host app enables Trace natively later, that replaces
+            // the stand-in along with this context.
+            if (sdkCore.getFeature(Feature.TRACING_FEATURE_NAME) == null) {
+                sdkCore.registerFeature(object : Feature {
+                    override val name: String = Feature.TRACING_FEATURE_NAME
+                    override fun onInitialize(appContext: Context) = Unit
+                    override fun onStop() = Unit
+                })
+            }
+
+            // RUM reads the rate as a Float, and treats any other type as no rate. A native OkHttp
+            // interceptor in the host app overwrites it with its own whenever it traces a request.
+            sdkCore.updateFeatureContext(Feature.TRACING_FEATURE_NAME) {
+                it[TRACE_SAMPLE_RATE_KEY] = resourceTraceSampleRate.toFloat()
+            }
         }
 
         if (nativeCrashReportEnabled) {
@@ -409,6 +437,10 @@ class DdSdkNativeInitialization internal constructor(
     @Suppress("UndocumentedPublicClass")
     companion object {
         private const val MILLISECONDS_IN_SECOND = 1000
+
+        // Must match TracingInterceptor.OKHTTP_INTERCEPTOR_SAMPLE_RATE in
+        // dd-sdk-android-okhttp and RumViewScope.TRACE_SAMPLE_RATE in dd-sdk-android-rum
+        private const val TRACE_SAMPLE_RATE_KEY = "okhttp_interceptor_sample_rate"
 
         /**
          * Initializes the Datadog React Native SDK from your MainApplication.

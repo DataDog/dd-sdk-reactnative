@@ -12,7 +12,6 @@ import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
 import type { FirstPartyHost } from '../../types';
 
-import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
 import { compileHeaderCaptureConfig } from './headerCapture/compileHeaderConfig';
 import { FetchProxy } from './requestProxy/FetchProxy/FetchProxy';
@@ -96,9 +95,6 @@ class RumResourceTracking {
         }
 
         this._isTracking = true;
-        DistributedTracingSampling.setResourceTraceSampleRate(
-            resourceTraceSampleRate
-        );
     }
 
     /**
@@ -121,12 +117,6 @@ class RumResourceTracking {
                 tracingSamplingRate: resourceTraceSampleRate
             });
         });
-        // Keep the distributed-tracing sampler's max-trace-id in sync; the
-        // shouldSampleTrace path consults this for rates strictly between 0
-        // and 100.
-        DistributedTracingSampling.setResourceTraceSampleRate(
-            resourceTraceSampleRate
-        );
     }
 
     stopTracking(): void {

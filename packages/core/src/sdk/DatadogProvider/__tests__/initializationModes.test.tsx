@@ -11,6 +11,7 @@ import { DdSdkReactNative } from '../../../DdSdkReactNative';
 import { InitializationMode } from '../../../config/types';
 import { DdRumUserInteractionTracking } from '../../../rum/instrumentation/interactionTracking/DdRumUserInteractionTracking';
 import { XMLHttpRequestMock } from '../../../rum/instrumentation/resourceTracking/__tests__/__utils__/XMLHttpRequestMock';
+import { DistributedTracingSampling } from '../../../rum/instrumentation/resourceTracking/distributedTracing/distributedTracingSampling';
 import { PropagatorType } from '../../../rum/types';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import { GlobalState } from '../../GlobalState/GlobalState';
@@ -225,6 +226,82 @@ describe('DatadogProvider', () => {
                 }
             ]);
             expect(NativeModules.DdRum.addAction).toHaveBeenCalledTimes(1);
+        });
+
+        describe('trace sampling', () => {
+            afterEach(() => {
+                DistributedTracingSampling.setSessionSampleRate(100);
+            });
+
+            it('rebases trace sampling on the resolved session sample rate', async () => {
+                renderWithProvider({
+                    configuration: {
+                        rumConfiguration: {
+                            trackErrors: false,
+                            // The manual tracing context APIs use the sampler without resource tracking.
+                            trackResources: false,
+                            trackInteractions: false
+                        },
+                        traceConfiguration: {},
+                        logsConfiguration: {}
+                    }
+                });
+                await flushPromises();
+
+                // Unknown until DatadogProvider.initialize: no rebasing.
+                expect(DistributedTracingSampling.sessionSampleRate).toBe(100);
+
+                await DatadogProvider.initialize({
+                    clientToken: 'fake-client-token',
+                    env: 'fake-env',
+                    rumConfiguration: {
+                        applicationId: 'fake-application-id',
+                        sessionSampleRate: 40
+                    }
+                });
+                await flushPromises();
+
+                expect(DistributedTracingSampling.sessionSampleRate).toBe(40);
+            });
+
+            it('keeps the sampling rates of the first initialization', async () => {
+                renderWithProvider({
+                    configuration: {
+                        rumConfiguration: {
+                            trackErrors: false,
+                            trackResources: false,
+                            trackInteractions: false
+                        },
+                        traceConfiguration: {},
+                        logsConfiguration: {}
+                    }
+                });
+                await flushPromises();
+
+                await DatadogProvider.initialize({
+                    clientToken: 'fake-client-token',
+                    env: 'fake-env',
+                    rumConfiguration: {
+                        applicationId: 'fake-application-id',
+                        sessionSampleRate: 40
+                    }
+                });
+                await flushPromises();
+
+                // Rejected by the native SDK initialization: it must not change JS sampling.
+                await DatadogProvider.initialize({
+                    clientToken: 'fake-client-token',
+                    env: 'fake-env',
+                    rumConfiguration: {
+                        applicationId: 'fake-application-id',
+                        sessionSampleRate: 10
+                    }
+                });
+                await flushPromises();
+
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+                expect(DistributedTracingSampling.sessionSampleRate).toBe(40);
+            });
         });
     });
 });

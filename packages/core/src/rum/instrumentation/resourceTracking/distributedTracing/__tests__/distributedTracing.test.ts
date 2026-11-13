@@ -524,6 +524,232 @@ describe('Sampling behavior', () => {
         });
     });
 
+    describe('Sampling decisions are rebased on the session sample rate', () => {
+        // Same vectors as the Flutter SDK, so both make the same decisions.
+        // Hash positions (percent of the 64-bit range):
+        //   session 0x000000000469: 0.357%     trace 15352856648520921629: 8.204%
+        //   session 0x000000000015: 26.490%    trace 4751997750760398084: 89.610%
+        //   session 0xd860b2b9437a: 68.673%
+        //   session 0x000000000053: 99.938%
+        // [sessionId, sessionSampleRate, identifier (as BigInt), traceSampleRate, expected]
+        const inputs: Array<
+            [string, number, BigInt.BigInteger, number, boolean]
+        > = [
+            // Combined 25% keeps the low-hash session.
+            [
+                '00000000-0000-0000-0000-000000000469',
+                50,
+                BigInt('4751997750760398084'),
+                50,
+                true
+            ],
+            // Combined 25% drops the high-hash session.
+            [
+                '00000000-0000-0000-0000-000000000053',
+                50,
+                BigInt('15352856648520921629'),
+                50,
+                false
+            ],
+            // Combined 25% drops this session, though the raw 50% trace rate would keep it.
+            [
+                '00000000-0000-0000-0000-000000000015',
+                50,
+                BigInt('15352856648520921629'),
+                50,
+                false
+            ],
+            // A 100% session rate leaves the trace rate unchanged.
+            [
+                '00000000-0000-0000-0000-000000000015',
+                100,
+                BigInt('4751997750760398084'),
+                50,
+                true
+            ],
+            // A 0% session rate drops everything, even at a 100% trace rate.
+            [
+                '00000000-0000-0000-0000-000000000469',
+                0,
+                BigInt('15352856648520921629'),
+                100,
+                false
+            ],
+            // A 0% trace rate drops everything, even at a 100% session rate.
+            [
+                '00000000-0000-0000-0000-000000000469',
+                100,
+                BigInt('15352856648520921629'),
+                0,
+                false
+            ],
+            // Combined 40% drops this session, though the raw 80% trace rate would keep it.
+            [
+                'a1b2c3d4-e5f6-7890-abcd-d860b2b9437a',
+                50,
+                BigInt('15352856648520921629'),
+                80,
+                false
+            ]
+        ];
+
+        beforeAll(() => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            global.XMLHttpRequest = XMLHttpRequestMock;
+        });
+
+        afterAll(() => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            global.XMLHttpRequest = undefined;
+        });
+
+        beforeEach(() => {
+            DdRumResourceTracking.stopTracking();
+        });
+
+        afterEach(() => {
+            DistributedTracingSampling.setSessionSampleRate(100);
+        });
+
+        inputs.forEach(
+            ([
+                sessionId,
+                sessionSampleRate,
+                identifier,
+                traceSampleRate,
+                expected
+            ]) => {
+                it(`sampling decision is deterministic for ${sessionId}, sessionSampleRate=${sessionSampleRate} and traceSampleRate=${traceSampleRate}`, () => {
+                    DdRumResourceTracking.startTracking({
+                        resourceTraceSampleRate: traceSampleRate,
+                        firstPartyHosts: []
+                    });
+                    DistributedTracingSampling.setSessionSampleRate(
+                        sessionSampleRate
+                    );
+
+                    const tracingId: TraceId = TracingIdentifier.fromBigInt(
+                        identifier,
+                        TracingIdType.trace
+                    ) as TraceId;
+
+                    const shouldSample = DistributedTracingSampling.shouldSampleTrace(
+                        traceSampleRate,
+                        sessionId,
+                        tracingId
+                    );
+
+                    expect(shouldSample).toBe(expected);
+                });
+            }
+        );
+
+        it('uses the session sample rate once it is known', () => {
+            // Tracking starts at provider mount, before the session sample rate is known.
+            DdRumResourceTracking.startTracking({
+                resourceTraceSampleRate: 50,
+                firstPartyHosts: []
+            });
+
+            const sessionId = '00000000-0000-0000-0000-000000000015';
+            const tracingId: TraceId = TracingIdentifier.fromBigInt(
+                BigInt('15352856648520921629'),
+                TracingIdType.trace
+            ) as TraceId;
+
+            // Without a session sample rate, the raw 50% trace rate keeps the session.
+            expect(
+                DistributedTracingSampling.shouldSampleTrace(
+                    50,
+                    sessionId,
+                    tracingId
+                )
+            ).toBe(true);
+
+            // DatadogProvider.initialize resolves a 50% session sample rate: combined 25% drops it.
+            DistributedTracingSampling.setSessionSampleRate(50);
+
+            expect(
+                DistributedTracingSampling.shouldSampleTrace(
+                    50,
+                    sessionId,
+                    tracingId
+                )
+            ).toBe(false);
+        });
+
+        it('ignores the session sample rate without a session', () => {
+            DdRumResourceTracking.startTracking({
+                resourceTraceSampleRate: 50,
+                firstPartyHosts: []
+            });
+            DistributedTracingSampling.setSessionSampleRate(0);
+
+            // trace 15352856648520921629 hashes to 8.204%: kept at 50%, whatever the session rate.
+            const tracingId: TraceId = TracingIdentifier.fromBigInt(
+                BigInt('15352856648520921629'),
+                TracingIdType.trace
+            ) as TraceId;
+
+            expect(
+                DistributedTracingSampling.shouldSampleTrace(
+                    50,
+                    null,
+                    tracingId
+                )
+            ).toBe(true);
+        });
+
+        it('samples without a session at the given rate when resource tracking is off', () => {
+            // The manual tracing context APIs pass their own rate, with no resource tracking.
+            // trace 15352856648520921629 hashes to 8.204%: kept at 50%, dropped at 5%.
+            const tracingId: TraceId = TracingIdentifier.fromBigInt(
+                BigInt('15352856648520921629'),
+                TracingIdType.trace
+            ) as TraceId;
+
+            expect(
+                DistributedTracingSampling.shouldSampleTrace(
+                    50,
+                    null,
+                    tracingId
+                )
+            ).toBe(true);
+            expect(
+                DistributedTracingSampling.shouldSampleTrace(5, null, tracingId)
+            ).toBe(false);
+        });
+
+        it('does not throw for very low combined rates', () => {
+            // A 1% session rate x a 1% trace rate is 0.01%, whose threshold is not an integer.
+            DistributedTracingSampling.setSessionSampleRate(1);
+
+            const tracingId: TraceId = TracingIdentifier.fromBigInt(
+                BigInt('15352856648520921629'),
+                TracingIdType.trace
+            ) as TraceId;
+
+            // session 0x000000000469 hashes to 0.357%: dropped at 0.01%.
+            expect(
+                DistributedTracingSampling.shouldSampleTrace(
+                    1,
+                    '00000000-0000-0000-0000-000000000469',
+                    tracingId
+                )
+            ).toBe(false);
+            // Same for a very low trace rate without a session.
+            expect(
+                DistributedTracingSampling.shouldSampleTrace(
+                    0.01,
+                    null,
+                    tracingId
+                )
+            ).toBe(false);
+        });
+    });
+
     describe('Sampling behavior for extreme and intermediate sampling rates', () => {
         const numSamples = 500;
         const maxTraceId = BigInt('18446744073709551615'); // 2^64 - 1

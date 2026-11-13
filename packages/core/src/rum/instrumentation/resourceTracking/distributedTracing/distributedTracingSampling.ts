@@ -14,17 +14,22 @@ const KNUTH_FACTOR = BigInt('1111111111111111111');
 const DISTRIBUTED_TRACING_SAMPLING_MODULE =
     'com.datadog.reactnative.rum.distributed_tracing_sampling';
 
-class _DistributedTracingSampling {
-    private _maxSampledTraceId: BigInt.BigInteger | null = null;
+const clampRate = (rate: number): number => Math.min(Math.max(rate, 0), 100);
 
-    get maxSampledTraceId(): BigInt.BigInteger {
-        return this._maxSampledTraceId ?? BigInt(0);
+class _DistributedTracingSampling {
+    private _sessionSampleRate: number = 100;
+
+    get sessionSampleRate(): number {
+        return this._sessionSampleRate;
     }
 
-    setResourceTraceSampleRate(resourceTraceSampleRate: number) {
-        this._maxSampledTraceId = _DistributedTracingSampling.getMaxTraceId(
-            resourceTraceSampleRate
-        );
+    /**
+     * Sets the RUM session sample rate the trace sampling decision is rebased on.
+     * Defaults to 100 (no rebasing) until the RUM configuration is known.
+     * Applies to resource tracking and to the manual tracing context APIs.
+     */
+    setSessionSampleRate(sessionSampleRate: number) {
+        this._sessionSampleRate = clampRate(sessionSampleRate);
     }
 
     shouldSampleTrace(
@@ -32,9 +37,6 @@ class _DistributedTracingSampling {
         sessionId: string | null | undefined,
         traceId: TraceId
     ): boolean {
-        if (tracingSamplingRate >= 100) {
-            return true;
-        }
         if (tracingSamplingRate <= 0) {
             return false;
         }
@@ -43,34 +45,69 @@ class _DistributedTracingSampling {
         //
         //   (identifier * knuthFactor) < max_trace_id
         //
-        // We use the low 48 bits from the session id if it exists, or the low bits of the trace id if it doesn't
-        let lowBits: BigInt.BigInteger | null = null;
-
-        if (sessionId != null) {
-            const uuidParts = sessionId.split('-');
-            if (uuidParts.length === 5) {
-                const lastPart = uuidParts[4];
-                try {
-                    // Parse last UUID part as hex into bigint
-                    lowBits = BigInt(`${lastPart}`, 16);
-                } catch {
-                    // ignore parse errors, lowBits stays null
-                }
+        // With a RUM session, the decision uses the low 48 bits of the session id and is rebased
+        // onto the session: a session's traces are sampled at sessionSampleRate x traceSampleRate,
+        // as the iOS and Android SDKs do, so traced sessions are always sampled-in RUM sessions.
+        const sessionLowBits = _DistributedTracingSampling.getSessionLowBits(
+            sessionId
+        );
+        if (sessionLowBits !== null) {
+            const combinedSampleRate =
+                this._sessionSampleRate *
+                (clampRate(tracingSamplingRate) / 100.0);
+            if (combinedSampleRate >= 100) {
+                return true;
             }
+            return _DistributedTracingSampling.isSampled(
+                sessionLowBits,
+                _DistributedTracingSampling.getMaxTraceId(combinedSampleRate)
+            );
         }
 
-        if (lowBits === null) {
-            lowBits = traceId.id.and(MAX_TRACE_ID);
+        // Without a session, the decision uses the low bits of the trace id at traceSampleRate.
+        if (tracingSamplingRate >= 100) {
+            return true;
         }
+        return _DistributedTracingSampling.isSampled(
+            traceId.id.and(MAX_TRACE_ID),
+            _DistributedTracingSampling.getMaxTraceId(tracingSamplingRate)
+        );
+    }
 
+    private static getSessionLowBits(
+        sessionId: string | null | undefined
+    ): BigInt.BigInteger | null {
+        if (sessionId == null) {
+            return null;
+        }
+        const uuidParts = sessionId.split('-');
+        if (uuidParts.length !== 5) {
+            return null;
+        }
+        try {
+            // Parse last UUID part as hex into bigint
+            return BigInt(`${uuidParts[4]}`, 16);
+        } catch {
+            return null;
+        }
+    }
+
+    private static isSampled(
+        lowBits: BigInt.BigInteger,
+        maxSampledId: BigInt.BigInteger
+    ): boolean {
         return lowBits
             .multiply(KNUTH_FACTOR)
             .and(MAX_TRACE_ID)
-            .lesser(this.maxSampledTraceId);
+            .lesser(maxSampledId);
     }
 
     private static getMaxTraceId(sampleRate: number): BigInt.BigInteger {
-        return BigInt(MAX_TRACE_ID.toJSNumber() * (sampleRate / 100.0));
+        // big-integer throws on non-integer numbers, which low rates (e.g. a 1% session rate
+        // x a 1% trace rate) produce once the product drops below 2^53.
+        return BigInt(
+            Math.floor(MAX_TRACE_ID.toJSNumber() * (sampleRate / 100.0))
+        );
     }
 }
 
