@@ -52,6 +52,17 @@ buck-out/
 
 # bob build files
 lib/
+dist/
+buildinfo.json
+CMakeUserPresets.json
+**/CMakeCache.txt
+**/CMakeFiles/
+**/compile_commands.json
+**/.cmake/
+**/.cxx/
+
+# Vega example app
+/example-vega/
 
 # fastlane
 #
