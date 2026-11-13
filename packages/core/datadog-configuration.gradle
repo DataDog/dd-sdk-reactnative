@@ -28,28 +28,69 @@ def getConfigurationFile() {
 }
 
 /*
- * Copies the configuration file into the build directory and renames it.
+ * Copies the configuration file into the output directory and renames it.
  */
-task copyDatadogConfigurationFile() {
-    // Note: there can be multiple source sets depending on the variants declared, so we
-    // create a configuration for all of them. This prevents warnings in Android Studio when 
-    // adding the same directory to sources for different variants.
-    android.sourceSets.forEach { source ->
-        copy {
-            from getConfigurationFile()
-            into getBuildAssetsDirectory(source.name)
-            rename {
-                'datadog-configuration.json'
-            }
-        }
-    }
+abstract class CopyDatadogConfigurationFileTask extends DefaultTask {
+    @InputFile
+    @PathSensitive(PathSensitivity.NONE)
+    abstract RegularFileProperty getConfigurationFile()
 
-    // Adds the copied configuration file to the assets of the app for every sourceSet. 
-    android.sourceSets.forEach { source ->
-        source.assets.srcDir(getBuildAssetsDirectory(source.name))
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDirectory()
+
+    @TaskAction
+    void copyConfigurationFile() {
+        def outputFile = new File(outputDirectory.get().asFile, 'datadog-configuration.json')
+        outputFile.bytes = configurationFile.get().asFile.bytes
     }
 }
 
-gradle.projectsEvaluated {
-    preBuild.dependsOn(copyDatadogConfigurationFile)
+def isVariantSourcesApiAvailable() {
+    def androidComponents = project.extensions.findByName("androidComponents")
+    if (androidComponents == null) {
+        return false
+    }
+    // Variant.sources.assets and addGeneratedSourceDirectory are available from AGP 7.3.
+    def version = androidComponents.pluginVersion
+    return version.major > 7 || (version.major == 7 && version.minor >= 3)
+}
+
+if (isVariantSourcesApiAvailable()) {
+    // AGP 9 rejects Provider instances in the SourceSet API, so the configuration file is
+    // registered as a generated assets directory of every variant instead.
+    def configurationFile = file(getConfigurationFile())
+
+    androidComponents.onVariants(androidComponents.selector().all(), { variant ->
+        def copyTask = project.tasks.register(
+            "copyDatadogConfigurationFile${variant.name.capitalize()}",
+            CopyDatadogConfigurationFileTask
+        ) {
+            it.configurationFile.set(configurationFile)
+        }
+        variant.sources.assets?.addGeneratedSourceDirectory(copyTask, { it.outputDirectory })
+    })
+} else {
+    task copyDatadogConfigurationFile() {
+        // Note: there can be multiple source sets depending on the variants declared, so we
+        // create a configuration for all of them. This prevents warnings in Android Studio when
+        // adding the same directory to sources for different variants.
+        android.sourceSets.forEach { source ->
+            copy {
+                from getConfigurationFile()
+                into getBuildAssetsDirectory(source.name)
+                rename {
+                    'datadog-configuration.json'
+                }
+            }
+        }
+
+        // Adds the copied configuration file to the assets of the app for every sourceSet.
+        android.sourceSets.forEach { source ->
+            source.assets.srcDir(getBuildAssetsDirectory(source.name))
+        }
+    }
+
+    gradle.projectsEvaluated {
+        preBuild.dependsOn(copyDatadogConfigurationFile)
+    }
 }

@@ -8,6 +8,7 @@ import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { DdSdkReactNative } from '../DdSdkReactNative';
+import { InternalLog } from '../InternalLog';
 import type { DdSdkNativeConfiguration } from '../config/features/CoreConfigurationNative';
 import { CoreConfiguration } from '../config/features/CoreConfiguration';
 import { LogsConfiguration } from '../config/features/LogsConfiguration';
@@ -26,7 +27,7 @@ import { AttributesSingleton } from '../sdk/AttributesSingleton/AttributesSingle
 import { DdSdkWrapper } from '../sdk/DdSdkInternal';
 import { GlobalState } from '../sdk/GlobalState/GlobalState';
 import { UserInfoSingleton } from '../sdk/UserInfoSingleton/UserInfoSingleton';
-import NativeDdSdkSpec from '../specs/NativeDdSdk';
+import { getNativeDdSdk } from '../specs/NativeDdSdk';
 import type { LogEvent } from '../types';
 import { ErrorSource } from '../types';
 import { version as sdkVersion } from '../version';
@@ -813,8 +814,128 @@ describe('DdSdkReactNative', () => {
                         propagatorTypes: ['datadog']
                     }
                 ],
-                trackFetchResources: true
+                trackFetchResources: true,
+                headerCaptureRules: undefined
             });
+        });
+
+        it('does not enable header capture when headerCaptureRules is omitted', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                true
+            );
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    headerCaptureRules: undefined
+                })
+            );
+        });
+
+        it('enables header capture with the default headerCaptureRules preset', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                true
+            );
+            configuration.rumConfiguration.headerCaptureRules = 'defaults';
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    headerCaptureRules: 'defaults'
+                })
+            );
+        });
+
+        it('enables header capture with custom headerCaptureRules', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                true
+            );
+            configuration.rumConfiguration.headerCaptureRules = [
+                { type: 'matchHeaders', headers: ['x-request-id'] }
+            ];
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    headerCaptureRules: [
+                        { type: 'matchHeaders', headers: ['x-request-id'] }
+                    ]
+                })
+            );
+        });
+
+        it('logs a warning and disables header capture when headerCaptureRules is set but trackResources is false', async () => {
+            // GIVEN
+            const fakeAppId = '1';
+            const fakeClientToken = '2';
+            const fakeEnvName = 'env';
+            const configuration = new CoreConfiguration(
+                fakeClientToken,
+                fakeEnvName
+            );
+            configuration.rumConfiguration = new RumConfiguration(
+                fakeAppId,
+                false,
+                false
+            );
+            configuration.rumConfiguration.headerCaptureRules = 'defaults';
+
+            NativeModules.DdSdk.initialize.mockResolvedValue(null);
+
+            // WHEN
+            await DdSdkReactNative.initialize(configuration);
+
+            // THEN
+            expect(DdRumResourceTracking.startTracking).not.toHaveBeenCalled();
+            expect(InternalLog.log).toHaveBeenCalledWith(
+                'headerCaptureRules is set but trackResources is false. Header capture will be disabled.',
+                SdkVerbosity.WARN
+            );
         });
 
         it('enables error tracking feature when initialize { error tracking config enabled }', async () => {
@@ -1318,8 +1439,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addAttribute(key, value);
 
             // THEN
-            expect(NativeDdSdkSpec.addAttribute).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.addAttribute).toHaveBeenCalledWith(key, {
+            expect(getNativeDdSdk()?.addAttribute).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.addAttribute).toHaveBeenCalledWith(key, {
                 value
             });
             expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
@@ -1339,8 +1460,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.removeAttribute(key);
 
             // THEN
-            expect(NativeDdSdkSpec.removeAttribute).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.removeAttribute).toHaveBeenCalledWith(key);
+            expect(getNativeDdSdk()?.removeAttribute).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.removeAttribute).toHaveBeenCalledWith(key);
             expect(AttributesSingleton.getInstance().getAttribute(key)).toEqual(
                 undefined
             );
@@ -1357,8 +1478,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addAttributes(attributes);
 
             // THEN
-            expect(NativeDdSdkSpec.addAttributes).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.addAttributes).toHaveBeenCalledWith(
+            expect(getNativeDdSdk()?.addAttributes).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.addAttributes).toHaveBeenCalledWith(
                 attributes
             );
             expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
@@ -1377,8 +1498,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.removeAttributes(['foo', 'baz']);
 
             // THEN
-            expect(NativeDdSdkSpec.removeAttributes).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.removeAttributes).toHaveBeenCalledWith([
+            expect(getNativeDdSdk()?.removeAttributes).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.removeAttributes).toHaveBeenCalledWith([
                 'foo',
                 'baz'
             ]);
@@ -1404,8 +1525,10 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.setUserInfo(userInfo);
 
             // THEN
-            expect(NativeDdSdkSpec.setUserInfo).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.setUserInfo).toHaveBeenCalledWith(userInfo);
+            expect(getNativeDdSdk()?.setUserInfo).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.setUserInfo).toHaveBeenCalledWith(
+                userInfo
+            );
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(
                 userInfo
             );
@@ -1425,8 +1548,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addUserExtraInfo(extraInfo);
 
             // THEN
-            expect(NativeDdSdkSpec.addUserExtraInfo).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.addUserExtraInfo).toHaveBeenCalledWith(
+            expect(getNativeDdSdk()?.addUserExtraInfo).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.addUserExtraInfo).toHaveBeenCalledWith(
                 extraInfo
             );
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
@@ -1446,7 +1569,7 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.addUserExtraInfo(extraInfo);
 
             // THEN
-            expect(NativeDdSdkSpec.addUserExtraInfo).toHaveBeenCalledWith(
+            expect(getNativeDdSdk()?.addUserExtraInfo).toHaveBeenCalledWith(
                 extraInfo
             );
             expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
@@ -1475,8 +1598,8 @@ describe('DdSdkReactNative', () => {
             await DdSdkReactNative.clearUserInfo();
 
             // THEN
-            expect(NativeDdSdkSpec.clearUserInfo).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.setUserInfo).toHaveBeenCalled();
+            expect(getNativeDdSdk()?.clearUserInfo).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.setUserInfo).toHaveBeenCalled();
             expect(
                 UserInfoSingleton.getInstance().getUserInfo()
             ).toBeUndefined();
@@ -1493,8 +1616,10 @@ describe('DdSdkReactNative', () => {
             DdSdkReactNative.setTrackingConsent(consent);
 
             // THEN
-            expect(NativeDdSdkSpec.setTrackingConsent).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.setTrackingConsent).toHaveBeenCalledWith(
+            expect(getNativeDdSdk()?.setTrackingConsent).toHaveBeenCalledTimes(
+                1
+            );
+            expect(getNativeDdSdk()?.setTrackingConsent).toHaveBeenCalledWith(
                 consent
             );
         });
@@ -1506,7 +1631,7 @@ describe('DdSdkReactNative', () => {
             DdSdkReactNative.clearAllData();
 
             // THEN
-            expect(NativeDdSdkSpec.clearAllData).toHaveBeenCalledTimes(1);
+            expect(getNativeDdSdk()?.clearAllData).toHaveBeenCalledTimes(1);
         });
     });
 

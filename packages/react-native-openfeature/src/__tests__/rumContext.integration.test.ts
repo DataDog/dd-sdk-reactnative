@@ -10,13 +10,13 @@ import { InMemoryProvider, OpenFeature } from '@openfeature/web-sdk';
 import { InternalLog } from '../../../core/src/InternalLog';
 import { SdkVerbosity } from '../../../core/src/config/types/SdkVerbosity';
 import { UserInfoSingleton } from '../../../core/src/sdk/UserInfoSingleton/UserInfoSingleton';
-import NativeDdFlags from '../../../core/src/specs/NativeDdFlags';
+import { getNativeDdFlags } from '../../../core/src/specs/NativeDdFlags';
 import { DatadogOpenFeatureProvider } from '../provider';
 import { enrichWithRumUser } from '../rumContext';
 
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
-    default: {
+    getNativeDdFlags: jest.fn().mockReturnValue({
         enable: jest.fn(() => Promise.resolve()),
         setEvaluationContext: jest.fn(() =>
             Promise.resolve({
@@ -34,15 +34,15 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
             })
         ),
         trackEvaluation: jest.fn(() => Promise.resolve())
-    }
+    })
 }));
 
 jest.mock('../../../core/src/specs/NativeDdSdk', () => ({
     __esModule: true,
-    default: {
+    getNativeDdSdk: jest.fn().mockReturnValue({
         setUserInfo: jest.fn(() => Promise.resolve()),
         clearUserInfo: jest.fn(() => Promise.resolve())
-    }
+    })
 }));
 
 let testSequence = 0;
@@ -87,7 +87,7 @@ describe('explicit RUM context enrichment', () => {
 
         const { clientName } = await setupProvider({});
 
-        expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+        expect(getNativeDdFlags()?.setEvaluationContext).toHaveBeenCalledWith(
             clientName,
             '',
             {}
@@ -119,12 +119,12 @@ describe('explicit RUM context enrichment', () => {
             company_name: 'Example, Inc.'
         };
         expect(OpenFeature.getContext(domain)).toStrictEqual(enrichedContext);
-        expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+        expect(getNativeDdFlags()?.setEvaluationContext).toHaveBeenCalledWith(
             clientName,
             'rum-user',
             expectedAttributes
         );
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+        expect(getNativeDdFlags()?.trackEvaluation).toHaveBeenCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
@@ -185,12 +185,10 @@ describe('explicit RUM context enrichment', () => {
                 "The evaluation context targetingKey is not a string. Using the anonymous subject ('') instead.",
                 SdkVerbosity.WARN
             );
-            expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
-                clientName,
-                '',
-                expectedAttributes
-            );
-            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            expect(
+                getNativeDdFlags()?.setEvaluationContext
+            ).toHaveBeenCalledWith(clientName, '', expectedAttributes);
+            expect(getNativeDdFlags()?.trackEvaluation).toHaveBeenCalledWith(
                 clientName,
                 'test-flag',
                 expect.any(Object),
@@ -220,12 +218,12 @@ describe('explicit RUM context enrichment', () => {
             targetingKey: 'rum-user',
             ...expectedAttributes
         });
-        expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+        expect(getNativeDdFlags()?.setEvaluationContext).toHaveBeenCalledWith(
             clientName,
             'rum-user',
             expectedAttributes
         );
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+        expect(getNativeDdFlags()?.trackEvaluation).toHaveBeenCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
@@ -262,17 +260,15 @@ describe('explicit RUM context enrichment', () => {
             region: 'us'
         };
         expect(OpenFeature.getContext(domain)).toStrictEqual(expectedContext);
-        expect(NativeDdFlags.setEvaluationContext).toHaveBeenLastCalledWith(
-            clientName,
-            'rum-user-b',
-            {
-                email: 'b@example.com',
-                plan: 'pro',
-                region: 'us'
-            }
-        );
         expect(
-            NativeDdFlags.trackEvaluation
+            getNativeDdFlags()?.setEvaluationContext
+        ).toHaveBeenLastCalledWith(clientName, 'rum-user-b', {
+            email: 'b@example.com',
+            plan: 'pro',
+            region: 'us'
+        });
+        expect(
+            getNativeDdFlags()?.trackEvaluation
         ).toHaveBeenLastCalledWith(
             clientName,
             'test-flag',
@@ -313,10 +309,10 @@ describe('explicit RUM context enrichment', () => {
             applicationContext
         );
         expect(
-            NativeDdFlags.setEvaluationContext
+            getNativeDdFlags()?.setEvaluationContext
         ).toHaveBeenLastCalledWith(clientName, '', { region: 'us' });
         expect(
-            NativeDdFlags.trackEvaluation
+            getNativeDdFlags()?.trackEvaluation
         ).toHaveBeenLastCalledWith(
             clientName,
             'test-flag',
@@ -376,11 +372,9 @@ describe('explicit RUM context enrichment', () => {
 
         const { clientName } = await setupProvider(enrichWithRumUser({}));
 
-        expect(NativeDdFlags.setEvaluationContext).toHaveBeenLastCalledWith(
-            clientName,
-            'rum-user',
-            {}
-        );
+        expect(
+            getNativeDdFlags()?.setEvaluationContext
+        ).toHaveBeenLastCalledWith(clientName, 'rum-user', {});
     });
 
     it('uses undefined application fields as tombstones for RUM attributes', async () => {
@@ -398,12 +392,12 @@ describe('explicit RUM context enrichment', () => {
         expect(OpenFeature.getContext(domain)).toStrictEqual({
             targetingKey: 'rum-user'
         });
-        expect(NativeDdFlags.setEvaluationContext).toHaveBeenCalledWith(
+        expect(getNativeDdFlags()?.setEvaluationContext).toHaveBeenCalledWith(
             clientName,
             'rum-user',
             {}
         );
-        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+        expect(getNativeDdFlags()?.trackEvaluation).toHaveBeenCalledWith(
             clientName,
             'test-flag',
             expect.any(Object),
