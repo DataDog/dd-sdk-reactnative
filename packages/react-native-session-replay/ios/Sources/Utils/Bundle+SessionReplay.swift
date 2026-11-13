@@ -16,6 +16,9 @@ extension Bundle {
             return resourceBundle
         }
 
-        return nil
+        // When the native iOS SDK is resolved through Swift Package Manager the podspec ships the
+        // assets as plain resources rather than in a DDSessionReplay bundle, so they sit directly
+        // in the bundle we just looked in.
+        return bundle
     }
 }

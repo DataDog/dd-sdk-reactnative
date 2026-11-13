@@ -4,6 +4,7 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
+import Foundation
 import XCTest
 @testable import DatadogSDKReactNativeSessionReplay
 import DatadogSessionReplay
@@ -310,6 +311,8 @@ private class MockFabricWrapper: RCTFabricWrapper {
 }
 
 private class MockDatadogCore: DatadogCoreProtocol {
+    var remoteConfiguration: RemoteConfiguration? { nil }
+
     func mostRecentModifiedFileAt(before: Date) throws -> Date? {
         return nil
     }

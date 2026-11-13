@@ -4,6 +4,7 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
+import Foundation
 import XCTest
 @testable import DatadogCore
 @testable import DatadogRUM
@@ -538,9 +539,15 @@ private class MockRootView: UIView {
 private final class MockHeatmapIdentifierRegistry: @unchecked Sendable, HeatmapIdentifierRegistry {
     @ReadWriteLock
     var identifiers: [ObjectIdentifier: HeatmapIdentifier] = [:]
+    @ReadWriteLock
+    var requiresDescendantLookup = false
 
-    func setHeatmapIdentifiers(_ heatmapIdentifiers: [ObjectIdentifier: HeatmapIdentifier]) {
+    func setHeatmapIdentifiers(
+        _ heatmapIdentifiers: [ObjectIdentifier: HeatmapIdentifier],
+        requiresDescendantLookup: Bool
+    ) {
         identifiers = heatmapIdentifiers
+        self.requiresDescendantLookup = requiresDescendantLookup
     }
 
     func heatmapIdentifier(for objectIdentifier: ObjectIdentifier) -> HeatmapIdentifier? {

@@ -17,18 +17,6 @@ end
 use_modular_headers!
 
 target 'ddSdkReactnativeExample' do
-  native_ios_sdk_path = ENV['DD_NATIVE_IOS_SDK_PATH']
-  if (native_ios_sdk_path) then
-    pod 'DatadogCore', :path => "#{native_ios_sdk_path}/DatadogCore.podspec"
-    pod 'DatadogLogs', :path => "#{native_ios_sdk_path}/DatadogLogs.podspec"
-    pod 'DatadogTrace', :path => "#{native_ios_sdk_path}/DatadogTrace.podspec"
-    pod 'DatadogInternal', :path => "#{native_ios_sdk_path}/DatadogInternal.podspec"
-    pod 'DatadogRUM', :path => "#{native_ios_sdk_path}/DatadogRUM.podspec"
-    pod 'DatadogCrashReporting', :path => "#{native_ios_sdk_path}/DatadogCrashReporting.podspec"
-    pod 'DatadogWebViewTracking', :path => "#{native_ios_sdk_path}/DatadogWebViewTracking.podspec"
-    pod 'DatadogSessionReplay', :path => "#{native_ios_sdk_path}/DatadogSessionReplay.podspec"
-  end
-
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
   pod 'DatadogSDKReactNativeSessionReplay', :path => '../../packages/react-native-session-replay/DatadogSDKReactNativeSessionReplay.podspec', :testspecs => ['Tests']
 
@@ -47,10 +35,9 @@ target 'ddSdkReactnativeExample' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
-    # Enable `DD_SDK_COMPILED_FOR_TESTING` condition when compiling `DatadogSDK` dependency:
-    datadog_sdk_target = installer.pods_project.targets.detect {|t| ["DatadogCore", "DatadogRUM", "DatadogLogs", "DatadogInternal", "DatadogTrace", "DatadogCrashReporting"].include?(t.name) }
-    datadog_sdk_target.build_configurations.each do |config|
-      config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_SDK_COMPILED_FOR_TESTING'
-    end    
+    # `DD_SDK_COMPILED_FOR_TESTING` is no longer injected. There is no pod target to set it on now
+    # that the SDK comes from SPM, and the native tests never needed it: none of them touch the
+    # three declarations it guards (`Datadog.flushAndDeinitialize` and its ObjC counterpart, and
+    # `DatadogContextProvider.replace(context:)`).
   end
 end
