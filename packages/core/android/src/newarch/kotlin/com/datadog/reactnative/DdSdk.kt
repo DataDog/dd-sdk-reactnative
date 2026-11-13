@@ -201,7 +201,7 @@ class DdSdk(
     private fun registerLifecycleEvents(reactContext: ReactApplicationContext) {
         reactContext.addLifecycleEventListener(object : LifecycleEventListener {
             override fun onHostResume() {
-                val currentActivity: Activity? = reactContext.currentActivity
+                val currentActivity: Activity? = reactContext.getCurrentActivity()
                 if (currentActivity != null) {
                     val intent = currentActivity.intent
                     val extras = intent.extras
