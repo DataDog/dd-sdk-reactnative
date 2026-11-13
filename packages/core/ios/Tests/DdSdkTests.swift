@@ -11,7 +11,7 @@ import XCTest
 @testable import DatadogCrashReporting
 @testable import DatadogInternal
 @testable import DatadogLogs
-@testable import DatadogRUM
+@testable @_spi(Experimental) import DatadogRUM
 @testable import DatadogSDKReactNative
 @testable import DatadogTrace
 
@@ -1223,6 +1223,32 @@ class DdSdkTests: XCTestCase {
         XCTAssertEqual(ddConfig.vitalsUpdateFrequency, nil)
     }
 
+    func testBuildConfigurationEnabledTimeseries() {
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.enableTimeseries = true
+        rumConfiguration.timeseriesCollectTypes = ["cpu", "memory"]
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+
+        let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertEqual(ddConfig.timeseries?.collectTypes, [.cpu, .memory])
+    }
+
+    func testBuildConfigurationDisabledTimeseriesByDefault() {
+        let rumConfiguration: RumConfiguration = makeDefaultRumConfiguration()
+        rumConfiguration.enableTimeseries = nil
+        rumConfiguration.timeseriesCollectTypes = nil
+        let configuration: DdSdkConfiguration = .mockAny(rumConfiguration: rumConfiguration)
+
+        let ddConfig = DdSdkNativeInitialization().buildRumConfiguration(
+            configuration: configuration
+        )
+
+        XCTAssertNil(ddConfig.timeseries)
+    }
+
     func testBuildConfigurationAverageUploadFrequency() {
         let configuration: DdSdkConfiguration = .mockAny(uploadFrequency: "AVERAGE")
 
@@ -1983,7 +2009,9 @@ func makeDefaultRumConfiguration() -> RumConfiguration {
         initialResourceThreshold: nil,
         trackMemoryWarnings: true,
         telemetrySampleRate: 45.0,
-        customEndpoint: nil
+        customEndpoint: nil,
+        enableTimeseries: nil,
+        timeseriesCollectTypes: nil
     )
 }
 
@@ -2110,6 +2138,7 @@ extension NSDictionary {
         rumConfig["nativeInteractionTracking"] = rumConfiguration?["nativeInteractionTracking"]
         rumConfig["customEndpoint"] = rumConfiguration?["customEndpoint"]
         rumConfig["trackFrustrations"] = rumConfiguration?["trackFrustrations"]
+        rumConfig["unstable_timeseries"] = rumConfiguration?["unstable_timeseries"]
 
         logsConfig["bundleLogsWithRum"] = logsConfiguration?["bundleLogsWithRum"]
         logsConfig["bundleLogsWithTraces"] = logsConfiguration?["bundleLogsWithTraces"]

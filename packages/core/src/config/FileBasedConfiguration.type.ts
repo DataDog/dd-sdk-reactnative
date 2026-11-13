@@ -12,6 +12,7 @@ import type {
     BatchSize,
     ProxyConfiguration,
     SdkVerbosity,
+    TimeseriesConfiguration,
     TrackingConsent,
     UploadFrequency,
     VitalsUpdateFrequency
@@ -59,6 +60,7 @@ export interface JsonConfiguration extends CoreConfigurationOptions {
         trackWatchdogTerminations?: boolean;
         vitalsUpdateFrequency?: VitalsUpdateFrequency;
         telemetrySampleRate?: number;
+        unstable_timeseries?: TimeseriesConfiguration;
     };
     traceConfiguration?: {
         customEndpoint?: string;
