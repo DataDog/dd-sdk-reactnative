@@ -1,0 +1,91 @@
+{
+    "name": "@datadog/mobile-react-native-vega",
+    "version": "3.11.0-vega.0",
+    "private": true,
+    "description": "Datadog native bridge for Amazon Vega SDK apps",
+    "keywords": [
+        "datadog",
+        "react-native",
+        "vega",
+        "amazon",
+        "tv"
+    ],
+    "author": "Datadog (https://github.com/DataDog)",
+    "homepage": "https://github.com/DataDog/dd-sdk-reactnative/packages/react-native-vega#readme",
+    "repository": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative",
+        "directory": "packages/react-native-vega"
+    },
+    "bugs": {
+        "url": "https://github.com/DataDog/dd-sdk-reactnative/issues"
+    },
+    "license": "Apache-2.0",
+    "main": "lib/commonjs/index",
+    "files": [
+        "src/**",
+        "lib/commonjs/**",
+        "lib/module/**",
+        "lib/typescript/**",
+        "kepler/AutoLinkInit.cpp",
+        "kepler/turbo-modules/*.cpp",
+        "kepler/turbo-modules/*.h",
+        "kepler/turbo-modules/generated/**",
+        "CMakeLists.txt",
+        "react-native.config.js"
+    ],
+    "types": "lib/typescript/index.d.ts",
+    "react-native": "src/index",
+    "source": "src/index",
+    "module": "lib/module/index",
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "test": "jest",
+        "lint": "eslint src __tests__",
+        "prepare": "bob build",
+        "codegen": "keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdSdk.ts -o kepler/turbo-modules/ --namespace DdSdkTurboModule --className DdSdk",
+        "test:native": "cmake -S tests -B build/host-tests && cmake --build build/host-tests && ctest --test-dir build/host-tests --output-on-failure"
+    },
+    "dependencies": {
+        "@amazon-devices/keplerscript-turbomodule-api": "1.2.5"
+    },
+    "peerDependencies": {
+        "@amazon-devices/react-native-kepler": "^2.0.0",
+        "react": ">=16.13.1",
+        "react-native": ">=0.63.4 <1.0"
+    },
+    "devDependencies": {
+        "react-native-builder-bob": "0.26.0"
+    },
+    "jest": {
+        "preset": "react-native",
+        "modulePathIgnorePatterns": [
+            "<rootDir>/lib/"
+        ],
+        "transformIgnorePatterns": [
+            "jest-runner"
+        ]
+    },
+    "kepler": {
+        "projectType": "turbomodule",
+        "targets": [
+            "tv"
+        ]
+    },
+    "react-native-builder-bob": {
+        "source": "src",
+        "output": "lib",
+        "targets": [
+            "commonjs",
+            "module",
+            [
+                "typescript",
+                {
+                    "tsc": "./../../node_modules/.bin/tsc",
+                    "project": "tsconfig.build.json"
+                }
+            ]
+        ]
+    }
+}
