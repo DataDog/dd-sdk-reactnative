@@ -7,7 +7,14 @@
 package com.datadog.reactnative
 
 import android.content.pm.PackageInfo
+import com.datadog.android.Datadog
+import com.datadog.android.api.SdkCore
+import com.datadog.android.api.feature.Feature
+import com.datadog.android.api.feature.FeatureScope
+import com.datadog.android.api.feature.FeatureSdkCore
+import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumMonitor
+import com.datadog.android.trace.Trace
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.facebook.react.bridge.ReactApplicationContext
@@ -23,10 +30,13 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
 import org.mockito.Answers
 import org.mockito.Mock
+import org.mockito.Mockito.mockStatic
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
@@ -268,6 +278,116 @@ internal class DdSdkNativeInitializationTest {
     }
 
     // endregion
+
+    // region initialize() / trace sample rate in the tracing feature context
+
+    @Test
+    fun `𝕄 register a tracing stand-in and publish the rate 𝕎 initialize() { RUM, no tracing feature }`() { // ktlint-disable-line max-line-length
+        // Given
+        val mockCore: FeatureSdkCore = mock()
+        whenever(mockCore.getFeature(Feature.TRACING_FEATURE_NAME)) doReturn null
+
+        // When
+        initializeWithCore(mockCore, rumConfiguration(resourceTraceSampleRate = 42.0))
+
+        // Then
+        val registered = argumentCaptor<Feature>()
+        verify(mockCore).registerFeature(registered.capture())
+        assertThat(registered.firstValue.name).isEqualTo(Feature.TRACING_FEATURE_NAME)
+        assertThat(publishedTracingContext(mockCore)["okhttp_interceptor_sample_rate"])
+            .isInstanceOf(java.lang.Float::class.java)
+            .isEqualTo(42f)
+    }
+
+    @Test
+    fun `𝕄 publish the rate without registering 𝕎 initialize() { RUM, Trace enabled }`() {
+        // Given
+        val mockCore: FeatureSdkCore = mock()
+        val mockTracingFeature: FeatureScope = mock()
+        whenever(mockCore.getFeature(Feature.TRACING_FEATURE_NAME)) doReturn mockTracingFeature
+
+        // When
+        initializeWithCore(
+            mockCore,
+            rumConfiguration(resourceTraceSampleRate = 42.0).copy(
+                traceConfiguration = TraceConfiguration()
+            )
+        )
+
+        // Then
+        verify(mockCore, never()).registerFeature(any())
+        assertThat(publishedTracingContext(mockCore)["okhttp_interceptor_sample_rate"])
+            .isInstanceOf(java.lang.Float::class.java)
+            .isEqualTo(42f)
+    }
+
+    @Test
+    fun `𝕄 publish the default rate 𝕎 initialize() { RUM, resourceTraceSampleRate unset }`() {
+        // Given
+        // e.g. a native-init JSON configuration without resourceTraceSampleRate
+        val mockCore: FeatureSdkCore = mock()
+        whenever(mockCore.getFeature(Feature.TRACING_FEATURE_NAME)) doReturn null
+
+        // When
+        initializeWithCore(mockCore, rumConfiguration(resourceTraceSampleRate = null))
+
+        // Then
+        assertThat(publishedTracingContext(mockCore)["okhttp_interceptor_sample_rate"])
+            .isInstanceOf(java.lang.Float::class.java)
+            .isEqualTo(100f)
+    }
+
+    @Test
+    fun `𝕄 neither register nor publish 𝕎 initialize() { RUM not configured }`() {
+        // Given
+        val mockCore: FeatureSdkCore = mock()
+
+        // When
+        initializeWithCore(mockCore, minimalConfiguration())
+
+        // Then
+        verify(mockCore, never()).registerFeature(any())
+        verify(mockCore, never()).updateFeatureContext(any(), any(), any())
+    }
+
+    // endregion
+
+    private fun rumConfiguration(resourceTraceSampleRate: Double?): DdSdkConfiguration =
+        minimalConfiguration().copy(
+            rumConfiguration = RumConfiguration(
+                applicationId = "fake-application-id",
+                resourceTraceSampleRate = resourceTraceSampleRate
+            )
+        )
+
+    private fun initializeWithCore(core: FeatureSdkCore, configuration: DdSdkConfiguration) {
+        val datadogMock = mockStatic(Datadog::class.java)
+        val rumMock = mockStatic(Rum::class.java)
+        val traceMock = mockStatic(Trace::class.java)
+        try {
+            datadogMock.`when`<SdkCore> { Datadog.getInstance() }.thenReturn(core)
+            rumMock.`when`<Unit> { Rum.enable(any(), any()) }.then { }
+            traceMock.`when`<Unit> { Trace.enable(any(), any()) }.then { }
+
+            testedNativeInitialization.initialize(configuration, isCalledFromJs = false)
+        } finally {
+            datadogMock.close()
+            rumMock.close()
+            traceMock.close()
+        }
+    }
+
+    private fun publishedTracingContext(core: FeatureSdkCore): Map<String, Any?> {
+        val callback = argumentCaptor<(MutableMap<String, Any?>) -> Unit>()
+        verify(core).updateFeatureContext(
+            eq(Feature.TRACING_FEATURE_NAME),
+            any(),
+            callback.capture()
+        )
+        val context = mutableMapOf<String, Any?>()
+        callback.firstValue.invoke(context)
+        return context
+    }
 
     private fun minimalConfiguration(): DdSdkConfiguration = DdSdkConfiguration(
         clientToken = "fake-client-token",
