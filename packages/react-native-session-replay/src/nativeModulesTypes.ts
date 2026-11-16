@@ -34,6 +34,7 @@ export interface NativeSessionReplayType extends NativeDdSessionReplay {
      * to be started manually. Default: `true`.
      * @param enableHeatmaps: Whether heatmap identifier computation is enabled.
      * @param enableCompositionTreeRecording: Whether the experimental Composition Tree recording pipeline is enabled.
+     * @param androidAdaptiveCaptureSchedulingEnabled: Whether experimental adaptive capture scheduling is enabled (Android only).
      */
     enable(
         replaySampleRate: number,
@@ -43,7 +44,8 @@ export interface NativeSessionReplayType extends NativeDdSessionReplay {
         textAndInputPrivacyLevel: TextAndInputPrivacyLevel,
         startRecordingImmediately: boolean,
         enableHeatmaps: boolean,
-        enableCompositionTreeRecording: boolean
+        enableCompositionTreeRecording: boolean,
+        androidAdaptiveCaptureSchedulingEnabled: boolean
     ): Promise<void>;
 
     /**
