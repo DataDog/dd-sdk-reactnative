@@ -225,4 +225,91 @@ describe('SVG tsconfig paths', () => {
             path.join(tmpDir, 'src', 'components', 'icon.svg')
         );
     });
+
+    it('should only resolve configured aliases when paths are defined without baseUrl', () => {
+        fs.mkdirSync(path.join(tmpDir, 'icons'));
+        fs.writeFileSync(path.join(tmpDir, 'icons', 'logo.svg'), '<svg/>');
+        fs.writeFileSync(
+            path.join(tmpDir, 'tsconfig.json'),
+            JSON.stringify({
+                compilerOptions: {
+                    paths: { '@components/*': ['./src/components/*'] }
+                }
+            })
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'Component.tsx'),
+            `import Logo from '@components/icon.svg';\nimport Stray from 'icons/logo.svg';\nexport default function C() { return <><Logo /><Stray /></>; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo'].path).toBe(
+            path.join(tmpDir, 'src', 'components', 'icon.svg')
+        );
+        expect(instance.localSvgMap['Stray']).toBeUndefined();
+    });
+
+    it('should resolve inherited paths without baseUrl against the config that defines them', () => {
+        fs.mkdirSync(path.join(tmpDir, 'shared'));
+        fs.writeFileSync(path.join(tmpDir, 'shared', 'icon.svg'), '<svg/>');
+        fs.writeFileSync(
+            path.join(tmpDir, 'tsconfig.base.json'),
+            `{\n  // Shared aliases\n  "compilerOptions": {\n    "paths": { "@shared/*": ["./shared/*"] },\n  },\n}`
+        );
+        fs.mkdirSync(path.join(tmpDir, 'apps', 'mobile'), { recursive: true });
+        fs.writeFileSync(
+            path.join(tmpDir, 'apps', 'mobile', 'tsconfig.json'),
+            JSON.stringify({ extends: '../../tsconfig.base.json' })
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'apps', 'mobile', 'Component.tsx'),
+            `import Logo from '@shared/icon.svg';\nexport default function C() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']?.path).toBe(
+            path.join(tmpDir, 'shared', 'icon.svg')
+        );
+    });
+
+    it('should resolve paths without baseUrl against the extending config when it overrides them', () => {
+        fs.mkdirSync(path.join(tmpDir, 'apps', 'mobile', 'local'), {
+            recursive: true
+        });
+        fs.writeFileSync(
+            path.join(tmpDir, 'apps', 'mobile', 'local', 'icon.svg'),
+            '<svg/>'
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'tsconfig.base.json'),
+            JSON.stringify({
+                compilerOptions: { paths: { '@shared/*': ['./shared/*'] } }
+            })
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'apps', 'mobile', 'tsconfig.json'),
+            JSON.stringify({
+                extends: '../../tsconfig.base.json',
+                compilerOptions: { paths: { '@shared/*': ['./local/*'] } }
+            })
+        );
+        fs.writeFileSync(
+            path.join(tmpDir, 'apps', 'mobile', 'Component.tsx'),
+            `import Logo from '@shared/icon.svg';\nexport default function C() { return <Logo />; }`
+        );
+
+        const instance = new ReactNativeSVG(tmpDir, tmpDir, false);
+        instance.setApiTypes(t);
+        instance.buildSvgMap();
+
+        expect(instance.localSvgMap['Logo']?.path).toBe(
+            path.join(tmpDir, 'apps', 'mobile', 'local', 'icon.svg')
+        );
+    });
 });

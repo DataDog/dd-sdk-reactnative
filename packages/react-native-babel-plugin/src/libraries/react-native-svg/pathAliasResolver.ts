@@ -9,6 +9,8 @@ import pathN from 'path';
 import { createMatchPath, loadConfig } from 'tsconfig-paths';
 import type { MatchPath } from 'tsconfig-paths';
 
+import { findPathsBaseDir } from './tsconfigPathsBase';
+
 export function isBareSpecifier(source: string): boolean {
     return source[0] !== '.' && !pathN.isAbsolute(source);
 }
@@ -127,9 +129,18 @@ export class PathAliasResolver {
         try {
             const config = loadConfig(pathN.dirname(configPath));
             if (config.resultType === 'success') {
+                // Without a baseUrl, TypeScript resolves `paths` against the
+                // config that defines them and doesn't treat other bare
+                // imports as relative to the config directory.
+                const pathsBaseDir =
+                    config.baseUrl === undefined
+                        ? findPathsBaseDir(config.configFileAbsolutePath)
+                        : null;
                 matchPathResult = createMatchPath(
-                    config.absoluteBaseUrl,
-                    config.paths
+                    pathsBaseDir ?? config.absoluteBaseUrl,
+                    config.paths,
+                    undefined,
+                    config.addMatchAll
                 );
             }
         } catch (err) {
