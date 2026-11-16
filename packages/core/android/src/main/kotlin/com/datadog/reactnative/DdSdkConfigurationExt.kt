@@ -18,6 +18,7 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.util.Locale
 
+@Suppress("LongMethod")
 internal fun ReadableMap.asDdSdkConfiguration(): DdSdkConfiguration {
     val additionalConfiguration = getMap("additionalConfiguration")?.toHashMap()
 

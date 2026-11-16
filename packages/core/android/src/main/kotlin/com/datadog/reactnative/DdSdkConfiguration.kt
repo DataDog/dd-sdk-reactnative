@@ -177,6 +177,8 @@ internal data class JSONRumConfiguration(
     val trackMemoryWarnings: Boolean? = null,
     val telemetrySampleRate: Double? = null,
     val customEndpoint: String? = null,
+    // Gson maps this property name to the `unstable_timeseries` JSON key.
+    @Suppress("ConstructorParameterNaming")
     val unstable_timeseries: JSONTimeseriesConfiguration? = null
 )
 
