@@ -166,8 +166,15 @@ private fun buildFlagsConfiguration(configuration: Map<String, Any?>): FlagsConf
             (configuration["customExposureEndpoint"] as? String)?.let {
                 useCustomExposureEndpoint("$it/api/v2/exposures")
             }
+            (configuration["flagSelection"] as? Map<*, *>)?.let {
+                flagSelection(it.stringList("tags"), it.stringList("keyPatterns"))
+            }
         }.build()
 }
+
+// JS validates the selection before bridging it; non-string values are dropped defensively.
+private fun Map<*, *>.stringList(key: String): List<String>? =
+    (this[key] as? List<*>)?.filterIsInstance<String>()
 
 internal fun buildEvaluationContext(
     targetingKey: String,

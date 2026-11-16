@@ -11,6 +11,7 @@ import com.datadog.android.api.SdkCore
 import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsConfiguration
 import com.datadog.tools.unit.toReadableMap
+import com.datadog.tools.unit.toReadableMapDeep
 import com.facebook.react.bridge.Promise
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -92,5 +93,141 @@ internal class DdFlagsImplementationTest {
         assertThat(context.targetingKey).isEqualTo("user")
         assertThat(context.attributes).containsOnlyKeys("country", "age")
         assertThat(context.attributes["country"]).isEqualTo("US")
+    }
+
+    @Test
+    fun `M pass flag selection unchanged W enable() { tags and key patterns }`() {
+        // When
+        val configuration = enableAndCaptureConfiguration(
+            mapOf(
+                "enabled" to true,
+                "flagSelection" to mapOf(
+                    "tags" to listOf(" team:checkout ", "team:checkout", ""),
+                    "keyPatterns" to listOf("checkout-*")
+                )
+            )
+        )
+
+        // Then
+        assertThat(configuration).isEqualTo(
+            defaultConfigurationBuilder()
+                .flagSelection(listOf(" team:checkout ", "team:checkout", ""), listOf("checkout-*"))
+                .build()
+        )
+    }
+
+    @Test
+    fun `M pass only the lists that are set W enable() { key patterns only }`() {
+        // When
+        val configuration = enableAndCaptureConfiguration(
+            mapOf(
+                "enabled" to true,
+                "flagSelection" to mapOf("keyPatterns" to listOf("checkout-*"))
+            )
+        )
+
+        // Then
+        assertThat(configuration).isEqualTo(
+            defaultConfigurationBuilder().flagSelection(null, listOf("checkout-*")).build()
+        )
+    }
+
+    @Test
+    fun `M not set flag selection W enable() { no flag selection }`() {
+        // When
+        val configuration = enableAndCaptureConfiguration(mapOf("enabled" to true))
+
+        // Then
+        assertThat(configuration).isEqualTo(defaultConfigurationBuilder().build())
+        assertThat(configuration).isNotEqualTo(
+            defaultConfigurationBuilder().flagSelection(emptyList(), emptyList()).build()
+        )
+    }
+
+    @Test
+    fun `M not set flag selection W enable() { flag selection is not a map }`() {
+        // When
+        val configuration = enableAndCaptureConfiguration(
+            mapOf(
+                "enabled" to true,
+                "flagSelection" to listOf("team:checkout")
+            )
+        )
+
+        // Then
+        assertThat(configuration).isEqualTo(defaultConfigurationBuilder().build())
+    }
+
+    @Test
+    fun `M drop non-string values W enable() { mixed values }`() {
+        // When
+        val configuration = enableAndCaptureConfiguration(
+            mapOf(
+                "enabled" to true,
+                "flagSelection" to mapOf(
+                    "tags" to listOf("team:checkout", null, 42),
+                    "keyPatterns" to "checkout-*"
+                )
+            )
+        )
+
+        // Then
+        assertThat(configuration).isEqualTo(
+            defaultConfigurationBuilder().flagSelection(listOf("team:checkout"), null).build()
+        )
+    }
+
+    @Test
+    fun `M keep surrogates unchanged W enable() { surrogate pair and unpaired surrogate }`() {
+        // The SDK reports an unpaired surrogate as malformed_selection; the bridge passes it as is.
+        val surrogatePair = "team:😀"
+        val unpairedSurrogate = "checkout-\uD800"
+
+        // When
+        val configuration = enableAndCaptureConfiguration(
+            mapOf(
+                "enabled" to true,
+                "flagSelection" to mapOf(
+                    "tags" to listOf(surrogatePair),
+                    "keyPatterns" to listOf(unpairedSurrogate)
+                )
+            )
+        )
+
+        // Then
+        assertThat(configuration).isEqualTo(
+            defaultConfigurationBuilder()
+                .flagSelection(listOf(surrogatePair), listOf(unpairedSurrogate))
+                .build()
+        )
+    }
+
+    private fun defaultConfigurationBuilder(): FlagsConfiguration.Builder =
+        FlagsConfiguration
+            .Builder()
+            .gracefulModeEnabled(true)
+            .trackExposures(true)
+            .rumIntegrationEnabled(true)
+
+    private fun enableAndCaptureConfiguration(
+        configuration: Map<String, Any?>
+    ): FlagsConfiguration? {
+        var captured: FlagsConfiguration? = null
+        val flagsMock = Mockito.mockStatic(Flags::class.java)
+
+        try {
+            flagsMock.`when`<Unit> { Flags.enable(any<FlagsConfiguration>(), any()) }.thenAnswer {
+                captured = it.getArgument(0)
+                null
+            }
+
+            DdFlagsImplementation(mock<SdkCore>())
+                .enable(configuration.toReadableMapDeep(), mockPromise)
+
+            verify(mockPromise).resolve(null)
+        } finally {
+            flagsMock.close()
+        }
+        return captured
     }
 }

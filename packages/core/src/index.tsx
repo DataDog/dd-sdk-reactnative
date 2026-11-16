@@ -40,6 +40,7 @@ import type { ParsedFlagsConfiguration } from './flags/configuration';
 import { __ddEnrichEvaluationContextWithRumUser } from './flags/rumIntegration';
 import type {
     FlagsConfiguration,
+    FlagSelection,
     FlagDetails,
     EvaluationContext,
     PrimitiveValue
@@ -133,6 +134,7 @@ export type {
     LogsConfigurationOptions,
     TraceConfigurationOptions,
     FlagsConfiguration,
+    FlagSelection,
     FlagsClient,
     ParsedFlagsConfiguration,
     EvaluationContext,

@@ -72,6 +72,24 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 
 > **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure.
 
+### Load a subset of flags
+
+Pass `flagSelection` to `DdFlags.enable()` to load only the flags that match any of the listed tags or key patterns.
+
+```tsx
+await DdFlags.enable({
+    flagSelection: { tags: ['team:checkout'], keyPatterns: ['checkout-*'] }
+});
+```
+
+- Tags match exactly and are case-sensitive. Key patterns match the whole flag key and are case-sensitive, and `*` matches any run of characters.
+- The selection is fixed when `DdFlags.enable()` is called, and applies to every client, including the one `DatadogOpenFeatureProvider` uses.
+- Leading and trailing Unicode whitespace is trimmed from every value, and empty values and duplicates are removed. Each list accepts at most 31 values, and each value is at most 200 UTF-8 bytes.
+- A malformed selection, or one over a limit, is not sent: the SDK logs an error and loads the full flag configuration. The server can also ignore a selection and return the full flag configuration, which the SDK also logs as an error. With `customFlagsEndpoint`, the proxy must forward the `DD-Flag-Selection-Ignored` response header for an ignored selection to be reported.
+- These errors are logged only when the core configuration sets `verbosity`. A malformed selection is reported as `flagSelection`. Limits and ignored selections are reported by the native SDKs with their own option names: `Flags.Configuration.flagSelection` on iOS and `flagSelection` on Android.
+- When the server applies the selection, flags outside it are not loaded. Evaluating them returns your default value with `FLAG_NOT_FOUND`, so select every flag the app evaluates.
+- The selection applies only to configurations the SDK fetches. Configurations that the app supplies itself, such as with `DatadogOfflineOpenFeatureProvider`, are not filtered.
+
 ### RUM user context
 
 Use `enrichWithRumUser()` when you explicitly want to use the current RUM user as part of an
