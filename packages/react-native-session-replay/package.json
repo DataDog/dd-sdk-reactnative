@@ -44,8 +44,7 @@
         "test": "jest",
         "lint": "eslint .",
         "build:assets": "node scripts/build-assets.js",
-        "prepare": "rm -rf lib && yarn build:assets && yarn bob build",
-        "postinstall": "node scripts/set-ios-rn-version.js"
+        "prepare": "rm -rf lib && yarn build:assets && yarn bob build"
     },
     "peerDependencies": {
         "react": ">=16.13.1",

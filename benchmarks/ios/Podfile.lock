@@ -2080,7 +2080,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DatadogSDKReactNative: 9d97fa19c95beeb1fcfeda2c775497a47772f6b6
-  DatadogSDKReactNativeSessionReplay: b25febff04084e78ef281e270b13927677a8cdc5
+  DatadogSDKReactNativeSessionReplay: 0b516dcf96bb1d049ffc56b2d8216eee4e77c85b
   DatadogSDKReactNativeWebView: 382b64115c0bb4d1a424d83c834d60c3dbb889ad
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
