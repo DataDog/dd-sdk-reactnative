@@ -378,12 +378,79 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(config?.rumIntegrationEnabled, true)
         XCTAssertNil(config?.customFlagsEndpoint)
         XCTAssertNil(config?.customExposureEndpoint)
+        XCTAssertNil(config?.flagSelection)
     }
 
     func testConfigurationParsingDisabled() {
         let configDict: NSDictionary = ["enabled": false]
         let config = configDict.asFlagsConfiguration()
         XCTAssertNil(config)
+    }
+
+    func testConfigurationParsingFlagSelection() {
+        let configDict: NSDictionary = [
+            "enabled": true,
+            "flagSelection": [
+                "tags": [" team:checkout ", "team:checkout", ""],
+                "keyPatterns": ["checkout-*"]
+            ]
+        ]
+
+        let selection = configDict.asFlagsConfiguration()?.flagSelection
+
+        XCTAssertEqual(selection?.tags, [" team:checkout ", "team:checkout", ""])
+        XCTAssertEqual(selection?.keyPatterns, ["checkout-*"])
+    }
+
+    func testConfigurationParsingFlagSelectionWithOneList() {
+        let configDict: NSDictionary = [
+            "enabled": true,
+            "flagSelection": ["keyPatterns": ["checkout-*"]]
+        ]
+
+        let selection = configDict.asFlagsConfiguration()?.flagSelection
+
+        XCTAssertEqual(selection?.tags, [])
+        XCTAssertEqual(selection?.keyPatterns, ["checkout-*"])
+    }
+
+    func testConfigurationParsingFlagSelectionKeepsSurrogatePairs() {
+        let configDict: NSDictionary = [
+            "enabled": true,
+            "flagSelection": ["tags": ["team:\u{1F600}"]]
+        ]
+
+        let selection = configDict.asFlagsConfiguration()?.flagSelection
+
+        XCTAssertEqual(selection?.tags, ["team:\u{1F600}"])
+        XCTAssertEqual(selection?.tags.first?.utf16.count, 7)
+    }
+
+    func testConfigurationParsingFlagSelectionDropsNonStringValues() {
+        let configDict: NSDictionary = [
+            "enabled": true,
+            "flagSelection": [
+                "tags": ["team:checkout", NSNull(), 42] as [Any],
+                "keyPatterns": "checkout-*"
+            ] as [String: Any]
+        ]
+
+        let selection = configDict.asFlagsConfiguration()?.flagSelection
+
+        XCTAssertEqual(selection?.tags, ["team:checkout"])
+        XCTAssertEqual(selection?.keyPatterns, [])
+    }
+
+    func testConfigurationParsingFlagSelectionIgnoresNonDictionary() {
+        let configDict: NSDictionary = [
+            "enabled": true,
+            "flagSelection": ["team:checkout"]
+        ]
+
+        let config = configDict.asFlagsConfiguration()
+
+        XCTAssertNotNil(config)
+        XCTAssertNil(config?.flagSelection)
     }
 
     // MARK: - FlagAssignment Tests

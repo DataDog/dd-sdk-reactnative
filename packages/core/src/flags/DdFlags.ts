@@ -11,6 +11,10 @@ import { getNativeDdFlags } from '../specs/NativeDdFlags';
 import { getGlobalInstance } from '../utils/singletonUtils';
 
 import { FlagsClient } from './FlagsClient';
+import {
+    MALFORMED_FLAG_SELECTION_MESSAGE,
+    validateFlagSelection
+} from './flagSelection';
 import type { DdFlagsType, FlagsConfiguration } from './types';
 
 const FLAGS_MODULE = 'com.datadog.reactnative.flags';
@@ -33,7 +37,23 @@ class DdFlagsWrapper implements DdFlagsType {
     private clients: Record<string, FlagsClient> = {};
 
     enable = async (configuration: FlagsConfiguration = {}): Promise<void> => {
-        await this.nativeFlags.enable({ enabled: true, ...configuration });
+        // Untyped JavaScript callers can pass `null`.
+        const { flagSelection, ...nativeConfiguration } = configuration ?? {};
+        const selectionResult = validateFlagSelection(flagSelection);
+        if (selectionResult.kind === 'malformed') {
+            InternalLog.log(
+                MALFORMED_FLAG_SELECTION_MESSAGE,
+                SdkVerbosity.ERROR
+            );
+        }
+
+        await this.nativeFlags.enable({
+            enabled: true,
+            ...nativeConfiguration,
+            ...(selectionResult.kind === 'selected' && {
+                flagSelection: selectionResult.selection
+            })
+        });
 
         this.isFeatureEnabled = true;
     };

@@ -104,6 +104,47 @@ export interface FlagsConfiguration {
      * @default true
      */
     rumIntegrationEnabled?: boolean;
+    /**
+     * Loads only the flags that match any of the given tags or key patterns.
+     *
+     * The native SDK trims leading and trailing Unicode whitespace from every value, drops empty values,
+     * and removes duplicates. Each list accepts at most 31 values, and each value is at most 200 UTF-8 bytes.
+     * A selection over a limit, or a malformed one, is not sent: the SDK logs an error and loads the full flag configuration.
+     * The server may also ignore a selection and return the full flag configuration.
+     * With `customFlagsEndpoint`, the proxy must forward the `DD-Flag-Selection-Ignored` response header
+     * for an ignored selection to be reported.
+     *
+     * When the server applies the selection, flags outside it are not loaded,
+     * so evaluating them returns the default value with the `FLAG_NOT_FOUND` error code.
+     *
+     * The selection is fixed when `DdFlags.enable()` is called and applies to every client.
+     * Selection errors are logged only when the SDK `verbosity` is set.
+     *
+     * @example
+     * ```ts
+     * await DdFlags.enable({
+     *     flagSelection: { tags: ['team:checkout'], keyPatterns: ['checkout-*'] }
+     * });
+     * ```
+     *
+     * @default undefined
+     */
+    flagSelection?: FlagSelection;
+}
+
+/**
+ * The flags to load, selected by tag or by key pattern. A flag is loaded if it matches any listed tag or key pattern.
+ */
+export interface FlagSelection {
+    /**
+     * Flag tags to load. Tags match exactly and are case-sensitive.
+     */
+    tags?: readonly string[];
+    /**
+     * Flag key patterns to load. A pattern matches the whole flag key, is case-sensitive,
+     * and `*` matches any run of characters.
+     */
+    keyPatterns?: readonly string[];
 }
 
 export type PrimitiveValue = null | boolean | string | number;

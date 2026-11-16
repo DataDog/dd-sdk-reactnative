@@ -162,8 +162,17 @@ extension NSDictionary {
             customFlagsEndpoint: customFlagsEndpointURL,
             customExposureEndpoint: customExposureEndpointURL,
             trackExposures: trackExposures ?? true,
-            rumIntegrationEnabled: rumIntegrationEnabled ?? true
+            rumIntegrationEnabled: rumIntegrationEnabled ?? true,
+            flagSelection: (object(forKey: "flagSelection") as? NSDictionary)?.asFlagSelection()
         )
+    }
+
+    /// JS validates the selection before bridging it; non-string values are dropped defensively, as on Android.
+    func asFlagSelection() -> Flags.FlagSelection {
+        func strings(forKey key: String) -> [String] {
+            (object(forKey: key) as? [Any])?.compactMap { $0 as? String } ?? []
+        }
+        return Flags.FlagSelection(tags: strings(forKey: "tags"), keyPatterns: strings(forKey: "keyPatterns"))
     }
 }
 
