@@ -41,3 +41,4 @@ prod,chokidar,MIT,"Copyright (c) 2012 Paul Miller (https://paulmillr.com), Elan 
 prod,fast-glob,MIT,"Copyright (c) Denis Malinochkin"
 prod,svgo,MIT,"Copyright (c) Kir Belevich"
 prod,uuid,MIT,"Copyright (c) 2010-2020 Robert Kieffer and other contributors"
+prod,tsconfig-paths,MIT,"Copyright (c) 2016 Jonas Kello"
