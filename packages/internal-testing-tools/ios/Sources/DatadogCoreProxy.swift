@@ -17,6 +17,10 @@ internal class DatadogCoreProxy: DatadogCoreProtocol {
         self.core = core
     }
 
+    var remoteConfiguration: RemoteConfiguration? {
+        core.remoteConfiguration
+    }
+
     func register<T>(feature: T) throws where T: DatadogFeature {
         do {
             try core.register(feature: feature)

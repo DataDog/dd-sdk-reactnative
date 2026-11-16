@@ -4,6 +4,7 @@
  * Copyright 2019-2020 Datadog, Inc.
  */
 
+import Foundation
 import XCTest
 @testable import DatadogSDKReactNative
 @testable import DatadogCore
