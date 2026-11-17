@@ -11,7 +11,6 @@ export type TimeseriesType = 'cpu' | 'memory';
 
 /**
  * Experimental: configuration for memory and CPU timeseries collection.
- * Requires a native SDK build with timeseries support.
  */
 export interface TimeseriesConfiguration {
     /**

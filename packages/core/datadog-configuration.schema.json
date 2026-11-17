@@ -398,7 +398,7 @@
                             "type": "string"
                         },
                         "unstable_timeseries": {
-                            "description": "Experimental: configuration for memory and CPU timeseries collection. Requires a native SDK build with timeseries support. Presence of this object enables timeseries collection.",
+                            "description": "Experimental: configuration for memory and CPU timeseries collection. Presence of this object enables timeseries collection.",
                             "type": "object",
                             "properties": {
                                 "collectTypes": {

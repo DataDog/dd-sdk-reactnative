@@ -95,7 +95,6 @@ internal val DEFAULT_TIMESERIES_COLLECT_TYPES = listOf("cpu", "memory")
 
 /**
  * Experimental: configuration for memory and CPU timeseries collection.
- * Requires a native SDK build with timeseries support.
  *
  * @param collectTypes The types of timeseries data to collect ("cpu", "memory"). Required.
  *   Use [DEFAULT_TIMESERIES_COLLECT_TYPES] to collect the default set.

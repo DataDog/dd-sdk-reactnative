@@ -111,7 +111,6 @@ public class DdSdkConfiguration: NSObject {
 ///    - telemetrySampleRate: Sampling rate (0–100) for internal telemetry emitted via RUM.
 ///    - customEndpoint: A custom RUM  intake endpoint to override the default Datadog intake.
 ///    - enableTimeseries: Experimental: enables collection of memory and CPU timeseries events.
-///      Requires a native SDK build with timeseries support.
 ///    - timeseriesCollectTypes: The types of timeseries data to collect ("cpu", "memory").
 ///      The native SDK requires an explicit set of types; if nil, this SDK
 ///      passes its default set (cpu and memory) on your behalf.
