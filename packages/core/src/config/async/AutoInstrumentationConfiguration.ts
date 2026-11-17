@@ -12,6 +12,7 @@ import { LOGS_DEFAULTS } from '../features/LogsConfiguration';
 import type { HeaderCaptureRule } from '../features/RumConfiguration.type';
 import { RUM_DEFAULTS } from '../features/RumConfiguration';
 import type { TraceConfiguration } from '../features/TraceConfiguration';
+import type { TimeseriesConfiguration } from '../types';
 
 /**
  * Auto Instrumentation configuration passed to DatadogProvider.
@@ -32,6 +33,7 @@ export type AutoInstrumentationConfiguration = {
         readonly nativeViewTracking?: boolean;
         readonly nativeIosResourceTracking?: boolean;
         readonly nativeIosResourceTrackingDisallowList?: string[];
+        readonly unstable_timeseries?: TimeseriesConfiguration;
         readonly actionEventMapper?: ActionEventMapper | null;
         readonly errorEventMapper?: ErrorEventMapper | null;
         readonly resourceEventMapper?: ResourceEventMapper | null;
@@ -59,6 +61,7 @@ export type AutoInstrumentationParameters = {
         readonly nativeViewTracking?: boolean;
         readonly nativeIosResourceTracking?: boolean;
         readonly nativeIosResourceTrackingDisallowList?: string[];
+        readonly unstable_timeseries?: TimeseriesConfiguration;
         readonly actionEventMapper: ActionEventMapper | null;
         readonly errorEventMapper: ErrorEventMapper | null;
         readonly resourceEventMapper: ResourceEventMapper | null;
@@ -129,6 +132,7 @@ export const addDefaultValuesToAutoInstrumentationConfiguration = (
                 features.rumConfiguration.nativeIosResourceTracking,
             nativeIosResourceTrackingDisallowList:
                 features.rumConfiguration.nativeIosResourceTrackingDisallowList,
+            unstable_timeseries: features.rumConfiguration.unstable_timeseries,
             firstPartyHosts:
                 features.rumConfiguration.firstPartyHosts ||
                 RUM_DEFAULTS.getFirstPartyHosts(),

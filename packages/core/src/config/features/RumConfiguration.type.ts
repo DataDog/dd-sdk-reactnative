@@ -7,7 +7,7 @@ import type { ActionEventMapper } from '../../rum/eventMappers/actionEventMapper
 import type { ErrorEventMapper } from '../../rum/eventMappers/errorEventMapper';
 import type { ResourceEventMapper } from '../../rum/eventMappers/resourceEventMapper';
 import type { FirstPartyHost } from '../../rum/types';
-import type { VitalsUpdateFrequency } from '../types';
+import type { TimeseriesConfiguration, VitalsUpdateFrequency } from '../types';
 
 /**
  * Required RUM configuration values.
@@ -303,6 +303,16 @@ export interface RumConfigurationOptions {
      * Preferred frequency for collecting mobile vitals.
      */
     vitalsUpdateFrequency?: VitalsUpdateFrequency;
+
+    // TODO: RUM-18601 remove the Android limitation note once the Android SDK supports late initialization
+    /**
+     * Experimental: configuration for memory and CPU timeseries collection.
+     *
+     * On Android, timeseries are only collected when the SDK is initialized natively
+     * from `MainApplication.onCreate` (`DdSdkNativeInitialization.initFromNative`),
+     * because the Android SDK must be initialized before the first Activity starts.
+     */
+    unstable_timeseries?: TimeseriesConfiguration;
 }
 
 /**
