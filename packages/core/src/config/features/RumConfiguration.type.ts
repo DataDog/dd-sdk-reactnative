@@ -304,9 +304,13 @@ export interface RumConfigurationOptions {
      */
     vitalsUpdateFrequency?: VitalsUpdateFrequency;
 
+    // TODO: RUM-18601 remove the Android limitation note once the Android SDK supports late initialization
     /**
      * Experimental: configuration for memory and CPU timeseries collection.
-     * Requires a native SDK build with timeseries support.
+     *
+     * On Android, timeseries are only collected when the SDK is initialized natively
+     * from `MainApplication.onCreate` (`DdSdkNativeInitialization.initFromNative`),
+     * because the Android SDK must be initialized before the first Activity starts.
      */
     unstable_timeseries?: TimeseriesConfiguration;
 }
