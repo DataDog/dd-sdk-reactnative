@@ -165,6 +165,9 @@ export const getJSONConfiguration = (
                     buildFirstPartyHosts(
                         configuration.rumConfiguration.firstPartyHosts
                     ) || RUM_DEFAULTS.getFirstPartyHosts(),
+                // Validated when compiled at resource tracking start
+                headerCaptureRules:
+                    configuration.rumConfiguration.headerCaptureRules,
                 useAccessibilityLabel:
                     configuration.rumConfiguration.useAccessibilityLabel,
                 trackInteractions:
@@ -213,7 +216,9 @@ export const getJSONConfiguration = (
                     configuration.rumConfiguration.nativeIosResourceTracking,
                 nativeIosResourceTrackingDisallowList:
                     configuration.rumConfiguration
-                        .nativeIosResourceTrackingDisallowList
+                        .nativeIosResourceTrackingDisallowList,
+                unstable_timeseries:
+                    configuration.rumConfiguration.unstable_timeseries
             }
         }),
         ...(configuration.traceConfiguration !== undefined && {

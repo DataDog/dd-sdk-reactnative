@@ -15,7 +15,7 @@ export type Hostname = { _type: 'Hostname' } & string;
 export const NO_MATCH_REGEX = new RegExp('a^');
 
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-const escapeRegExp = (string: string) => {
+export const escapeRegExp = (string: string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 };
 

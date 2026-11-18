@@ -8,6 +8,7 @@ import { version as reactNativeVersion } from 'react-native/package.json';
 import { NativeModules } from 'react-native';
 
 import { InitializationMode } from '../../../config/types';
+import type { TimeseriesConfiguration } from '../../../config/types';
 import { DdLogs } from '../../../logs/DdLogs';
 import { DdRum } from '../../../rum/DdRum';
 import { PropagatorType, RumActionType } from '../../../rum/types';
@@ -75,7 +76,7 @@ describe('DatadogProvider', () => {
                   "clientToken": "fakeToken",
                   "configurationForTelemetry": {
                     "initializationType": "SYNC",
-                    "reactNativeVersion": "0.76.9",
+                    "reactNativeVersion": "${reactNativeVersion}",
                     "reactVersion": "18.3.1",
                     "trackErrors": true,
                     "trackInteractions": true,
@@ -92,6 +93,7 @@ describe('DatadogProvider', () => {
                     "customEndpoint": undefined,
                     "errorEventMapper": null,
                     "firstPartyHosts": [],
+                    "headerCaptureRules": undefined,
                     "initialResourceThreshold": undefined,
                     "longTaskThresholdMs": 0,
                     "nativeCrashReportEnabled": false,
@@ -113,6 +115,7 @@ describe('DatadogProvider', () => {
                     "trackNonFatalAnrs": undefined,
                     "trackResources": false,
                     "trackWatchdogTerminations": false,
+                    "unstable_timeseries": undefined,
                     "useAccessibilityLabel": true,
                     "vitalsUpdateFrequency": "AVERAGE",
                   },
@@ -338,6 +341,56 @@ describe('DatadogProvider', () => {
                 expect(
                     receivedConfiguration.rumConfiguration
                         .nativeIosResourceTrackingDisallowList
+                ).toEqual(expected);
+            }
+        );
+    });
+
+    describe('unstable_timeseries', () => {
+        const timeseries: TimeseriesConfiguration = {
+            collectTypes: ['memory']
+        };
+
+        it.each([
+            ['unset', 'unset', undefined],
+            ['set', 'unset', timeseries],
+            ['unset', 'set', timeseries]
+        ])(
+            'partial initialization: features %s, initialize %s => native %p',
+            async (featuresValue, initializeValue, expected) => {
+                renderWithProvider({
+                    configuration: {
+                        rumConfiguration: {
+                            trackErrors: false,
+                            trackResources: false,
+                            trackInteractions: false,
+                            ...(featuresValue === 'set' && {
+                                unstable_timeseries: timeseries
+                            })
+                        },
+                        traceConfiguration: {},
+                        logsConfiguration: {}
+                    }
+                });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).not.toHaveBeenCalled();
+
+                await DatadogProvider.initialize({
+                    clientToken: 'fake-client-token',
+                    env: 'fake-env',
+                    rumConfiguration: {
+                        applicationId: 'fake-application-id',
+                        ...(initializeValue === 'set' && {
+                            unstable_timeseries: timeseries
+                        })
+                    }
+                });
+                await flushPromises();
+                expect(NativeModules.DdSdk.initialize).toHaveBeenCalledTimes(1);
+                const receivedConfiguration =
+                    NativeModules.DdSdk.initialize.mock.calls[0][0];
+                expect(
+                    receivedConfiguration.rumConfiguration.unstable_timeseries
                 ).toEqual(expected);
             }
         );

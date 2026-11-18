@@ -6,8 +6,8 @@
 
 import { InternalLog } from '../InternalLog';
 import { SdkVerbosity } from '../config/types/SdkVerbosity';
-import NativeDdFlags from '../specs/NativeDdFlags';
-import type { Spec } from '../specs/NativeDdFlags';
+import type { DdNativeFlagsType } from '../nativeModulesTypes';
+import { getNativeDdFlags } from '../specs/NativeDdFlags';
 
 import { processEvaluationContext } from './internal';
 import type { FlagCacheEntry } from './internal';
@@ -77,14 +77,15 @@ export function __ddTrackFlagRumEvaluation(
     );
 }
 
-function submit(operation: (native: Spec) => Promise<void>): void {
+function submit(operation: (native: DdNativeFlagsType) => Promise<void>): void {
     // Submit immediately. Evaluation must not wait for native acknowledgment or upload.
     try {
-        if (!NativeDdFlags) {
+        const native = getNativeDdFlags();
+        if (!native) {
             logTrackingFailure();
             return;
         }
-        operation(NativeDdFlags).catch(logTrackingFailure);
+        operation(native).catch(logTrackingFailure);
     } catch {
         logTrackingFailure();
     }

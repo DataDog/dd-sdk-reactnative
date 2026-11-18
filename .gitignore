@@ -89,9 +89,6 @@ packages/**/*.tgz
 # Jest
 coverage
 
-# Auto-generated iOS Header
-packages/react-native-session-replay/ios/Sources/RCTVersion.h
-
 # Datadog temporary files
 .tmp
 *.tgz
@@ -109,3 +106,5 @@ packages/react-native-babel-plugin/svg-map.json
 
 # Session Replay assets
 packages/react-native-session-replay/assets/*
+
+.planning

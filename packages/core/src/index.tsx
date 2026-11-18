@@ -22,6 +22,11 @@ import {
     ProxyType
 } from './config/types/ProxyConfiguration';
 import { SdkVerbosity } from './config/types/SdkVerbosity';
+import { defaultTimeseriesTypes } from './config/types/TimeseriesConfiguration';
+import type {
+    TimeseriesConfiguration,
+    TimeseriesType
+} from './config/types/TimeseriesConfiguration';
 import { TrackingConsent } from './config/types/TrackingConsent';
 import {
     BatchProcessingLevel,
@@ -103,6 +108,7 @@ export {
     TrackingConsent,
     SdkVerbosity,
     VitalsUpdateFrequency,
+    defaultTimeseriesTypes,
     PropagatorType,
     UploadFrequency,
     BatchSize,
@@ -123,12 +129,21 @@ export {
     __ddEnrichEvaluationContextWithRumUser
 };
 export type {
+    HeaderCaptureRule,
+    DefaultsRule,
+    MatchHeadersRule,
+    MatchRequestHeadersRule,
+    MatchResponseHeadersRule
+} from './config/features/RumConfiguration.type';
+export type {
     Timestamp,
     FirstPartyHost,
     AutoInstrumentationConfiguration,
     PartialInitializationConfiguration,
     CoreConfigurationOptions,
     RumConfigurationOptions,
+    TimeseriesConfiguration,
+    TimeseriesType,
     LogsConfigurationOptions,
     TraceConfigurationOptions,
     FlagsConfiguration,

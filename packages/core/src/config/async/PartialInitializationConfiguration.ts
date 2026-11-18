@@ -9,6 +9,7 @@ import type {
     BatchSize,
     ProxyConfiguration,
     SdkVerbosity,
+    TimeseriesConfiguration,
     TrackingConsent,
     UploadFrequency,
     VitalsUpdateFrequency
@@ -49,6 +50,7 @@ export type PartialInitializationConfiguration = {
         readonly trackNonFatalAnrs?: boolean;
         readonly appHangThreshold?: number;
         readonly resourceTraceSampleRate?: number;
+        readonly unstable_timeseries?: TimeseriesConfiguration;
     };
     readonly logsConfiguration?: {
         readonly bundleLogsWithRum?: boolean;

@@ -27,6 +27,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
                  withStartRecordingImmediately:(BOOL)startRecordingImmediately
                  withEnableHeatmaps:(BOOL)enableHeatmaps
                  withEnableCompositionTreeRecording:(BOOL)enableCompositionTreeRecording
+                 withAndroidAdaptiveCaptureSchedulingEnabled:(BOOL)androidAdaptiveCaptureSchedulingEnabled
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
@@ -38,6 +39,7 @@ RCT_REMAP_METHOD(enable, withEnableReplaySampleRate:(double)replaySampleRate
           startRecordingImmediately:startRecordingImmediately
           enableHeatmaps:enableHeatmaps
           enableCompositionTreeRecording:enableCompositionTreeRecording
+          androidAdaptiveCaptureSchedulingEnabled:androidAdaptiveCaptureSchedulingEnabled
           resolve:resolve
           reject:reject];
 }
@@ -81,8 +83,10 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
         startRecordingImmediately:(BOOL)startRecordingImmediately
         enableHeatmaps:(BOOL)enableHeatmaps
         enableCompositionTreeRecording:(BOOL)enableCompositionTreeRecording
+        androidAdaptiveCaptureSchedulingEnabled:(BOOL)androidAdaptiveCaptureSchedulingEnabled
         resolve:(RCTPromiseResolveBlock)resolve
         reject:(RCTPromiseRejectBlock)reject {
+    // Adaptive capture scheduling is Android-only; accept it to keep the shared bridge signature aligned.
     [self.ddSessionReplayImplementation enableWithReplaySampleRate:replaySampleRate
                                                     customEndpoint:customEndpoint
                                                  imagePrivacyLevel:imagePrivacyLevel

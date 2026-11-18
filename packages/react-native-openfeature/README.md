@@ -382,17 +382,14 @@ When the backend applies selection, flags outside it are absent from the returne
 
 `site` uses a domain such as `datadoghq.com` or `datadoghq.eu`, not the native SDK's `US1` or `EU1` identifiers. The default is `datadoghq.com`. Fetching and evaluation do not register tracking; use the hooks below when tracking is needed.
 
-### Optional tracking with DatadogCoreProvider (Android only)
+### Optional tracking with DatadogCoreProvider
 
 Register exposure, evaluation, and RUM hooks independently with the evaluation-only
 `DatadogCoreProvider`. Do not add these hooks to `DatadogOpenFeatureProvider` or
 `DatadogOfflineOpenFeatureProvider`, which already track automatically.
 
-Independent tracking hooks are currently supported only on Android, using native SDK
-3.16.0. In shared application code, guard this setup with `Platform.OS === 'android'`.
-On iOS, `initialize()` warns once per hook and leaves it inactive; flag evaluation and
-the existing providers' automatic tracking remain unchanged. No iOS dependency upgrade,
-deployment-target change, or CocoaPods override is required for this release.
+Independent tracking hooks support Android and iOS. The native iOS SDK is resolved through
+Swift Package Manager by the core RN SDK; no Datadog pod overrides are required.
 
 The exposure and evaluation hooks require the core Datadog SDK to be initialized and
 `DdFlags.enable()` to have completed. The RUM hook also uses a native Flags client to enforce
@@ -465,9 +462,6 @@ existing policy. Exposure logging is not suppressed by evaluation telemetry opt-
 Use matching core and OpenFeature package releases containing the tracking APIs. If the core
 package is missing a required tracking helper, `initialize()` warns once per hook and leaves
 that hook inactive; flag evaluation continues. Repeated evaluations do not repeat the warning.
-
-iOS support for these independent hooks is deferred to a follow-up. The shared native bridge
-methods reject direct iOS calls with `UNSUPPORTED_PLATFORM`; they do not report successful tracking.
 
 ### Offline initialization
 
