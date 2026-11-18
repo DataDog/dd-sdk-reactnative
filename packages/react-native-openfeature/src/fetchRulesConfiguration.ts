@@ -6,27 +6,16 @@
 
 import { configurationFromRulesBinary } from '@datadog/flagging-core/rules-based';
 import type { FlagSelection, FlagsConfiguration } from '@datadog/flagging-core';
-import { buildEndpointHost, timeStampNow } from '@datadog/flagging-core';
+import { timeStampNow } from '@datadog/flagging-core';
 
-import { applyFlagSelection, reportSelectionError } from './flagSelection';
+import {
+    buildConfigurationUrl,
+    defaultLogger,
+    getErrorMessage,
+    reportIgnoredSelection
+} from './configurationFetchUtils';
+import { applyFlagSelection } from './flagSelection';
 import { version } from './version';
-
-const FLAG_SELECTION_IGNORED_REASONS: ReadonlySet<string> = new Set([
-    'malformed_selection',
-    'too_many_values',
-    'invalid_key_pattern',
-    'invalid_tag',
-    'tag_load_failed'
-]);
-const MAX_FLAG_SELECTION_IGNORED_REASON_LENGTH = 32;
-
-const defaultLogger = {
-    error(message: string): void {
-        // Fetching must not load the native SDK; warnings also avoid LogBox errors.
-        // eslint-disable-next-line no-console
-        console.warn(`DATADOG: ${message}`);
-    }
-};
 
 export interface RulesConfigurationFetchOptions {
     clientToken: string;
@@ -47,15 +36,7 @@ export interface RulesConfigurationFetchOptions {
 export async function fetchRulesConfiguration(
     options: RulesConfigurationFetchOptions
 ): Promise<FlagsConfiguration> {
-    const host = buildEndpointHost(
-        options.site ?? 'datadoghq.com',
-        'ufc-client'
-    );
-
-    // RN's built-in URLSearchParams.set is not implemented on supported versions.
-    const baseUrl = `https://${host}/api/v2/feature-flagging/config/rules-based/client?dd_env=${encodeURIComponent(
-        options.env
-    )}`;
+    const baseUrl = buildConfigurationUrl(options.site, options.env, 'rules');
     const logger = options.logger ?? defaultLogger;
     const { url, selected } = applyFlagSelection(
         baseUrl,
@@ -107,41 +88,7 @@ export async function fetchRulesConfiguration(
         configuration.rules.fetchedAt = fetchedAt;
     }
     if (selected) {
-        const value = response.headers.get('DD-Flag-Selection-Ignored');
-        if (value) {
-            // Proxies can reflect caller data or join repeated headers; report only known reasons.
-            const reason =
-                value.length <= MAX_FLAG_SELECTION_IGNORED_REASON_LENGTH &&
-                FLAG_SELECTION_IGNORED_REASONS.has(value)
-                    ? value
-                    : 'unknown';
-            reportSelectionError(
-                logger,
-                `flagSelection was ignored by the server (${reason}). Loaded the full flag configuration.`
-            );
-        }
+        reportIgnoredSelection(response, logger);
     }
     return configuration;
-}
-
-async function getErrorMessage(response: Response): Promise<string> {
-    const contentType = response.headers
-        .get('content-type')
-        ?.split(';')[0]
-        .trim();
-    if (
-        contentType === 'application/vnd.api+json' ||
-        contentType === 'application/json'
-    ) {
-        try {
-            const body = await response.json();
-            const detail = body?.errors?.[0]?.detail;
-            if (typeof detail === 'string' && detail.length > 0) {
-                return detail;
-            }
-        } catch {
-            // Preserve the HTTP failure even when its error body is not valid JSON.
-        }
-    }
-    return response.statusText || `HTTP ${response.status}`;
 }

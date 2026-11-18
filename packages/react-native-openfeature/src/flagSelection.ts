@@ -4,7 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import type { FlagSelection, FlagSelectionError } from '@datadog/flagging-core';
+import type {
+    CanonicalFlagSelection,
+    FlagSelection,
+    FlagSelectionError
+} from '@datadog/flagging-core';
 import {
     canonicalizeFlagSelection,
     MAX_FLAG_SELECTION_KEY_PATTERN_BYTES,
@@ -53,10 +57,7 @@ export function applyFlagSelection(
         return { url, selected: false };
     };
     try {
-        const { selection, error } = canonicalizeFlagSelection(input);
-        if (error) {
-            return drop(error);
-        }
+        const selection = readFlagSelection(input, logger);
         if (!selection) {
             return { url, selected: false };
         }
@@ -82,6 +83,26 @@ export function applyFlagSelection(
         // Getters, proxies, and encoding failures can expose caller data through raw errors.
         return drop('malformed_selection');
     }
+}
+
+export function readFlagSelection(
+    input: FlagSelection | undefined,
+    logger: SelectionLogger
+): CanonicalFlagSelection | undefined {
+    let selection: CanonicalFlagSelection | undefined;
+    let error: FlagSelectionError | undefined;
+    try {
+        ({ selection, error } = canonicalizeFlagSelection(input));
+    } catch {
+        error = 'malformed_selection';
+    }
+    if (error) {
+        reportSelectionError(
+            logger,
+            `flagSelection was not sent (${error}: ${LIMIT_DESCRIPTIONS[error]}). Loading the full flag configuration.`
+        );
+    }
+    return error ? undefined : selection;
 }
 
 function encodeQueryValue(value: string): string {

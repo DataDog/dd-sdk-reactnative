@@ -411,6 +411,62 @@ object-typed flags must contain object values. Invalid flags are isolated from v
 The native SDK's legacy codec is unchanged. To load a configuration directly into a native
 `FlagsClient`, parse it with `configurationFromString` from `@datadog/mobile-react-native`.
 
+### Fetching precomputed configuration
+
+Use `fetchPrecomputedConfiguration` to fetch a snapshot for one context without initializing
+the native SDK. It is available from both entry points; the root path does not load protobuf.
+
+```tsx
+import {
+    DatadogCoreProvider,
+    fetchPrecomputedConfiguration,
+    getPrecomputedContext
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+const configuration = await fetchPrecomputedConfiguration({
+    clientToken: '<CLIENT_TOKEN>',
+    env: 'production',
+    context: { targetingKey: 'user-123', country: 'US' },
+    flagSelection: { keyPatterns: ['checkout-*'] }
+});
+if (!configuration.precomputed) {
+    throw new Error(configuration.precomputedError);
+}
+const provider = new DatadogCoreProvider();
+provider.setConfiguration(configuration);
+await OpenFeature.setProviderAndWait('checkout', provider, getPrecomputedContext(configuration));
+const enabled = OpenFeature.getClient('checkout').getBooleanValue('checkout-enabled', false);
+```
+
+Supply fetched snapshots to this package's OpenFeature providers, not to native
+`DdFlags.getClient().setConfiguration()`, which does not support encoded snapshots.
+
+The helper accepts `clientToken`, `env`, `context`, and optional `applicationId`, `site`,
+`flagSelection`, `fetch`, `signal`, and `logger`. Each call makes one POST with RN SDK identity
+and the shared decoder's capabilities. It does not poll, retry, persist, or register tracking.
+Fetch again for a different context. Diagnostics default to `DATADOG:`-prefixed console warnings.
+
+JSON values are captured before fetching. Attributes whose JSON representation is undefined,
+including functions and symbols, are omitted; dates use their JSON representation. Contexts
+must be objects (not arrays), with a string `targetingKey` when defined. Invalid context shapes,
+cyclic values, and BigInt reject with `INVALID_CONTEXT`. The returned context is detached from
+the caller. Evaluate with `getPrecomputedContext(configuration)`. With `DatadogCoreProvider`,
+an original context containing omitted or converted values does not match the snapshot; flags
+then return their defaults with `INVALID_CONTEXT`.
+
+Selection follows the rules below but is sent in the POST body, so the rules URL-size limit
+does not apply. Flags are not filtered locally. `dd_assignment_token`, when present in the
+context, is sent only as the `DD-Assignment-Token` header and is excluded from the request's
+targeting attributes and saved configuration. Failures from requests with an assignment token
+use sanitized errors.
+
+HTTP, network, cancellation, and JSON-read failures reject. Schema-invalid responses return
+`precomputedError`; malformed individual flags are isolated in `precomputed.flagErrors`.
+Check `configuration.precomputed` before replacing an active configuration. This helper uses
+the current RN evaluator's default disabled experimentation opt-out mode; a response computed
+under a different policy is rejected.
+
 ### Fetching rules configuration
 
 Use `fetchRulesConfiguration` from the `/rules-based` entry point to fetch client-distributed

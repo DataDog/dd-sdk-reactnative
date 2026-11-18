@@ -14,6 +14,7 @@ import type { DatadogTrackingHook, DatadogTrackingHooks } from '../index';
 import {
     coreConfigurationFromString,
     DatadogCoreProvider,
+    fetchPrecomputedConfiguration,
     fetchRulesConfiguration
 } from '../rules-based';
 import {
@@ -28,6 +29,7 @@ import {
     rulesConfiguration,
     rulesWire
 } from './__utils__/coreConfiguration';
+import { encodedConfiguration } from './__utils__/encodedConfiguration';
 
 // Exercise the real evaluator, OpenFeature lifecycle, and JS bridge adapter. Only native
 // delivery is mocked; its promises deliberately never resolve to detect accidental awaiting.
@@ -464,6 +466,70 @@ describe.each(['android', 'ios'] as const)(
 
             expect(native.setEvaluationContext).not.toHaveBeenCalled();
         });
+
+        it.each([precomputedConfiguration, encodedConfiguration])(
+            'evaluates a fetched snapshot from %p and tracks only with explicitly registered hooks',
+            async make => {
+                const fetch = jest.fn().mockResolvedValue({
+                    ok: true,
+                    json: async () => make().precomputed.response
+                });
+                const context = {
+                    ...matchingContext,
+                    dd_assignment_token: 'synthetic-credential'
+                };
+                const configuration = await fetchPrecomputedConfiguration({
+                    clientToken: 'test-client-token',
+                    env: 'production',
+                    context,
+                    fetch
+                });
+                const provider = new DatadogCoreProvider();
+                provider.setConfiguration(configuration);
+                const domain = `tracking-${++sequence}`;
+                await OpenFeature.setProviderAndWait(domain, provider, context);
+                const client = OpenFeature.getClient(domain);
+                expect(client.getBooleanValue('boolean-flag', false)).toBe(
+                    true
+                );
+                expect(native.trackExposure).not.toHaveBeenCalled();
+                expect(rum).not.toHaveBeenCalled();
+
+                const tracking = composeDatadogTrackingHooks(
+                    createDatadogExposureLoggingHook(),
+                    createDatadogRumTrackingHook()
+                );
+                await tracking.initialize();
+                client.addHooks(...tracking.hooks);
+                expect(client.getBooleanValue('boolean-flag', false)).toBe(
+                    true
+                );
+                expect(native.trackExposure).toHaveBeenCalledWith(
+                    'default',
+                    'boolean-flag',
+                    expect.objectContaining({ variationKey: 'on' }),
+                    'user-1',
+                    { country: 'US' }
+                );
+                expect(rum).toHaveBeenCalledTimes(1);
+                await OpenFeature.setContext(domain, {
+                    targetingKey: 'other',
+                    country: 'CA'
+                });
+                expect(
+                    client.getBooleanDetails('boolean-flag', false)
+                ).toMatchObject({
+                    value: false,
+                    errorCode: ErrorCode.INVALID_CONTEXT
+                });
+                expect(native.trackExposure).toHaveBeenCalledTimes(1);
+                expect(rum).toHaveBeenCalledTimes(1);
+                expect(fetch).toHaveBeenCalledTimes(1);
+                expect(native.enable).not.toHaveBeenCalled();
+                expect(native.setEvaluationContext).not.toHaveBeenCalled();
+                await tracking.shutdown();
+            }
+        );
 
         it('tracks fetched rules without fetching again for context changes or hook cleanup', async () => {
             const bytes = Uint8Array.from(

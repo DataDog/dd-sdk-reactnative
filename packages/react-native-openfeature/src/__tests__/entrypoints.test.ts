@@ -70,6 +70,7 @@ describe('package entry points', () => {
                 'configurationToString',
                 'getPrecomputedContext',
                 'getClientFingerprint',
+                'fetchPrecomputedConfiguration',
                 'createDatadogExposureLoggingHook',
                 'createDatadogRumTrackingHook',
                 'composeDatadogTrackingHooks'
@@ -78,6 +79,7 @@ describe('package entry points', () => {
             }
             expect(entry.DatadogCoreProvider).toBeUndefined();
             expect(entry.coreConfigurationFromString).toBeUndefined();
+            expect(entry.fetchRulesConfiguration).toBeUndefined();
         });
     });
 
