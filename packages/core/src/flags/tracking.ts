@@ -44,6 +44,31 @@ export function __ddTrackFlagExposure(
 }
 
 /** @internal Used by the matching-version OpenFeature tracking hooks. */
+export function __ddTrackFlagEvaluationEvent(
+    clientName: string,
+    key: string,
+    flag: FlagTrackingAssignment | null,
+    context: EvaluationContext,
+    errorCode: string | null,
+    observeFullEvaluationData: boolean,
+    telemetryTargetingKey: string | null
+): void {
+    const captured = processEvaluationContext(context);
+    submit(native =>
+        native.trackProtectedEvaluation(
+            clientName,
+            key,
+            flag,
+            captured.targetingKey,
+            captured.attributes ?? {},
+            errorCode,
+            observeFullEvaluationData === true,
+            captureTelemetryTargetingKey(telemetryTargetingKey)
+        )
+    );
+}
+
+/** @internal Used by the matching-version OpenFeature tracking hooks. */
 export function __ddTrackFlagRumEvaluation(
     clientName: string,
     key: string,
@@ -103,5 +128,18 @@ function logTrackingFailure(
         );
     } catch {
         // Diagnostics must not interrupt evaluation or reject native delivery promises.
+    }
+}
+
+function captureTelemetryTargetingKey(value: string | null): string | null {
+    if (typeof value !== 'string') {
+        return null;
+    }
+    try {
+        // Reject malformed UTF-16 before the bridge can replace it with another identity.
+        encodeURIComponent(value);
+        return value;
+    } catch {
+        return null;
     }
 }

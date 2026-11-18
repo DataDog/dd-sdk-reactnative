@@ -24,6 +24,7 @@ module.exports = {
     ...actualDatadog,
     __ddTrackFlagExposure: jest.fn(),
     __ddTrackFlagRumEvaluation: jest.fn(),
+    __ddTrackFlagEvaluationEvent: jest.fn(),
     DdSdkReactNative: {
         initialize: jest
             .fn()

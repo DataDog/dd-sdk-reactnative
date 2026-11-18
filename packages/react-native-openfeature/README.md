@@ -528,14 +528,14 @@ When the backend applies selection, flags outside it are absent from the returne
 
 ### Optional tracking with DatadogCoreProvider
 
-Register exposure and RUM hooks independently with the evaluation-only
+Register exposure, evaluation, and RUM hooks independently with the evaluation-only
 `DatadogCoreProvider`. Do not add these hooks to `DatadogOpenFeatureProvider` or
 `DatadogOfflineOpenFeatureProvider`, which already track automatically.
 
 Independent tracking hooks support Android and iOS. The native iOS SDK is resolved through
 Swift Package Manager by the core RN SDK; no Datadog pod overrides are required.
 
-The hooks require the core Datadog SDK to be initialized and
+The exposure and evaluation hooks require the core Datadog SDK to be initialized and
 `DdFlags.enable()` to have completed. The RUM hook also uses a native Flags client to enforce
 its evaluation telemetry opt-out policy, and requires RUM to be enabled separately.
 The hooks do not initialize, shut down, or change consent for the shared native SDK.
@@ -547,8 +547,8 @@ base URL; the RN bridge appends `/api/v2/exposures`. These hooks do not emit eva
 events. RUM's endpoint is configured separately when initializing RUM. These overrides
 do not change configuration fetching.
 
-The exposure hook requires `initialize()`. The RUM hook is active as soon as it is
-created, matching the browser API; its `initialize()` is optional. For either hook,
+The exposure and evaluation hooks require `initialize()`. The RUM hook is active as soon as it
+is created, matching the browser API; its `initialize()` is optional. For each hook,
 `shutdown()` deactivates tracking and `initialize()` reactivates it.
 
 ```tsx
@@ -556,6 +556,7 @@ import { DdFlags } from '@datadog/mobile-react-native';
 import {
     composeDatadogTrackingHooks,
     createDatadogExposureLoggingHook,
+    createDatadogEvaluationLoggingHook,
     createDatadogRumTrackingHook,
     DatadogCoreProvider,
     configurationFromString
@@ -573,6 +574,7 @@ await OpenFeature.setProviderAndWait('datadog-core', provider, {
 // Include only the tracking operations your application needs.
 const tracking = composeDatadogTrackingHooks(
     createDatadogExposureLoggingHook({ clientName: 'datadog-core' }),
+    createDatadogEvaluationLoggingHook({ clientName: 'datadog-core' }),
     createDatadogRumTrackingHook({ clientName: 'datadog-core' })
 );
 await tracking.initialize();
@@ -595,17 +597,27 @@ shutting down.
 
 Each hook submits its record immediately through an asynchronous native call. There is no
 JavaScript batching, timer, or upload queue, and evaluation does not await native delivery.
-Native consent handling, exposure deduplication, storage, and upload batching remain unchanged.
-Exposure logging respects `doLog` and the native `trackExposures` setting; setting
-`trackExposures: false` also disables the exposure hook's output. RUM records the variant
+Native consent handling, exposure deduplication, evaluation aggregation, storage, and upload
+batching remain unchanged. Exposure logging respects `doLog` and the native `trackExposures`
+setting; `trackExposures: false` also disables the exposure hook's output. RUM records the variant
 of successful evaluations through the selected native Flags client, respecting its
-opt-out policy and RUM integration setting.
+opt-out policy and RUM integration setting. Evaluation logging also records errors and coded
+defaults. Use the same `clientName` for evaluation and RUM hooks to apply the same client's policy.
 The hooks do not enable or synchronize per-subject opt-out; they preserve the native client's
 existing policy. Exposure logging is not suppressed by evaluation telemetry opt-out.
 
+Evaluation logging captures `__dd_observe_full_evaluation_data` from each evaluation's
+metadata. Unless it is exactly `true`, native code hashes nonempty targeting keys with
+SHA-256 and excludes evaluation attributes before aggregation. The original subject and
+context remain available to native opt-out checks. Hashing is applied once in native code,
+not in JavaScript. Missing or malformed telemetry identities are omitted; an explicit
+empty targeting key remains empty. This policy does not change exposure or RUM tracking.
+The evaluation hook requires the privacy-aware native bridge and never falls back to an
+unprotected tracking operation.
+
 Use matching core and OpenFeature package releases containing the tracking APIs. If the core
-package is missing a required tracking helper, the exposure hook warns once when initialized
-and the RUM hook warns once when created. The affected hook stays inactive; flag evaluation
+package is missing a required tracking helper, exposure and evaluation hooks warn once when
+initialized and the RUM hook warns once when created. The affected hook stays inactive; flag evaluation
 continues. Repeated evaluations do not repeat the warning.
 
 ### Offline initialization
