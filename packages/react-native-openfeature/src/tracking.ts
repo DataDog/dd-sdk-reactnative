@@ -53,22 +53,6 @@ export function createDatadogExposureLoggingHook(
     });
 }
 
-/** Logs every evaluation, including errors/defaults, through native aggregation. */
-export function createDatadogEvaluationLoggingHook(
-    options: DatadogTrackingHooksOptions = {}
-): DatadogTrackingHooks {
-    const clientName = options.clientName ?? 'default';
-    return createHook('__ddTrackFlagEvaluationEvent', (context, details) => {
-        DatadogSdk.__ddTrackFlagEvaluationEvent(
-            clientName,
-            context.flagKey,
-            toAssignment(details),
-            toDdContext(context.context),
-            details.errorCode ?? (details.reason === 'ERROR' ? 'GENERAL' : null)
-        );
-    });
-}
-
 /** Adds successful evaluations to the current native RUM view. */
 export function createDatadogRumTrackingHook(
     options: DatadogTrackingHooksOptions = {}
@@ -123,10 +107,7 @@ function runTrackingLifecycleOperation(
 }
 
 function createHook(
-    method:
-        | '__ddTrackFlagExposure'
-        | '__ddTrackFlagEvaluationEvent'
-        | '__ddTrackFlagRumEvaluation',
+    method: '__ddTrackFlagExposure' | '__ddTrackFlagRumEvaluation',
     record: (
         context: HookContext,
         details: EvaluationDetails<FlagValue>
