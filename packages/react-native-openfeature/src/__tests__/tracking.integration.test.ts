@@ -447,12 +447,11 @@ describe.each(['android', 'ios'] as const)(
             const client = OpenFeature.getClient(domain);
             client.getBooleanValue('test-flag', false);
             expect(native.trackExposure).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+
             expect(rum).not.toHaveBeenCalled();
 
             const tracking = composeDatadogTrackingHooks(
                 createDatadogExposureLoggingHook(),
-                createDatadogEvaluationLoggingHook(),
                 createDatadogRumTrackingHook()
             );
             await tracking.initialize();
@@ -470,7 +469,7 @@ describe.each(['android', 'ios'] as const)(
             expect(fetch).toHaveBeenCalledTimes(1);
             expect(provider.getConfiguration()).toBe(configuration);
             expect(native.trackExposure).toHaveBeenCalledTimes(1);
-            expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(2);
+
             expect(rum).toHaveBeenCalledTimes(2);
             expect(native.trackEvaluation).not.toHaveBeenCalled();
             expect(native.enable).not.toHaveBeenCalled();
@@ -525,15 +524,12 @@ describe.each(['android', 'ios'] as const)(
                 createDatadogExposureLoggingHook({
                     clientName: 'refresh-owner'
                 }),
-                createDatadogEvaluationLoggingHook({
-                    clientName: 'refresh-owner'
-                }),
                 createDatadogRumTrackingHook()
             );
             await tracking.initialize();
             client.addHooks(...tracking.hooks);
             expect(native.trackExposure).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+
             expect(rum).not.toHaveBeenCalled();
 
             expect(client.getBooleanDetails('test-flag', false)).toMatchObject({
@@ -547,7 +543,7 @@ describe.each(['android', 'ios'] as const)(
             const refreshed = await fetchRulesConfiguration(fetchOptions);
             provider.setConfiguration(refreshed);
             expect(native.trackExposure).toHaveBeenCalledTimes(1);
-            expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(1);
+
             expect(rum).toHaveBeenCalledTimes(1);
 
             expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
@@ -585,9 +581,7 @@ describe.each(['android', 'ios'] as const)(
                 ]
             ];
             expect(native.trackExposure.mock.calls).toEqual(expectedRecords);
-            expect(native.trackEvaluationEvent.mock.calls).toEqual(
-                expectedRecords.map(record => [...record, null])
-            );
+
             expect(rum.mock.calls).toEqual([
                 ['default', 'test-flag', 'on', 'user-1', { country: 'US' }],
                 [
