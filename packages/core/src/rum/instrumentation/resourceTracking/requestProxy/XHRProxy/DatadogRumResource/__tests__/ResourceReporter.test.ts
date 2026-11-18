@@ -83,4 +83,124 @@ describe('Resource reporter', () => {
         expect(DdRum.startResource).not.toHaveBeenCalled();
         expect(DdRum.stopResource).not.toHaveBeenCalled();
     });
+
+    describe('captured header attributes in stopResource context', () => {
+        it('includes _dd.request_headers in stopResource context when captured request headers are present', async () => {
+            // GIVEN
+            const resourceReporter = new ResourceReporter([]);
+            const resource = resourceMockFactory.getCustomResource({
+                capturedRequestHeaders: {
+                    'content-type': 'application/json',
+                    'cache-control': 'no-cache'
+                }
+            });
+
+            // WHEN
+            resourceReporter.reportResource(resource);
+            await flushPromises();
+
+            // THEN
+            const stopContext = DdRum.stopResource.mock.calls[0][4];
+            expect(stopContext).toEqual(
+                expect.objectContaining({
+                    '_dd.request_headers': {
+                        'content-type': 'application/json',
+                        'cache-control': 'no-cache'
+                    }
+                })
+            );
+        });
+
+        it('includes _dd.response_headers in stopResource context when captured response headers are present', async () => {
+            // GIVEN
+            const resourceReporter = new ResourceReporter([]);
+            const resource = resourceMockFactory.getCustomResource({
+                capturedResponseHeaders: {
+                    etag: '"abc123"',
+                    'cache-control': 'max-age=3600'
+                }
+            });
+
+            // WHEN
+            resourceReporter.reportResource(resource);
+            await flushPromises();
+
+            // THEN
+            const stopContext = DdRum.stopResource.mock.calls[0][4];
+            expect(stopContext).toEqual(
+                expect.objectContaining({
+                    '_dd.response_headers': {
+                        etag: '"abc123"',
+                        'cache-control': 'max-age=3600'
+                    }
+                })
+            );
+        });
+
+        it('includes both _dd.request_headers and _dd.response_headers when both are present', async () => {
+            // GIVEN
+            const resourceReporter = new ResourceReporter([]);
+            const resource = resourceMockFactory.getCustomResource({
+                capturedRequestHeaders: {
+                    'content-type': 'text/plain'
+                },
+                capturedResponseHeaders: { 'x-cache': 'HIT' }
+            });
+
+            // WHEN
+            resourceReporter.reportResource(resource);
+            await flushPromises();
+
+            // THEN
+            const stopContext = DdRum.stopResource.mock.calls[0][4];
+            expect(stopContext).toEqual(
+                expect.objectContaining({
+                    '_dd.request_headers': {
+                        'content-type': 'text/plain'
+                    },
+                    '_dd.response_headers': { 'x-cache': 'HIT' }
+                })
+            );
+        });
+
+        it('does not include _dd.request_headers or _dd.response_headers when headers are undefined', async () => {
+            // GIVEN
+            const resourceReporter = new ResourceReporter([]);
+            const resource = resourceMockFactory.getBasicResource();
+
+            // WHEN
+            resourceReporter.reportResource(resource);
+            await flushPromises();
+
+            // THEN
+            const stopContext = DdRum.stopResource.mock.calls[0][4];
+            expect(stopContext).not.toHaveProperty('_dd.request_headers');
+            expect(stopContext).not.toHaveProperty('_dd.response_headers');
+        });
+
+        it('does not include _dd.request_headers when only response headers are present', async () => {
+            // GIVEN
+            const resourceReporter = new ResourceReporter([]);
+            const resource = resourceMockFactory.getCustomResource({
+                capturedResponseHeaders: {
+                    'x-request-id': '12345'
+                }
+            });
+
+            // WHEN
+            resourceReporter.reportResource(resource);
+            await flushPromises();
+
+            // THEN
+            const stopContext = DdRum.stopResource.mock.calls[0][4];
+            expect(stopContext).toEqual(
+                expect.objectContaining({
+                    '_dd.response_headers': {
+                        'x-request-id': '12345'
+                    }
+                })
+            );
+            expect(stopContext).not.toHaveProperty('_dd.request_headers');
+        });
+    });
 });

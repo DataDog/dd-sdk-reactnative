@@ -19,7 +19,7 @@ import {
     ProviderStatus
 } from '@openfeature/web-sdk';
 
-import NativeDdFlagsModule from '../../../core/src/specs/NativeDdFlags';
+import { getNativeDdFlags } from '../../../core/src/specs/NativeDdFlags';
 import { DatadogCoreEvaluationProvider } from '../datadogCoreProvider';
 import { DatadogOfflineOpenFeatureProvider } from '../index';
 import { coreConfigurationFromString } from '../rules-based';
@@ -33,15 +33,15 @@ import {
 
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
-    default: {
+    getNativeDdFlags: jest.fn().mockReturnValue({
         enable: jest.fn(() => Promise.resolve()),
         setEvaluationContext: jest.fn(() => Promise.resolve({})),
         trackEvaluation: jest.fn(() => Promise.resolve())
-    }
+    })
 }));
 
 const NativeDdFlags = jest.mocked(
-    NativeDdFlagsModule as NonNullable<typeof NativeDdFlagsModule>
+    getNativeDdFlags() as NonNullable<ReturnType<typeof getNativeDdFlags>>
 );
 
 let sequence = 0;

@@ -9,6 +9,8 @@ import Foundation
 @testable import DatadogInternal
 
 internal class MockDatadogCore: DatadogCoreProtocol {
+    var remoteConfiguration: RemoteConfiguration? { nil }
+
     func send(message: FeatureMessage, else fallback: @escaping () -> Void) {
         if  // Configuration Telemetry Message
             case .telemetry(let telemetry) = message,

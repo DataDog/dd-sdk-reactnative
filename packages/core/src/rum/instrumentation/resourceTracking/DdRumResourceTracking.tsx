@@ -7,12 +7,14 @@
 import BigInt from 'big-integer';
 
 import { InternalLog } from '../../../InternalLog';
+import type { HeaderCaptureRule } from '../../../config/features/RumConfiguration.type';
 import { SdkVerbosity } from '../../../config/types/SdkVerbosity';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
 import type { FirstPartyHost } from '../../types';
 
 import { DistributedTracingSampling } from './distributedTracing/distributedTracingSampling';
 import { firstPartyHostsRegexMapBuilder } from './distributedTracing/firstPartyHosts';
+import { compileHeaderCaptureConfig } from './headerCapture/compileHeaderConfig';
 import { FetchProxy } from './requestProxy/FetchProxy/FetchProxy';
 import { XHRProxy } from './requestProxy/XHRProxy/XHRProxy';
 import type { RequestProxy } from './requestProxy/interfaces/RequestProxy';
@@ -42,11 +44,13 @@ class RumResourceTracking {
     startTracking({
         resourceTraceSampleRate,
         firstPartyHosts,
-        trackFetchResources = false
+        trackFetchResources = false,
+        headerCaptureRules
     }: {
         resourceTraceSampleRate: number;
         firstPartyHosts: FirstPartyHost[];
         trackFetchResources?: boolean;
+        headerCaptureRules?: 'defaults' | HeaderCaptureRule[] | undefined;
     }): void {
         // extra safety to avoid proxying the XHR class twice
         if (this._isTracking) {
@@ -61,7 +65,8 @@ class RumResourceTracking {
             tracingSamplingRate: resourceTraceSampleRate,
             firstPartyHostsRegexMap: firstPartyHostsRegexMapBuilder(
                 firstPartyHosts
-            )
+            ),
+            headerCaptureConfig: compileHeaderCaptureConfig(headerCaptureRules)
         };
 
         const xhrProxy = XHRProxy.createWithResourceReporter();

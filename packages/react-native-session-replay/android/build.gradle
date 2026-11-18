@@ -34,7 +34,16 @@ apply plugin: 'com.android.library'
 if (isNewArchitectureEnabled()) {
   apply plugin: 'com.facebook.react'
 }
-apply plugin: 'kotlin-android'
+// AGP 9 ships built-in Kotlin support and registers the `kotlin` extension
+// itself. Applying the Kotlin plugin on top of it fails configuration with
+// "Cannot add extension with name 'kotlin'". Asking for the extension covers
+// every way built-in Kotlin can be turned on -- the global default, the
+// android.builtInKotlin property, and the per-module com.android.built-in-kotlin
+// plugin -- without reading an AGP version number.
+if (project.extensions.findByName('kotlin') == null) {
+  apply plugin: 'kotlin-android'
+}
+
 apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
 /**
@@ -132,32 +141,32 @@ android {
   sourceSets {
     main {
       if (isNewArchitectureEnabled()) {
-        java.srcDirs += ['src/newarch/kotlin']
+        kotlin.srcDirs += ['src/newarch/kotlin']
       } else {
-        java.srcDirs += ['src/oldarch/kotlin']
+        kotlin.srcDirs += ['src/oldarch/kotlin']
       }
 
       if (reactNativeMinorVersion >= 83) {
-        java.srcDirs += ['src/rn83/kotlin']
+        kotlin.srcDirs += ['src/rn83/kotlin']
       } else if (reactNativeMinorVersion >= 80) {
-        java.srcDirs += ['src/rn80/kotlin']
+        kotlin.srcDirs += ['src/rn80/kotlin']
       } else if (reactNativeMinorVersion >= 79) {
-        java.srcDirs += ['src/rn79/kotlin']
+        kotlin.srcDirs += ['src/rn79/kotlin']
       } else if (reactNativeMinorVersion >= 76) {
-        java.srcDirs += ['src/rn76/kotlin']
+        kotlin.srcDirs += ['src/rn76/kotlin']
       } else if (reactNativeMinorVersion >= 75) {
-        java.srcDirs += ['src/rn75/kotlin']
+        kotlin.srcDirs += ['src/rn75/kotlin']
       } else if (reactNativeMinorVersion >= 69) {
-        java.srcDirs += ['src/rn69/kotlin']
+        kotlin.srcDirs += ['src/rn69/kotlin']
       } else {
-        java.srcDirs += ['src/rnlegacy/kotlin']
+        kotlin.srcDirs += ['src/rnlegacy/kotlin']
       }
 
 
       if (reactNativeMinorVersion >= 74) {
-        java.srcDirs += ['src/rnpost74/kotlin']
+        kotlin.srcDirs += ['src/rnpost74/kotlin']
       } else {
-        java.srcDirs += ['src/rnpre74/kotlin']
+        kotlin.srcDirs += ['src/rnpre74/kotlin']
       }
 
       assets.srcDirs += ['../assets']

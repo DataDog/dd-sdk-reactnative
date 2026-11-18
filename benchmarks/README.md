@@ -6,6 +6,8 @@
 2. From the iOS folder, run `pod install`.
 3. From the root folder, run `yarn ios` or `yarn android`.
 
+> **Note:** the benchmarks app is internal tooling. From dd-sdk-android 3.17.0, `dd-sdk-android-benchmark-internal` is no longer on Maven Central, so building the Android app requires access to Datadog's internal network. The iOS build, the SDK packages and the example apps are not affected.
+
 ## Enable old architecture
 
 The Benchmark app uses React Native's New Architecture by default. However, you may need to switch to the Old Architecture to compare performance between the two systems or reproduce bugs that are specific to legacy environments.

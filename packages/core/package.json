@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native",
-    "version": "3.11.0",
+    "version": "3.12.0",
     "description": "A client-side React Native module to interact with Datadog",
     "keywords": [
         "datadog",
@@ -43,6 +43,11 @@
             "import": "./lib/module/index.js",
             "require": "./lib/commonjs/index.js",
             "types": "./lib/typescript/index.d.ts"
+        },
+        "./internal": {
+            "import": "./lib/module/internal.js",
+            "require": "./lib/commonjs/internal.js",
+            "types": "./lib/typescript/internal.d.ts"
         },
         "./metro": {
             "import": "./lib/module/metro.js",

@@ -16,6 +16,9 @@ import { URLHostParser } from '../XHRProxy/URLHostParser';
 import type { RequestProxyOptions } from '../interfaces/RequestProxy';
 import type { DdRumResourceGraphqlAttributes } from '../interfaces/RumResource';
 
+import type { HeaderCaptureState } from './headerCapture';
+import { createHeaderCaptureState } from './headerCapture';
+
 export interface RequestContext {
     resourceId: number;
     graphql: DdRumResourceGraphqlAttributes & {
@@ -26,6 +29,7 @@ export interface RequestContext {
     timer: Timer;
     tracingAttributes: DdRumResourceTracingAttributes;
     baggageHeaderEntries: Set<string>;
+    headerCapture: HeaderCaptureState;
 }
 
 // Disambiguates resources sharing the same start millisecond and method,
@@ -55,7 +59,8 @@ export const createRequestContext = ({
             userId: getCachedUserId(),
             accountId: getCachedAccountId()
         }),
-        baggageHeaderEntries: new Set<string>()
+        baggageHeaderEntries: new Set<string>(),
+        headerCapture: createHeaderCaptureState(options.headerCaptureConfig)
     };
 };
 

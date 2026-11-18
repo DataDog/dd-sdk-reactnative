@@ -10,11 +10,9 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+# The Datadog podspecs work with any pod linkage. This app links pods as dynamic frameworks so that
+# CI covers that setup, while example/ covers React Native's default static linkage.
+use_frameworks! :linkage => :dynamic
 
 target 'DdSdkReactNativeExample' do
   pod 'DatadogSDKReactNative', :path => '../../packages/core/DatadogSDKReactNative.podspec', :testspecs => ['Tests']
@@ -34,13 +32,6 @@ target 'DdSdkReactNativeExample' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false
     )
-
-    # Enable `DD_SDK_COMPILED_FOR_TESTING` condition when compiling `DatadogSDK` dependency:
-    datadog_sdk_target = installer.pods_project.targets.detect {|t| ["DatadogCore", "DatadogRUM", "DatadogLogs", "DatadogInternal", "DatadogTrace", "DatadogCrashReporting"].include?(t.name) }
-    datadog_sdk_target.build_configurations.each do |config|
-      config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_SDK_COMPILED_FOR_TESTING'
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
-    end
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|

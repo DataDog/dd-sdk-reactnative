@@ -8,11 +8,11 @@
 
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
-    default: {
+    getNativeDdFlags: jest.fn().mockReturnValue({
         enable: jest.fn(() => Promise.resolve()),
         setEvaluationContext: jest.fn(() => Promise.resolve({})),
         trackEvaluation: jest.fn(() => Promise.resolve())
-    }
+    })
 }));
 
 // The rules parser loads Protobuf-ES. Only the `/rules-based` entry may load it.

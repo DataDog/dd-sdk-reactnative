@@ -5,7 +5,7 @@
  */
 
 import { InternalLog } from '../../../../InternalLog';
-import NativeDdSdkSpec from '../../../../specs/NativeDdSdk';
+import { getNativeDdSdk } from '../../../../specs/NativeDdSdk';
 import { BoundedBuffer } from '../BoundedBuffer';
 
 describe('BoundedBuffer', () => {
@@ -126,7 +126,7 @@ describe('BoundedBuffer', () => {
             await buffer.drain();
             expect(callbackWithId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenNthCalledWith(1, 'callbackId1');
-            expect(NativeDdSdkSpec.telemetryError).toHaveBeenCalledWith(
+            expect(getNativeDdSdk()?.telemetryError).toHaveBeenCalledWith(
                 'Could not generate enough random numbers happened 2 times.',
                 '',
                 'RandomIdGenerationError'
@@ -146,7 +146,7 @@ describe('BoundedBuffer', () => {
 
             await buffer.drain();
             expect(fakeCallback).toHaveBeenCalledTimes(3);
-            expect(NativeDdSdkSpec.telemetryError).toHaveBeenCalledWith(
+            expect(getNativeDdSdk()?.telemetryError).toHaveBeenCalledWith(
                 'Buffer overflow happened 1 times.',
                 '',
                 'BufferOverflow'
@@ -171,7 +171,7 @@ describe('BoundedBuffer', () => {
             expect(fakeCallback).toHaveBeenCalledTimes(1);
             expect(callbackReturningId).not.toHaveBeenCalled();
             expect(callbackWithId).not.toHaveBeenCalled();
-            expect(NativeDdSdkSpec.telemetryError).toHaveBeenCalledWith(
+            expect(getNativeDdSdk()?.telemetryError).toHaveBeenCalledWith(
                 'Buffer overflow happened 2 times.',
                 '',
                 'BufferOverflow'
@@ -196,7 +196,7 @@ describe('BoundedBuffer', () => {
             expect(fakeCallback).toHaveBeenCalledTimes(1);
             expect(callbackReturningId).toHaveBeenCalledTimes(1);
             expect(callbackWithId).toHaveBeenCalledTimes(1);
-            expect(NativeDdSdkSpec.telemetryError).not.toHaveBeenCalled();
+            expect(getNativeDdSdk()?.telemetryError).not.toHaveBeenCalled();
         });
     });
 });

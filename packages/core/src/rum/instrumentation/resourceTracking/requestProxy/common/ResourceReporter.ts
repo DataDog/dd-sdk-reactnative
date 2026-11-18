@@ -52,7 +52,9 @@ const formatResourceStartContext = (
 
 const formatResourceStopContext = (
     timings: RUMResource['timings'],
-    graphqlAttributes: RUMResource['graphqlAttributes']
+    graphqlAttributes: RUMResource['graphqlAttributes'],
+    capturedRequestHeaders?: Record<string, string>,
+    capturedResponseHeaders?: Record<string, string>
 ): Record<string, unknown> => {
     const attributes: Record<string, unknown> = {};
 
@@ -86,6 +88,13 @@ const formatResourceStopContext = (
         }
     }
 
+    if (capturedRequestHeaders !== undefined) {
+        attributes['_dd.request_headers'] = capturedRequestHeaders;
+    }
+    if (capturedResponseHeaders !== undefined) {
+        attributes['_dd.response_headers'] = capturedResponseHeaders;
+    }
+
     return attributes;
 };
 
@@ -103,7 +112,12 @@ const reportResource = async (resource: RUMResource) => {
         resource.response.statusCode,
         resource.request.kind,
         resource.response.size,
-        formatResourceStopContext(resource.timings, resource.graphqlAttributes),
+        formatResourceStopContext(
+            resource.timings,
+            resource.graphqlAttributes,
+            resource.capturedRequestHeaders,
+            resource.capturedResponseHeaders
+        ),
         resource.timings.stopTime,
         resource.resourceContext
     );

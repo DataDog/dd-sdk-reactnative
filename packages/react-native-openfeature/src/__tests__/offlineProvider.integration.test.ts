@@ -20,11 +20,11 @@ import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
 // ready-state evaluation can call trackEvaluation without throwing.
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
-    default: {
+    getNativeDdFlags: jest.fn().mockReturnValue({
         enable: jest.fn(() => Promise.resolve()),
         setEvaluationContext: jest.fn(() => Promise.resolve({})),
         trackEvaluation: jest.fn(() => Promise.resolve())
-    }
+    })
 }));
 
 const wireFor = (targetingKey: string): string =>

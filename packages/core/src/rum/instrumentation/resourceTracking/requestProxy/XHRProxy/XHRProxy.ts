@@ -7,10 +7,16 @@
 import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
+import { isHeaderAllowed } from '../../headerCapture/isHeaderAllowed';
+import { parseResponseHeaders } from '../../headerCapture/parseResponseHeaders';
 import { isRunningWithinFetchProxy } from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
 import { createRequestContext, getResourceKey } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
+import {
+    finalizeCapturedHeaders,
+    recordRequestHeader
+} from '../common/headerCapture';
 import { filterDevResource } from '../common/internalDevResourceBlocklist';
 import {
     getInstrumentationHeaders,
@@ -191,7 +197,22 @@ const reportXhr = async (
 
     const key = getResourceKey(context);
 
+    // Stop before header processing so it is not counted in the resource duration
     context.timer.stop();
+
+    // Snapshot before any await: the app may reopen this XHR from its
+    // completion handler while the GraphQL body is being read.
+    const statusCode = xhrProxy.status;
+    const capturedHeaders = finalizeCapturedHeaders({
+        state: context.headerCapture,
+        url: context.url,
+        statusCode,
+        responseHeaders: () =>
+            parseResponseHeaders(
+                xhrProxy.getAllResponseHeaders(),
+                isHeaderAllowed
+            )
+    });
 
     // Only extract GraphQL errors if operationType is set AND error tracking is enabled
     if (context.graphql.operationType && context.graphql.trackErrors) {
@@ -223,8 +244,9 @@ const reportXhr = async (
         },
         graphqlAttributes: context.graphql,
         tracingAttributes: context.tracingAttributes,
+        ...capturedHeaders,
         response: {
-            statusCode: xhrProxy.status,
+            statusCode,
             size: responseSize
         },
         timings: {
@@ -251,17 +273,26 @@ const proxySetRequestHeader = (providers: XHRProxyProviders): void => {
             return originalXhrSetRequestHeader.apply(this, [header, value]);
         }
 
+        // XHR coerces values to strings: do it once so the sent and the
+        // captured values are identical
+        const stringValue = String(value);
         const processedHeader = processRequestHeader({
             context: this._datadog_xhr,
             header,
-            value
+            value: stringValue
         });
 
         if (processedHeader.type === 'send') {
-            return originalXhrSetRequestHeader.apply(this, [
+            const result = originalXhrSetRequestHeader.apply(this, [
                 processedHeader.header,
                 processedHeader.value
             ]);
+            recordRequestHeader(
+                this._datadog_xhr.headerCapture,
+                header,
+                stringValue
+            );
+            return result;
         }
     };
 };
