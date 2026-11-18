@@ -16,6 +16,18 @@ jest.mock('@datadog/flagging-core', () => ({
 }));
 
 describe('getClientFingerprint', () => {
+    it('exports the same getter and compatible types from both entries', () => {
+        const root: typeof import('../index') = jest.requireActual('../index');
+        const rules: typeof import('../rules-based') = jest.requireActual(
+            '../rules-based'
+        );
+        const rootValue: import('../index').ClientFingerprint = root.getClientFingerprint();
+        const rulesValue: import('../rules-based').ClientFingerprint = rules.getClientFingerprint();
+        expect(root.getClientFingerprint).toBe(getClientFingerprint);
+        expect(rules.getClientFingerprint).toBe(getClientFingerprint);
+        expect(rootValue).toBe(rulesValue);
+    });
+
     it('describes the React Native SDK and its decoder capabilities', () => {
         const fingerprint: ClientFingerprint = getClientFingerprint();
         expect(JSON.parse(fingerprint)).toEqual({

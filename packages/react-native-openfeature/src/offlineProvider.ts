@@ -166,9 +166,15 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         // Older core SDKs predate the evaluator bridge. Keep their released precomputed behavior,
         // but never silently ignore usable rules or keep serving a stale configuration when they
         // are supplied. A rules parse error has no rules to ignore, so precomputed data still loads.
-        if (configuration?.rules) {
+        const attributes =
+            configuration?.precomputed?.response?.data?.attributes;
+        if (
+            configuration?.rules ||
+            attributes?.obfuscated ||
+            attributes?.obfuscation !== undefined
+        ) {
             InternalLog.log(
-                'DatadogOfflineOpenFeatureProvider rules-based evaluation requires an updated @datadog/mobile-react-native SDK. Update both Datadog packages together.',
+                'DatadogOfflineOpenFeatureProvider rules-based or encoded precomputed evaluation requires an updated @datadog/mobile-react-native SDK. Update both Datadog packages together.',
                 SdkVerbosity.WARN
             );
             this.flagsClient.setConfiguration({});

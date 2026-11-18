@@ -4,8 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { configurationFromString } from '@datadog/mobile-react-native';
-
 import { DatadogOfflineOpenFeatureProvider } from './offlineProvider';
 import { DatadogOpenFeatureProvider } from './provider';
 import type { DatadogOpenFeatureProviderOptions } from './provider';
@@ -18,11 +16,18 @@ export type { ClientFingerprint } from './client-fingerprint';
 export {
     DatadogOpenFeatureProvider,
     DatadogOfflineOpenFeatureProvider,
-    enrichWithRumUser,
-    configurationFromString
+    enrichWithRumUser
 };
 export type { DatadogOpenFeatureProviderOptions, EnrichableEvaluationContext };
-export type { FlagsConfiguration } from '@datadog/flagging-core';
+export {
+    configurationFromString,
+    configurationToString,
+    getPrecomputedContext
+} from '@datadog/flagging-core';
+export type {
+    FlagsConfiguration,
+    FlagsConfigurationWire
+} from '@datadog/flagging-core';
 export {
     createDatadogExposureLoggingHook,
     createDatadogEvaluationLoggingHook,

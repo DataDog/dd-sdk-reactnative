@@ -4,7 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { configMatchesContext } from '@datadog/flagging-core';
+import {
+    configMatchesContext,
+    configurationFromString,
+    configurationToString
+} from '@datadog/flagging-core';
 import type {
     FlagsConfiguration,
     PrecomputedFlag
@@ -78,53 +82,76 @@ export class OfflineEvaluation implements OfflineEvaluator {
         }
         if (precomputed) {
             try {
-                this.precomputedFlags = helpers.decodePrecomputedFlags(
-                    precomputed.response as Parameters<
-                        CompatibilityHelpers['decodePrecomputedFlags']
-                    >[0]
-                );
-                const flags: Record<
-                    string,
-                    PrecomputedFlag
-                > = Object.fromEntries(
-                    Array.from(this.precomputedFlags, ([key, flag]) => [
-                        key,
-                        {
-                            allocationKey: flag.allocationKey,
-                            variationKey: flag.variationKey,
-                            // The released client checks the value's runtime type, including integer/float
-                            // aliases and object-typed payloads containing primitives. Keep that behavior.
-                            variationType: typeof flag.value as FlagValueType,
-                            variationValue: flag.value as JsonValue,
-                            reason: flag.reason,
-                            doLog: flag.doLog,
-                            // The native decoder does not keep the split serial ID; read it from the wire.
-                            serialId:
-                                precomputed.response.data.attributes.flags[key]
-                                    ?.serialId
+                const attributes = precomputed.response?.data?.attributes;
+                if (
+                    (attributes?.obfuscated !== undefined &&
+                        attributes.obfuscated !== false) ||
+                    attributes?.obfuscation !== undefined
+                ) {
+                    // Core owns encoded lookup and validation; native helpers only accept plaintext.
+                    const parsed = configurationFromString(
+                        configurationToString({ precomputed })
+                    );
+                    if (!parsed.precomputed) {
+                        throw new Error(parsed.precomputedError);
+                    }
+                    this.configuration.precomputed = {
+                        ...parsed.precomputed,
+                        flagErrors: {
+                            ...precomputed.flagErrors,
+                            ...parsed.precomputed.flagErrors
                         }
-                    ])
-                );
-                this.configuration.precomputed = {
-                    ...precomputed,
-                    context: precomputed.context
-                        ? toOpenFeatureContext(
-                              helpers.normalizeWireContext(precomputed.context)
-                          )
-                        : undefined,
-                    // The native decoder omits malformed entries; flagging-core's parser reports them.
-                    flagErrors: precomputed.flagErrors,
-                    response: {
-                        data: {
-                            attributes: {
-                                createdAt:
-                                    precomputed.response.data.attributes
-                                        .createdAt,
-                                flags
+                    };
+                } else {
+                    this.precomputedFlags = helpers.decodePrecomputedFlags(
+                        precomputed.response as Parameters<
+                            CompatibilityHelpers['decodePrecomputedFlags']
+                        >[0]
+                    );
+                    const flags: Record<
+                        string,
+                        PrecomputedFlag
+                    > = Object.fromEntries(
+                        Array.from(this.precomputedFlags, ([key, flag]) => [
+                            key,
+                            {
+                                allocationKey: flag.allocationKey,
+                                variationKey: flag.variationKey,
+                                // The released client checks the value's runtime type, including integer/float
+                                // aliases and object-typed payloads containing primitives. Keep that behavior.
+                                variationType: typeof flag.value as FlagValueType,
+                                variationValue: flag.value as JsonValue,
+                                reason: flag.reason,
+                                doLog: flag.doLog,
+                                // The native decoder does not keep the split serial ID; read it from the wire.
+                                serialId:
+                                    precomputed.response.data.attributes.flags[
+                                        key
+                                    ]?.serialId
+                            }
+                        ])
+                    );
+                    this.configuration.precomputed = {
+                        ...precomputed,
+                        // The native decoder omits malformed entries; flagging-core's parser reports them.
+                        flagErrors: precomputed.flagErrors,
+                        response: {
+                            data: {
+                                attributes: {
+                                    createdAt:
+                                        precomputed.response.data.attributes
+                                            .createdAt,
+                                    flags
+                                }
                             }
                         }
-                    }
-                };
+                    };
+                }
+                this.configuration.precomputed.context = precomputed.context
+                    ? toOpenFeatureContext(
+                          helpers.normalizeWireContext(precomputed.context)
+                      )
+                    : undefined;
             } catch (error) {
                 // A malformed precomputed branch must not hide a usable rules branch.
                 this.configuration.precomputed = undefined;
