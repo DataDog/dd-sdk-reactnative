@@ -312,14 +312,14 @@ application manages configuration delivery, storage, and updates.
 ```tsx
 import {
     DatadogCoreProvider,
-    coreConfigurationFromString
+    configurationFromString
 } from '@datadog/mobile-react-native-openfeature/rules-based';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 const provider = new DatadogCoreProvider();
 // `wire` is a ConfigurationWire string delivered by your application.
 // This parser supports both precomputed and rules-based configurations.
-provider.setConfiguration(coreConfigurationFromString(wire));
+provider.setConfiguration(configurationFromString(wire));
 
 // For precomputed data, supply the exact context the configuration was computed for.
 // For rules, supply the context you want to evaluate locally.
@@ -330,13 +330,13 @@ const client = OpenFeature.getClient('datadog-core');
 const enabled = client.getBooleanValue('new-feature', false);
 
 // Replace configuration whenever your application receives an update.
-provider.setConfiguration(coreConfigurationFromString(updatedWire));
+provider.setConfiguration(configurationFromString(updatedWire));
 ```
 
 You can also supply a parsed `FlagsConfiguration` directly. Both entry points export this type.
 `getConfiguration()` returns the supplied configuration, or `undefined` if no configuration is set.
-Use `coreConfigurationFromString` for this provider, rather than the native offline provider's
-precomputed-only `configurationFromString` helper.
+Use `configurationFromString` from `/rules-based` for rules or mixed configurations.
+`coreConfigurationFromString` remains an alias for this full parser.
 
 - Matching precomputed data takes precedence over rules. If the context does not match, the
   evaluator uses rules when available. Otherwise, evaluation returns your coded default with
@@ -351,6 +351,41 @@ precomputed-only `configurationFromString` helper.
 - Replacing a usable configuration emits `ConfigurationChanged`. An unusable replacement emits
   `Error`. Loading a usable configuration after an error emits `Ready`, followed by
   `ConfigurationChanged`.
+
+### Portable configuration helpers
+
+Both entry points export `configurationFromString`, `configurationToString`,
+`getPrecomputedContext`, and the `FlagsConfigurationWire` type. The root entry parses and
+serializes only precomputed data without loading protobuf. The `/rules-based` entry preserves
+both precomputed data and rules. Both support plaintext v1 and encoded-key v2 configurations,
+including retrieval metadata and evaluation options. Encoded keys affect lookup only; evaluate
+and track flags using their original keys.
+
+```tsx
+import {
+    configurationFromString,
+    configurationToString,
+    getPrecomputedContext
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import type { FlagsConfigurationWire } from '@datadog/mobile-react-native-openfeature/rules-based';
+
+const configuration = configurationFromString(wire);
+const savedWire: FlagsConfigurationWire = configurationToString(configuration);
+const snapshotContext = getPrecomputedContext(configuration);
+```
+
+`getPrecomputedContext` returns a detached copy, or `undefined` when there is no embedded
+precomputed context. It does not update OpenFeature. For `DatadogCoreProvider`, supply that
+context explicitly when serving a snapshot. The offline provider adopts it when the effective
+OpenFeature context is empty. Malformed wires and unsupported encodings produce parse errors;
+a valid rules branch remains available when a precomputed branch cannot be parsed.
+
+The root parser now validates response envelopes, embedded contexts, and flag values, matching
+the `/rules-based` parser. Hand-built wires accepted by the previous JSON-only root parser may
+now fail validation: `createdAt` is required, `targetingKey` must be a string when present, and
+object-typed flags must contain object values. Invalid flags are isolated from valid flags.
+The native SDK's legacy codec is unchanged. To load a configuration directly into a native
+`FlagsClient`, parse it with `configurationFromString` from `@datadog/mobile-react-native`.
 
 ### Fetching rules configuration
 
@@ -441,18 +476,16 @@ import { DdFlags } from '@datadog/mobile-react-native';
 import {
     composeDatadogTrackingHooks,
     createDatadogExposureLoggingHook,
-    createDatadogRumTrackingHook
-} from '@datadog/mobile-react-native-openfeature';
-import {
+    createDatadogRumTrackingHook,
     DatadogCoreProvider,
-    coreConfigurationFromString
+    configurationFromString
 } from '@datadog/mobile-react-native-openfeature/rules-based';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 // After initializing the core Datadog SDK:
 await DdFlags.enable();
 const provider = new DatadogCoreProvider();
-provider.setConfiguration(coreConfigurationFromString(wire));
+provider.setConfiguration(configurationFromString(wire));
 await OpenFeature.setProviderAndWait('datadog-core', provider, {
     targetingKey: 'user-123', country: 'US'
 });
@@ -503,29 +536,30 @@ supply it with `setConfiguration`. For evaluation without tracking, use `Datadog
 
 Rules-based evaluation requires `@datadog/mobile-react-native` and
 `@datadog/mobile-react-native-openfeature` 3.10.0 or later. Update both packages together to use the
-native tracking/evaluator bridge. With an older core SDK that lacks the bridge, precomputed
-configurations retain their previous behavior, but rules configurations produce a warning and
-`GENERAL` error rather than being silently ignored. A configuration that cannot be parsed reports
-`PARSE_ERROR`, as `DatadogCoreProvider` does.
+native tracking/evaluator bridge. With an older core SDK that lacks the bridge, plaintext
+precomputed configurations retain their previous behavior, but rules or encoded precomputed
+configurations produce a warning once per provider and a `GENERAL` error rather than being
+silently ignored. With the evaluator bridge, a configuration that cannot be parsed reports
+`PARSE_ERROR`, as `DatadogCoreProvider` does. An older core SDK may report `GENERAL` instead.
 
 #### Rules-based configuration
 
-Use `coreConfigurationFromString` from the `/rules-based` entry point to parse rules-based
+Use `configurationFromString` from the `/rules-based` entry point to parse rules-based
 configurations or configurations containing both precomputed data and rules.
-`configurationFromString` supports only precomputed configurations. Rules are evaluated locally for
-the current context, so you can change users or targeting attributes without fetching another
-configuration:
+The root entry's `configurationFromString` supports only precomputed configurations. Rules are
+evaluated locally for the current context, so you can change users or targeting attributes
+without fetching another configuration:
 
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
 import { DatadogOfflineOpenFeatureProvider } from '@datadog/mobile-react-native-openfeature';
-import { coreConfigurationFromString } from '@datadog/mobile-react-native-openfeature/rules-based';
+import { configurationFromString } from '@datadog/mobile-react-native-openfeature/rules-based';
 import { OpenFeature } from '@openfeature/react-sdk';
 
 await DdFlags.enable();
 const domain = 'offline-rules';
 const provider = new DatadogOfflineOpenFeatureProvider({ clientName: domain });
-provider.setConfiguration(coreConfigurationFromString(rulesWire));
+provider.setConfiguration(configurationFromString(rulesWire));
 await OpenFeature.setProviderAndWait(domain, provider, {
     targetingKey: 'user-123',
     country: 'CA'

@@ -21,6 +21,7 @@ import {
     precomputedConfiguration,
     rulesConfiguration
 } from './__utils__/coreConfiguration';
+import { encodedConfiguration } from './__utils__/encodedConfiguration';
 
 type ConfigurationResult = ReturnType<FlagsClient['setConfiguration']>;
 const READY: ConfigurationResult = { status: 'ready' };
@@ -111,6 +112,24 @@ describe('DatadogOfflineOpenFeatureProvider (legacy core SDK without the evaluat
             configuration
         );
         expect(warning).not.toHaveBeenCalled();
+    });
+
+    it('clears stale configuration and fails clearly for encoded v2 without the evaluator bridge', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        const emit = jest.spyOn(provider.events, 'emit');
+        provider.setConfiguration(precomputedConfiguration());
+        provider.setConfiguration(encodedConfiguration());
+        expect(mockFlagsClient.setConfiguration).toHaveBeenLastCalledWith({});
+        expect(emit).toHaveBeenLastCalledWith(
+            ProviderEvents.Error,
+            expect.objectContaining({ errorCode: ErrorCode.GENERAL })
+        );
+        expect(InternalLog.log).toHaveBeenCalledWith(
+            expect.stringContaining(
+                'encoded precomputed evaluation requires an updated'
+            ),
+            SdkVerbosity.WARN
+        );
     });
 
     it('advertises the offline provider name', () => {
