@@ -6,6 +6,9 @@
 
 /* eslint-disable global-require */
 
+import * as DatadogSdk from '../../../core/src/index';
+import * as OpenFeatureSdk from '../index';
+
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
     getNativeDdFlags: jest.fn().mockReturnValue({
@@ -21,6 +24,13 @@ jest.mock('@datadog/flagging-core/rules-based', () => {
 });
 
 describe('package entry points', () => {
+    it('does not expose independent evaluation logging before native privacy support', () => {
+        expect(OpenFeatureSdk).not.toHaveProperty(
+            'createDatadogEvaluationLoggingHook'
+        );
+        expect(DatadogSdk).not.toHaveProperty('__ddTrackFlagEvaluationEvent');
+    });
+
     it('keeps the rules-based parser out of the main entry', () => {
         expect(() =>
             jest.isolateModules(() => require('../index'))

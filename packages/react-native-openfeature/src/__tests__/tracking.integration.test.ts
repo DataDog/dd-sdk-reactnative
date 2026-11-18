@@ -17,7 +17,6 @@ import {
 } from '../rules-based';
 import {
     composeDatadogTrackingHooks,
-    createDatadogEvaluationLoggingHook,
     createDatadogExposureLoggingHook,
     createDatadogRumTrackingHook
 } from '../tracking';
@@ -37,7 +36,6 @@ jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
         setEvaluationContext: jest.fn(),
         trackEvaluation: jest.fn(),
         trackExposure: jest.fn(() => new Promise(() => {})),
-        trackEvaluationEvent: jest.fn(() => new Promise(() => {})),
         trackRumEvaluation: jest.fn(() => new Promise(() => {}))
     })
 }));
@@ -91,7 +89,6 @@ describe.each(['android', 'ios'] as const)(
             const { client, domain } = await configuredClient(
                 composeDatadogTrackingHooks(
                     createDatadogExposureLoggingHook(),
-                    createDatadogEvaluationLoggingHook(),
                     createDatadogRumTrackingHook()
                 )
             );
@@ -103,11 +100,7 @@ describe.each(['android', 'ios'] as const)(
             expect(client.getBooleanDetails('missing', false).errorCode).toBe(
                 ErrorCode.FLAG_NOT_FOUND
             );
-            for (const operation of [
-                native.trackExposure,
-                native.trackEvaluationEvent,
-                rum
-            ]) {
+            for (const operation of [native.trackExposure, rum]) {
                 expect(operation).toHaveBeenCalled();
                 for (const call of operation.mock.calls) {
                     expect(call[4]).toEqual({ country: 'US' });
@@ -122,7 +115,7 @@ describe.each(['android', 'ios'] as const)(
             const { client } = await configuredClient();
             expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
             expect(native.trackExposure).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+
             expect(native.trackEvaluation).not.toHaveBeenCalled();
             expect(rum).not.toHaveBeenCalled();
         });
@@ -138,7 +131,6 @@ describe.each(['android', 'ios'] as const)(
                 const { client, provider } = await configuredClient(
                     composeDatadogTrackingHooks(
                         createDatadogExposureLoggingHook(),
-                        createDatadogEvaluationLoggingHook(),
                         createDatadogRumTrackingHook()
                     ),
                     rules
@@ -176,18 +168,7 @@ describe.each(['android', 'ios'] as const)(
                 expect(native.trackExposure).toHaveBeenCalledTimes(
                     doLog ? 1 : 0
                 );
-                expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
-                    'default',
-                    key,
-                    expect.objectContaining({
-                        allocationKey: 'allocation',
-                        variationKey: 'on',
-                        doLog
-                    }),
-                    'user-1',
-                    { country: 'US' },
-                    null
-                );
+
                 expect(rum).toHaveBeenCalledTimes(1);
             }
         );
@@ -196,7 +177,6 @@ describe.each(['android', 'ios'] as const)(
             const { client, provider } = await configuredClient(
                 composeDatadogTrackingHooks(
                     createDatadogExposureLoggingHook(),
-                    createDatadogEvaluationLoggingHook(),
                     createDatadogRumTrackingHook()
                 ),
                 true
@@ -215,21 +195,12 @@ describe.each(['android', 'ios'] as const)(
             });
             expect(native.trackExposure).not.toHaveBeenCalled();
             expect(rum).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
-                'default',
-                'test-flag',
-                null,
-                'user-1',
-                { country: 'US' },
-                null
-            );
         });
 
-        it('treats ERROR without an error code as GENERAL despite assignment metadata', async () => {
+        it('does not report exposure or RUM for ERROR results with assignment metadata', async () => {
             const { client, provider } = await configuredClient(
                 composeDatadogTrackingHooks(
                     createDatadogExposureLoggingHook(),
-                    createDatadogEvaluationLoggingHook(),
                     createDatadogRumTrackingHook()
                 )
             );
@@ -246,14 +217,6 @@ describe.each(['android', 'ios'] as const)(
             });
             expect(native.trackExposure).not.toHaveBeenCalled();
             expect(rum).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
-                'default',
-                'boolean-flag',
-                null,
-                'user-1',
-                { country: 'US' },
-                'GENERAL'
-            );
         });
 
         it.each([false, true])(
@@ -261,8 +224,7 @@ describe.each(['android', 'ios'] as const)(
             async doLog => {
                 const { client, provider } = await configuredClient(
                     composeDatadogTrackingHooks(
-                        createDatadogExposureLoggingHook(),
-                        createDatadogEvaluationLoggingHook()
+                        createDatadogExposureLoggingHook()
                     )
                 );
                 const configuration = precomputedConfiguration();
@@ -282,24 +244,13 @@ describe.each(['android', 'ios'] as const)(
                 expect(native.trackExposure).toHaveBeenCalledTimes(
                     doLog ? 1 : 0
                 );
-                expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
-                    'default',
-                    'object-flag',
-                    expect.objectContaining({
+                if (doLog) {
+                    expect(native.trackExposure.mock.calls[0][2]).toEqual({
                         allocationKey: 'allocation',
                         variationKey: 'settings',
                         doLog
-                    }),
-                    'user-1',
-                    { country: 'US' },
-                    null
-                );
-                expect(
-                    native.trackEvaluationEvent.mock.calls[0][2]
-                ).not.toHaveProperty('value');
-                expect(
-                    native.trackEvaluationEvent.mock.calls[0][2]
-                ).not.toHaveProperty('variationValue');
+                    });
+                }
             }
         );
 
@@ -310,26 +261,23 @@ describe.each(['android', 'ios'] as const)(
             expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
             expect(console.warn).not.toHaveBeenCalled();
             expect(native.trackExposure).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+
             expect(native.trackRumEvaluation).not.toHaveBeenCalled();
             expect(native.trackEvaluation).not.toHaveBeenCalled();
         });
 
         it.each([
-            ['exposure', createDatadogExposureLoggingHook, 1, 0, 0],
-            ['evaluation', createDatadogEvaluationLoggingHook, 0, 1, 0],
-            ['RUM', createDatadogRumTrackingHook, 0, 0, 1]
+            ['exposure', createDatadogExposureLoggingHook, 1, 0],
+            ['RUM', createDatadogRumTrackingHook, 0, 1]
         ] as const)(
             'selects only the %s operation',
-            async (_name, create, exposures, evaluations, rumCalls) => {
+            async (_name, create, exposures, rumCalls) => {
                 const { client } = await configuredClient(create());
                 expect(client.getBooleanValue('boolean-flag', false)).toBe(
                     true
                 );
                 expect(native.trackExposure).toHaveBeenCalledTimes(exposures);
-                expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(
-                    evaluations
-                );
+
                 expect(rum).toHaveBeenCalledTimes(rumCalls);
                 expect(native.trackEvaluation).not.toHaveBeenCalled();
                 expect(native.enable).not.toHaveBeenCalled();
@@ -340,7 +288,6 @@ describe.each(['android', 'ios'] as const)(
         describe.each([false, true])('with rules configuration: %s', rules => {
             it.each([
                 ['exposure', createDatadogExposureLoggingHook],
-                ['evaluation', createDatadogEvaluationLoggingHook],
                 ['RUM', createDatadogRumTrackingHook]
             ] as const)(
                 'tracks %s without affecting evaluation',
@@ -364,9 +311,7 @@ describe.each(['android', 'ios'] as const)(
                     expect(native.trackExposure).toHaveBeenCalledTimes(
                         _name === 'exposure' ? 11 : 0
                     );
-                    expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(
-                        _name === 'evaluation' ? 11 : 0
-                    );
+
                     expect(native.trackRumEvaluation).toHaveBeenCalledTimes(
                         _name === 'RUM' ? 11 : 0
                     );
@@ -382,9 +327,6 @@ describe.each(['android', 'ios'] as const)(
                 createDatadogExposureLoggingHook({
                     clientName: 'native-owner'
                 }),
-                createDatadogEvaluationLoggingHook({
-                    clientName: 'native-owner'
-                }),
                 createDatadogRumTrackingHook({ clientName: 'native-owner' })
             );
             const { client } = await configuredClient(tracking);
@@ -394,9 +336,7 @@ describe.each(['android', 'ios'] as const)(
                     true
                 );
                 expect(native.trackExposure).toHaveBeenCalledTimes(i + 1);
-                expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(
-                    i + 1
-                );
+
                 expect(rum).toHaveBeenCalledTimes(i + 1);
             }
             expect(jest.getTimerCount()).toBe(0);
@@ -421,27 +361,16 @@ describe.each(['android', 'ios'] as const)(
             );
         });
 
-        it('does not suppress evaluation or RUM when doLog is false', async () => {
+        it('does not suppress RUM when doLog is false', async () => {
             const { client } = await configuredClient(
                 composeDatadogTrackingHooks(
                     createDatadogExposureLoggingHook(),
-                    createDatadogEvaluationLoggingHook(),
                     createDatadogRumTrackingHook()
                 )
             );
             expect(client.getStringValue('string-flag', '')).toBe('hello');
             expect(native.trackExposure).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).toHaveBeenCalledWith(
-                'default',
-                'string-flag',
-                expect.objectContaining({
-                    doLog: false,
-                    variationKey: 'greeting'
-                }),
-                'user-1',
-                { country: 'US' },
-                null
-            );
+
             expect(rum).toHaveBeenCalledWith(
                 'default',
                 'string-flag',
@@ -451,11 +380,10 @@ describe.each(['android', 'ios'] as const)(
             );
         });
 
-        it('records errors once without an assignment, exposure, or RUM event', async () => {
+        it('does not record exposure or RUM for evaluation errors', async () => {
             const { client } = await configuredClient(
                 composeDatadogTrackingHooks(
                     createDatadogExposureLoggingHook(),
-                    createDatadogEvaluationLoggingHook(),
                     createDatadogRumTrackingHook()
                 )
             );
@@ -465,49 +393,9 @@ describe.each(['android', 'ios'] as const)(
             expect(client.getNumberDetails('boolean-flag', 42).errorCode).toBe(
                 ErrorCode.TYPE_MISMATCH
             );
-            expect(native.trackEvaluationEvent.mock.calls).toEqual([
-                [
-                    'default',
-                    'missing',
-                    null,
-                    'user-1',
-                    { country: 'US' },
-                    ErrorCode.FLAG_NOT_FOUND
-                ],
-                [
-                    'default',
-                    'boolean-flag',
-                    null,
-                    'user-1',
-                    { country: 'US' },
-                    ErrorCode.TYPE_MISMATCH
-                ]
-            ]);
+
             expect(native.trackExposure).not.toHaveBeenCalled();
             expect(rum).not.toHaveBeenCalled();
-        });
-
-        it('captures each rules evaluation context without updating the native client context', async () => {
-            const { client, domain } = await configuredClient(
-                createDatadogEvaluationLoggingHook(),
-                true
-            );
-            expect(client.getBooleanValue('test-flag', false)).toBe(true);
-            await OpenFeature.setContext(domain, {
-                targetingKey: 'user-2',
-                country: 'CA',
-                nested: { ignored: true }
-            });
-            expect(client.getBooleanValue('test-flag', true)).toBe(false);
-            expect(
-                native.trackEvaluationEvent.mock.calls.map(call =>
-                    call.slice(3, 5)
-                )
-            ).toEqual([
-                ['user-1', { country: 'US' }],
-                ['user-2', { country: 'CA' }]
-            ]);
-            expect(native.setEvaluationContext).not.toHaveBeenCalled();
         });
 
         it('passes opt-out context to the selected native RUM tracking client', async () => {
@@ -529,7 +417,7 @@ describe.each(['android', 'ios'] as const)(
                 { country: 'US', dd_evaluation_telemetry_opt_out: true }
             );
             expect(native.trackExposure).not.toHaveBeenCalled();
-            expect(native.trackEvaluationEvent).not.toHaveBeenCalled();
+
             expect(native.setEvaluationContext).not.toHaveBeenCalled();
         });
 
@@ -550,8 +438,8 @@ describe.each(['android', 'ios'] as const)(
 
         it('activates and stops only its own hooks, without managing the shared native SDK', async () => {
             const exposure = createDatadogExposureLoggingHook();
-            const evaluation = createDatadogEvaluationLoggingHook();
-            const { client } = await configuredClient(evaluation);
+            const rumTracking = createDatadogRumTrackingHook();
+            const { client } = await configuredClient(rumTracking);
             client.addHooks(...exposure.hooks);
             client.getBooleanValue('boolean-flag', false);
             expect(native.trackExposure).not.toHaveBeenCalled();
@@ -562,7 +450,7 @@ describe.each(['android', 'ios'] as const)(
             await exposure.shutdown();
             client.getBooleanValue('boolean-flag', false);
             expect(native.trackExposure).toHaveBeenCalledTimes(1);
-            expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(3);
+            expect(rum).toHaveBeenCalledTimes(3);
             expect(native.enable).not.toHaveBeenCalled();
         });
 
@@ -570,28 +458,24 @@ describe.each(['android', 'ios'] as const)(
             native.trackExposure.mockImplementationOnce(() => {
                 throw new Error('bridge unavailable');
             });
-            native.trackEvaluationEvent.mockRejectedValueOnce(
-                new Error('native unavailable')
-            );
+
             rum.mockRejectedValueOnce(new Error('RUM unavailable'));
             const { client } = await configuredClient(
                 composeDatadogTrackingHooks(
                     createDatadogExposureLoggingHook(),
-                    createDatadogEvaluationLoggingHook(),
                     createDatadogRumTrackingHook()
                 )
             );
             expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
             await Promise.resolve();
             expect(native.trackExposure).toHaveBeenCalledTimes(1);
-            expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(1);
+
             expect(rum).toHaveBeenCalledTimes(1);
         });
 
         it('unregisters tracking with the documented clearHooks and shutdown sequence', async () => {
             const tracking = composeDatadogTrackingHooks(
                 createDatadogExposureLoggingHook(),
-                createDatadogEvaluationLoggingHook(),
                 createDatadogRumTrackingHook()
             );
             const { client } = await configuredClient(tracking);
@@ -600,7 +484,7 @@ describe.each(['android', 'ios'] as const)(
             await tracking.shutdown();
             expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
             expect(native.trackExposure).toHaveBeenCalledTimes(1);
-            expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(1);
+
             expect(rum).toHaveBeenCalledTimes(1);
             expect(native.enable).not.toHaveBeenCalled();
         });
@@ -608,15 +492,12 @@ describe.each(['android', 'ios'] as const)(
         it('restarts the same tracking controller without duplicate registrations', async () => {
             const tracking = composeDatadogTrackingHooks(
                 createDatadogExposureLoggingHook(),
-                createDatadogEvaluationLoggingHook(),
                 createDatadogRumTrackingHook()
             );
             const { client } = await configuredClient(tracking);
             const expectRecords = (count: number) => {
                 expect(native.trackExposure).toHaveBeenCalledTimes(count);
-                expect(native.trackEvaluationEvent).toHaveBeenCalledTimes(
-                    count
-                );
+
                 expect(rum).toHaveBeenCalledTimes(count);
             };
 
@@ -644,16 +525,10 @@ describe.each(['android', 'ios'] as const)(
             const firstTracking = composeDatadogTrackingHooks(
                 createDatadogExposureLoggingHook({
                     clientName: 'native-first'
-                }),
-                createDatadogEvaluationLoggingHook({
-                    clientName: 'native-first'
                 })
             );
             const secondTracking = composeDatadogTrackingHooks(
                 createDatadogExposureLoggingHook({
-                    clientName: 'native-second'
-                }),
-                createDatadogEvaluationLoggingHook({
                     clientName: 'native-second'
                 })
             );
@@ -705,9 +580,7 @@ describe.each(['android', 'ios'] as const)(
                 ]
             ];
             expect(native.trackExposure.mock.calls).toEqual(expectedRecords);
-            expect(native.trackEvaluationEvent.mock.calls).toEqual(
-                expectedRecords.map(record => [...record, null])
-            );
+
             expect(rum).not.toHaveBeenCalled();
             expect(native.trackEvaluation).not.toHaveBeenCalled();
             expect(native.enable).not.toHaveBeenCalled();
