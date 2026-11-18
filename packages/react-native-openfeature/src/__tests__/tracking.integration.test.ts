@@ -89,6 +89,37 @@ describe.each(['android', 'ios'] as const)(
             jest.useRealTimers();
         });
 
+        it('never forwards assignment authorization to any native tracking operation', async () => {
+            const { client, domain } = await configuredClient(
+                composeDatadogTrackingHooks(
+                    createDatadogExposureLoggingHook(),
+                    createDatadogEvaluationLoggingHook(),
+                    createDatadogRumTrackingHook()
+                )
+            );
+            await OpenFeature.setContext(domain, {
+                ...matchingContext,
+                dd_assignment_token: 'synthetic-credential'
+            });
+            expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+            expect(client.getBooleanDetails('missing', false).errorCode).toBe(
+                ErrorCode.FLAG_NOT_FOUND
+            );
+            for (const operation of [
+                native.trackExposure,
+                native.trackEvaluationEvent,
+                rum
+            ]) {
+                expect(operation).toHaveBeenCalled();
+                for (const call of operation.mock.calls) {
+                    expect(call[4]).toEqual({ country: 'US' });
+                    expect(JSON.stringify(call)).not.toContain(
+                        'synthetic-credential'
+                    );
+                }
+            }
+        });
+
         it('does not track when no hooks are registered', async () => {
             const { client } = await configuredClient();
             expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
