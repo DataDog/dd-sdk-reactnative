@@ -38,27 +38,6 @@ export function __ddTrackFlagExposure(
 }
 
 /** @internal Used by the matching-version OpenFeature tracking hooks. */
-export function __ddTrackFlagEvaluationEvent(
-    clientName: string,
-    key: string,
-    flag: FlagTrackingAssignment | null,
-    context: EvaluationContext,
-    errorCode: string | null
-): void {
-    const captured = processEvaluationContext(context);
-    submit(native =>
-        native.trackEvaluationEvent(
-            clientName,
-            key,
-            flag,
-            captured.targetingKey,
-            captured.attributes ?? {},
-            errorCode
-        )
-    );
-}
-
-/** @internal Used by the matching-version OpenFeature tracking hooks. */
 export function __ddTrackFlagRumEvaluation(
     clientName: string,
     key: string,

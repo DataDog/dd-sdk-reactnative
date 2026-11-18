@@ -197,31 +197,66 @@ class DdFlagsTests: XCTestCase {
         waitForExpectations(timeout: 1.0, handler: nil)
     }
 
-    func testIndependentTrackingRejectsUnsupportedPlatformWithoutUsingClient() {
-        var clientRequested = false
-        implementation.clientProviders["tracking"] = {
-            clientRequested = true
-            return MockFlagsClient()
-        }
+    func testTrackExposureIsIndependentAndPreservesSerialID() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
         let flag: NSDictionary = [
-            "allocationKey": "allocation", "variationKey": "on", "reason": "STATIC",
-            "doLog": true, "value": true
+            "allocationKey": "allocation", "variationKey": "on",
+            "doLog": true, "serialId": "9007199254740993"
         ]
+        var resolved = false
+        implementation.trackExposure("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: ["country": "US"], resolve: { result in
+            XCTAssertNil(result)
+            resolved = true
+        }, reject: { _, _, _ in XCTFail("Should resolve") })
+
+        XCTAssertTrue(resolved)
+        XCTAssertEqual(client.trackedExposure?.key, "flag")
+        XCTAssertEqual(client.trackedExposure?.assignment.allocationKey, "allocation")
+        XCTAssertEqual(client.trackedExposure?.assignment.variationKey, "on")
+        XCTAssertEqual(client.trackedExposure?.assignment.serialID, 9_007_199_254_740_993)
+        XCTAssertEqual(client.trackedExposure?.context.targetingKey, "user")
+        XCTAssertEqual(client.trackedExposure?.context.attributes["country"], .string("US"))
+        XCTAssertNil(client.trackedEvaluation)
+        XCTAssertNil(client.trackedEvaluationEvent)
+        XCTAssertNil(client.trackedRUMEvaluation)
+        XCTAssertNil(client.lastEvaluationContext)
+    }
+
+    func testTrackRumEvaluationIsIndependentAndPreservesOptOutContext() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
+        var resolved = false
+        implementation.trackRumEvaluation("tracking", key: "flag", variant: "on", targetingKey: "user", attributes: ["dd_evaluation_telemetry_opt_out": true], resolve: { _ in
+            resolved = true
+        }, reject: { _, _, _ in XCTFail("Should resolve") })
+
+        XCTAssertTrue(resolved)
+        XCTAssertEqual(client.trackedRUMEvaluation?.key, "flag")
+        XCTAssertEqual(client.trackedRUMEvaluation?.variant, "on")
+        XCTAssertEqual(client.trackedRUMEvaluation?.context.targetingKey, "user")
+        XCTAssertEqual(client.trackedRUMEvaluation?.context.attributes["dd_evaluation_telemetry_opt_out"], .bool(true))
+        XCTAssertNil(client.trackedExposure)
+        XCTAssertNil(client.trackedEvaluation)
+        XCTAssertNil(client.trackedEvaluationEvent)
+        XCTAssertNil(client.lastEvaluationContext)
+    }
+
+    func testIndependentTrackingRejectsMalformedAssignments() {
+        let client = MockFlagsClient()
+        implementation.clientProviders["tracking"] = { client }
         var rejectionCount = 0
-        let reject: RCTPromiseReject = { code, message, error in
-            XCTAssertEqual(code, "UNSUPPORTED_PLATFORM")
-            XCTAssertEqual(message, "Independent flag tracking hooks are currently supported only on Android.")
-            XCTAssertNil(error)
+        let reject: RCTPromiseReject = { code, _, _ in
+            XCTAssertEqual(code, "INVALID_FLAG_ASSIGNMENT")
             rejectionCount += 1
         }
-        let resolve: RCTPromiseResolve = { _ in XCTFail("Unsupported tracking must not report success") }
-
-        implementation.trackExposure("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: [:], resolve: resolve, reject: reject)
-        implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: [:], errorCode: nil, resolve: resolve, reject: reject)
-        implementation.trackRumEvaluation("tracking", key: "flag", variant: "on", targetingKey: "user", attributes: [:], resolve: resolve, reject: reject)
-
+        let malformed: [NSDictionary] = [[:], ["allocationKey": "a", "variationKey": "v"], ["allocationKey": 1, "variationKey": "v", "doLog": true]]
+        for flag in malformed {
+            implementation.trackExposure("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: [:], resolve: { _ in XCTFail("Should reject") }, reject: reject)
+        }
         XCTAssertEqual(rejectionCount, 3)
-        XCTAssertFalse(clientRequested)
+        XCTAssertNil(client.trackedExposure)
+        XCTAssertNil(client.trackedEvaluationEvent)
     }
 
     // MARK: - AnyValue Tests
@@ -366,7 +401,8 @@ class DdFlagsTests: XCTestCase {
             "trackExposures": false,
             "rumIntegrationEnabled": false,
             "customFlagsEndpoint": "https://flags.example.com",
-            "customExposureEndpoint": "https://exposure.example.com"
+            "customExposureEndpoint": "https://exposure.example.com",
+            "customEvaluationEndpoint": "https://evaluation.example.com"
         ]
 
         let config = configDict.asFlagsConfiguration()
@@ -376,6 +412,7 @@ class DdFlagsTests: XCTestCase {
         XCTAssertEqual(config?.rumIntegrationEnabled, false)
         XCTAssertEqual(config?.customFlagsEndpoint?.absoluteString, "https://flags.example.com/precompute-assignments")
         XCTAssertEqual(config?.customExposureEndpoint?.absoluteString, "https://exposure.example.com/api/v2/exposures")
+        XCTAssertEqual(config?.customEvaluationEndpoint?.absoluteString, "https://evaluation.example.com/api/v2/flagevaluation")
     }
 
     func testConfigurationParsingDefaults() {
@@ -385,6 +422,14 @@ class DdFlagsTests: XCTestCase {
         XCTAssertNotNil(config)
         XCTAssertEqual(config?.trackExposures, true)
         XCTAssertEqual(config?.rumIntegrationEnabled, true)
+        XCTAssertNil(config?.customFlagsEndpoint)
+        XCTAssertNil(config?.customExposureEndpoint)
+        XCTAssertNil(config?.customEvaluationEndpoint)
+    }
+
+    func testConfigurationParsingEvaluationEndpointOnly() {
+        let config = (["enabled": true, "customEvaluationEndpoint": "https://evaluation.example.com/proxy"] as NSDictionary).asFlagsConfiguration()
+        XCTAssertEqual(config?.customEvaluationEndpoint?.absoluteString, "https://evaluation.example.com/proxy/api/v2/flagevaluation")
         XCTAssertNil(config?.customFlagsEndpoint)
         XCTAssertNil(config?.customExposureEndpoint)
     }
@@ -568,6 +613,9 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
 
     var lastEvaluationContext: FlagsEvaluationContext?
     var trackedEvaluation: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
+    var trackedExposure: (key: String, assignment: FlagAssignment, context: FlagsEvaluationContext)?
+    var trackedEvaluationEvent: (key: String, assignment: FlagAssignment?, context: FlagsEvaluationContext, errorCode: String?)?
+    var trackedRUMEvaluation: (key: String, variant: String, context: FlagsEvaluationContext)?
 
     func setEvaluationContext(_ context: DatadogFlags.FlagsEvaluationContext, completion: @escaping (Result<Void, DatadogFlags.FlagsError>) -> Void) {
         lastEvaluationContext = context
@@ -584,5 +632,17 @@ private class MockFlagsClient: FlagsClientProtocol, FlagsClientInternal {
 
     func sendFlagEvaluation(key: String, assignment: DatadogFlags.FlagAssignment, context: DatadogFlags.FlagsEvaluationContext) {
         trackedEvaluation = (key, assignment, context)
+    }
+
+    func sendFlagExposure(key: String, assignment: FlagAssignment, context: FlagsEvaluationContext) {
+        trackedExposure = (key, assignment, context)
+    }
+
+    func sendFlagEvaluationEvent(key: String, assignment: FlagAssignment?, context: FlagsEvaluationContext, errorCode: String?) {
+        trackedEvaluationEvent = (key, assignment, context, errorCode)
+    }
+
+    func sendFlagRUMEvaluation(key: String, variant: String, context: FlagsEvaluationContext) {
+        trackedRUMEvaluation = (key, variant, context)
     }
 }

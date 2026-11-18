@@ -11,7 +11,6 @@ import type {
     Hook,
     HookContext
 } from '@openfeature/web-sdk';
-import { Platform } from 'react-native';
 
 import { toDdContext } from './mappers';
 
@@ -32,7 +31,7 @@ export interface DatadogTrackingHook {
     shutdown?(): Promise<void> | void;
 }
 
-/** Android only. Logs exposures through native storage, consent handling, and deduplication. */
+/** Logs exposures through native storage, consent handling, and deduplication. */
 export function createDatadogExposureLoggingHook(
     options: DatadogTrackingHooksOptions = {}
 ): DatadogTrackingHooks {
@@ -54,23 +53,7 @@ export function createDatadogExposureLoggingHook(
     });
 }
 
-/** Android only. Logs every evaluation, including errors/defaults, through native aggregation. */
-export function createDatadogEvaluationLoggingHook(
-    options: DatadogTrackingHooksOptions = {}
-): DatadogTrackingHooks {
-    const clientName = options.clientName ?? 'default';
-    return createHook('__ddTrackFlagEvaluationEvent', (context, details) => {
-        DatadogSdk.__ddTrackFlagEvaluationEvent(
-            clientName,
-            context.flagKey,
-            toAssignment(details),
-            toDdContext(context.context),
-            details.errorCode ?? (details.reason === 'ERROR' ? 'GENERAL' : null)
-        );
-    });
-}
-
-/** Android only. Adds successful evaluations to the current native RUM view. */
+/** Adds successful evaluations to the current native RUM view. */
 export function createDatadogRumTrackingHook(
     options: DatadogTrackingHooksOptions = {}
 ): DatadogTrackingHooks {
@@ -124,10 +107,7 @@ function runTrackingLifecycleOperation(
 }
 
 function createHook(
-    method:
-        | '__ddTrackFlagExposure'
-        | '__ddTrackFlagEvaluationEvent'
-        | '__ddTrackFlagRumEvaluation',
+    method: '__ddTrackFlagExposure' | '__ddTrackFlagRumEvaluation',
     record: (
         context: HookContext,
         details: EvaluationDetails<FlagValue>
@@ -151,17 +131,6 @@ function createHook(
             }
         ],
         initialize: async () => {
-            if (Platform.OS !== 'android') {
-                active = false;
-                if (!compatibilityWarningLogged) {
-                    compatibilityWarningLogged = true;
-                    // eslint-disable-next-line no-console
-                    console.warn(
-                        'DATADOG: Independent flag tracking hooks are currently supported only on Android. This hook is disabled; flag evaluation is unaffected.'
-                    );
-                }
-                return;
-            }
             active = typeof DatadogSdk[method] === 'function';
             if (!active && !compatibilityWarningLogged) {
                 compatibilityWarningLogged = true;

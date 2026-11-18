@@ -11,7 +11,6 @@ import { Platform } from 'react-native';
 import { DatadogCoreProvider } from '../rules-based';
 import {
     createDatadogExposureLoggingHook,
-    createDatadogEvaluationLoggingHook,
     createDatadogRumTrackingHook
 } from '../tracking';
 
@@ -22,55 +21,58 @@ import {
 
 jest.mock('@datadog/mobile-react-native', () => ({ __esModule: true }));
 
-describe('tracking hook core compatibility', () => {
-    beforeEach(() => {
-        jest.replaceProperty(Platform, 'OS', 'android');
-        jest.spyOn(console, 'warn').mockImplementation(() => {});
-    });
+describe.each(['android', 'ios'] as const)(
+    'tracking hook core compatibility on %s',
+    platform => {
+        beforeEach(() => {
+            jest.replaceProperty(Platform, 'OS', platform);
+            jest.spyOn(console, 'warn').mockImplementation(() => {});
+        });
 
-    afterEach(async () => {
-        await OpenFeature.clearProviders();
-        await OpenFeature.clearContext();
-        jest.restoreAllMocks();
-        Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagExposure');
-        Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagEvaluationEvent');
-        Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagRumEvaluation');
-    });
+        afterEach(async () => {
+            await OpenFeature.clearProviders();
+            await OpenFeature.clearContext();
+            jest.restoreAllMocks();
+            Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagExposure');
+            Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagRumEvaluation');
+        });
 
-    it.each([
-        [createDatadogExposureLoggingHook, '__ddTrackFlagExposure'],
-        [createDatadogEvaluationLoggingHook, '__ddTrackFlagEvaluationEvent'],
-        [createDatadogRumTrackingHook, '__ddTrackFlagRumEvaluation']
-    ] as const)(
-        'warns once and leaves evaluation working when %s is unavailable',
-        async (create, method) => {
-            const tracking = create();
-            const provider = new DatadogCoreProvider();
-            provider.setConfiguration(precomputedConfiguration());
-            await OpenFeature.setProviderAndWait(provider, matchingContext);
-            const client = OpenFeature.getClient();
-            client.addHooks(...tracking.hooks);
+        it.each([
+            [createDatadogExposureLoggingHook, '__ddTrackFlagExposure'],
+            [createDatadogRumTrackingHook, '__ddTrackFlagRumEvaluation']
+        ] as const)(
+            'warns once and leaves evaluation working when %s is unavailable',
+            async (create, method) => {
+                const tracking = create();
+                const provider = new DatadogCoreProvider();
+                provider.setConfiguration(precomputedConfiguration());
+                await OpenFeature.setProviderAndWait(provider, matchingContext);
+                const client = OpenFeature.getClient();
+                client.addHooks(...tracking.hooks);
 
-            await tracking.initialize();
-            await tracking.initialize();
-            for (let i = 0; i < 10; i++) {
+                await tracking.initialize();
+                await tracking.initialize();
+                for (let i = 0; i < 10; i++) {
+                    expect(client.getBooleanValue('boolean-flag', false)).toBe(
+                        true
+                    );
+                }
+                await tracking.shutdown();
+                await tracking.initialize();
+                expect(console.warn).toHaveBeenCalledTimes(1);
+                expect(console.warn).toHaveBeenCalledWith(
+                    expect.stringContaining(method)
+                );
+
+                const record = jest.fn();
+                Object.assign(DatadogSdk, { [method]: record });
+                await tracking.initialize();
                 expect(client.getBooleanValue('boolean-flag', false)).toBe(
                     true
                 );
+                expect(record).toHaveBeenCalledTimes(1);
+                expect(console.warn).toHaveBeenCalledTimes(1);
             }
-            await tracking.shutdown();
-            await tracking.initialize();
-            expect(console.warn).toHaveBeenCalledTimes(1);
-            expect(console.warn).toHaveBeenCalledWith(
-                expect.stringContaining(method)
-            );
-
-            const record = jest.fn();
-            Object.assign(DatadogSdk, { [method]: record });
-            await tracking.initialize();
-            expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
-            expect(record).toHaveBeenCalledTimes(1);
-            expect(console.warn).toHaveBeenCalledTimes(1);
-        }
-    );
-});
+        );
+    }
+);

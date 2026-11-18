@@ -123,22 +123,26 @@ public class DdFlagsImplementation: NSObject {
 
     @objc
     public func trackExposure(_ clientName: String, key: String, rawFlag: NSDictionary, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
-        rejectUnsupportedTracking(reject)
-    }
-
-    @objc
-    public func trackEvaluationEvent(_ clientName: String, key: String, rawFlag: NSDictionary?, targetingKey: String, attributes: NSDictionary, errorCode: String?, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
-        rejectUnsupportedTracking(reject)
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized.", nil)
+            return
+        }
+        guard let assignment = rawFlag.asTrackingAssignment() else {
+            reject("INVALID_FLAG_ASSIGNMENT", "Failed to parse tracking metadata from the provided raw flag data.", nil)
+            return
+        }
+        client.sendFlagExposure(key: key, assignment: assignment, context: buildEvaluationContext(targetingKey: targetingKey, attributes: attributes))
+        resolve(nil)
     }
 
     @objc
     public func trackRumEvaluation(_ clientName: String, key: String, variant: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
-        rejectUnsupportedTracking(reject)
-    }
-
-    // The shared TurboModule spec requires these methods, but iOS support is deferred.
-    private func rejectUnsupportedTracking(_ reject: RCTPromiseReject) {
-        reject("UNSUPPORTED_PLATFORM", "Independent flag tracking hooks are currently supported only on Android.", nil)
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized.", nil)
+            return
+        }
+        client.sendFlagRUMEvaluation(key: key, variant: variant, context: buildEvaluationContext(targetingKey: targetingKey, attributes: attributes))
+        resolve(nil)
     }
 
     /// Construct an `FlagsEvaluationContext` from a targeting key and a dictionary of attributes.
@@ -173,12 +177,17 @@ extension NSDictionary {
         if let customExposureEndpoint = object(forKey: "customExposureEndpoint") as? String {
             customExposureEndpointURL = URL(string: "\(customExposureEndpoint)/api/v2/exposures" as String)
         }
+        var customEvaluationEndpointURL: URL? = nil
+        if let customEvaluationEndpoint = object(forKey: "customEvaluationEndpoint") as? String {
+            customEvaluationEndpointURL = URL(string: "\(customEvaluationEndpoint)/api/v2/flagevaluation" as String)
+        }
 
         return Flags.Configuration(
             gracefulModeEnabled: gracefulModeEnabled,
             customFlagsEndpoint: customFlagsEndpointURL,
             customExposureEndpoint: customExposureEndpointURL,
             trackExposures: trackExposures ?? true,
+            customEvaluationEndpoint: customEvaluationEndpointURL,
             rumIntegrationEnabled: rumIntegrationEnabled ?? true
         )
     }
@@ -220,6 +229,26 @@ extension FlagAssignment {
 private let serialIDKey = "serialId"
 
 extension NSDictionary {
+    func asTrackingAssignment() -> FlagAssignment? {
+        guard
+            let allocationKey = object(forKey: "allocationKey") as? String,
+            let variationKey = object(forKey: "variationKey") as? String,
+            let doLog = object(forKey: "doLog") as? Bool
+        else {
+            return nil
+        }
+
+        // Independent tracking needs assignment identity, not the flag value or evaluation reason.
+        return FlagAssignment(
+            allocationKey: allocationKey,
+            variationKey: variationKey,
+            variation: .unknown(""),
+            reason: "",
+            doLog: doLog,
+            serialID: (object(forKey: "serialId") as? String).flatMap(Int.init)
+        )
+    }
+
     func asFlagAssignment() -> FlagAssignment? {
         guard
             let allocationKey = object(forKey: "allocationKey") as? String,
