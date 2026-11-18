@@ -30,6 +30,8 @@ import type {
     ResolutionDetails
 } from '@openfeature/web-sdk';
 
+import { withoutAssignmentToken } from './mappers';
+
 /**
  * Evaluates manually supplied configurations in JavaScript using @datadog/flagging-core.
  * Ported from openfeature-js-client's browser DatadogCoreProvider.
@@ -93,9 +95,9 @@ export class DatadogCoreEvaluationProvider implements Provider {
     }
 
     initialize(context: EvaluationContext = {}): Promise<void> {
-        this.context = context;
+        this.context = withoutAssignmentToken(context);
         const error = toOpenFeatureError(
-            getFlagsConfigurationError(this.flagsConfiguration, context)
+            getFlagsConfigurationError(this.flagsConfiguration, this.context)
         );
         return error ? Promise.reject(error) : Promise.resolve();
     }
@@ -104,7 +106,7 @@ export class DatadogCoreEvaluationProvider implements Provider {
         _oldContext: EvaluationContext,
         newContext: EvaluationContext
     ): void {
-        this.context = newContext;
+        this.context = withoutAssignmentToken(newContext);
         const error = toOpenFeatureError(
             getFlagsConfigurationError(this.flagsConfiguration, this.context)
         );
@@ -169,7 +171,7 @@ export class DatadogCoreEvaluationProvider implements Provider {
             type,
             flagKey,
             defaultValue,
-            context,
+            withoutAssignmentToken(context),
             logger
         );
         if (

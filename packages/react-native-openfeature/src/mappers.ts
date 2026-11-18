@@ -16,7 +16,7 @@ import type { EvaluationContext as OFEvaluationContext } from '@openfeature/web-
 export const toDdContext = (
     context: OFEvaluationContext
 ): DdEvaluationContext => {
-    const { targetingKey, ...attributes } = context;
+    const { targetingKey, ...attributes } = withoutAssignmentToken(context);
 
     // Important ⚠️
     // The Flags SDK doesn't support nested non-primitive values in the evaluation context as per OF.3 FFE SDK requirement.
@@ -43,5 +43,18 @@ export const toDdContext = (
  * enters `ERROR` (serving coded defaults) rather than silently serving another subject's flags.
  */
 export const isEmptyContext = (context: OFEvaluationContext): boolean => {
-    return Object.values(context).every(value => value === undefined);
+    return Object.values(withoutAssignmentToken(context)).every(
+        value => value === undefined
+    );
+};
+
+/** Assignment authorization is not an evaluation attribute or telemetry field. */
+export const withoutAssignmentToken = (
+    context: OFEvaluationContext
+): OFEvaluationContext => {
+    const {
+        dd_assignment_token: _assignmentToken,
+        ...evaluationContext
+    } = context;
+    return evaluationContext;
 };
