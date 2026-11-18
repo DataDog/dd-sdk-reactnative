@@ -12,6 +12,8 @@ import type { EnrichableEvaluationContext } from './rumContext';
 
 export { getClientFingerprint } from './client-fingerprint';
 export type { ClientFingerprint } from './client-fingerprint';
+export { fetchPrecomputedConfiguration } from './fetchPrecomputedConfiguration';
+export type { PrecomputedConfigurationFetchOptions } from './fetchPrecomputedConfiguration';
 
 export {
     DatadogOpenFeatureProvider,
@@ -25,6 +27,7 @@ export {
     getPrecomputedContext
 } from '@datadog/flagging-core';
 export type {
+    FlagSelection,
     FlagsConfiguration,
     FlagsConfigurationWire
 } from '@datadog/flagging-core';

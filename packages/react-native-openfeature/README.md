@@ -381,6 +381,53 @@ context explicitly when serving a snapshot. The offline provider adopts it when 
 OpenFeature context is empty. Malformed wires and unsupported encodings produce parse errors;
 a valid rules branch remains available when a precomputed branch cannot be parsed.
 
+### Fetching precomputed configuration
+
+Use `fetchPrecomputedConfiguration` to fetch a snapshot for one context without initializing
+the native SDK. It is available from both entry points; the root path does not load protobuf.
+
+```tsx
+import {
+    DatadogCoreProvider,
+    fetchPrecomputedConfiguration,
+    getPrecomputedContext
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+const configuration = await fetchPrecomputedConfiguration({
+    clientToken: '<CLIENT_TOKEN>',
+    env: 'production',
+    context: { targetingKey: 'user-123', country: 'US' },
+    flagSelection: { keyPatterns: ['checkout-*'] }
+});
+if (!configuration.precomputed) {
+    throw new Error(configuration.precomputedError);
+}
+const provider = new DatadogCoreProvider();
+provider.setConfiguration(configuration);
+await OpenFeature.setProviderAndWait('checkout', provider, getPrecomputedContext(configuration));
+const enabled = OpenFeature.getClient('checkout').getBooleanValue('checkout-enabled', false);
+```
+
+The helper accepts `clientToken`, `env`, `context`, and optional `applicationId`, `site`,
+`flagSelection`, `fetch`, `signal`, and `logger`. Each call makes one POST with RN SDK identity
+and the shared decoder's capabilities. It does not poll, retry, persist, or register tracking.
+Fetch again for a different context. JSON values are captured before fetching; undefined
+attributes are omitted, dates use their JSON representation, and cyclic or nonserializable
+contexts reject with `INVALID_CONTEXT`. The returned context is detached from the caller.
+
+Selection follows the rules below but is sent in the POST body, so the rules URL-size limit
+does not apply. Flags are not filtered locally. `dd_assignment_token`, when present in the
+context, is sent only as the `DD-Assignment-Token` header and is excluded from the request's
+targeting attributes and saved configuration. Failures from requests with an assignment token
+use sanitized errors.
+
+HTTP, network, cancellation, and JSON-read failures reject. Schema-invalid responses return
+`precomputedError`; malformed individual flags are isolated in `precomputed.flagErrors`.
+Check `configuration.precomputed` before replacing an active configuration. This helper uses
+the current RN evaluator's default disabled experimentation opt-out mode; a response computed
+under a different policy is rejected.
+
 ### Fetching rules configuration
 
 Use `fetchRulesConfiguration` from the `/rules-based` entry point to fetch client-distributed rules and decode them into a `FlagsConfiguration`. Like the browser helper, it accepts `clientToken`, `env`, an optional site domain, an optional `flagSelection`, an optional `fetch` implementation, and an optional `AbortSignal`. An optional `logger` receives selection diagnostics and defaults to `console`. The helper does not require native SDK initialization or `DdFlags.enable()`.

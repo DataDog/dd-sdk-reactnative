@@ -12,6 +12,8 @@ import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
 
 export { getClientFingerprint } from './client-fingerprint';
 export type { ClientFingerprint } from './client-fingerprint';
+export { fetchPrecomputedConfiguration } from './fetchPrecomputedConfiguration';
+export type { PrecomputedConfigurationFetchOptions } from './fetchPrecomputedConfiguration';
 
 // Rules parsing loads Protobuf-ES. Keep it behind this entry, as the browser SDK does.
 export {
