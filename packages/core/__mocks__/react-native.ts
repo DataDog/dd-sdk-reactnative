@@ -190,7 +190,8 @@ const DdFlags: DdNativeFlagsType = {
     setEvaluationContext: jest.fn(() => Promise.resolve({})),
     trackEvaluation: jest.fn(() => Promise.resolve()),
     trackExposure: jest.fn(() => Promise.resolve()),
-    trackRumEvaluation: jest.fn(() => Promise.resolve())
+    trackRumEvaluation: jest.fn(() => Promise.resolve()),
+    trackProtectedEvaluation: jest.fn(() => Promise.resolve())
 };
 actualRN.NativeModules.DdFlags = DdFlags;
 

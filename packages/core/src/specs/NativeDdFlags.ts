@@ -37,6 +37,17 @@ export interface Spec extends TurboModule {
         attributes: Object
     ) => Promise<void>;
 
+    readonly trackProtectedEvaluation: (
+        clientName: string,
+        key: string,
+        rawFlag: Object | null,
+        targetingKey: string,
+        attributes: Object,
+        errorCode: string | null,
+        observeFullEvaluationData: boolean,
+        telemetryTargetingKey: string | null
+    ) => Promise<void>;
+
     readonly trackRumEvaluation: (
         clientName: string,
         key: string,

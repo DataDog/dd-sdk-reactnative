@@ -136,6 +136,28 @@ public class DdFlagsImplementation: NSObject {
     }
 
     @objc
+    public func trackProtectedEvaluation(_ clientName: String, key: String, rawFlag: NSDictionary?, targetingKey: String, attributes: NSDictionary, errorCode: String?, observeFullEvaluationData: Bool, telemetryTargetingKey: String?, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
+        guard let client = getClient(name: clientName) as? FlagsClientInternal else {
+            reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized.", nil)
+            return
+        }
+        let assignment = rawFlag?.asTrackingAssignment()
+        guard rawFlag == nil || assignment != nil else {
+            reject("INVALID_FLAG_ASSIGNMENT", "Failed to parse tracking metadata from the provided raw flag data.", nil)
+            return
+        }
+        client.sendFlagEvaluationEvent(
+            key: key,
+            assignment: assignment,
+            context: buildEvaluationContext(targetingKey: targetingKey, attributes: attributes),
+            telemetryTargetingKey: telemetryTargetingKey,
+            observeFullEvaluationData: observeFullEvaluationData,
+            errorCode: errorCode
+        )
+        resolve(nil)
+    }
+
+    @objc
     public func trackRumEvaluation(_ clientName: String, key: String, variant: String, targetingKey: String, attributes: NSDictionary, resolve: @escaping RCTPromiseResolve, reject: @escaping RCTPromiseReject) {
         guard let client = getClient(name: clientName) as? FlagsClientInternal else {
             reject("CLIENT_NOT_INITIALIZED", "Flags client '\(clientName)' is not properly initialized.", nil)

@@ -87,4 +87,29 @@ class DdFlags(
     ) {
         implementation.trackExposure(clientName, key, rawFlag, targetingKey, attributes, promise)
     }
+
+    @ReactMethod
+    override fun trackProtectedEvaluation(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap?,
+        targetingKey: String,
+        attributes: ReadableMap,
+        errorCode: String?,
+        observeFullEvaluationData: Boolean,
+        telemetryTargetingKey: String?,
+        promise: Promise,
+    ) {
+        implementation.trackProtectedEvaluation(
+            clientName,
+            key,
+            rawFlag,
+            targetingKey,
+            attributes,
+            errorCode,
+            observeFullEvaluationData,
+            telemetryTargetingKey,
+            promise,
+        )
+    }
 }

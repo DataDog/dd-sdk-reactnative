@@ -29,6 +29,7 @@ export type {
 } from '@datadog/flagging-core';
 export {
     createDatadogExposureLoggingHook,
+    createDatadogEvaluationLoggingHook,
     createDatadogRumTrackingHook,
     composeDatadogTrackingHooks
 } from './tracking';
