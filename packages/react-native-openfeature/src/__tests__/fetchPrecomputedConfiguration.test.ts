@@ -473,24 +473,35 @@ describe('fetchPrecomputedConfiguration', () => {
             expect(logger.error).not.toHaveBeenCalled();
         });
 
-        it('drops a throwing selection with one bounded diagnostic', async () => {
-            const fetch = jest.fn().mockResolvedValue(response());
-            await fetchPrecomputedConfiguration({
-                ...options,
-                fetch,
-                logger,
-                flagSelection: {
-                    get tags(): string[] {
-                        throw new Error('private selection');
+        it.each(['getter', 'unstable item'])(
+            'drops a throwing or malformed %s with one bounded diagnostic',
+            async kind => {
+                const fetch = jest.fn().mockResolvedValue(response());
+                let reads = 0;
+                const tags = ['valid'];
+                Object.defineProperty(tags, 0, {
+                    get: () => (++reads === 1 ? 'valid' : '\ud800')
+                });
+                await fetchPrecomputedConfiguration({
+                    ...options,
+                    fetch,
+                    logger,
+                    flagSelection: {
+                        get tags(): string[] {
+                            if (kind === 'getter') {
+                                throw new Error('private selection');
+                            }
+                            return tags;
+                        }
                     }
-                }
-            });
-            expect(request(fetch).flag_selection).toBeUndefined();
-            expect(logger.error).toHaveBeenCalledTimes(1);
-            expect(logger.error.mock.calls[0][0]).not.toContain(
-                'private selection'
-            );
-        });
+                });
+                expect(request(fetch).flag_selection).toBeUndefined();
+                expect(logger.error).toHaveBeenCalledTimes(1);
+                expect(logger.error.mock.calls[0][0]).not.toContain(
+                    'private selection'
+                );
+            }
+        );
 
         it.each(['invalid_tag', 'private response header'])(
             'reports ignored selection after decoding, sanitizing %s',
