@@ -4,7 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import * as DatadogSdk from '@datadog/mobile-react-native';
 import type {
     EvaluationDetails,
     FlagValue,
@@ -44,7 +43,7 @@ export function createDatadogExposureLoggingHook(
         if (!flag?.doLog) {
             return;
         }
-        DatadogSdk.__ddTrackFlagExposure(
+        getDatadogSdk().__ddTrackFlagExposure(
             clientName,
             context.flagKey,
             flag,
@@ -64,7 +63,7 @@ export function createDatadogRumTrackingHook(
             details.reason !== 'ERROR' &&
             details.variant != null
         ) {
-            DatadogSdk.__ddTrackFlagRumEvaluation(
+            getDatadogSdk().__ddTrackFlagRumEvaluation(
                 clientName,
                 context.flagKey,
                 details.variant,
@@ -131,7 +130,7 @@ function createHook(
             }
         ],
         initialize: async () => {
-            active = typeof DatadogSdk[method] === 'function';
+            active = typeof getDatadogSdk()[method] === 'function';
             if (!active && !compatibilityWarningLogged) {
                 compatibilityWarningLogged = true;
                 // Older core packages may not expose InternalLog either.
@@ -146,6 +145,12 @@ function createHook(
             active = false;
         }
     };
+}
+
+function getDatadogSdk(): typeof import('@datadog/mobile-react-native') {
+    // Evaluation-only imports must not resolve the native SDK, even through /rules-based.
+    // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+    return require('@datadog/mobile-react-native');
 }
 
 function toAssignment(details: EvaluationDetails<FlagValue>) {
