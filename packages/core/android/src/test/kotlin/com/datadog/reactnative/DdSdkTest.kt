@@ -2413,7 +2413,7 @@ internal class DdSdkTest {
                 .hasField("featureConfiguration") {
                     it.hasField("timeseriesConfiguration") { ts ->
                         ts.hasFieldEqualTo(
-                            "enabledTypes",
+                            "collectTypes",
                             setOf(TimeseriesType.CPU, TimeseriesType.MEMORY)
                         )
                     }
