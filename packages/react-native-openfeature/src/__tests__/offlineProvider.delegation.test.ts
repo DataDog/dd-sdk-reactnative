@@ -21,7 +21,11 @@ import {
 
 import { getNativeDdFlags } from '../../../core/src/specs/NativeDdFlags';
 import { DatadogCoreEvaluationProvider } from '../datadogCoreProvider';
-import { DatadogOfflineOpenFeatureProvider } from '../index';
+import {
+    DatadogOfflineOpenFeatureProvider,
+    configurationFromString as parsePrecomputed,
+    configurationToString as serializePrecomputed
+} from '../index';
 import { coreConfigurationFromString } from '../rules-based';
 
 import {
@@ -30,6 +34,10 @@ import {
     rulesConfiguration,
     rulesWire
 } from './__utils__/coreConfiguration';
+import {
+    encodedConfiguration,
+    encodedFlagKey
+} from './__utils__/encodedConfiguration';
 
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
     __esModule: true,
@@ -72,6 +80,127 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         OpenFeature.clearHandlers();
         jest.restoreAllMocks();
     });
+
+    it.each([parsePrecomputed, coreConfigurationFromString])(
+        'serves encoded v2 through the evaluator and tracks plaintext flag keys and assignment IDs',
+        async parse => {
+            const configuration = encodedConfiguration();
+            configuration.precomputed.context = {
+                ...configuration.precomputed.context,
+                nested: { ignored: true },
+                dd_assignment_token: 'ignored-token'
+            };
+            const { provider, name, flagsClient } = setup(
+                parse(serializePrecomputed(configuration))
+            );
+            await OpenFeature.setProviderAndWait(provider);
+            const client = OpenFeature.getClient();
+            expect(
+                client.getBooleanDetails(encodedFlagKey, false)
+            ).toMatchObject({
+                value: true,
+                variant: 'on',
+                reason: 'TARGETING_MATCH'
+            });
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+                name,
+                encodedFlagKey,
+                expect.objectContaining({
+                    key: encodedFlagKey,
+                    value: true,
+                    variationValue: 'true',
+                    variationType: 'boolean',
+                    allocationKey: 'allocation',
+                    variationKey: 'on',
+                    serialId: '42',
+                    doLog: true
+                }),
+                'user-1',
+                { country: 'US' }
+            );
+            expect(flagsClient.getStringValue('string-flag', '')).toBe('hello');
+            expect(flagsClient.getNumberValue('number-flag', 0)).toBe(3.14);
+            expect(flagsClient.getObjectValue('object-flag', {})).toEqual({
+                nested: { enabled: true },
+                list: [1, 2]
+            });
+            const calls = NativeDdFlags.trackEvaluation.mock.calls.length;
+            expect(client.getStringDetails(encodedFlagKey, '').errorCode).toBe(
+                ErrorCode.TYPE_MISMATCH
+            );
+            expect(client.getBooleanDetails('missing', false).errorCode).toBe(
+                ErrorCode.FLAG_NOT_FOUND
+            );
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(calls);
+            await OpenFeature.setContext({ targetingKey: 'other' });
+            expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+            await OpenFeature.clearContext();
+            expect(client.getBooleanValue(encodedFlagKey, false)).toBe(true);
+            expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
+        }
+    );
+
+    it('uses rules fallback from a round-tripped mixed v2 wire', async () => {
+        const { provider } = setup(
+            coreConfigurationFromString(
+                configurationToString({
+                    ...rulesConfiguration(),
+                    ...encodedConfiguration()
+                })
+            )
+        );
+        await OpenFeature.setProviderAndWait(provider);
+        const client = OpenFeature.getClient();
+        expect(client.getBooleanValue(encodedFlagKey, false)).toBe(true);
+        await OpenFeature.setContext({ targetingKey: 'other', country: 'CA' });
+        expect(client.getBooleanDetails('test-flag', true)).toMatchObject({
+            value: false,
+            variant: 'off'
+        });
+    });
+
+    it.each(['unknown', 'missing-salt', 'invalid-key'])(
+        'rejects %s encoded input without tracking defaults and retains usable rules',
+        async malformed => {
+            const configuration = encodedConfiguration();
+            const attributes =
+                configuration.precomputed.response.data.attributes;
+            if (malformed === 'unknown') {
+                Object.assign(attributes.obfuscation ?? {}, {
+                    scheme: 'unknown'
+                });
+            } else if (malformed === 'missing-salt') {
+                Object.assign(attributes.obfuscation ?? {}, {
+                    salt: undefined
+                });
+            } else {
+                attributes.flags = {
+                    plaintext: Object.values(attributes.flags)[0]
+                };
+            }
+            const { provider } = setup(configuration);
+            await expect(
+                OpenFeature.setProviderAndWait(provider)
+            ).rejects.toMatchObject({
+                code: ErrorCode.PARSE_ERROR
+            });
+            expect(
+                OpenFeature.getClient().getBooleanDetails(encodedFlagKey, false)
+            ).toMatchObject({
+                value: false,
+                errorCode: ErrorCode.PARSE_ERROR
+            });
+            expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
+            provider.setConfiguration({
+                ...configuration,
+                ...rulesConfiguration()
+            });
+            await OpenFeature.setContext(matchingContext);
+            expect(
+                OpenFeature.getClient().getBooleanValue('test-flag', false)
+            ).toBe(true);
+        }
+    );
 
     it('delegates all precomputed types and tracks each result once with the embedded context', async () => {
         const boolean = jest.spyOn(
