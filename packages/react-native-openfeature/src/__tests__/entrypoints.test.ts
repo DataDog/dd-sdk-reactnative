@@ -46,6 +46,7 @@ describe('package entry points', () => {
                 'getClientFingerprint',
                 'fetchPrecomputedConfiguration',
                 'createDatadogExposureLoggingHook',
+                'createDatadogEvaluationLoggingHook',
                 'createDatadogRumTrackingHook',
                 'composeDatadogTrackingHooks'
             ]) {

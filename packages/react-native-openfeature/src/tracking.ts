@@ -58,7 +58,7 @@ export function createDatadogEvaluationLoggingHook(
 ): DatadogTrackingHooks {
     const clientName = options.clientName ?? 'default';
     return createHook('__ddTrackFlagEvaluationEvent', (context, details) => {
-        DatadogSdk.__ddTrackFlagEvaluationEvent(
+        getDatadogSdk().__ddTrackFlagEvaluationEvent(
             clientName,
             context.flagKey,
             toAssignment(details),

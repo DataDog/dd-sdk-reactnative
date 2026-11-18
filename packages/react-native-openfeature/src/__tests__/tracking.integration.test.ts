@@ -13,6 +13,7 @@ import { getNativeDdFlags } from '../../../core/src/specs/NativeDdFlags';
 import type { DatadogTrackingHook, DatadogTrackingHooks } from '../index';
 import {
     coreConfigurationFromString,
+    createDatadogEvaluationLoggingHook as evaluationHookFromRules,
     DatadogCoreProvider,
     fetchPrecomputedConfiguration,
     fetchRulesConfiguration
@@ -53,6 +54,13 @@ if (!NativeDdFlags) {
 const native = jest.mocked(NativeDdFlags);
 const rum = native.trackRumEvaluation;
 let sequence = 0;
+
+it('exports the protected evaluation hook from both entry points', () => {
+    expect(
+        jest.requireActual('../index').createDatadogEvaluationLoggingHook
+    ).toBe(createDatadogEvaluationLoggingHook);
+    expect(evaluationHookFromRules).toBe(createDatadogEvaluationLoggingHook);
+});
 
 async function configuredClient(
     tracking?: DatadogTrackingHooks,

@@ -134,6 +134,7 @@ describe('rules-based portable configuration', () => {
         for (const factory of [
             'createDatadogExposureLoggingHook',
             'fetchPrecomputedConfiguration',
+            'createDatadogEvaluationLoggingHook',
             'createDatadogRumTrackingHook',
             'composeDatadogTrackingHooks'
         ] as const) {
