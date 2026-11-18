@@ -157,35 +157,6 @@ class DdFlagsImplementation(
     }
 
     /**
-     * Track an evaluation event without recording an exposure or updating RUM.
-     * @param clientName The name of the client.
-     * @param key The key of the flag.
-     * @param rawFlag The flag assignment from JavaScript, if available.
-     * @param targetingKey The targeting key.
-     * @param attributes The attributes for the evaluation context.
-     * @param errorCode The evaluation error code, or null for a successful evaluation.
-     * @param promise The promise to resolve after the native call, without waiting for upload.
-     */
-    @Suppress("LongParameterList")
-    fun trackEvaluationEvent(
-        clientName: String,
-        key: String,
-        rawFlag: ReadableMap?,
-        targetingKey: String,
-        attributes: ReadableMap,
-        errorCode: String?,
-        promise: Promise,
-    ) {
-        _FlagsInternalProxy(getClient(clientName)).trackFlagEvaluationEvent(
-            key,
-            rawFlag?.let { convertMapToUnparsedFlag(it.toMap()) },
-            buildEvaluationContext(targetingKey, attributes),
-            errorCode,
-        )
-        promise.resolve(null)
-    }
-
-    /**
      * Associate a flag evaluation with RUM without recording an exposure or evaluation event.
      * @param clientName The name of the client.
      * @param key The key of the flag.
