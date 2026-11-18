@@ -36,17 +36,24 @@ describe('package entry points', () => {
 
     it('keeps the rules-based parser out of the main entry', () => {
         expect(() =>
-            jest.isolateModules(() => require('../index'))
+            jest.isolateModules(() => {
+                const entry = jest.requireActual('../index');
+                expect(typeof entry.getClientFingerprint).toBe('function');
+                expect(JSON.parse(entry.getClientFingerprint()).sdk.name).toBe(
+                    'react-native'
+                );
+            })
         ).not.toThrow();
     });
 
-    it('exposes portable and tracking helpers without exposing rules or fingerprint APIs', () => {
+    it('exposes portable, tracking and fingerprint helpers without exposing rules APIs', () => {
         jest.isolateModules(() => {
             const entry = require('../index');
             for (const name of [
                 'configurationFromString',
                 'configurationToString',
                 'getPrecomputedContext',
+                'getClientFingerprint',
                 'createDatadogExposureLoggingHook',
                 'createDatadogRumTrackingHook',
                 'composeDatadogTrackingHooks'
@@ -55,7 +62,6 @@ describe('package entry points', () => {
             }
             expect(entry.DatadogCoreProvider).toBeUndefined();
             expect(entry.coreConfigurationFromString).toBeUndefined();
-            expect(entry.getClientFingerprint).toBeUndefined();
         });
     });
 

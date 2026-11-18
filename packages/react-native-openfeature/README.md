@@ -289,6 +289,21 @@ function App() {
 export default AppWithProviders;
 ```
 
+### Client fingerprint
+
+Use `getClientFingerprint()` when an application server prepares a precomputed configuration for this SDK:
+
+```tsx
+import { getClientFingerprint } from '@datadog/mobile-react-native-openfeature';
+
+const requestBody = JSON.stringify({
+    context: { targetingKey: 'user-123' },
+    clientFingerprint: getClientFingerprint()
+});
+```
+
+Forward the opaque string unchanged. It describes the SDK version and supported precomputed encodings, not a user or device, and is not authentication. The getter and `ClientFingerprint` type are also available from `/rules-based`; the root import does not load protobuf. Applications choose their own client-server transport.
+
 ### JavaScript evaluation with manual configuration
 
 Use `DatadogCoreProvider` to evaluate manually supplied precomputed or rules-based configurations in
