@@ -7,6 +7,7 @@
 /* eslint-disable global-require, @typescript-eslint/no-var-requires */
 
 import * as DatadogSdk from '../../../core/src/index';
+import packageJson from '../../package.json';
 import * as OpenFeatureSdk from '../index';
 
 jest.mock('../../../core/src/specs/NativeDdFlags', () => ({
@@ -25,6 +26,15 @@ jest.mock('@datadog/flagging-core/rules-based', () => {
 jest.mock('@bufbuild/protobuf', () => {
     throw new Error('protobuf loaded');
 });
+jest.mock('@bufbuild/protobuf/wire', () => {
+    throw new Error('protobuf wire loaded');
+});
+jest.mock('@bufbuild/protobuf/codegenv2', () => {
+    throw new Error('protobuf codegen loaded');
+});
+jest.mock('@bufbuild/protobuf/wkt', () => {
+    throw new Error('protobuf well-known types loaded');
+});
 
 describe('package entry points', () => {
     it('does not expose independent evaluation logging before native privacy support', () => {
@@ -36,17 +46,30 @@ describe('package entry points', () => {
 
     it('keeps the rules-based parser out of the main entry', () => {
         expect(() =>
-            jest.isolateModules(() => require('../index'))
+            jest.isolateModules(() => {
+                const entry = jest.requireActual('../index');
+                expect(typeof entry.getClientFingerprint).toBe('function');
+                // Pin the real list: new capabilities need React Native decoding and tracking support.
+                expect(JSON.parse(entry.getClientFingerprint())).toEqual({
+                    version: 1,
+                    sdk: {
+                        name: 'react-native',
+                        version: packageJson.version
+                    },
+                    capabilities: ['assignment-encoding-flag-key-256-v1']
+                });
+            })
         ).not.toThrow();
     });
 
-    it('exposes portable and tracking helpers without exposing rules or fingerprint APIs', () => {
+    it('exposes portable, tracking and fingerprint helpers without exposing rules APIs', () => {
         jest.isolateModules(() => {
             const entry = require('../index');
             for (const name of [
                 'configurationFromString',
                 'configurationToString',
                 'getPrecomputedContext',
+                'getClientFingerprint',
                 'createDatadogExposureLoggingHook',
                 'createDatadogRumTrackingHook',
                 'composeDatadogTrackingHooks'
@@ -55,7 +78,6 @@ describe('package entry points', () => {
             }
             expect(entry.DatadogCoreProvider).toBeUndefined();
             expect(entry.coreConfigurationFromString).toBeUndefined();
-            expect(entry.getClientFingerprint).toBeUndefined();
         });
     });
 

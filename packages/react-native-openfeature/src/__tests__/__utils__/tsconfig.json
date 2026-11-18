@@ -6,7 +6,8 @@
     "include": [
         "portableConfiguration.types.ts",
         "rumContext.types.ts",
-        "../rumContext.test.ts"
+        "../rumContext.test.ts",
+        "../client-fingerprint.test.ts"
     ],
     "exclude": []
 }

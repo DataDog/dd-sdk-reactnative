@@ -10,6 +10,9 @@ import type { FlagsConfiguration } from '@datadog/flagging-core';
 
 import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
 
+export { getClientFingerprint } from './client-fingerprint';
+export type { ClientFingerprint } from './client-fingerprint';
+
 // Rules parsing loads Protobuf-ES. Keep it behind this entry, as the browser SDK does.
 export {
     configurationFromString,
