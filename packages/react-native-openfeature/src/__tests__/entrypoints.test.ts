@@ -23,7 +23,13 @@ jest.mock('@datadog/flagging-core/rules-based', () => {
 describe('package entry points', () => {
     it('keeps the rules-based parser out of the main entry', () => {
         expect(() =>
-            jest.isolateModules(() => require('../index'))
+            jest.isolateModules(() => {
+                const entry = jest.requireActual('../index');
+                expect(typeof entry.getClientFingerprint).toBe('function');
+                expect(JSON.parse(entry.getClientFingerprint()).sdk.name).toBe(
+                    'react-native'
+                );
+            })
         ).not.toThrow();
     });
 
