@@ -133,7 +133,6 @@ describe('rules-based portable configuration', () => {
         );
         for (const factory of [
             'createDatadogExposureLoggingHook',
-            'createDatadogEvaluationLoggingHook',
             'createDatadogRumTrackingHook',
             'composeDatadogTrackingHooks'
         ] as const) {

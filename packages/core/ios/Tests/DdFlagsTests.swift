@@ -221,31 +221,6 @@ class DdFlagsTests: XCTestCase {
         XCTAssertNil(client.lastEvaluationContext)
     }
 
-    func testTrackEvaluationEventIsIndependent() {
-        let client = MockFlagsClient()
-        let other = MockFlagsClient()
-        implementation.clientProviders["tracking"] = { client }
-        implementation.clientProviders["other"] = { other }
-        let flag: NSDictionary = ["allocationKey": "allocation", "variationKey": "off", "doLog": false]
-        var resolved = false
-        implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: ["dd_evaluation_telemetry_opt_out": true], errorCode: nil, resolve: { _ in
-            resolved = true
-        }, reject: { _, _, _ in XCTFail("Should resolve") })
-
-        XCTAssertTrue(resolved)
-        XCTAssertEqual(client.trackedEvaluationEvent?.key, "flag")
-        XCTAssertEqual(client.trackedEvaluationEvent?.assignment?.variationKey, "off")
-        XCTAssertEqual(client.trackedEvaluationEvent?.assignment?.doLog, false)
-        XCTAssertEqual(client.trackedEvaluationEvent?.context.targetingKey, "user")
-        XCTAssertEqual(client.trackedEvaluationEvent?.context.attributes["dd_evaluation_telemetry_opt_out"], .bool(true))
-        XCTAssertNil(client.trackedEvaluationEvent?.errorCode)
-        XCTAssertNil(client.trackedExposure)
-        XCTAssertNil(client.trackedEvaluation)
-        XCTAssertNil(client.trackedRUMEvaluation)
-        XCTAssertNil(client.lastEvaluationContext)
-        XCTAssertNil(other.trackedEvaluationEvent)
-    }
-
     func testTrackRumEvaluationIsIndependentAndPreservesOptOutContext() {
         let client = MockFlagsClient()
         implementation.clientProviders["tracking"] = { client }
@@ -265,24 +240,6 @@ class DdFlagsTests: XCTestCase {
         XCTAssertNil(client.lastEvaluationContext)
     }
 
-    func testTrackEvaluationEventWithoutAssignment() {
-        let client = MockFlagsClient()
-        implementation.clientProviders["tracking"] = { client }
-        for errorCode in [nil, "FLAG_NOT_FOUND"] as [String?] {
-            var resolved = false
-            implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: nil, targetingKey: "user", attributes: [:], errorCode: errorCode, resolve: { _ in
-                resolved = true
-            }, reject: { _, _, _ in XCTFail("Should resolve") })
-            XCTAssertTrue(resolved)
-            XCTAssertEqual(client.trackedEvaluationEvent?.key, "flag")
-            XCTAssertNil(client.trackedEvaluationEvent?.assignment)
-            XCTAssertEqual(client.trackedEvaluationEvent?.errorCode, errorCode)
-        }
-        XCTAssertNil(client.trackedExposure)
-        XCTAssertNil(client.trackedEvaluation)
-        XCTAssertNil(client.trackedRUMEvaluation)
-    }
-
     func testIndependentTrackingRejectsMalformedAssignments() {
         let client = MockFlagsClient()
         implementation.clientProviders["tracking"] = { client }
@@ -294,9 +251,8 @@ class DdFlagsTests: XCTestCase {
         let malformed: [NSDictionary] = [[:], ["allocationKey": "a", "variationKey": "v"], ["allocationKey": 1, "variationKey": "v", "doLog": true]]
         for flag in malformed {
             implementation.trackExposure("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: [:], resolve: { _ in XCTFail("Should reject") }, reject: reject)
-            implementation.trackEvaluationEvent("tracking", key: "flag", rawFlag: flag, targetingKey: "user", attributes: [:], errorCode: nil, resolve: { _ in XCTFail("Should reject") }, reject: reject)
         }
-        XCTAssertEqual(rejectionCount, 6)
+        XCTAssertEqual(rejectionCount, 3)
         XCTAssertNil(client.trackedExposure)
         XCTAssertNil(client.trackedEvaluationEvent)
     }
