@@ -2010,7 +2010,7 @@ __metadata:
     "@datadog/mobile-react-native": ^3.0.0
     graphql: ">=16.13.2"
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
   languageName: unknown
   linkType: soft
 
@@ -2041,7 +2041,7 @@ __metadata:
     uuid: ^11.1.1
   peerDependencies:
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
   bin:
     datadog-generate-sr-assets: ./lib/commonjs/cli/generate-sr-assets.js
   languageName: unknown
@@ -2058,7 +2058,7 @@ __metadata:
   peerDependencies:
     "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
     react-native-code-push: ">=2.0.0"
   languageName: unknown
   linkType: soft
@@ -2076,7 +2076,7 @@ __metadata:
   peerDependencies:
     "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
     react-native-navigation: ^7.5.0
   languageName: unknown
   linkType: soft
@@ -2096,7 +2096,7 @@ __metadata:
     "@datadog/mobile-react-native": ^3.1.0
     "@openfeature/web-sdk": ^1.8.0
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
   languageName: unknown
   linkType: soft
 
@@ -2109,7 +2109,7 @@ __metadata:
     react-native-builder-bob: 0.26.0
   peerDependencies:
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
   languageName: unknown
   linkType: soft
 
@@ -2123,7 +2123,7 @@ __metadata:
   peerDependencies:
     "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
     react-native-webview: ">=11.0.0"
   languageName: unknown
   linkType: soft
@@ -2138,7 +2138,7 @@ __metadata:
     react-native-builder-bob: 0.26.0
   peerDependencies:
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
   languageName: unknown
   linkType: soft
 
@@ -2158,7 +2158,7 @@ __metadata:
   peerDependencies:
     "@datadog/mobile-react-native": ^3.0.0
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
   languageName: unknown
   linkType: soft
 
@@ -2218,7 +2218,7 @@ __metadata:
     rum-events-format: "DataDog/rum-events-format#workspace=rum-events-format"
   peerDependencies:
     react: ">=16.13.1"
-    react-native: ">=0.63.4 <1.0"
+    react-native: ">=0.75.0 <1.0"
   languageName: unknown
   linkType: soft
 
