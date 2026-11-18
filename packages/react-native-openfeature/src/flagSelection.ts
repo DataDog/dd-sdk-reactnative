@@ -93,6 +93,13 @@ export function readFlagSelection(
     let error: FlagSelectionError | undefined;
     try {
         ({ selection, error } = canonicalizeFlagSelection(input));
+        // JSON accepts unpaired surrogates that a changing array getter can introduce
+        // after canonicalizer validation. Validate the captured strings for both transports.
+        if (selection) {
+            for (const value of [...selection.tags, ...selection.keyPatterns]) {
+                encodeURIComponent(value);
+            }
+        }
     } catch {
         error = 'malformed_selection';
     }
