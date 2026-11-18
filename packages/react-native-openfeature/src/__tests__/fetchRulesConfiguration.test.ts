@@ -261,9 +261,24 @@ describe('fetchRulesConfiguration', () => {
             }
         );
 
-        it.each(['too_many_values', 'future_reason', '', null])(
+        it.each<[string | null, string | undefined]>([
+            ['malformed_selection', 'malformed_selection'],
+            ['too_many_values', 'too_many_values'],
+            ['invalid_key_pattern', 'invalid_key_pattern'],
+            ['invalid_tag', 'invalid_tag'],
+            ['tag_load_failed', 'tag_load_failed'],
+            ['future_reason', 'unknown'],
+            ['x'.repeat(32), 'unknown'],
+            ['x'.repeat(33), 'unknown'],
+            ['x'.repeat(4096), 'unknown'],
+            ['too_many_values, invalid_tag', 'unknown'],
+            [options.clientToken, 'unknown'],
+            [`dd-client-token: ${options.clientToken}`, 'unknown'],
+            ['', undefined],
+            [null, undefined]
+        ])(
             'handles an ignored-selection header: %s',
-            async reason => {
+            async (reason, reportedReason) => {
                 const headers = new Headers();
                 if (reason !== null) {
                     headers.set('DD-Flag-Selection-Ignored', reason);
@@ -291,14 +306,89 @@ describe('fetchRulesConfiguration', () => {
                     )
                 ).toBe(true);
                 expect(fetch).toHaveBeenCalledTimes(1);
-                if (reason) {
+                if (reportedReason) {
                     expect(logger.error).toHaveBeenCalledTimes(1);
                     expect(logger.error).toHaveBeenCalledWith(
-                        `flagSelection was ignored by the server (${reason}). Loaded the full flag configuration.`
+                        `flagSelection was ignored by the server (${reportedReason}). Loaded the full flag configuration.`
                     );
                 } else {
                     expect(logger.error).not.toHaveBeenCalled();
                 }
+            }
+        );
+
+        it('treats repeated ignored-selection headers as unknown', async () => {
+            const headers = new Headers();
+            headers.append('DD-Flag-Selection-Ignored', 'invalid_tag');
+            headers.append('DD-Flag-Selection-Ignored', 'invalid_tag');
+            const fetch = jest.fn().mockResolvedValue(response({ headers }));
+            await fetchRulesConfiguration({
+                ...options,
+                flagSelection: { tags: ['mobile'] },
+                fetch,
+                logger
+            });
+            expect(logger.error).toHaveBeenCalledTimes(1);
+            expect(logger.error).toHaveBeenCalledWith(
+                'flagSelection was ignored by the server (unknown). Loaded the full flag configuration.'
+            );
+        });
+
+        it('reports a full configuration load only after reading the body', async () => {
+            const fetch = jest.fn().mockResolvedValue(
+                response({
+                    headers: new Headers({
+                        'DD-Flag-Selection-Ignored': 'invalid_tag'
+                    }),
+                    arrayBuffer: jest.fn(async () => {
+                        expect(logger.error).not.toHaveBeenCalled();
+                        return rulesBytes.buffer;
+                    })
+                })
+            );
+            await expect(
+                fetchRulesConfiguration({
+                    ...options,
+                    flagSelection: { tags: ['mobile'] },
+                    fetch,
+                    logger
+                })
+            ).resolves.toHaveProperty('rules');
+            expect(logger.error).toHaveBeenCalledTimes(1);
+        });
+
+        it.each(['body read', 'protobuf decode'])(
+            'does not report a full configuration load after a %s failure',
+            async stage => {
+                const error = new Error('Unable to read response');
+                const arrayBuffer =
+                    stage === 'body read'
+                        ? jest.fn().mockRejectedValue(error)
+                        : jest
+                              .fn()
+                              .mockResolvedValue(new Uint8Array([255]).buffer);
+                const fetch = jest.fn().mockResolvedValue(
+                    response({
+                        headers: new Headers({
+                            'DD-Flag-Selection-Ignored': 'invalid_tag'
+                        }),
+                        arrayBuffer
+                    })
+                );
+                const result = fetchRulesConfiguration({
+                    ...options,
+                    flagSelection: { tags: ['mobile'] },
+                    fetch,
+                    logger
+                });
+                if (stage === 'body read') {
+                    await expect(result).rejects.toBe(error);
+                } else {
+                    await expect(result).rejects.toThrow();
+                }
+                expect(fetch).toHaveBeenCalledTimes(1);
+                expect(arrayBuffer).toHaveBeenCalledTimes(1);
+                expect(logger.error).not.toHaveBeenCalled();
             }
         );
 
