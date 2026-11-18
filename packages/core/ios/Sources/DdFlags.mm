@@ -55,6 +55,20 @@ RCT_EXPORT_METHOD(trackExposure:(NSString *)clientName
     [self trackExposure:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
 }
 
+RCT_EXPORT_METHOD(trackProtectedEvaluation:(NSString *)clientName
+                  withKey:(NSString *)key
+                  withRawFlag:(nullable NSDictionary *)rawFlag
+                  targetingKey:(NSString *)targetingKey
+                  attributes:(NSDictionary *)attributes
+                  errorCode:(nullable NSString *)errorCode
+                  observeFullEvaluationData:(BOOL)observeFullEvaluationData
+                  telemetryTargetingKey:(nullable NSString *)telemetryTargetingKey
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject)
+{
+    [self trackProtectedEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes errorCode:errorCode observeFullEvaluationData:observeFullEvaluationData telemetryTargetingKey:telemetryTargetingKey resolve:resolve reject:reject];
+}
+
 RCT_EXPORT_METHOD(trackRumEvaluation:(NSString *)clientName
                   withKey:(NSString *)key
                   variant:(NSString *)variant
@@ -105,6 +119,10 @@ RCT_EXPORT_METHOD(trackRumEvaluation:(NSString *)clientName
 
 - (void)trackExposure:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary *)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddFlagsImplementation trackExposure:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes resolve:resolve reject:reject];
+}
+
+- (void)trackProtectedEvaluation:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary * _Nullable)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes errorCode:(NSString * _Nullable)errorCode observeFullEvaluationData:(BOOL)observeFullEvaluationData telemetryTargetingKey:(NSString * _Nullable)telemetryTargetingKey resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
+    [self.ddFlagsImplementation trackProtectedEvaluation:clientName key:key rawFlag:rawFlag targetingKey:targetingKey attributes:attributes errorCode:errorCode observeFullEvaluationData:observeFullEvaluationData telemetryTargetingKey:telemetryTargetingKey resolve:resolve reject:reject];
 }
 
 - (void)trackRumEvaluation:(NSString *)clientName key:(NSString *)key variant:(NSString *)variant targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {

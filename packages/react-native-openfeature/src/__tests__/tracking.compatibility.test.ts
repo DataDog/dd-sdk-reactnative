@@ -11,6 +11,7 @@ import { Platform } from 'react-native';
 import { DatadogCoreProvider } from '../rules-based';
 import {
     createDatadogExposureLoggingHook,
+    createDatadogEvaluationLoggingHook,
     createDatadogRumTrackingHook
 } from '../tracking';
 
@@ -34,11 +35,16 @@ describe.each(['android', 'ios'] as const)(
             await OpenFeature.clearContext();
             jest.restoreAllMocks();
             Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagExposure');
+            Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagEvaluationEvent');
             Reflect.deleteProperty(DatadogSdk, '__ddTrackFlagRumEvaluation');
         });
 
         it.each([
             [createDatadogExposureLoggingHook, '__ddTrackFlagExposure'],
+            [
+                createDatadogEvaluationLoggingHook,
+                '__ddTrackFlagEvaluationEvent'
+            ],
             [createDatadogRumTrackingHook, '__ddTrackFlagRumEvaluation']
         ] as const)(
             'warns once and leaves evaluation working when %s is unavailable',
