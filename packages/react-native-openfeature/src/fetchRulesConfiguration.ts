@@ -11,6 +11,15 @@ import { timeStampNow } from '@datadog/flagging-core';
 import { applyFlagSelection, reportSelectionError } from './flagSelection';
 import { version } from './version';
 
+const FLAG_SELECTION_IGNORED_REASONS: ReadonlySet<string> = new Set([
+    'malformed_selection',
+    'too_many_values',
+    'invalid_key_pattern',
+    'invalid_tag',
+    'tag_load_failed'
+]);
+const MAX_FLAG_SELECTION_IGNORED_REASON_LENGTH = 32;
+
 const supportedSites = new Set([
     'datadoghq.com',
     'us3.datadoghq.com',
@@ -74,21 +83,26 @@ export async function fetchRulesConfiguration(
         );
     }
 
-    if (selected) {
-        const reason = response.headers.get('DD-Flag-Selection-Ignored');
-        if (reason) {
-            reportSelectionError(
-                logger,
-                `flagSelection was ignored by the server (${reason}). Loaded the full flag configuration.`
-            );
-        }
-    }
-
     const configuration = configurationFromRulesBinary(
         new Uint8Array(await response.arrayBuffer())
     );
     if (configuration.rules) {
         configuration.rules.fetchedAt = fetchedAt;
+    }
+    if (selected) {
+        const value = response.headers.get('DD-Flag-Selection-Ignored');
+        if (value) {
+            // Proxies can reflect caller data or join repeated headers; report only known reasons.
+            const reason =
+                value.length <= MAX_FLAG_SELECTION_IGNORED_REASON_LENGTH &&
+                FLAG_SELECTION_IGNORED_REASONS.has(value)
+                    ? value
+                    : 'unknown';
+            reportSelectionError(
+                logger,
+                `flagSelection was ignored by the server (${reason}). Loaded the full flag configuration.`
+            );
+        }
     }
     return configuration;
 }
