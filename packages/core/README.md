@@ -16,9 +16,9 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-native
 ```
 
-**Minimum React Native version**: SDK supports React Native version 0.63.4 or higher on Android. On iOS, the native SDK is resolved through Swift Package Manager, which requires React Native 0.75 or higher.
+**Minimum React Native version**: React Native 0.75 or higher. The native iOS SDK is resolved through Swift Package Manager, which needs React Native 0.75 or higher. If your app uses an older React Native version, use SDK version `3.12.x`. See the [migration guide][5] for details.
 
-Versions `1.0.0-rc5` and higher require you to have `compileSdkVersion = 31` in the Android application setup, which implies that you should use Build Tools version 31, Android Gradle Plugin version 7, and Gradle version 7 or higher. To modify the versions, change the values in the `buildscript.ext` block of your application's top-level `build.gradle` file. Datadog recommends using React Native version 0.67 or higher.
+Versions `1.0.0-rc5` and higher require you to have `compileSdkVersion = 31` in the Android application setup, which implies that you should use Build Tools version 31, Android Gradle Plugin version 7, and Gradle version 7 or higher. To modify the versions, change the values in the `buildscript.ext` block of your application's top-level `build.gradle` file.
 
 ### Specify application details in UI
 
@@ -129,3 +129,4 @@ of your [application sandbox][4], which can't be read by any other app installed
 [2]: https://raw.githubusercontent.com/DataDog/dd-sdk-reactnative/main/docs/image_reactnative.png
 [3]: https://source.android.com/security/app-sandbox
 [4]: https://support.apple.com/guide/security/security-of-runtime-process-sec15bfe098e/web
+[5]: https://github.com/DataDog/dd-sdk-reactnative/blob/develop/MIGRATION.md

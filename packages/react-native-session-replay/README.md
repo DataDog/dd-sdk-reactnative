@@ -18,7 +18,7 @@ To install with Yarn, run:
 yarn add @datadog/mobile-react-native-session-replay
 ```
 
-**iOS setup**: the native iOS SDK is resolved through Swift Package Manager, which requires React Native 0.75 or higher.
+**Minimum React Native version**: React Native 0.75 or higher. The native iOS SDK is resolved through Swift Package Manager, which needs React Native 0.75 or higher.
 
 ## Enable Session Replay
 

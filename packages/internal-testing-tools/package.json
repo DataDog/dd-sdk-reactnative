@@ -44,7 +44,7 @@
     },
     "peerDependencies": {
         "react": ">=16.13.1",
-        "react-native": ">=0.63.4 <1.0"
+        "react-native": ">=0.75.0 <1.0"
     },
     "devDependencies": {
         "@testing-library/react-native": "7.0.2",
