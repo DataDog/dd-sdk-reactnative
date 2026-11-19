@@ -40,6 +40,11 @@ function build_ios_app {
     RCT_NEW_ARCH_ENABLED=1 pod install --repo-update
 
     # Build & Archive
+    #
+    # The provisioning profile goes through BENCHMARK_PROVISIONING_PROFILE_SPECIFIER, which only the
+    # BenchmarkRunner target reads. Pods are dynamic frameworks, and frameworks reject a provisioning
+    # profile, so passing PROVISIONING_PROFILE_SPECIFIER on the command line (which applies to every
+    # target) fails the build.
     LOG_PATH="${XCODEBUILD_LOG_PATH:-logs/xcodebuild_full_output_benchmark_runner.log}"
     mkdir -p logs
     touch "$LOG_PATH"
@@ -53,7 +58,7 @@ function build_ios_app {
                -archivePath BenchmarkRunner.xcarchive \
                CODE_SIGN_STYLE="$CODE_SIGN_STYLE" \
                CODE_SIGN_IDENTITY="$CODE_SIGN_IDENTITY" \
-               PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_SPECIFIER" \
+               BENCHMARK_PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_SPECIFIER" \
                DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
                2>&1 | tee -a "$LOG_PATH" | xcbeautify || exit 1
 
