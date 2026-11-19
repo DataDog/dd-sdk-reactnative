@@ -49,6 +49,7 @@ package/android/src/rnlegacy/kotlin/com.datadog.reactnative.sessionreplay/utils/
 package/android/src/rnpost74/kotlin/com/datadog/reactnative/sessionreplay/DdSDKReactNativeSessionReplayPackage.kt
 package/android/src/rnpre74/kotlin/com/datadog/reactnative/sessionreplay/DdSDKReactNativeSessionReplayPackage.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/DdSessionReplayImplementationTest.kt
+package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/DdSessionReplayTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/ReactNativeSessionReplayExtensionSupportTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/extensions/ReactDrawablesExtTest.kt
 package/android/src/test/kotlin/com/datadog/reactnative/sessionreplay/mappers/ReactViewGroupMapperTest.kt
