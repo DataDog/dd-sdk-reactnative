@@ -165,6 +165,8 @@ package/lib/commonjs/config/types/ProxyConfiguration.js
 package/lib/commonjs/config/types/ProxyConfiguration.js.map
 package/lib/commonjs/config/types/SdkVerbosity.js
 package/lib/commonjs/config/types/SdkVerbosity.js.map
+package/lib/commonjs/config/types/TimeseriesConfiguration.js
+package/lib/commonjs/config/types/TimeseriesConfiguration.js.map
 package/lib/commonjs/config/types/TrackingConsent.js
 package/lib/commonjs/config/types/TrackingConsent.js.map
 package/lib/commonjs/config/types/UploadFrequency.js
@@ -476,6 +478,8 @@ package/lib/module/config/types/ProxyConfiguration.js
 package/lib/module/config/types/ProxyConfiguration.js.map
 package/lib/module/config/types/SdkVerbosity.js
 package/lib/module/config/types/SdkVerbosity.js.map
+package/lib/module/config/types/TimeseriesConfiguration.js
+package/lib/module/config/types/TimeseriesConfiguration.js.map
 package/lib/module/config/types/TrackingConsent.js
 package/lib/module/config/types/TrackingConsent.js.map
 package/lib/module/config/types/UploadFrequency.js
@@ -787,6 +791,8 @@ package/lib/typescript/config/types/ProxyConfiguration.d.ts
 package/lib/typescript/config/types/ProxyConfiguration.d.ts.map
 package/lib/typescript/config/types/SdkVerbosity.d.ts
 package/lib/typescript/config/types/SdkVerbosity.d.ts.map
+package/lib/typescript/config/types/TimeseriesConfiguration.d.ts
+package/lib/typescript/config/types/TimeseriesConfiguration.d.ts.map
 package/lib/typescript/config/types/TrackingConsent.d.ts
 package/lib/typescript/config/types/TrackingConsent.d.ts.map
 package/lib/typescript/config/types/UploadFrequency.d.ts
@@ -1087,6 +1093,7 @@ package/src/config/types/InitializationMode.ts
 package/src/config/types/InitializationModeForTelemetry.ts
 package/src/config/types/ProxyConfiguration.ts
 package/src/config/types/SdkVerbosity.ts
+package/src/config/types/TimeseriesConfiguration.ts
 package/src/config/types/TrackingConsent.ts
 package/src/config/types/UploadFrequency.tsx
 package/src/config/types/VitalsUpdateFrequency.ts

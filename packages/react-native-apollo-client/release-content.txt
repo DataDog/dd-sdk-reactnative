@@ -69,6 +69,8 @@ package/lib/typescript/core/src/config/types/ProxyConfiguration.d.ts
 package/lib/typescript/core/src/config/types/ProxyConfiguration.d.ts.map
 package/lib/typescript/core/src/config/types/SdkVerbosity.d.ts
 package/lib/typescript/core/src/config/types/SdkVerbosity.d.ts.map
+package/lib/typescript/core/src/config/types/TimeseriesConfiguration.d.ts
+package/lib/typescript/core/src/config/types/TimeseriesConfiguration.d.ts.map
 package/lib/typescript/core/src/config/types/TrackingConsent.d.ts
 package/lib/typescript/core/src/config/types/TrackingConsent.d.ts.map
 package/lib/typescript/core/src/config/types/UploadFrequency.d.ts
