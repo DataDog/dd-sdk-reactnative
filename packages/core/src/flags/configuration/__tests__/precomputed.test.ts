@@ -175,8 +175,6 @@ describe('decodePrecomputedFlags', () => {
 
                 const entry = cache.get('f');
 
-                // The flag itself must still decode: a bad serial id binds to the serial id,
-                // never to the flag (nor to its siblings).
                 expect(entry?.key).toBe('f');
                 expect(entry?.serialId).toBeUndefined();
                 expect('serialId' in (entry as object)).toBe(false);
@@ -198,9 +196,8 @@ describe('decodePrecomputedFlags', () => {
             expect(cache.get('bad')?.serialId).toBeUndefined();
         });
 
-        it('omits the key from the object sent across the bridge, not just the value', () => {
-            // The bridge serializes the entry; a present-but-undefined property and an absent
-            // one are indistinguishable on the object but not on the wire.
+        it('omits the serial id from the JSON sent across the bridge', () => {
+            // JSON.stringify omits properties with undefined values. The `in` assertion above checks key presence.
             const cache = decodePrecomputedFlags(
                 responseWith({ f: flag({ serialId: null }) })
             );
