@@ -529,7 +529,7 @@ export class DdSdkReactNative {
         const actionNameAttribute =
             configuration.rumConfiguration?.actionNameAttribute;
         const resourceTraceSampleRate =
-            configuration.rumConfiguration?.resourceTraceSampleRate ||
+            configuration.rumConfiguration?.resourceTraceSampleRate ??
             RUM_DEFAULTS.resourceTraceSampleRate;
         const headerCaptureRules =
             configuration.rumConfiguration?.headerCaptureRules;
