@@ -19,7 +19,7 @@ export interface FlagCacheEntry {
     reason: string;
     doLog: boolean;
     extraLogging: Record<string, unknown>;
-    // Native Android carries split serial IDs as strings across the React Native bridge.
+    // The iOS and Android bridges use decimal strings to preserve integer precision.
     serialId?: string;
 }
 

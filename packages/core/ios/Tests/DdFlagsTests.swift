@@ -158,7 +158,8 @@ class DdFlagsTests: XCTestCase {
             "variationKey": "var",
             "reason": "reason",
             "doLog": true,
-            "value": true
+            "value": true,
+            "serialId": "340132"
         ]
 
         implementation.trackEvaluation("test_client", key: "feature_flag", rawFlag: rawFlag, targetingKey: "user_1", attributes: [:], resolve: { result in
@@ -173,6 +174,7 @@ class DdFlagsTests: XCTestCase {
 
         XCTAssertEqual(mockClient.trackedEvaluation?.key, "feature_flag")
         XCTAssertEqual(mockClient.trackedEvaluation?.assignment.variationKey, "var")
+        XCTAssertEqual(mockClient.trackedEvaluation?.assignment.serialID, 340132)
     }
 
     func testTrackEvaluationWithInvalidFlag() {
