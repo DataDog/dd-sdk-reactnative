@@ -96,6 +96,7 @@ public class DdSdkSessionStartedListener: NSObject {
     }
 
     private func sendToJsWithBridge(sessionId: String) {
+        #if DD_RN_LEGACY_BRIDGE
         guard
             let rctBridge = self.rctBridge,
             rctBridge.isValid
@@ -109,6 +110,7 @@ public class DdSdkSessionStartedListener: NSObject {
             args: [DdSdkSessionStartedListener.BRIDGE_EVENT_NAME, sessionId],
             completion: {}
         )
+        #endif
     }
 
     private func sendToJsWithListener(sessionId: String) {
