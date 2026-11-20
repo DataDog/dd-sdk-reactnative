@@ -11,11 +11,15 @@ import com.datadog.android.api.SdkCore
 import com.datadog.android.flags.Flags
 import com.datadog.android.flags.FlagsConfiguration
 import com.datadog.tools.unit.toReadableMap
+import com.facebook.react.bridge.JavaOnlyArray
+import com.facebook.react.bridge.JavaOnlyMap
 import com.facebook.react.bridge.Promise
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
@@ -28,6 +32,8 @@ import org.mockito.kotlin.verify
     ExtendWith(MockitoExtension::class)
 )
 internal class DdFlagsImplementationTest {
+
+    private val booleanFlag = mapOf("variationType" to "boolean", "variationValue" to "true")
 
     @Mock
     lateinit var mockPromise: Promise
@@ -73,6 +79,28 @@ internal class DdFlagsImplementationTest {
         } finally {
             flagsMock.close()
             datadogMock.close()
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = [0L, 9_007_199_254_740_993L])
+    fun `M preserve the serial ID W round tripping a flag through the bridge`(serialId: Long) {
+        val flag = convertMapToUnparsedFlag(booleanFlag + ("serialId" to serialId))
+        val snapshot = convertUnparsedFlagToMap("flag", flag)
+            .toWritableMap({ JavaOnlyMap() }, { JavaOnlyArray() })
+            .toMap()
+
+        assertThat(snapshot["serialId"]).isEqualTo(serialId.toString())
+        assertThat(convertMapToUnparsedFlag(snapshot).serialId).isEqualTo(serialId)
+    }
+
+    @Test
+    fun `M omit the serial ID W a flag has a missing or malformed ID`() {
+        for (input in listOf(booleanFlag, booleanFlag + ("serialId" to "1.5"))) {
+            val flag = convertMapToUnparsedFlag(input)
+
+            assertThat(flag.serialId).isNull()
+            assertThat(convertUnparsedFlagToMap("flag", flag)).doesNotContainKey("serialId")
         }
     }
 

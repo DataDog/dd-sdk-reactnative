@@ -187,7 +187,7 @@ internal fun buildEvaluationContext(
 
 private const val SERIAL_ID_KEY = "serialId"
 
-private fun convertUnparsedFlagToMap(
+internal fun convertUnparsedFlagToMap(
     flagKey: String,
     flag: UnparsedFlag,
 ): Map<String, Any?> {
@@ -233,7 +233,7 @@ private fun convertUnparsedFlagToMap(
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun convertMapToUnparsedFlag(map: Map<String, Any>): UnparsedFlag =
+internal fun convertMapToUnparsedFlag(map: Map<String, Any>): UnparsedFlag =
     object : UnparsedFlag {
         override val variationType: String = map["variationType"] as? String ?: ""
         override val variationValue: String = map["variationValue"] as? String ?: ""
