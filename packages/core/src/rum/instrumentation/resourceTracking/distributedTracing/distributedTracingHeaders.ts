@@ -231,7 +231,12 @@ const getTracingContextForAttributes = (
         );
     }
 
-    resourceContext['_dd.rule_psr'] = tracingSamplingRate / 100;
+    // Report the rate the sampling decision was made with (rebased on the session sample rate
+    // with a session) when there is one; non-first-party requests keep the trace rate.
+    resourceContext['_dd.rule_psr'] =
+        tracingAttributes.tracingStrategy === 'KEEP'
+            ? tracingAttributes.rulePsr
+            : tracingSamplingRate / 100;
 
     return new DatadogTracingContext(
         requestHeaders,
