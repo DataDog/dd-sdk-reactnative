@@ -52,9 +52,9 @@ class _DistributedTracingSampling {
             sessionId
         );
         if (sessionLowBits !== null) {
-            const combinedSampleRate =
-                this._sessionSampleRate *
-                (clampRate(tracingSamplingRate) / 100.0);
+            const combinedSampleRate = this.combinedSampleRate(
+                tracingSamplingRate
+            );
             if (combinedSampleRate >= 100) {
                 return true;
             }
@@ -71,6 +71,27 @@ class _DistributedTracingSampling {
         return _DistributedTracingSampling.isSampled(
             traceId.id.and(MAX_TRACE_ID),
             _DistributedTracingSampling.getMaxTraceId(tracingSamplingRate)
+        );
+    }
+
+    /**
+     * The sample rate (0-100) that shouldSampleTrace applies: sessionSampleRate x
+     * tracingSamplingRate with a RUM session, tracingSamplingRate without one.
+     * Reported as `_dd.rule_psr`, as the Android SDK reports its effective rate.
+     */
+    effectiveSampleRate(
+        tracingSamplingRate: number,
+        sessionId: string | null | undefined
+    ): number {
+        if (_DistributedTracingSampling.getSessionLowBits(sessionId) === null) {
+            return clampRate(tracingSamplingRate);
+        }
+        return this.combinedSampleRate(tracingSamplingRate);
+    }
+
+    private combinedSampleRate(tracingSamplingRate: number): number {
+        return (
+            this._sessionSampleRate * (clampRate(tracingSamplingRate) / 100.0)
         );
     }
 

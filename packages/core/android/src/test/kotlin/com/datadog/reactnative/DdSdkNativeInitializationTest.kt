@@ -15,6 +15,7 @@ import com.datadog.android.api.feature.FeatureSdkCore
 import com.datadog.android.rum.Rum
 import com.datadog.android.rum.RumMonitor
 import com.datadog.android.trace.Trace
+import com.datadog.android.trace.TracingHeaderType
 import com.datadog.tools.unit.GenericAssert.Companion.assertThat
 import com.datadog.tools.unit.forge.BaseConfigurator
 import com.facebook.react.bridge.ReactApplicationContext
@@ -350,13 +351,35 @@ internal class DdSdkNativeInitializationTest {
         verify(mockCore, never()).updateFeatureContext(any(), any(), any())
     }
 
+    @Test
+    fun `𝕄 neither register nor publish 𝕎 initialize() { RUM, firstPartyHosts unset }`() {
+        // Given
+        // e.g. a native-init JSON configuration without firstPartyHosts: JS traces nothing, and
+        // iOS reports no trace sample rate either
+        val mockCore: FeatureSdkCore = mock()
+
+        // When
+        initializeWithCore(
+            mockCore,
+            rumConfiguration(resourceTraceSampleRate = 42.0, firstPartyHosts = null)
+        )
+
+        // Then
+        verify(mockCore, never()).registerFeature(any())
+        verify(mockCore, never()).updateFeatureContext(any(), any(), any())
+    }
+
     // endregion
 
-    private fun rumConfiguration(resourceTraceSampleRate: Double?): DdSdkConfiguration =
+    private fun rumConfiguration(
+        resourceTraceSampleRate: Double?,
+        firstPartyHosts: Map<String, Set<TracingHeaderType>>? = emptyMap()
+    ): DdSdkConfiguration =
         minimalConfiguration().copy(
             rumConfiguration = RumConfiguration(
                 applicationId = "fake-application-id",
-                resourceTraceSampleRate = resourceTraceSampleRate
+                resourceTraceSampleRate = resourceTraceSampleRate,
+                firstPartyHosts = firstPartyHosts
             )
         )
 

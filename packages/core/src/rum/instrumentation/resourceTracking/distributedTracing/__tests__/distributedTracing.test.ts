@@ -6,6 +6,7 @@
 
 import BigInt from 'big-integer';
 
+import { PropagatorType } from '../../../../types';
 import { DdRumResourceTracking } from '../../DdRumResourceTracking';
 import { XMLHttpRequestMock } from '../../__tests__/__utils__/XMLHttpRequestMock';
 import type { TraceId } from '../TracingIdentifier';
@@ -14,7 +15,9 @@ import {
     TracingIdentifier,
     TracingIdFormat
 } from '../TracingIdentifier';
+import { getTracingContextForPropagators } from '../distributedTracingHeaders';
 import { DistributedTracingSampling } from '../distributedTracingSampling';
+import { generateTracingAttributesWithSampling } from '../distributedTracing';
 
 import { TracingIdentifierUtils } from './__utils__/TracingIdentifierUtils';
 
@@ -720,6 +723,59 @@ describe('Sampling behavior', () => {
             expect(
                 DistributedTracingSampling.shouldSampleTrace(5, null, tracingId)
             ).toBe(false);
+        });
+
+        it('reports the rate the decision was made with as the effective sample rate', () => {
+            const sessionId = '00000000-0000-0000-0000-000000000469';
+            DistributedTracingSampling.setSessionSampleRate(50);
+
+            // With a session: rebased on the session sample rate.
+            expect(
+                DistributedTracingSampling.effectiveSampleRate(50, sessionId)
+            ).toBe(25);
+            // Without a session: the trace sample rate alone.
+            expect(
+                DistributedTracingSampling.effectiveSampleRate(50, null)
+            ).toBe(50);
+
+            // A 100% session rate leaves the trace rate unchanged.
+            DistributedTracingSampling.setSessionSampleRate(100);
+            expect(
+                DistributedTracingSampling.effectiveSampleRate(50, sessionId)
+            ).toBe(50);
+        });
+
+        it('reports the rebased rate as rule_psr for resources and manual tracing contexts', () => {
+            // session 0x000000000469 hashes to 0.357%: sampled at the combined 25%.
+            const sessionId = '00000000-0000-0000-0000-000000000469';
+            DistributedTracingSampling.setSessionSampleRate(50);
+
+            const attributes = generateTracingAttributesWithSampling(
+                50,
+                [PropagatorType.DATADOG],
+                sessionId
+            );
+            expect(attributes.tracingStrategy).toBe('KEEP');
+            expect(
+                attributes.tracingStrategy === 'KEEP' && attributes.rulePsr
+            ).toBe(0.25);
+
+            const tracingContext = getTracingContextForPropagators(
+                [PropagatorType.DATADOG],
+                50,
+                sessionId
+            );
+            expect(tracingContext.getRumResourceContext()['_dd.rule_psr']).toBe(
+                0.25
+            );
+
+            // Without a session, the trace sample rate alone.
+            expect(
+                getTracingContextForPropagators(
+                    [PropagatorType.DATADOG],
+                    50
+                ).getRumResourceContext()['_dd.rule_psr']
+            ).toBe(0.5);
         });
 
         it('does not throw for very low combined rates', () => {

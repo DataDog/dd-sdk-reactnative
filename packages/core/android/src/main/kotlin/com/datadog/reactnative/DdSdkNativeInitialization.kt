@@ -107,8 +107,9 @@ class DdSdkNativeInitialization internal constructor(
         // Defaults to 100 when unset (e.g. a native-init JSON file without it), as JS and iOS do.
         val resourceTraceSampleRate = ddSdkConfiguration.rumConfiguration?.resourceTraceSampleRate
             ?: DefaultConfiguration.resourceTraceSampleRate
+        val hasFirstPartyHosts = ddSdkConfiguration.rumConfiguration?.firstPartyHosts != null
         val sdkCore = Datadog.getInstance() as? FeatureSdkCore
-        if (rumConfiguration != null && sdkCore != null) {
+        if (rumConfiguration != null && hasFirstPartyHosts && sdkCore != null) {
             // The core drops context writes to unregistered features, so register a no-op stand-in
             // when Trace isn't enabled. If the host app enables Trace natively later, that replaces
             // the stand-in along with this context.
