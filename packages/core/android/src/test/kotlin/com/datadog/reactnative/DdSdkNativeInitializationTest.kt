@@ -203,7 +203,7 @@ internal class DdSdkNativeInitializationTest {
         assertThat(configuration.rumConfiguration?.nativeLongTaskThresholdMs).isEqualTo(200.0)
         assertThat(configuration.rumConfiguration?.nativeViewTracking).isEqualTo(false)
         assertThat(configuration.rumConfiguration?.nativeInteractionTracking).isEqualTo(false)
-        assertThat(configuration.rumConfiguration?.firstPartyHosts).isNull()
+        assertThat(configuration.rumConfiguration?.firstPartyHosts).isEmpty()
         assertThat(configuration.logsConfiguration?.customEndpoint).isNull()
         assertThat(configuration.traceConfiguration?.customEndpoint).isNull()
         assertThat(configuration.rumConfiguration?.timeseries).isNull()
@@ -352,10 +352,31 @@ internal class DdSdkNativeInitializationTest {
     }
 
     @Test
+    fun `𝕄 publish the default rate 𝕎 initialize() { minimal native-init JSON file }`() {
+        // Given
+        // RUM without firstPartyHosts or resourceTraceSampleRate, which iOS also reports a rate for
+        whenever(
+            mockJSONFileReader.parseAssetsJSONFile(mockContext, "datadog-configuration.json")
+        ) doReturn javaClass.getResource(
+            "/input/minimal-configuration.json"
+        ).readText()
+        val mockCore: FeatureSdkCore = mock()
+        whenever(mockCore.getFeature(Feature.TRACING_FEATURE_NAME)) doReturn null
+
+        // When
+        initializeWithCore(mockCore, testedNativeInitialization.getConfigurationFromJSONFile())
+
+        // Then
+        assertThat(publishedTracingContext(mockCore)["okhttp_interceptor_sample_rate"])
+            .isInstanceOf(java.lang.Float::class.java)
+            .isEqualTo(100f)
+    }
+
+    @Test
     fun `𝕄 neither register nor publish 𝕎 initialize() { RUM, firstPartyHosts unset }`() {
         // Given
-        // e.g. a native-init JSON configuration without firstPartyHosts: JS traces nothing, and
-        // iOS reports no trace sample rate either
+        // Neither JS nor a native-init JSON file sends this (both default to no hosts), but the
+        // bridge configuration allows it: iOS reports no trace sample rate then either
         val mockCore: FeatureSdkCore = mock()
 
         // When

@@ -192,7 +192,7 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
             nativeLongTaskThresholdMs = rum.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
             nativeViewTracking = rum.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
             nativeInteractionTracking = rum.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
-            firstPartyHosts = rum.firstPartyHosts?.asFirstPartyHosts(),
+            firstPartyHosts = rum.firstPartyHosts?.asFirstPartyHosts() ?: emptyMap(),
             trackNonFatalAnrs = rum.trackNonFatalAnrs,
             initialResourceThreshold = rum.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold,
             telemetrySampleRate = rum.telemetrySampleRate?.toDouble()
