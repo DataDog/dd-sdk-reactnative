@@ -60,11 +60,18 @@ namespace rct = facebook::react;
 
 #if RCT_NEW_ARCH_ENABLED
 + (NSString* _Nonnull)getTextFromView:(RCTParagraphComponentView*)view {
-    if (view == nil || view.attributedText == nil) {
+    if (view == nil) {
         return RCTTextPropertiesDefaultText;
     }
 
-    return view.attributedText.string;
+    // `attributedText` is not cached: every read rebuilds the attributed string and resolves the font of
+    // each fragment. Read it only once per view.
+    NSAttributedString* attributedText = view.attributedText;
+    if (attributedText == nil) {
+        return RCTTextPropertiesDefaultText;
+    }
+
+    return attributedText.string;
 }
 
 + (NSTextAlignment)getAlignmentFromAttributes:(rct::TextAttributes)textAttributes {
