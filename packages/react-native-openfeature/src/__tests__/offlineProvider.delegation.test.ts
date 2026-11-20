@@ -125,6 +125,25 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
     });
 
+    it('tracks serial ID zero from a rules-only evaluation', async () => {
+        const configuration = rulesConfiguration();
+        const flag = configuration.rules.response.flags['test-flag'];
+        flag.allocations[0].splits[0].serialId = 0;
+        const { provider, name } = setup(configuration);
+        await OpenFeature.setProviderAndWait(provider, matchingContext);
+
+        expect(
+            OpenFeature.getClient().getBooleanValue('test-flag', false)
+        ).toBe(true);
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            name,
+            'test-flag',
+            expect.objectContaining({ serialId: '0' }),
+            'user-1',
+            { country: 'US' }
+        );
+    });
+
     it('changes a rules-based value through real OpenFeature context changes and tracks the selected allocation', async () => {
         const resolve = jest.spyOn(
             DatadogCoreEvaluationProvider.prototype,
