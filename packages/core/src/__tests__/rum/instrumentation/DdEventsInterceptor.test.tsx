@@ -423,3 +423,84 @@ it('M do nothing W interceptOnPress { no arguments call } ', async () => {
     );
     expect(InternalLog.log.mock.calls[0][1]).toBe(SdkVerbosity.DEBUG);
 });
+
+it.each(['target', 'currentTarget'])(
+    'M track an EventTarget press W interceptOnPress { fiber on %s }',
+    targetProperty => {
+        const event = Object.freeze({
+            nativeEvent: { pageX: 10, pageY: 20 },
+            [targetProperty]: {
+                __internalInstanceHandle: {
+                    memoizedProps: { accessibilityLabel: 'event_target' }
+                }
+            }
+        });
+
+        testedEventsInterceptor.interceptOnPress(event);
+
+        expect(DdRum.addAction).toHaveBeenCalledWith(
+            RumActionType.TAP,
+            'event_target',
+            {},
+            undefined,
+            event
+        );
+        expect(event).not.toHaveProperty('_targetInst');
+    }
+);
+
+it('M preserve legacy target priority W interceptOnPress { both event formats }', () => {
+    const event = {
+        _targetInst: { memoizedProps: { accessibilityLabel: 'legacy' } },
+        target: {
+            __internalInstanceHandle: {
+                memoizedProps: { accessibilityLabel: 'event_target' }
+            }
+        }
+    };
+
+    testedEventsInterceptor.interceptOnPress(event);
+
+    expect(DdRum.addAction.mock.calls[0][1]).toBe('legacy');
+});
+
+it('M track a wrapped EventTarget press W interceptOnPress', () => {
+    const event = {
+        target: {
+            __internalInstanceHandle: {
+                memoizedProps: {},
+                return: { memoizedProps: { 'dd-action-name': 'parent_action' } }
+            }
+        }
+    };
+
+    testedEventsInterceptor.interceptOnPress({ event });
+
+    expect(DdRum.addAction).toHaveBeenCalledWith(
+        RumActionType.TAP,
+        'parent_action',
+        {},
+        undefined,
+        event
+    );
+});
+
+it('M name the pressed view W interceptOnPress { EventTarget with a nested text target }', () => {
+    const event = {
+        currentTarget: {
+            __internalInstanceHandle: {
+                memoizedProps: { accessibilityLabel: 'pressed_view' }
+            }
+        },
+        target: {
+            __internalInstanceHandle: {
+                memoizedProps: {},
+                elementType: 'RCTText'
+            }
+        }
+    };
+
+    testedEventsInterceptor.interceptOnPress(event);
+
+    expect(DdRum.addAction.mock.calls[0][1]).toBe('pressed_view');
+});
