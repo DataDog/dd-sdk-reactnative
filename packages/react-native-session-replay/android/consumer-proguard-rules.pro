@@ -43,3 +43,13 @@
     *** computedBorderRadius;
     *** backgroundColor;
 }
+
+# Prepared text is optional on older RN versions; its public accessors are read reflectively.
+-keep class com.facebook.react.views.text.PreparedLayoutTextView {
+    public *** getPreparedLayout();
+    public java.lang.CharSequence getText();
+}
+-keep class com.facebook.react.views.text.PreparedLayout {
+    public android.text.Layout getLayout();
+    public float getVerticalOffset();
+}
