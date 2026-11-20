@@ -165,7 +165,11 @@ const toFlagCacheEntry = (
         extraLogging: extraLogging ?? {}
     };
 
-    if (typeof serialId === 'number' && Number.isFinite(serialId)) {
+    if (
+        typeof serialId === 'number' &&
+        Number.isSafeInteger(serialId) &&
+        serialId >= 0
+    ) {
         entry.serialId = String(serialId);
     }
 

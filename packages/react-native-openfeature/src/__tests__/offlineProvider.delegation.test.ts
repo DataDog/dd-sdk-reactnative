@@ -669,6 +669,28 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         );
     });
 
+    it.each([-1, 1.5, Number.MAX_SAFE_INTEGER + 1])(
+        'tracks a precomputed evaluation with the invalid serial ID %s omitted',
+        async serialId => {
+            const configuration = precomputedConfiguration();
+            Object.assign(
+                configuration.precomputed.response.data.attributes.flags[
+                    'boolean-flag'
+                ],
+                { serialId }
+            );
+            const { provider } = setup(configuration);
+            await OpenFeature.setProviderAndWait(provider);
+            expect(
+                OpenFeature.getClient().getBooleanValue('boolean-flag', false)
+            ).toBe(true);
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(1);
+            expect(
+                NativeDdFlags.trackEvaluation.mock.calls[0][2]
+            ).not.toHaveProperty('serialId');
+        }
+    );
+
     it('names the precomputed-only parser when a rules wire yields no configuration', () => {
         const log = jest.spyOn(InternalLog, 'log');
         const { provider } = setup(configurationFromString(rulesWire));

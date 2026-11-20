@@ -219,7 +219,11 @@ export class OfflineEvaluation implements OfflineEvaluator {
             : undefined;
         const serialId = result.flagMetadata?.__dd_split_serial_id;
         const serial =
-            typeof serialId === 'number' ? { serialId: String(serialId) } : {};
+            typeof serialId === 'number' &&
+            Number.isSafeInteger(serialId) &&
+            serialId >= 0
+                ? { serialId: String(serialId) }
+                : {};
         const flag: FlagCacheEntry = precomputed
             ? { ...precomputed, ...serial }
             : {

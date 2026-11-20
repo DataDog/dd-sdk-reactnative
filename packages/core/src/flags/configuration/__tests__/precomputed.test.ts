@@ -158,7 +158,10 @@ describe('decodePrecomputedFlags', () => {
             ['a string', '340132'],
             ['a boolean', true],
             ['NaN', NaN],
-            ['Infinity', Infinity]
+            ['Infinity', Infinity],
+            ['a fraction', 1.5],
+            ['a negative integer', -1],
+            ['an unsafe integer', Number.MAX_SAFE_INTEGER + 1]
         ])(
             'omits the key entirely and keeps the flag when the serial id is %s',
             (_label, serialId) => {
