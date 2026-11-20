@@ -97,7 +97,7 @@ export class OfflineEvaluation implements OfflineEvaluator {
                             variationValue: flag.value as JsonValue,
                             reason: flag.reason,
                             doLog: flag.doLog,
-                            // The native decoder does not keep the split serial ID; read it from the wire.
+                            // flagging-core needs the numeric wire ID; the bridge uses a decimal string.
                             serialId:
                                 precomputed.response.data.attributes.flags[key]
                                     ?.serialId

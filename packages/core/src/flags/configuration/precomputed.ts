@@ -30,11 +30,13 @@ export class UnsupportedConfigurationError extends Error {
  * Decode a precomputed CDN response into the `FlagCacheEntry` map that `FlagsClient`
  * caches and evaluates against — the same shape the native CDN fetch returns today.
  *
- * The mapping is ~1:1. Two transforms are applied per flag:
+ * The decoder maps each flag to the native cache entry:
  * - `value` is the typed `variationValue` as-is (`integer`/`float` are JS `number`s);
  * - a string `variationValue` is derived (JSON for objects, `"true"/"false"` for
  *   booleans, `String(...)` otherwise) because native Android exposure tracking
- *   rebuilds the flag from the string form.
+ *   rebuilds the flag from the string form;
+ * - a non-negative safe integer `serialId` becomes a decimal string for the bridge.
+ *   The OpenFeature offline adapter also supplies this ID from evaluator metadata.
  *
  * @throws {UnsupportedConfigurationError} if the response is obfuscated, or its envelope is
  * structurally malformed (missing/non-object `data.attributes.flags`).
