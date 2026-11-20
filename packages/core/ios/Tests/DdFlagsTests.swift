@@ -147,6 +147,26 @@ class DdFlagsTests: XCTestCase {
         waitForExpectations(timeout: 1.0, handler: nil)
     }
 
+    func testSetEvaluationContextInvalidContext() {
+        let expectation = self.expectation(description: "SetEvaluationContext rejects with invalid context")
+
+        let mockClient = MockFlagsClient()
+        mockClient.errorToReturn = .invalidContext
+
+        implementation.clientProviders["test_client"] = { mockClient }
+
+        implementation.setEvaluationContext("test_client", targetingKey: "user_1", attributes: [:], resolve: { result in
+            XCTFail("Should not resolve")
+            expectation.fulfill()
+        }, reject: { code, message, error in
+            XCTAssertEqual(code, "INVALID_CONTEXT")
+            XCTAssertNotNil(message)
+            expectation.fulfill()
+        })
+
+        waitForExpectations(timeout: 1.0, handler: nil)
+    }
+
     func testTrackEvaluation() {
         let expectation = self.expectation(description: "TrackEvaluation resolves")
 
