@@ -2,6 +2,35 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
+# Resolve the app's React Native version, as the package may be shared by apps on
+# different versions. Autolinking can evaluate this before use_react_native! sets
+# REACT_NATIVE_PATH, so fall back to resolving from the app's installation root.
+installation_root = Pod::Config.instance.installation_root
+rn_package_json = nil
+if ENV['REACT_NATIVE_PATH']
+  rn_package_json = installation_root.join(ENV['REACT_NATIVE_PATH'], 'package.json').to_s
+end
+unless rn_package_json && File.exist?(rn_package_json)
+  begin
+    rn_package_json = Pod::Executable.execute_command('node', [
+      '--print',
+      "require.resolve('react-native/package.json', {paths: [process.argv[1]]})",
+      installation_root.to_s
+    ], false).lines.map(&:strip).find { |line| File.exist?(line) }
+  rescue StandardError
+    rn_package_json = nil
+  end
+end
+
+has_legacy_bridge = false
+if rn_package_json && File.exist?(rn_package_json)
+  rn_major, rn_minor = JSON.parse(File.read(rn_package_json))["version"].split(".").map(&:to_i)
+  has_legacy_bridge = rn_major == 0 && rn_minor < 89
+else
+  # Autolinking evaluates the podspec again once REACT_NATIVE_PATH is set.
+  Pod::UI.warn "DatadogSDKReactNative: unable to find react-native from #{installation_root}."
+end
+
 # /!\ Remember to keep this version in sync with the other Datadog podspecs:
 #     - DatadogSDKReactNativeSessionReplay.podspec
 #     - DatadogSDKReactNativeWebView.podspec
@@ -370,6 +399,15 @@ Pod::Spec.new do |s|
   }
 
   xcconfig = datadog_spm_xcconfig.dup
+
+  # Swift cannot use numeric C preprocessor macros. During the RN 0.89 release
+  # cycle, enqueueJSCall was removed and restored for compatibility:
+  # https://github.com/react/react-native/pull/59938
+  # Avoid relying on this legacy API on RN 0.89+; session events already use the
+  # existing event emitter.
+  if has_legacy_bridge
+    xcconfig['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] = '$(inherited) DD_RN_LEGACY_BRIDGE'
+  end
 
   if ENV['RCT_NEW_ARCH_ENABLED'] == '1'
     xcconfig.merge!({
