@@ -62,6 +62,30 @@ describe('DatadogCoreProvider with OpenFeature', () => {
         });
     });
 
+    it('keeps assignment authorization out of precomputed matching across context changes', async () => {
+        const context = {
+            ...matchingContext,
+            dd_assignment_token: 'synthetic-first'
+        };
+        await OpenFeature.setProviderAndWait(
+            DOMAIN,
+            precomputedProvider(),
+            context
+        );
+        const client = OpenFeature.getClient(DOMAIN);
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        await OpenFeature.setContext(DOMAIN, {
+            ...matchingContext,
+            dd_assignment_token: 'synthetic-replacement'
+        });
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+        expect(OpenFeature.getContext(DOMAIN).dd_assignment_token).toBe(
+            'synthetic-replacement'
+        );
+    });
+
     it('parses rules via the public helper and reevaluates when the OpenFeature context changes', async () => {
         const provider = new DatadogCoreProvider();
         provider.setConfiguration(coreConfigurationFromString(rulesWire));

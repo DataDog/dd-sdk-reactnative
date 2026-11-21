@@ -80,6 +80,30 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         expect(client.getBooleanValue('new-feature', false)).toBe(true);
     });
 
+    it('ignores assignment authorization embedded in the snapshot context', async () => {
+        const { domain, clientName } = freshNames();
+        const wire = JSON.parse(wireFor('user-123'));
+        wire.precomputed.context.dd_assignment_token = 'embedded-credential';
+        const configuration = configurationFromString(JSON.stringify(wire));
+        const provider = new DatadogOfflineOpenFeatureProvider({ clientName });
+        provider.setConfiguration(configuration);
+
+        await OpenFeature.setProviderAndWait(domain, provider, {
+            targetingKey: 'user-123'
+        });
+
+        const client = OpenFeature.getClient(domain);
+        expect(client.providerStatus).toBe(ProviderStatus.READY);
+        expect(client.getBooleanDetails('new-feature', false)).toMatchObject({
+            value: true,
+            reason: 'STATIC'
+        });
+        expect(configuration.precomputed?.context).toEqual({
+            targetingKey: 'user-123',
+            dd_assignment_token: 'embedded-credential'
+        });
+    });
+
     it('enters ERROR and serves defaults on a mismatching setContext, then recovers on a matching one', async () => {
         const { domain, clientName } = freshNames();
         const provider = new DatadogOfflineOpenFeatureProvider({ clientName });

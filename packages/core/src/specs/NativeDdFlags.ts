@@ -29,6 +29,21 @@ export interface Spec extends TurboModule {
         targetingKey: string,
         attributes: Object
     ) => Promise<void>;
+    readonly trackExposure: (
+        clientName: string,
+        key: string,
+        rawFlag: Object,
+        targetingKey: string,
+        attributes: Object
+    ) => Promise<void>;
+
+    readonly trackRumEvaluation: (
+        clientName: string,
+        key: string,
+        variant: string,
+        targetingKey: string,
+        attributes: Object
+    ) => Promise<void>;
 }
 
 let cachedModule: Spec | null = null;
