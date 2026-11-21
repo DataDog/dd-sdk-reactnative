@@ -416,19 +416,30 @@ describe('fetchRulesConfiguration', () => {
             );
         });
 
-        it('uses console diagnostics by default', async () => {
+        it('uses prefixed warnings for server-ignored selections by default', async () => {
+            const warn = jest
+                .spyOn(console, 'warn')
+                .mockImplementation(() => {});
             const error = jest
                 .spyOn(console, 'error')
                 .mockImplementation(() => {});
-            const fetch = jest.fn().mockResolvedValue(response());
+            const fetch = jest.fn().mockResolvedValue(
+                response({
+                    headers: new Headers({
+                        'DD-Flag-Selection-Ignored': 'tag_load_failed'
+                    })
+                })
+            );
             await fetchRulesConfiguration({
                 ...options,
-                flagSelection: ({
-                    tags: 'invalid'
-                } as unknown) as FlagSelection,
+                flagSelection: { tags: ['checkout'] },
                 fetch
             });
-            expect(error).toHaveBeenCalledTimes(1);
+            expect(warn).toHaveBeenCalledTimes(1);
+            expect(warn).toHaveBeenCalledWith(
+                expect.stringMatching(/^DATADOG: flagSelection was ignored/)
+            );
+            expect(error).not.toHaveBeenCalled();
         });
 
         it('loads a server-ignored response even when the logger throws', async () => {
@@ -539,6 +550,62 @@ describe('fetchRulesConfiguration', () => {
         expect(jest.getTimerCount()).toBe(0);
     });
 
+    it('captures fetchedAt before requesting or reading the response', async () => {
+        const start = new Date('2026-10-20T12:00:00Z').getTime();
+        jest.useFakeTimers().setSystemTime(start);
+        const body = response({
+            arrayBuffer: jest.fn(async () => {
+                jest.setSystemTime(start + 2000);
+                return rulesBytes.buffer;
+            })
+        });
+        const fetch = jest.fn(async () => {
+            jest.setSystemTime(start + 1000);
+            return body;
+        });
+
+        const configuration = await fetchRulesConfiguration({
+            ...options,
+            fetch
+        });
+
+        expect(configuration.rules?.fetchedAt).toBe(start);
+        expect(Date.now()).toBe(start + 2000);
+    });
+
+    it.each([undefined, '', '<APPLICATION_ID>'])(
+        'sends the optional application ID only when present: %p',
+        async applicationId => {
+            const fetch = jest.fn().mockResolvedValue(response());
+            await fetchRulesConfiguration({ ...options, applicationId, fetch });
+            const headers = fetch.mock.calls[0][1].headers;
+            if (applicationId) {
+                expect(headers['dd-application-id']).toBe(applicationId);
+            } else {
+                expect(headers).not.toHaveProperty('dd-application-id');
+            }
+        }
+    );
+
+    it('uses prefixed warnings instead of console errors for default diagnostics', async () => {
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const fetch = jest.fn().mockResolvedValue(response());
+
+        await fetchRulesConfiguration({
+            ...options,
+            flagSelection: { tags: 'invalid' } as never,
+            fetch
+        });
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringMatching(/^DATADOG: flagSelection was not sent/)
+        );
+        expect(error).not.toHaveBeenCalled();
+        expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
     it.each([
         'datadoghq.com',
         'us3.datadoghq.com',
@@ -570,7 +637,7 @@ describe('fetchRulesConfiguration', () => {
             const fetch = jest.fn();
             await expect(
                 fetchRulesConfiguration({ ...options, site, fetch })
-            ).rejects.toThrow('Unsupported site');
+            ).rejects.toThrow(/Unsupported site|not supported/);
             expect(fetch).not.toHaveBeenCalled();
         }
     );
@@ -711,6 +778,92 @@ describe('fetchRulesConfiguration', () => {
         await expect(
             fetchRulesConfiguration({ ...options, fetch })
         ).rejects.toThrow();
+    });
+
+    it.each([false, true])(
+        'reads real fetch polyfill response bodies with RN binary support: %s',
+        async supported => {
+            const unsupported = new Error(
+                'FileReader.readAsArrayBuffer is not implemented'
+            );
+            const read = jest.fn();
+            class BinaryFileReader {
+                result?: ArrayBuffer;
+                onload?: () => void;
+
+                readAsArrayBuffer() {
+                    read();
+                    if (!supported) {
+                        throw unsupported;
+                    }
+                    this.result = rulesBytes.buffer;
+                    this.onload?.();
+                }
+            }
+            const descriptors = Object.getOwnPropertyDescriptors(globalThis);
+            const { Blob: NodeBlob } = jest.requireActual<
+                typeof import('buffer')
+            >('buffer');
+            Object.defineProperty(globalThis, 'FileReader', {
+                configurable: true,
+                value: BinaryFileReader
+            });
+            Object.defineProperty(globalThis, 'Blob', {
+                configurable: true,
+                value: NodeBlob
+            });
+            try {
+                let FetchResponse!: typeof Response;
+                jest.isolateModules(() => {
+                    FetchResponse = jest.requireActual('whatwg-fetch').Response;
+                });
+                const fetch = jest.fn().mockResolvedValue(
+                    new FetchResponse(new Blob(), {
+                        status: 200,
+                        headers: { 'content-type': 'application/protobuf' }
+                    })
+                );
+                const result = fetchRulesConfiguration({ ...options, fetch });
+
+                if (supported) {
+                    expect((await result).rules?.response).toBeDefined();
+                } else {
+                    await expect(result).rejects.toMatchObject({
+                        message: expect.stringContaining(
+                            'Use React Native 0.72 or later, or pass a fetch implementation that supports Response.arrayBuffer()'
+                        ),
+                        cause: unsupported
+                    });
+                }
+                expect(read).toHaveBeenCalledTimes(1);
+                expect(fetch).toHaveBeenCalledTimes(1);
+            } finally {
+                for (const key of ['FileReader', 'Blob']) {
+                    if (descriptors[key]) {
+                        Object.defineProperty(
+                            globalThis,
+                            key,
+                            descriptors[key]
+                        );
+                    } else {
+                        Reflect.deleteProperty(globalThis, key);
+                    }
+                }
+            }
+        }
+    );
+
+    it('does not translate a different FileReader failure', async () => {
+        const error = new Error('FileReader.readAsArrayBuffer was aborted');
+        const fetch = jest
+            .fn()
+            .mockResolvedValue(
+                response({ arrayBuffer: jest.fn().mockRejectedValue(error) })
+            );
+
+        await expect(
+            fetchRulesConfiguration({ ...options, fetch })
+        ).rejects.toBe(error);
     });
 
     it('evaluates fetched rules locally and preserves them after a failed explicit refresh', async () => {
