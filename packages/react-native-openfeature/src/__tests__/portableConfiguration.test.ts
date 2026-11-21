@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { ErrorCode } from '@openfeature/web-sdk';
+
 import type { FlagsConfigurationWire } from '../index';
 import * as root from '../index';
 import type { FlagsConfigurationWire as RulesWire } from '../rules-based';
@@ -103,6 +105,63 @@ describe.each([
             ).toEqual(expect.any(String));
         }
     );
+
+    it.each(['missing createdAt', 'null targetingKey'])(
+        'validates hand-built plaintext envelopes and contexts: %s',
+        invalidField => {
+            const configuration = precomputedConfiguration();
+            if (invalidField === 'missing createdAt') {
+                Object.assign(
+                    configuration.precomputed.response.data.attributes,
+                    {
+                        createdAt: undefined
+                    }
+                );
+            } else {
+                Object.assign(configuration.precomputed, {
+                    context: { targetingKey: null }
+                });
+            }
+
+            const parsed = entry.configurationFromString(
+                entry.configurationToString(configuration)
+            );
+            expect(parsed.precomputed).toBeUndefined();
+            expect(parsed.precomputedError).toEqual(expect.any(String));
+        }
+    );
+
+    it('isolates a plaintext object flag with a primitive value', async () => {
+        const configuration = precomputedConfiguration();
+        configuration.precomputed.response.data.attributes.flags[
+            'object-flag'
+        ].variationValue = 42;
+        const parsed = entry.configurationFromString(
+            entry.configurationToString(configuration)
+        );
+        expect(parsed.precomputed?.flagErrors?.['object-flag']).toEqual(
+            expect.any(String)
+        );
+        const provider = new rules.DatadogCoreProvider();
+        provider.setConfiguration(parsed);
+        await provider.initialize(matchingContext);
+        expect(
+            provider.resolveObjectEvaluation(
+                'object-flag',
+                {},
+                matchingContext,
+                logger
+            )
+        ).toMatchObject({ value: {}, errorCode: ErrorCode.PARSE_ERROR });
+        expect(
+            provider.resolveBooleanEvaluation(
+                'boolean-flag',
+                false,
+                matchingContext,
+                logger
+            ).value
+        ).toBe(true);
+    });
 
     it.each([
         { obfuscated: true, obfuscation: undefined },

@@ -30,6 +30,7 @@ import type {
 
 import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
 import { withoutAssignmentToken } from './mappers';
+import { requiresEncodedPrecomputedEvaluation } from './precomputedEncoding';
 
 // Keep the bridge contract owned by FlagsClient; no OpenFeature dependency enters the core SDK.
 type CreateEvaluator = Parameters<FlagsClient['__ddSetOfflineEvaluator']>[0];
@@ -76,21 +77,19 @@ export class OfflineEvaluation implements OfflineEvaluator {
         ) {
             // A bare {} has no capability. The precomputed-only parser returns it for a rules-only wire.
             InternalLog.log(
-                'DatadogOfflineOpenFeatureProvider received no precomputed or rules configuration. configurationFromString is precomputed-only; parse rules-based wires with coreConfigurationFromString from the /rules-based entry point.',
+                'DatadogOfflineOpenFeatureProvider received no precomputed or rules configuration. The root configurationFromString is precomputed-only; parse rules-based wires with configurationFromString from the /rules-based entry point.',
                 SdkVerbosity.WARN
             );
         }
         if (precomputed) {
             try {
-                const attributes = precomputed.response?.data?.attributes;
-                if (
-                    (attributes?.obfuscated !== undefined &&
-                        attributes.obfuscated !== false) ||
-                    attributes?.obfuscation !== undefined
-                ) {
-                    // Core owns encoded lookup and validation; native helpers only accept plaintext.
+                if (requiresEncodedPrecomputedEvaluation(precomputed)) {
+                    // Use the public codec for encoded validation, not core's internal parser.
+                    // Embedded context is normalized below, as for legacy plaintext snapshots.
                     const parsed = configurationFromString(
-                        configurationToString({ precomputed })
+                        configurationToString({
+                            precomputed: { ...precomputed, context: undefined }
+                        })
                     );
                     if (!parsed.precomputed) {
                         throw new Error(parsed.precomputedError);
@@ -259,7 +258,11 @@ export class OfflineEvaluation implements OfflineEvaluator {
                   value: result.value,
                   allocationKey,
                   variationKey: result.variant,
-                  variationType: type,
+                  variationType:
+                      this.servesPrecomputed &&
+                      typeof result.flagMetadata?.variationType === 'string'
+                          ? result.flagMetadata.variationType
+                          : type,
                   variationValue:
                       typeof result.value === 'object'
                           ? JSON.stringify(result.value)

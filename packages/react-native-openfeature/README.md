@@ -366,6 +366,13 @@ context explicitly when serving a snapshot. The offline provider adopts it when 
 OpenFeature context is empty. Malformed wires and unsupported encodings produce parse errors;
 a valid rules branch remains available when a precomputed branch cannot be parsed.
 
+The root parser now validates response envelopes, embedded contexts, and flag values, matching
+the `/rules-based` parser. Hand-built wires accepted by the previous JSON-only root parser may
+now fail validation: `createdAt` is required, `targetingKey` must be a string when present, and
+object-typed flags must contain object values. Invalid flags are isolated from valid flags.
+The native SDK's legacy codec is unchanged. To load a configuration directly into a native
+`FlagsClient`, parse it with `configurationFromString` from `@datadog/mobile-react-native`.
+
 ### Fetching rules configuration
 
 Use `fetchRulesConfiguration` from the `/rules-based` entry point to fetch client-distributed rules and decode them into a `FlagsConfiguration`. Like the browser helper, it accepts `clientToken`, `env`, an optional site domain, an optional `flagSelection`, an optional `fetch` implementation, and an optional `AbortSignal`. An optional `logger` receives selection diagnostics and defaults to `console`. The helper does not require native SDK initialization or `DdFlags.enable()`.
@@ -495,9 +502,9 @@ Rules-based evaluation requires `@datadog/mobile-react-native` and
 `@datadog/mobile-react-native-openfeature` 3.10.0 or later. Update both packages together to use the
 native tracking/evaluator bridge. With an older core SDK that lacks the bridge, plaintext
 precomputed configurations retain their previous behavior, but rules or encoded precomputed
-configurations produce a warning and `GENERAL` error rather than being silently ignored.
-A configuration that cannot be parsed reports
-`PARSE_ERROR`, as `DatadogCoreProvider` does.
+configurations produce a warning once per provider and a `GENERAL` error rather than being
+silently ignored. With the evaluator bridge, a configuration that cannot be parsed reports
+`PARSE_ERROR`, as `DatadogCoreProvider` does. An older core SDK may report `GENERAL` instead.
 
 #### Rules-based configuration
 

@@ -3,6 +3,10 @@
     "compilerOptions": {
         "noEmit": true
     },
-    "include": ["rumContext.types.ts", "../rumContext.test.ts"],
+    "include": [
+        "portableConfiguration.types.ts",
+        "rumContext.types.ts",
+        "../rumContext.test.ts"
+    ],
     "exclude": []
 }

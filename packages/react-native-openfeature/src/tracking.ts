@@ -130,7 +130,11 @@ function createHook(
             }
         ],
         initialize: async () => {
-            active = typeof getDatadogSdk()[method] === 'function';
+            try {
+                active = typeof getDatadogSdk()[method] === 'function';
+            } catch {
+                active = false;
+            }
             if (!active && !compatibilityWarningLogged) {
                 compatibilityWarningLogged = true;
                 // Older core packages may not expose InternalLog either.

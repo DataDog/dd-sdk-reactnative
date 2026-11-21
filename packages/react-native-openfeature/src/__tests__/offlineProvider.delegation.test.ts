@@ -159,6 +159,87 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         });
     });
 
+    it.each([undefined, false])(
+        'rejects descriptor-only encoding when obfuscated is %p without native tracking',
+        async obfuscated => {
+            const configuration = precomputedConfiguration();
+            Object.assign(configuration.precomputed.response.data.attributes, {
+                obfuscated,
+                obfuscation: {
+                    scheme: 'flag-key-sha256-v1',
+                    salt: '00112233445566778899aabbccddeeff'
+                }
+            });
+            const { provider } = setup(configuration);
+
+            await expect(
+                OpenFeature.setProviderAndWait(provider)
+            ).rejects.toMatchObject({
+                code: ErrorCode.PARSE_ERROR
+            });
+            expect(NativeDdFlags.trackEvaluation).not.toHaveBeenCalled();
+        }
+    );
+
+    it.each([
+        ['plaintext', precomputedConfiguration],
+        ['encoded', encodedConfiguration]
+    ] as const)(
+        'normalizes a hand-built %s embedded context before validation',
+        async (_kind, make) => {
+            const configuration = make();
+            Object.assign(configuration.precomputed, {
+                context: { targetingKey: 42, country: 'US' }
+            });
+            const { provider, name } = setup(configuration);
+
+            await OpenFeature.setProviderAndWait(provider);
+            expect(
+                OpenFeature.getClient().getBooleanValue('boolean-flag', false)
+            ).toBe(true);
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+                name,
+                'boolean-flag',
+                expect.objectContaining({ variationType: 'boolean' }),
+                '',
+                { country: 'US' }
+            );
+            expect(configuration.precomputed.context?.targetingKey).toBe(42);
+        }
+    );
+
+    it.each([
+        ['plaintext integer', precomputedConfiguration, 'integer', 7],
+        ['encoded integer', encodedConfiguration, 'integer', 7],
+        ['plaintext float', precomputedConfiguration, 'float', 3.14],
+        ['encoded float', encodedConfiguration, 'float', 3.14]
+    ] as const)(
+        'preserves %s variation metadata in native tracking',
+        async (_kind, make, variationType, value) => {
+            const configuration = make();
+            const flag = Object.values(
+                configuration.precomputed.response.data.attributes.flags
+            ).find(assignment => assignment.variationKey === 'amount');
+            if (!flag) {
+                throw new Error('Missing number fixture');
+            }
+            Object.assign(flag, { variationType, variationValue: value });
+            const { provider, name } = setup(configuration);
+            await OpenFeature.setProviderAndWait(provider);
+
+            expect(
+                OpenFeature.getClient().getNumberValue('number-flag', 0)
+            ).toBe(value);
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenLastCalledWith(
+                name,
+                'number-flag',
+                expect.objectContaining({ variationType, value }),
+                'user-1',
+                { country: 'US' }
+            );
+        }
+    );
+
     it.each(['unknown', 'missing-salt', 'invalid-key'])(
         'rejects %s encoded input without tracking defaults and retains usable rules',
         async malformed => {

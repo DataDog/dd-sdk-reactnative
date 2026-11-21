@@ -132,6 +132,74 @@ describe('DatadogOfflineOpenFeatureProvider (legacy core SDK without the evaluat
         );
     });
 
+    it.each([undefined, false])(
+        'rejects an encoding descriptor when obfuscated is %p on older core',
+        obfuscated => {
+            const configuration = precomputedConfiguration();
+            Object.assign(configuration.precomputed.response.data.attributes, {
+                obfuscated,
+                obfuscation: {
+                    scheme: 'flag-key-sha256-v1',
+                    salt: '00112233445566778899aabbccddeeff'
+                }
+            });
+            const provider = new DatadogOfflineOpenFeatureProvider();
+            const emit = jest.spyOn(provider.events, 'emit');
+
+            provider.setConfiguration(configuration);
+
+            expect(mockFlagsClient.setConfiguration).toHaveBeenLastCalledWith(
+                {}
+            );
+            expect(emit).toHaveBeenLastCalledWith(
+                ProviderEvents.Error,
+                expect.objectContaining({ errorCode: ErrorCode.GENERAL })
+            );
+        }
+    );
+
+    it.each([0, '', null])(
+        'rejects a non-boolean obfuscated value %p on older core',
+        obfuscated => {
+            const configuration = precomputedConfiguration();
+            Object.assign(configuration.precomputed.response.data.attributes, {
+                obfuscated
+            });
+            const provider = new DatadogOfflineOpenFeatureProvider();
+            const emit = jest.spyOn(provider.events, 'emit');
+
+            provider.setConfiguration(configuration);
+
+            expect(mockFlagsClient.setConfiguration).toHaveBeenLastCalledWith(
+                {}
+            );
+            expect(emit).toHaveBeenLastCalledWith(
+                ProviderEvents.Error,
+                expect.objectContaining({ errorCode: ErrorCode.GENERAL })
+            );
+        }
+    );
+
+    it('warns once per provider while rejecting every unsupported replacement', () => {
+        const provider = new DatadogOfflineOpenFeatureProvider();
+        provider.setConfiguration(encodedConfiguration());
+        provider.setConfiguration(rulesConfiguration());
+        provider.setConfiguration(encodedConfiguration());
+
+        expect(InternalLog.log).toHaveBeenCalledTimes(1);
+        expect(mockFlagsClient.setConfiguration).toHaveBeenCalledTimes(3);
+        expect(mockFlagsClient.setConfiguration.mock.calls).toEqual([
+            [{}],
+            [{}],
+            [{}]
+        ]);
+
+        new DatadogOfflineOpenFeatureProvider().setConfiguration(
+            encodedConfiguration()
+        );
+        expect(InternalLog.log).toHaveBeenCalledTimes(2);
+    });
+
     it('advertises the offline provider name', () => {
         expect(new DatadogOfflineOpenFeatureProvider().metadata.name).toBe(
             'datadog-react-native-offline'
