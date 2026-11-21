@@ -6,7 +6,7 @@
 
 import { configurationFromRulesBinary } from '@datadog/flagging-core/rules-based';
 import type { FlagSelection, FlagsConfiguration } from '@datadog/flagging-core';
-import { timeStampNow } from '@datadog/flagging-core';
+import { buildEndpointHost, timeStampNow } from '@datadog/flagging-core';
 
 import { applyFlagSelection, reportSelectionError } from './flagSelection';
 import { version } from './version';
@@ -20,25 +20,24 @@ const FLAG_SELECTION_IGNORED_REASONS: ReadonlySet<string> = new Set([
 ]);
 const MAX_FLAG_SELECTION_IGNORED_REASON_LENGTH = 32;
 
-const supportedSites = new Set([
-    'datadoghq.com',
-    'us3.datadoghq.com',
-    'us5.datadoghq.com',
-    'ap1.datadoghq.com',
-    'ap2.datadoghq.com',
-    'uk1.datadoghq.com',
-    'datadoghq.eu',
-    'datad0g.com'
-]);
+const defaultLogger = {
+    error(message: string): void {
+        // Fetching must not load the native SDK; warnings also avoid LogBox errors.
+        // eslint-disable-next-line no-console
+        console.warn(`DATADOG: ${message}`);
+    }
+};
 
 export interface RulesConfigurationFetchOptions {
     clientToken: string;
     env: string;
+    /** RUM application ID sent as dd-application-id for per-application usage attribution. */
+    applicationId?: string;
     /** Datadog site domain, such as 'datadoghq.eu'. Defaults to 'datadoghq.com'. */
     site?: string;
     /** Request flags matching any of these tags or key patterns. Invalid or over-limit selections are not sent. */
     flagSelection?: FlagSelection;
-    /** Reports dropped or server-ignored selections. Defaults to console. */
+    /** Reports dropped or server-ignored selections. Defaults to a prefixed console warning. */
     logger?: { error(message: string): void };
     fetch?: typeof globalThis.fetch;
     signal?: AbortSignal;
@@ -48,16 +47,16 @@ export interface RulesConfigurationFetchOptions {
 export async function fetchRulesConfiguration(
     options: RulesConfigurationFetchOptions
 ): Promise<FlagsConfiguration> {
-    const site = options.site ?? 'datadoghq.com';
-    if (!supportedSites.has(site)) {
-        throw new Error(`Unsupported site for flagging endpoints: ${site}`);
-    }
+    const host = buildEndpointHost(
+        options.site ?? 'datadoghq.com',
+        'ufc-client'
+    );
 
     // RN's built-in URLSearchParams.set is not implemented on supported versions.
-    const baseUrl = `https://ufc-client.ff-cdn.${site}/api/v2/feature-flagging/config/rules-based/client?dd_env=${encodeURIComponent(
+    const baseUrl = `https://${host}/api/v2/feature-flagging/config/rules-based/client?dd_env=${encodeURIComponent(
         options.env
     )}`;
-    const logger = options.logger ?? console;
+    const logger = options.logger ?? defaultLogger;
     const { url, selected } = applyFlagSelection(
         baseUrl,
         options.flagSelection,
@@ -70,6 +69,9 @@ export async function fetchRulesConfiguration(
         headers: {
             Accept: 'application/protobuf',
             'dd-client-token': options.clientToken,
+            ...(options.applicationId && {
+                'dd-application-id': options.applicationId
+            }),
             'DD-Client-Library-Language': 'react-native',
             'DD-Client-Library-Version': version
         },
@@ -83,9 +85,24 @@ export async function fetchRulesConfiguration(
         );
     }
 
-    const configuration = configurationFromRulesBinary(
-        new Uint8Array(await response.arrayBuffer())
-    );
+    let body: ArrayBuffer;
+    try {
+        body = await response.arrayBuffer();
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            error.message === 'FileReader.readAsArrayBuffer is not implemented'
+        ) {
+            throw Object.assign(
+                new Error(
+                    'Use React Native 0.72 or later, or pass a fetch implementation that supports Response.arrayBuffer()'
+                ),
+                { cause: error }
+            );
+        }
+        throw error;
+    }
+    const configuration = configurationFromRulesBinary(new Uint8Array(body));
     if (configuration.rules) {
         configuration.rules.fetchedAt = fetchedAt;
     }

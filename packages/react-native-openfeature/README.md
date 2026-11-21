@@ -340,7 +340,18 @@ precomputed-only `configurationFromString` helper.
 
 ### Fetching rules configuration
 
-Use `fetchRulesConfiguration` from the `/rules-based` entry point to fetch client-distributed rules and decode them into a `FlagsConfiguration`. Like the browser helper, it accepts `clientToken`, `env`, an optional site domain, an optional `flagSelection`, an optional `fetch` implementation, and an optional `AbortSignal`. An optional `logger` receives selection diagnostics and defaults to `console`. The helper does not require native SDK initialization or `DdFlags.enable()`.
+Use `fetchRulesConfiguration` from the `/rules-based` entry point to fetch client-distributed
+rules and decode them into a `FlagsConfiguration`. It accepts `clientToken`, `env`, an optional
+`applicationId`, site domain, `flagSelection`, `fetch` implementation, and `AbortSignal`.
+The application ID is sent as `dd-application-id` for per-application usage attribution.
+An optional `logger` receives selection diagnostics; the default writes `DATADOG:`-prefixed
+console warnings. Fetching does not load or initialize the native SDK or require `DdFlags.enable()`.
+
+The built-in fetch requires **React Native 0.72 or later** to read binary response bodies.
+On RN 0.63-0.71, pass a fetch implementation whose `Response.arrayBuffer()` works. Earlier RN
+versions leave `FileReader.readAsArrayBuffer()` unimplemented; the helper reports this limitation
+with an actionable error and retains the original error as `cause`. It does not add a binary-read
+polyfill or change the package's React Native peer dependency.
 
 ```tsx
 import {
@@ -369,14 +380,18 @@ await OpenFeature.setContext('datadog-core', {
 });
 
 // Refresh explicitly when the application needs new rules.
-provider.setConfiguration(await fetchRulesConfiguration(fetchOptions));
+try {
+    provider.setConfiguration(await fetchRulesConfiguration(fetchOptions));
+} catch {
+    // Keep evaluating the last successfully loaded rules.
+}
 ```
 
-The helper makes one request per call, with no automatic polling, retries, persistence, or tracking. It rejects on HTTP, network, cancellation, body-read, or decoding failures. Catch refresh errors before replacing the provider configuration to keep evaluating the last successfully loaded rules. Use a client token; the helper only requests client-distributed configuration, never server-distributed rules.
+The helper makes one request per call, with no automatic polling, retries, persistence, or tracking. It rejects on HTTP, network, cancellation, body-read, or decoding failures. The refresh example retains the active configuration when fetching fails. Use a client token; the helper only requests client-distributed configuration, never server-distributed rules.
 
 `flagSelection` requests flags matching any of the listed tags or key patterns (OR). Tags are exact, case-sensitive matches; key patterns are case-sensitive and match the whole key, with `*` matching any run of characters. Values are trimmed using Unicode whitespace, deduplicated, and sorted by UTF-8 bytes. Each list accepts at most 31 distinct nonempty values after normalization, and each value can contain at most 200 UTF-8 bytes. Empty selections are omitted quietly.
 
-Selection is best-effort: a malformed or over-limit selection, or one that makes the encoded request URL exceed 8,192 bytes, is not sent. The helper logs an error and requests the full configuration instead. A nonempty `DD-Flag-Selection-Ignored` response header also produces an error diagnostic when a selection was sent. Supply `logger: { error(message) { /* route diagnostics */ } }` to customize reporting. Diagnostics do not initialize the native SDK or send telemetry, and a throwing logger does not prevent configuration loading.
+Selection is best-effort: a malformed or over-limit selection, or one that makes the encoded request URL exceed 8,192 bytes, is not sent. The helper reports a diagnostic and requests the full configuration instead. A nonempty `DD-Flag-Selection-Ignored` response header also produces a diagnostic when a selection was sent. Supply `logger: { error(message) { /* route diagnostics */ } }` to customize reporting. Diagnostics do not initialize the native SDK or send telemetry, and a throwing logger does not prevent configuration loading.
 
 When the backend applies selection, flags outside it are absent from the returned configuration. Evaluating them returns your default value with `FLAG_NOT_FOUND`, so select every flag the app evaluates. Selection is not an access-control boundary: the helper retains the full returned configuration if the server ignores selection and does not filter it locally.
 
