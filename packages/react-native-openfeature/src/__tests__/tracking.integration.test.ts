@@ -120,6 +120,48 @@ describe.each(['android', 'ios'] as const)(
             expect(rum).not.toHaveBeenCalled();
         });
 
+        it.each([false, true])(
+            'tracks RUM immediately without initialization with rules: %s',
+            async rules => {
+                const tracking = createDatadogRumTrackingHook();
+                const { client } = await configuredClient(undefined, rules);
+                client.addHooks(...tracking.hooks);
+                const key = rules ? 'test-flag' : 'boolean-flag';
+
+                expect(client.getBooleanValue(key, false)).toBe(true);
+                expect(rum).toHaveBeenCalledTimes(1);
+                await tracking.shutdown();
+                expect(client.getBooleanValue(key, false)).toBe(true);
+                expect(rum).toHaveBeenCalledTimes(1);
+                await tracking.initialize();
+                expect(client.getBooleanValue(key, false)).toBe(true);
+                expect(rum).toHaveBeenCalledTimes(2);
+                expect(native.trackExposure).not.toHaveBeenCalled();
+                expect(native.enable).not.toHaveBeenCalled();
+            }
+        );
+
+        it('does not report exposure for a non-string allocation key', async () => {
+            const { client, provider } = await configuredClient(
+                createDatadogExposureLoggingHook()
+            );
+            jest.spyOn(provider, 'resolveBooleanEvaluation').mockReturnValue({
+                value: true,
+                reason: 'STATIC',
+                variant: 'on',
+                flagMetadata: { doLog: true, allocationKey: 42 }
+            });
+
+            expect(
+                client.getBooleanDetails('boolean-flag', false)
+            ).toMatchObject({
+                value: true,
+                variant: 'on',
+                flagMetadata: { doLog: true, allocationKey: 42 }
+            });
+            expect(native.trackExposure).not.toHaveBeenCalled();
+        });
+
         it.each([
             { rules: false, doLog: false },
             { rules: false, doLog: true },

@@ -41,7 +41,7 @@ export function createDatadogExposureLoggingHook(
             return;
         }
         const flag = toAssignment(details);
-        if (!flag?.doLog) {
+        if (!flag) {
             return;
         }
         DatadogSdk.__ddTrackFlagExposure(
@@ -53,25 +53,32 @@ export function createDatadogExposureLoggingHook(
     });
 }
 
-/** Adds successful evaluations to the current native RUM view. */
+/**
+ * Adds successful evaluations to the current native RUM view.
+ * Active on creation; native Flags and RUM must already be enabled.
+ */
 export function createDatadogRumTrackingHook(
     options: DatadogTrackingHooksOptions = {}
 ): DatadogTrackingHooks {
     const clientName = options.clientName ?? 'default';
-    return createHook('__ddTrackFlagRumEvaluation', (context, details) => {
-        if (
-            !details.errorCode &&
-            details.reason !== 'ERROR' &&
-            details.variant != null
-        ) {
-            DatadogSdk.__ddTrackFlagRumEvaluation(
-                clientName,
-                context.flagKey,
-                details.variant,
-                toDdContext(context.context)
-            );
-        }
-    });
+    return createHook(
+        '__ddTrackFlagRumEvaluation',
+        (context, details) => {
+            if (
+                !details.errorCode &&
+                details.reason !== 'ERROR' &&
+                details.variant != null
+            ) {
+                DatadogSdk.__ddTrackFlagRumEvaluation(
+                    clientName,
+                    context.flagKey,
+                    details.variant,
+                    toDdContext(context.context)
+                );
+            }
+        },
+        true
+    );
 }
 
 export function composeDatadogTrackingHooks(
@@ -111,10 +118,26 @@ function createHook(
     record: (
         context: HookContext,
         details: EvaluationDetails<FlagValue>
-    ) => void
+    ) => void,
+    startActive = false
 ): DatadogTrackingHooks {
     let active = false;
     let compatibilityWarningLogged = false;
+
+    const activate = () => {
+        active = typeof DatadogSdk[method] === 'function';
+        if (!active && !compatibilityWarningLogged) {
+            compatibilityWarningLogged = true;
+            // Older core packages may not expose InternalLog either.
+            // eslint-disable-next-line no-console
+            console.warn(
+                `DATADOG: Tracking hook disabled because the core SDK does not provide ${method}. Install matching versions of @datadog/mobile-react-native and @datadog/mobile-react-native-openfeature that support tracking hooks, then rebuild the native app.`
+            );
+        }
+    };
+    if (startActive) {
+        activate();
+    }
     return {
         hooks: [
             {
@@ -131,15 +154,7 @@ function createHook(
             }
         ],
         initialize: async () => {
-            active = typeof DatadogSdk[method] === 'function';
-            if (!active && !compatibilityWarningLogged) {
-                compatibilityWarningLogged = true;
-                // Older core packages may not expose InternalLog either.
-                // eslint-disable-next-line no-console
-                console.warn(
-                    `DATADOG: Tracking hook disabled because the core SDK does not provide ${method}. Install matching versions of @datadog/mobile-react-native and @datadog/mobile-react-native-openfeature that support tracking hooks, then rebuild the native app.`
-                );
-            }
+            activate();
         },
         // Hooks do not own the shared native SDK, its consent state, or its upload pipeline.
         shutdown: async () => {

@@ -44,6 +44,8 @@ class DdFlagsImplementation(
         val flagsConfig = buildFlagsConfiguration(configuration.toMap())
         if (flagsConfig != null) {
             Flags.enable(flagsConfig, sdkCore)
+            // Clients created before enable() are no-op clients and must be rebuilt.
+            clients.clear()
         } else {
             InternalLogger.UNBOUND.log(
                 InternalLogger.Level.ERROR,

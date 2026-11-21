@@ -28,6 +28,7 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.same
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -84,6 +85,90 @@ internal class DdFlagsImplementationTest {
         } finally {
             flagsMock.close()
             datadogMock.close()
+        }
+    }
+
+    @Test
+    fun `M rebuild clients W enable() follows tracking`() {
+        // Given
+        val core = mock<SdkCore>()
+        val fallback = mock<FlagsClient>()
+        val enabledClient = mock<FlagsClient>()
+        var enabled = false
+        val proxyClients = mutableListOf<Any?>()
+        val configuration = mapOf("enabled" to true).toReadableMap()
+        val attributes = mapOf("country" to "US").toReadableMap()
+        Mockito.mockStatic(Flags::class.java).use { flagsMock ->
+            flagsMock.`when`<Unit> { Flags.enable(any<FlagsConfiguration>(), same(core)) }.then {
+                enabled = true
+                null
+            }
+            Mockito.mockConstruction(FlagsClient.Builder::class.java) { builder, _ ->
+                whenever(builder.build()).thenAnswer { if (enabled) enabledClient else fallback }
+            }.use { builders ->
+                Mockito.mockConstruction(_FlagsInternalProxy::class.java) { _, context ->
+                    proxyClients.add(context.arguments()[0])
+                }.use { proxies ->
+                    val testedImplementation = DdFlagsImplementation(core)
+
+                    // When
+                    testedImplementation.trackExposure(
+                        "default",
+                        "flag",
+                        rawFlag(),
+                        "user",
+                        attributes,
+                        mockPromise
+                    )
+                    testedImplementation.enable(configuration, mockPromise)
+                    testedImplementation.trackExposure(
+                        "default",
+                        "flag",
+                        rawFlag(),
+                        "user",
+                        attributes,
+                        mockPromise
+                    )
+                    testedImplementation.trackRumEvaluation(
+                        "default",
+                        "flag",
+                        "on",
+                        "user",
+                        attributes,
+                        mockPromise
+                    )
+                    testedImplementation.trackEvaluation(
+                        "default",
+                        "flag",
+                        rawFlag(),
+                        "user",
+                        attributes,
+                        mockPromise
+                    )
+
+                    // Then
+                    assertThat(builders.constructed()).hasSize(2)
+                    assertThat(proxyClients).containsExactly(
+                        fallback,
+                        enabledClient,
+                        enabledClient,
+                        enabledClient
+                    )
+                    verify(proxies.constructed()[0]).trackFlagExposure(eq("flag"), any(), any())
+                    verify(proxies.constructed()[1]).trackFlagExposure(eq("flag"), any(), any())
+                    verify(proxies.constructed()[2]).trackFlagRumEvaluation(
+                        eq("flag"),
+                        eq("on"),
+                        any()
+                    )
+                    verify(proxies.constructed()[3]).trackFlagSnapshotEvaluation(
+                        eq("flag"),
+                        any(),
+                        any()
+                    )
+                    verify(mockPromise, times(5)).resolve(null)
+                }
+            }
         }
     }
 
