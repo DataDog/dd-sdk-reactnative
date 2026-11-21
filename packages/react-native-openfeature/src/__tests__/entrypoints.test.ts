@@ -48,7 +48,6 @@ describe('package entry points', () => {
                 'configurationToString',
                 'getPrecomputedContext',
                 'createDatadogExposureLoggingHook',
-                'createDatadogEvaluationLoggingHook',
                 'createDatadogRumTrackingHook',
                 'composeDatadogTrackingHooks'
             ]) {
