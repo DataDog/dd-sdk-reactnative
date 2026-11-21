@@ -72,6 +72,20 @@ After completing this setup, your app is ready for flag evaluation with OpenFeat
 
 > **Note**: Sending flag evaluation data to Datadog is automatically enabled when using the Feature Flags SDK. Provide `rumIntegrationEnabled` and `trackExposures` parameters to the `DdFlags.enable()` call to configure.
 
+For native-backed providers, configure custom intake routing with
+`customExposureEndpoint` and `customEvaluationEndpoint` on `DdFlags.enable()`.
+Both accept base URLs; the bridge appends `/api/v2/exposures` and
+`/api/v2/flagevaluation`, respectively. RUM's endpoint is configured separately
+when initializing RUM. These overrides do not change configuration fetching.
+
+### Reserved context attribute
+
+`dd_assignment_token` is reserved for assignment authorization, not flag targeting.
+The OpenFeature providers exclude it from context matching and native tracking,
+without changing the application's context. For the offline compatibility provider,
+a context containing only this token is treated as empty and adopts the snapshot's
+embedded context.
+
 ### RUM user context
 
 Use `enrichWithRumUser()` when you explicitly want to use the current RUM user as part of an
@@ -413,10 +427,14 @@ The hooks do not initialize, shut down, or change consent for the shared native 
 
 Tracking destinations are configured on the native SDK, not on individual hooks. The core
 SDK's site selects the default endpoints. For custom intake routing, pass
-`customExposureEndpoint` and/or `customEvaluationEndpoint` to `DdFlags.enable()` before
-creating clients. Both accept base URLs; the RN bridge appends `/api/v2/exposures` and
-`/api/v2/flagevaluation`, respectively. RUM's endpoint is configured separately when
-initializing RUM. These overrides do not change configuration fetching.
+`customExposureEndpoint` to `DdFlags.enable()` before creating clients. It accepts a
+base URL; the RN bridge appends `/api/v2/exposures`. These hooks do not emit evaluation
+events. RUM's endpoint is configured separately when initializing RUM. These overrides
+do not change configuration fetching.
+
+The exposure hook requires `initialize()`. The RUM hook is active as soon as it is
+created, matching the browser API; its `initialize()` is optional. For either hook,
+`shutdown()` deactivates tracking and `initialize()` reactivates it.
 
 ```tsx
 import { DdFlags } from '@datadog/mobile-react-native';
@@ -465,14 +483,17 @@ shutting down.
 Each hook submits its record immediately through an asynchronous native call. There is no
 JavaScript batching, timer, or upload queue, and evaluation does not await native delivery.
 Native consent handling, exposure deduplication, storage, and upload batching remain unchanged.
-Exposure logging respects `doLog`. RUM records the variant of successful evaluations through the
-selected native Flags client, respecting its opt-out policy and RUM integration setting.
+Exposure logging respects `doLog` and the native `trackExposures` setting; setting
+`trackExposures: false` also disables the exposure hook's output. RUM records the variant
+of successful evaluations through the selected native Flags client, respecting its
+opt-out policy and RUM integration setting.
 The hooks do not enable or synchronize per-subject opt-out; they preserve the native client's
 existing policy. Exposure logging is not suppressed by evaluation telemetry opt-out.
 
 Use matching core and OpenFeature package releases containing the tracking APIs. If the core
-package is missing a required tracking helper, `initialize()` warns once per hook and leaves
-that hook inactive; flag evaluation continues. Repeated evaluations do not repeat the warning.
+package is missing a required tracking helper, the exposure hook warns once when initialized
+and the RUM hook warns once when created. The affected hook stays inactive; flag evaluation
+continues. Repeated evaluations do not repeat the warning.
 
 ### Offline initialization
 

@@ -17,6 +17,12 @@ type FlagTrackingAssignment = Pick<
     FlagCacheEntry,
     'allocationKey' | 'variationKey' | 'doLog' | 'serialId'
 >;
+type TrackingMethod = 'trackExposure' | 'trackRumEvaluation';
+type TrackingFailure =
+    | 'missing native module'
+    | 'unsupported native method'
+    | 'native call failed';
+const reportedFailures = new Set<string>();
 
 /** @internal Used by the matching-version OpenFeature tracking hooks. */
 export function __ddTrackFlagExposure(
@@ -26,7 +32,7 @@ export function __ddTrackFlagExposure(
     context: EvaluationContext
 ): void {
     const captured = processEvaluationContext(context);
-    submit(native =>
+    submit('trackExposure', native =>
         native.trackExposure(
             clientName,
             key,
@@ -45,7 +51,7 @@ export function __ddTrackFlagRumEvaluation(
     context: EvaluationContext
 ): void {
     const captured = processEvaluationContext(context);
-    submit(native =>
+    submit('trackRumEvaluation', native =>
         native.trackRumEvaluation(
             clientName,
             key,
@@ -56,23 +62,46 @@ export function __ddTrackFlagRumEvaluation(
     );
 }
 
-function submit(operation: (native: DdNativeFlagsType) => Promise<void>): void {
+function submit(
+    method: TrackingMethod,
+    operation: (native: DdNativeFlagsType) => Promise<void>
+): void {
     // Submit immediately. Evaluation must not wait for native acknowledgment or upload.
     try {
         const native = getNativeDdFlags();
         if (!native) {
-            logTrackingFailure();
+            logTrackingFailure(method, 'missing native module');
             return;
         }
-        operation(native).catch(logTrackingFailure);
-    } catch {
-        logTrackingFailure();
+        if (typeof native[method] !== 'function') {
+            logTrackingFailure(method, 'unsupported native method');
+            return;
+        }
+        operation(native).catch(error =>
+            logTrackingFailure(method, 'native call failed', error)
+        );
+    } catch (error) {
+        logTrackingFailure(method, 'native call failed', error);
     }
 }
 
-function logTrackingFailure(): void {
-    InternalLog.log(
-        'Unable to submit flag tracking. Ensure the native SDK supports the tracking hooks and Flags is enabled.',
-        SdkVerbosity.WARN
-    );
+function logTrackingFailure(
+    method: TrackingMethod,
+    reason: TrackingFailure,
+    error?: unknown
+): void {
+    const failure = `${method}: ${reason}`;
+    if (reportedFailures.has(failure)) {
+        return;
+    }
+    reportedFailures.add(failure);
+    try {
+        const detail = error instanceof Error ? `: ${error.message}` : '';
+        InternalLog.log(
+            `Unable to submit flag tracking (${failure})${detail}. Ensure the native SDK supports the tracking hooks and Flags is enabled.`,
+            SdkVerbosity.WARN
+        );
+    } catch {
+        // Diagnostics must not interrupt evaluation or reject native delivery promises.
+    }
 }
