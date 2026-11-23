@@ -17,7 +17,10 @@ type FlagTrackingAssignment = Pick<
     FlagCacheEntry,
     'allocationKey' | 'variationKey' | 'doLog' | 'serialId'
 >;
-type TrackingMethod = 'trackExposure' | 'trackRumEvaluation';
+type TrackingMethod =
+    | 'trackExposure'
+    | 'trackProtectedEvaluation'
+    | 'trackRumEvaluation';
 type TrackingFailure =
     | 'missing native module'
     | 'unsupported native method'
@@ -39,6 +42,31 @@ export function __ddTrackFlagExposure(
             flag,
             captured.targetingKey,
             captured.attributes ?? {}
+        )
+    );
+}
+
+/** @internal Used by the matching-version OpenFeature tracking hooks. */
+export function __ddTrackFlagEvaluationEvent(
+    clientName: string,
+    key: string,
+    flag: FlagTrackingAssignment | null,
+    context: EvaluationContext,
+    errorCode: string | null,
+    observeFullEvaluationData: boolean,
+    telemetryTargetingKey: string | null
+): void {
+    const captured = processEvaluationContext(context);
+    submit('trackProtectedEvaluation', native =>
+        native.trackProtectedEvaluation(
+            clientName,
+            key,
+            flag,
+            captured.targetingKey,
+            captured.attributes ?? {},
+            errorCode,
+            observeFullEvaluationData === true,
+            captureTelemetryTargetingKey(telemetryTargetingKey)
         )
     );
 }
@@ -96,12 +124,28 @@ function logTrackingFailure(
     }
     reportedFailures.add(failure);
     try {
-        const detail = error instanceof Error ? `: ${error.message}` : '';
+        const detail =
+            method !== 'trackProtectedEvaluation' && error instanceof Error
+                ? `: ${error.message}`
+                : '';
         InternalLog.log(
             `Unable to submit flag tracking (${failure})${detail}. Ensure the native SDK supports the tracking hooks and Flags is enabled.`,
             SdkVerbosity.WARN
         );
     } catch {
         // Diagnostics must not interrupt evaluation or reject native delivery promises.
+    }
+}
+
+function captureTelemetryTargetingKey(value: string | null): string | null {
+    if (typeof value !== 'string') {
+        return null;
+    }
+    try {
+        // Reject malformed UTF-16 before the bridge can replace it with another identity.
+        encodeURIComponent(value);
+        return value;
+    } catch {
+        return null;
     }
 }

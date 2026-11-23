@@ -20,6 +20,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.extension.Extensions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
@@ -272,6 +274,83 @@ internal class DdFlagsImplementationTest {
     }
 
     @Test
+    fun `M only track evaluation W trackProtectedEvaluation()`() {
+        val client = mock<FlagsClient>()
+        Mockito.mockConstruction(FlagsClient.Builder::class.java) { builder, _ ->
+            whenever(builder.build()).thenReturn(client)
+        }.use {
+            Mockito.mockConstruction(_FlagsInternalProxy::class.java).use { proxies ->
+                DdFlagsImplementation(mock()).trackProtectedEvaluation(
+                    "tracking",
+                    "flag",
+                    mapOf(
+                        "allocationKey" to "allocation",
+                        "variationKey" to "on",
+                        "doLog" to true,
+                        "serialId" to "9007199254740993"
+                    ).toReadableMap(),
+                    "user",
+                    mapOf("country" to "US").toReadableMap(),
+                    null,
+                    false,
+                    "telemetry-user",
+                    mockPromise
+                )
+                val proxy = proxies.constructed().single()
+                val flag = argumentCaptor<UnparsedFlag>()
+                val context = argumentCaptor<EvaluationContext>()
+                verify(proxy).trackFlagEvaluationEvent(
+                    eq("flag"),
+                    flag.capture(),
+                    context.capture(),
+                    eq(null),
+                    eq(false),
+                    eq("telemetry-user")
+                )
+                assertThat(flag.firstValue.allocationKey).isEqualTo("allocation")
+                assertThat(context.firstValue.targetingKey).isEqualTo("user")
+                verifyNoMoreInteractions(proxy)
+                verifyNoInteractions(client)
+                verify(mockPromise).resolve(null)
+            }
+        }
+    }
+
+    @Test
+    fun `M forward missing assignment and error W trackProtectedEvaluation()`() {
+        val client = mock<FlagsClient>()
+        Mockito.mockConstruction(FlagsClient.Builder::class.java) { builder, _ ->
+            whenever(builder.build()).thenReturn(client)
+        }.use {
+            Mockito.mockConstruction(_FlagsInternalProxy::class.java).use { proxies ->
+                DdFlagsImplementation(mock()).trackProtectedEvaluation(
+                    "tracking",
+                    "missing",
+                    null,
+                    "user",
+                    emptyMap<String, Any>().toReadableMap(),
+                    "FLAG_NOT_FOUND",
+                    false,
+                    null,
+                    mockPromise
+                )
+                val proxy = proxies.constructed().single()
+                verify(proxy).trackFlagEvaluationEvent(
+                    eq("missing"),
+                    eq(null),
+                    any(),
+                    eq("FLAG_NOT_FOUND"),
+                    eq(false),
+                    eq(null)
+                )
+                verifyNoMoreInteractions(proxy)
+                verifyNoInteractions(client)
+                verify(mockPromise).resolve(null)
+            }
+        }
+    }
+
+    @Test
     fun `M only track RUM W trackRumEvaluation()`() {
         // Given
         val client = mock<FlagsClient>()
@@ -295,6 +374,55 @@ internal class DdFlagsImplementationTest {
                 verify(proxy).trackFlagRumEvaluation(eq("flag"), eq("on"), context.capture())
                 assertThat(context.firstValue.targetingKey).isEqualTo("user")
                 assertThat(context.firstValue.attributes).containsEntry("country", "US")
+                verifyNoMoreInteractions(proxy)
+                verifyNoInteractions(client)
+                verify(mockPromise).resolve(null)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "false, telemetry-user",
+        "true, telemetry-user",
+        "false, ''",
+        "true, ''",
+        "false,",
+        "true,"
+    )
+    fun `M preserve privacy policy and original opt-out context W trackProtectedEvaluation()`(
+        observeFullEvaluationData: Boolean,
+        telemetryTargetingKey: String?
+    ) {
+        val client = mock<FlagsClient>()
+        Mockito.mockConstruction(FlagsClient.Builder::class.java) { builder, _ ->
+            whenever(builder.build()).thenReturn(client)
+        }.use {
+            Mockito.mockConstruction(_FlagsInternalProxy::class.java).use { proxies ->
+                DdFlagsImplementation(mock()).trackProtectedEvaluation(
+                    "tracking",
+                    "flag",
+                    rawFlag(),
+                    "original-subject",
+                    mapOf("dd_evaluation_telemetry_opt_out" to true).toReadableMap(),
+                    null,
+                    observeFullEvaluationData,
+                    telemetryTargetingKey,
+                    mockPromise
+                )
+                val proxy = proxies.constructed().single()
+                val context = argumentCaptor<EvaluationContext>()
+                verify(proxy).trackFlagEvaluationEvent(
+                    eq("flag"),
+                    any(),
+                    context.capture(),
+                    eq(null),
+                    eq(observeFullEvaluationData),
+                    eq(telemetryTargetingKey)
+                )
+                assertThat(context.firstValue.targetingKey).isEqualTo("original-subject")
+                assertThat(context.firstValue.attributes)
+                    .containsEntry("dd_evaluation_telemetry_opt_out", "true")
                 verifyNoMoreInteractions(proxy)
                 verifyNoInteractions(client)
                 verify(mockPromise).resolve(null)

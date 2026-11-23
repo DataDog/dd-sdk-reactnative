@@ -52,6 +52,27 @@ export function createDatadogExposureLoggingHook(
     });
 }
 
+/** Logs evaluations through native privacy protection, consent, and aggregation. */
+export function createDatadogEvaluationLoggingHook(
+    options: DatadogTrackingHooksOptions = {}
+): DatadogTrackingHooks {
+    const clientName = options.clientName ?? 'default';
+    return createHook('__ddTrackFlagEvaluationEvent', (context, details) => {
+        getDatadogSdk().__ddTrackFlagEvaluationEvent(
+            clientName,
+            context.flagKey,
+            toAssignment(details),
+            toDdContext(context.context),
+            details.errorCode ??
+                (details.reason === 'ERROR' ? 'GENERAL' : null),
+            details.flagMetadata?.__dd_observe_full_evaluation_data === true,
+            typeof context.context.targetingKey === 'string'
+                ? context.context.targetingKey
+                : null
+        );
+    });
+}
+
 /**
  * Adds successful evaluations to the current native RUM view.
  * Active on creation; native Flags and RUM must already be enabled.
@@ -113,7 +134,10 @@ function runTrackingLifecycleOperation(
 }
 
 function createHook(
-    method: '__ddTrackFlagExposure' | '__ddTrackFlagRumEvaluation',
+    method:
+        | '__ddTrackFlagExposure'
+        | '__ddTrackFlagEvaluationEvent'
+        | '__ddTrackFlagRumEvaluation',
     record: (
         context: HookContext,
         details: EvaluationDetails<FlagValue>
