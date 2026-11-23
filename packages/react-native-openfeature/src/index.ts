@@ -10,6 +10,9 @@ import type { DatadogOpenFeatureProviderOptions } from './provider';
 import { enrichWithRumUser } from './rumContext';
 import type { EnrichableEvaluationContext } from './rumContext';
 
+export { getClientFingerprint } from './client-fingerprint';
+export type { ClientFingerprint } from './client-fingerprint';
+
 export {
     DatadogOpenFeatureProvider,
     DatadogOfflineOpenFeatureProvider,
