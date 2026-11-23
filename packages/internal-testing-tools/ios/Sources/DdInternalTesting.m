@@ -3,12 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-// Import this first to prevent require cycles
-#if __has_include("DatadogInternalTesting-Swift.h")
-#import <DatadogInternalTesting-Swift.h>
-#else
-#import <DatadogInternalTesting/DatadogInternalTesting-Swift.h>
-#endif
+#import "DatadogInternalTestingSwiftBridge.h"
 #import "DdInternalTesting.h"
 
 
@@ -36,14 +31,6 @@ RCT_REMAP_METHOD(enable, withResolve:(RCTPromiseResolveBlock)resolve
     [self enable:resolve reject:reject];
 }
 
-// Thanks to this guard, we won't compile this code when we build for the old architecture.
-#ifdef RCT_NEW_ARCH_ENABLED
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
-{
-    return std::make_shared<facebook::react::NativeDdInternalTestingSpecJSI>(params);
-}
-#endif
 
 - (DdInternalTestingImplementation*)ddInternalTestingImplementation
 {

@@ -33,6 +33,10 @@ Pod::Spec.new do |s|
 
 
   s.source_files = "ios/Sources/*.{h,m,mm,swift}"
+  # The Swift bridge header imports the pod's generated Swift header. Keep it out of the pod's
+  # umbrella header: the Swift sources are compiled against the umbrella, so the build would
+  # depend on its own output.
+  s.private_header_files = "ios/Sources/DatadogInternalTestingSwiftBridge.h"
 
   s.dependency "React-Core"
   s.dependency "DatadogSDKReactNative"

@@ -5,22 +5,22 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <React/RCTBridgeModule.h>
+
 @class DdInternalTestingImplementation;
 
-#ifdef RCT_NEW_ARCH_ENABLED
-
-#import <DdInternalTesting/DdInternalTesting.h>
-@interface DdInternalTesting: NSObject <NativeDdInternalTestingSpec>
-
-#else
-
-#import <React/RCTBridgeModule.h>
+// This header must stay importable from Objective-C and Swift, so it does not import the C++
+// TurboModule spec. DdInternalTesting+TurboModule.mm adopts NativeDdInternalTestingSpec; the
+// methods below are the spec's methods, declared here so that the compiler checks that
+// DdInternalTesting implements them.
 @interface DdInternalTesting : NSObject <RCTBridgeModule>
-
-#endif
 
 @property (nonatomic, strong) DdInternalTestingImplementation* ddInternalTestingImplementation;
 
 + (void)enableFromNative;
+
+- (void)enable:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void)clearData:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void)getAllEvents:(NSString *)feature resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
 @end
