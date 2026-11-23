@@ -7,6 +7,7 @@
 // This file is imported in the auto-generated DatadogSDKReactNative-Swift.h header file.
 // Deleting it could result in iOS builds failing.
 
+#import "RCTDatadogTrackableWebView.h"
 #import "RCTDatadogWebView.h"
 #import "RCTDatadogWebViewManager.h"
 // react-native-webview is a static library under CocoaPods' default linkage, where its public

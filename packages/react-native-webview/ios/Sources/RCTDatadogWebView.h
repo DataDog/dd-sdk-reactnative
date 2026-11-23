@@ -14,6 +14,7 @@
 #else
 #import "RNCWebViewImpl.h"
 #endif
+#import "RCTDatadogTrackableWebView.h"
 
 @class RCTDatadogWebView;
 
@@ -21,7 +22,7 @@
 - (void)didCreateWebView:(RCTDatadogWebView *)webView;
 @end
 
-@interface RCTDatadogWebView : RNCWebViewImpl
+@interface RCTDatadogWebView : RNCWebViewImpl <RCTDatadogTrackableWebView>
 
 @property(nonatomic, weak) id<RCTDatadogWebViewDelegate> ddWebViewDelegate;
 @property(nonatomic, assign) BOOL isTrackingEnabled;

@@ -11,7 +11,7 @@ import DatadogCore
 import DatadogInternal
 
 @objc public class RCTDatadogWebViewTracking: NSObject {
-    var webView: RCTDatadogWebView? = nil
+    var webView: RCTDatadogTrackableWebView? = nil
     var allowedHosts: Set<String> = Set()
     var onSdkInitializedListener: OnSdkInitializedListener?
     
@@ -37,7 +37,7 @@ import DatadogInternal
      - Note: If the SDK core is not available immediately, this method will register a listener and
      enable tracking only when the core will be initialized.
      */
-    @objc public func enable(webView: RCTDatadogWebView, allowedHosts: Set<String>) {
+    @objc public func enable(webView: RCTDatadogTrackableWebView, allowedHosts: Set<String>) {
         self.webView = webView
         self.allowedHosts = allowedHosts
 
@@ -54,7 +54,7 @@ import DatadogInternal
     
 
     private func enableWebViewTracking(
-        webView: RCTDatadogWebView,
+        webView: RCTDatadogTrackableWebView,
         allowedHosts: Set<String>,
         core: DatadogCoreProtocol
     ) {

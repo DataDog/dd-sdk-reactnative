@@ -8,15 +8,11 @@
 #import "RCTDatadogWebViewManager.h"
 #import "RCTDatadogWebView.h"
 
-#if __has_include("DatadogSDKReactNativeWebView-Swift.h")
-#import <DatadogSDKReactNativeWebView-Swift.h>
-#else
-#import <DatadogSDKReactNativeWebView/DatadogSDKReactNativeWebView-Swift.h>
-#endif
+#import "RCTDatadogWebViewTrackingWrapper.h"
 
 @interface RCTDatadogWebViewManager () <RNCWebViewDelegate, RCTDatadogWebViewDelegate>
     @property (nonatomic, strong) NSMutableSet *allowedHosts;
-@property (nonatomic, strong) RCTDatadogWebViewTracking* webViewTracking;
+@property (nonatomic, strong) RCTDatadogWebViewTrackingWrapper* webViewTracking;
 @end
 
 @implementation RCTDatadogWebViewManager { }
@@ -41,7 +37,7 @@ RCT_CUSTOM_VIEW_PROPERTY(allowedHosts, NSArray, RCTDatadogWebView)
     self = [super init];
     if (self) {
         self.allowedHosts = [[NSMutableSet alloc] init];
-        self.webViewTracking = [[RCTDatadogWebViewTracking alloc] init];
+        self.webViewTracking = [[RCTDatadogWebViewTrackingWrapper alloc] init];
     }
     return self;
 }
