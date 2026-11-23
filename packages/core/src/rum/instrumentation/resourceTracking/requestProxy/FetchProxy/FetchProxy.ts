@@ -8,7 +8,10 @@ import { InternalLog } from '../../../../../InternalLog';
 import { SdkVerbosity } from '../../../../../config/types';
 import { extractGraphQLErrors } from '../../graphql/graphqlUtils';
 import { getErrorData } from '../XHRProxy/xhrUtils';
-import { callOriginalFetch } from '../common/FetchProxyState';
+import {
+    callOriginalFetch,
+    isResourceTrackingDisabled
+} from '../common/FetchProxyState';
 import type { RequestContext } from '../common/RequestContext';
 import { createRequestContext, getResourceKey } from '../common/RequestContext';
 import { ResourceReporter } from '../common/ResourceReporter';
@@ -64,6 +67,11 @@ export class FetchProxy extends RequestProxy {
         this.originalFetch = originalFetch;
 
         const installedFetch: typeof fetch = (input, init) => {
+            if (isResourceTrackingDisabled()) {
+                return callOriginalFetch(() =>
+                    originalFetch.call(this.providers.fetchGlobal, input, init)
+                );
+            }
             return trackFetch({
                 input,
                 init,

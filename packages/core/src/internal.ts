@@ -30,3 +30,5 @@ export type { LogsNativeConfiguration } from './config/features/LogsConfiguratio
 export type { RumNativeConfiguration } from './config/features/RumConfigurationNative';
 export type { TraceNativeConfiguration } from './config/features/TraceConfigurationNative';
 export type { InitializationModeForTelemetry } from './config/types/InitializationModeForTelemetry';
+
+export { callWithoutResourceTracking } from './rum/instrumentation/resourceTracking/requestProxy/common/FetchProxyState';

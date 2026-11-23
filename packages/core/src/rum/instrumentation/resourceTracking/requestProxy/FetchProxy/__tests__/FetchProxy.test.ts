@@ -17,6 +17,7 @@ import {
     DATADOG_GRAPH_QL_OPERATION_TYPE_HEADER
 } from '../../../graphql/graphqlHeaders';
 import { compileHeaderCaptureConfig } from '../../../headerCapture/compileHeaderConfig';
+import { callWithoutResourceTracking } from '../../common/FetchProxyState';
 import type { ResourceReporter } from '../../common/ResourceReporter';
 import type { RUMResource } from '../../interfaces/RumResource';
 import { FetchProxy } from '../FetchProxy';
@@ -111,6 +112,29 @@ const createProxy = ({
 };
 
 describe('FetchProxy', () => {
+    it('restores tracking after an excluded request throws synchronously', async () => {
+        const response = createResponse();
+        const originalFetch = jest
+            .fn()
+            .mockImplementationOnce(() => {
+                throw new Error('network unavailable');
+            })
+            .mockResolvedValue(response);
+        const reportResource = jest.fn();
+        const { fetchGlobal, proxy } = createProxy({
+            originalFetch,
+            reportResource
+        });
+        proxy.onTrackingStart(getOptions());
+        expect(() =>
+            callWithoutResourceTracking(() =>
+                fetchGlobal.fetch('https://api.example.com/upload')
+            )
+        ).toThrow('network unavailable');
+        await fetchGlobal.fetch('https://api.example.com/upload');
+        expect(reportResource).toHaveBeenCalledTimes(1);
+    });
+
     it('reports a successful Fetch resource without replacing the response', async () => {
         const response = createResponse({
             status: 201,

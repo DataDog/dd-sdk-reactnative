@@ -35,6 +35,7 @@ class DdSdkSpec : public com::amazon::kepler::turbomodule::KeplerTurboModule {
             &methodAggregator) const noexcept override;
 
     virtual com::amazon::kepler::turbomodule::Promise startHttpProxy() = 0;
+    virtual com::amazon::kepler::turbomodule::Promise stopHttpProxy() = 0;
     virtual com::amazon::kepler::turbomodule::Promise
     httpResponse(std::string requestId, double statusCode) = 0;
 };

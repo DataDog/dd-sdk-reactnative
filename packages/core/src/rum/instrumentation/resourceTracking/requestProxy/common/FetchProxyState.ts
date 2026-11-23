@@ -5,6 +5,7 @@
  */
 
 let fetchProxyCallDepth = 0;
+let resourceTrackingDisabledDepth = 0;
 
 /**
  * Calls the original Fetch implementation while marking its synchronous work.
@@ -23,3 +24,16 @@ export const callOriginalFetch = <T>(callback: () => T): T => {
 export const isRunningWithinFetchProxy = (): boolean => {
     return fetchProxyCallDepth > 0;
 };
+
+/** Excludes only the requests started synchronously by this callback. */
+export const callWithoutResourceTracking = <T>(callback: () => T): T => {
+    resourceTrackingDisabledDepth += 1;
+    try {
+        return callOriginalFetch(callback);
+    } finally {
+        resourceTrackingDisabledDepth -= 1;
+    }
+};
+
+export const isResourceTrackingDisabled = (): boolean =>
+    resourceTrackingDisabledDepth > 0;

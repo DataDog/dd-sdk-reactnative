@@ -9,6 +9,7 @@ import { TurboModuleRegistry } from '@amazon-devices/keplerscript-turbomodule-ap
 
 export interface DdSdk extends KeplerTurboModule {
     startHttpProxy(): Promise<void>;
+    stopHttpProxy(): Promise<void>;
     httpResponse(requestId: string, statusCode: number): Promise<void>;
 }
 

@@ -33,6 +33,13 @@ DdSdk::~DdSdk() noexcept {
     datadog_rn_vega::HttpRequestBridge::getInstance().setEmitFunction({});
 }
 
+Promise DdSdk::stopHttpProxy() {
+    return Promise([](const std::shared_ptr<Promise> &promise) {
+        datadog_rn_vega::HttpRequestBridge::getInstance().setEmitFunction({});
+        promise->resolve(true);
+    });
+}
+
 Promise DdSdk::httpResponse(std::string requestId, double statusCode) {
     return Promise(
         [requestId, statusCode](const std::shared_ptr<Promise> &promise) {

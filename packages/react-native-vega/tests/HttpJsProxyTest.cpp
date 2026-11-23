@@ -109,4 +109,41 @@ int main() {
     assert(sending.get().status_code == 202);
     teardown.get();
     assert(!bridge.sendRequest("url", "", emptyBody).success);
+
+    // Stopping wakes every pending upload without waiting for the 30s timeout.
+    std::mutex idsMutex;
+    std::vector<std::string> pendingIds;
+    std::promise<void> allEmitted;
+    bridge.setEmitFunction(
+        [&](const auto &id, const auto &, const auto &, const auto &) {
+            std::lock_guard<std::mutex> lock(idsMutex);
+            pendingIds.push_back(id);
+            if (pendingIds.size() == 3)
+                allEmitted.set_value();
+        });
+    std::vector<std::future<datadog_rn_vega::HttpProxyResult>> waiting;
+    for (int i = 0; i < 3; ++i) {
+        waiting.push_back(std::async(std::launch::async, [&] {
+            return bridge.sendRequest("url", "", emptyBody);
+        }));
+    }
+    allEmitted.get_future().wait();
+    bridge.setEmitFunction({});
+    bridge.setEmitFunction({}); // Repeated teardown is safe.
+    for (auto &request : waiting) {
+        assert(request.wait_for(std::chrono::seconds(1)) ==
+               std::future_status::ready);
+        auto cancelled = request.get();
+        assert(!cancelled.success && !cancelled.retryable);
+    }
+    assert(!bridge.sendRequest("url", "", emptyBody).retryable);
+    bridge.setEmitFunction(
+        [&](const auto &id, const auto &, const auto &, const auto &) {
+            // Responses from the stopped session cannot complete a new request.
+            for (const auto &oldId : pendingIds)
+                bridge.onResponse(oldId, 500);
+            bridge.onResponse(id, 201);
+        });
+    assert(bridge.sendRequest("url", "", emptyBody).status_code == 201);
+    bridge.setEmitFunction({});
 }

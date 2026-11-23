@@ -4,85 +4,134 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { callWithoutResourceTracking } from '@datadog/mobile-react-native/internal';
 import { NativeEventEmitter } from 'react-native';
 
-import { trackInternalResource } from './InternalResourceTracking';
+import type { DdSdk } from './turbo-modules/NativeDdSdk';
 import { getNativeDdSdk } from './turbo-modules/NativeDdSdk';
 
+let activeCleanup: (() => void) | undefined;
+let operations = Promise.resolve();
+
+const enqueue = (operation: () => Promise<void>): Promise<void> => {
+    const result = operations.then(operation);
+    operations = result.catch(() => undefined);
+    return result;
+};
+
 /**
- * Listens for HTTP request events emitted by the C++ SDK's upload thread
- * and forwards them using fetch(). Sends the HTTP status code back to C++
- * via DdSdk.httpResponse().
- *
- * Await startHttpProxy() before starting native uploads so the listener is ready.
+ * Forwards native uploads through fetch without recording them as RUM resources.
+ * Await startup before enabling native uploads. Starting again replaces the
+ * previous session; its cleanup cannot stop the replacement session.
  */
 export async function startHttpProxy(): Promise<() => void> {
-    let cleanup = () => undefined as void;
-    try {
-        const nativeSdk = getNativeDdSdk();
-        if (!nativeSdk) {
-            return () => undefined;
+    activeCleanup?.();
+    let active = true;
+    let nativeSdk: DdSdk | null = null;
+    let subscription: { remove(): void } | undefined;
+    const requests = new Set<AbortController>();
+
+    const cleanup = () => {
+        if (!active) {
+            return;
         }
-        const emitter = new NativeEventEmitter();
-
-        const subscription = emitter.addListener(
-            'ddHttpRequest',
-            async (event: {
-                requestId: string;
-                url: string;
-                headers: string;
-                body: string;
-            }) => {
-                let statusCode = 0;
-                try {
-                    // Parse headers from wire format ("Key: Value\nKey2: Value2\n")
-                    const headerLines = event.headers
-                        .split('\n')
-                        .filter(line => line.includes(':'));
-                    const headersInit: Record<string, string> = {};
-                    for (const line of headerLines) {
-                        const colonIdx = line.indexOf(':');
-                        const key = line.substring(0, colonIdx).trim();
-                        const value = line.substring(colonIdx + 1).trim();
-                        headersInit[key] = value;
-                    }
-
-                    const stopTracking = trackInternalResource(event.url);
-                    try {
-                        const response = await fetch(event.url, {
-                            method: 'POST',
-                            headers: headersInit,
-                            body: event.body
-                        });
-                        statusCode = response.status;
-                    } finally {
-                        stopTracking();
-                    }
-                } catch (error) {
-                    // Network errors are reported as status 0 so C++ treats them as retryable.
-                    statusCode = 0;
-                }
-
-                try {
-                    await nativeSdk.httpResponse(event.requestId, statusCode);
-                } catch (error) {
-                    // If httpResponse fails, the C++ side times out and retries.
-                }
-            }
-        );
-
-        cleanup = () => {
+        active = false;
+        if (activeCleanup === cleanup) {
+            activeCleanup = undefined;
+        }
+        // Queue teardown before a replacement session can enable its emitter.
+        enqueue(async () => {
             try {
-                subscription.remove();
+                await nativeSdk?.stopHttpProxy();
             } catch {
-                // Cleanup must not interrupt the host app's teardown.
+                // Teardown must not interrupt the host app.
             }
-        };
-        await nativeSdk.startHttpProxy();
-        return cleanup;
+        });
+        try {
+            subscription?.remove();
+        } catch {
+            // The native module may already be unavailable.
+        }
+        requests.forEach(request => {
+            try {
+                request.abort();
+            } catch {
+                // Some Fetch implementations do not support cancellation.
+            }
+        });
+        requests.clear();
+    };
+    activeCleanup = cleanup;
+
+    try {
+        await enqueue(async () => {
+            if (!active) {
+                return;
+            }
+            nativeSdk = getNativeDdSdk();
+            if (!nativeSdk) {
+                cleanup();
+                return;
+            }
+            const sdk = nativeSdk;
+            subscription = new NativeEventEmitter().addListener(
+                'ddHttpRequest',
+                async (event: {
+                    requestId: string;
+                    url: string;
+                    headers: string;
+                    body: string;
+                }) => {
+                    if (!active) {
+                        return;
+                    }
+                    let statusCode = 0;
+                    let controller: AbortController | undefined;
+                    try {
+                        const headers: Record<string, string> = {};
+                        event.headers.split('\n').forEach(line => {
+                            const colon = line.indexOf(':');
+                            if (colon >= 0) {
+                                headers[
+                                    line.substring(0, colon).trim()
+                                ] = line.substring(colon + 1).trim();
+                            }
+                        });
+                        if (typeof AbortController !== 'undefined') {
+                            controller = new AbortController();
+                            requests.add(controller);
+                        }
+                        const response = await callWithoutResourceTracking(() =>
+                            fetch(event.url, {
+                                method: 'POST',
+                                headers,
+                                body: event.body,
+                                ...(controller
+                                    ? { signal: controller.signal }
+                                    : {})
+                            })
+                        );
+                        statusCode = response.status;
+                    } catch {
+                        // Status 0 makes network failures retryable in native.
+                    } finally {
+                        if (controller) {
+                            requests.delete(controller);
+                        }
+                    }
+                    if (active) {
+                        try {
+                            await sdk.httpResponse(event.requestId, statusCode);
+                        } catch {
+                            // Native times out or teardown cancels the waiter.
+                        }
+                    }
+                }
+            );
+            await sdk.startHttpProxy();
+        });
     } catch {
-        // Native transport can be unavailable while the host app is starting.
         cleanup();
-        return () => undefined;
     }
+    return cleanup;
 }

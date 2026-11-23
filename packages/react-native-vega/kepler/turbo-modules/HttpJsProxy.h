@@ -23,6 +23,7 @@ struct PendingHttpRequest {
     std::mutex mutex;
     std::condition_variable cv;
     bool completed = false;
+    bool cancelled = false;
     int status_code = 0;
 };
 
@@ -58,6 +59,7 @@ class HttpRequestBridge {
      */
     using BodyWriter = std::function<size_t(char* buffer, size_t num_bytes)>;
 
+    // Replacing or clearing the emitter also cancels its pending requests.
     void setEmitFunction(EmitFn fn);
 
     /**

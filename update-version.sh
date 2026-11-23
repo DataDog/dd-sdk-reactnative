@@ -8,6 +8,19 @@ sed -i '' -e "s/\".*\"/\"$1\"/g" packages/core/android/src/main/kotlin/com/datad
 
 # Change version
 yarn run lerna version $1 --ignore-changes --no-git-tag-version --no-push
+
+# Keep Vega on the release version with a beta suffix.
+node <<'NODE'
+const fs = require('fs');
+const { version } = require('./lerna.json');
+const { version: coreVersion } = require('./packages/core/package.json');
+const packagePath = 'packages/react-native-vega/package.json';
+const vegaPackage = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+vegaPackage.version = version.endsWith('-beta') ? version : `${version}-beta`;
+vegaPackage.peerDependencies['@datadog/mobile-react-native'] = coreVersion;
+fs.writeFileSync(packagePath, JSON.stringify(vegaPackage, null, 4) + '\n');
+NODE
+
 yarn prepare
 
 # prepare packages

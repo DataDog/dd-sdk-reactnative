@@ -8,13 +8,19 @@ separately.
 
 `startHttpProxy()` resolves to a cleanup function. Await it before starting the
 native SDK so the JavaScript listener and native emitter are ready for uploads.
+Starting again stops the previous session. Cleanup removes the listener, aborts
+active fetches where supported, and disarms native uploads, waking any pending
+requests. SDK uploads bypass automatic Fetch and XHR resource tracking without
+adding headers or excluding app requests to the same URL.
+
 Native modules are resolved on use, keeping package imports safe on other
-platforms.
+platforms. This package follows the shared repository version with a `-beta`
+suffix while remaining private and excluded from publishing.
 
 Run the transport tests with:
 
 ```sh
-yarn workspace @datadog/mobile-react-native-vega test --runInBand --watchman=false
+yarn test --runTestsByPath packages/react-native-vega/__tests__/*.test.ts --runInBand --watchman=false
 yarn workspace @datadog/mobile-react-native-vega test:native
 ```
 

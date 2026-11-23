@@ -1,6 +1,6 @@
 {
     "name": "@datadog/mobile-react-native-vega",
-    "version": "3.11.0-vega.0",
+    "version": "3.13.0-beta",
     "private": true,
     "description": "Datadog native bridge for Amazon Vega SDK apps",
     "keywords": [
@@ -38,7 +38,7 @@
     "source": "src/index",
     "module": "lib/module/index",
     "publishConfig": {
-        "access": "public"
+        "access": "restricted"
     },
     "scripts": {
         "test": "jest",
@@ -52,6 +52,7 @@
     },
     "peerDependencies": {
         "@amazon-devices/react-native-kepler": "^2.0.0",
+        "@datadog/mobile-react-native": "3.13.0",
         "react": ">=16.13.1",
         "react-native": ">=0.63.4 <1.0"
     },
@@ -60,6 +61,9 @@
     },
     "jest": {
         "preset": "react-native",
+        "moduleNameMapper": {
+            "^@datadog/mobile-react-native/internal$": "<rootDir>/../core/src/internal.ts"
+        },
         "modulePathIgnorePatterns": [
             "<rootDir>/lib/"
         ],

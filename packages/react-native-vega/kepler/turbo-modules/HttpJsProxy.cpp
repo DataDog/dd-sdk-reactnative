@@ -14,7 +14,7 @@ namespace datadog_rn_vega {
 static const size_t BODY_WRITER_EOF = 0;
 static const size_t BODY_WRITER_ABORT = 0xffffffff;
 
-HttpRequestBridge& HttpRequestBridge::getInstance() {
+HttpRequestBridge &HttpRequestBridge::getInstance() {
     static HttpRequestBridge instance;
     return instance;
 }
@@ -22,17 +22,35 @@ HttpRequestBridge& HttpRequestBridge::getInstance() {
 void HttpRequestBridge::setEmitFunction(EmitFn fn) {
     std::lock_guard<std::mutex> lock(emitterMutex_);
     emitFn_ = std::move(fn);
+    std::map<std::string, std::shared_ptr<PendingHttpRequest>> cancelled;
+    {
+        std::lock_guard<std::mutex> pendingLock(mutex_);
+        cancelled.swap(pending_);
+    }
+    for (const auto &entry : cancelled) {
+        const auto &pending = entry.second;
+        {
+            std::lock_guard<std::mutex> pendingLock(pending->mutex);
+            if (!pending->completed) {
+                pending->cancelled = true;
+                pending->completed = true;
+            }
+        }
+        pending->cv.notify_one();
+    }
 }
 
-HttpProxyResult HttpRequestBridge::sendRequest(
-    const char* url, const char* headers, BodyWriter body_writer) {
+HttpProxyResult HttpRequestBridge::sendRequest(const char *url,
+                                               const char *headers,
+                                               BodyWriter body_writer) {
 
     // Read the full body from the writer callback
     std::vector<char> chunk(64 * 1024);
     std::string body;
     while (true) {
         size_t n = body_writer(chunk.data(), chunk.size());
-        if (n == BODY_WRITER_EOF) break;
+        if (n == BODY_WRITER_EOF)
+            break;
         if (n == BODY_WRITER_ABORT || n > chunk.size()) {
             return {false, false, 0};
         }
@@ -42,20 +60,18 @@ HttpProxyResult HttpRequestBridge::sendRequest(
     // Create a pending request with unique ID
     std::string requestId;
     auto pending = std::make_shared<PendingHttpRequest>();
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        requestId = std::to_string(nextRequestId_++);
-        pending_[requestId] = pending;
-    }
-
     // Clearing the emitter waits for an active emit to finish before the native
-    // module is destroyed. Never hold this lock while waiting for a JS response.
+    // module is destroyed. Never hold this lock while waiting for a JS
+    // response.
     {
         std::lock_guard<std::mutex> emitterLock(emitterMutex_);
         if (!emitFn_) {
-            std::lock_guard<std::mutex> lock(mutex_);
-            pending_.erase(requestId);
             return {false, false, 0};
+        }
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            requestId = std::to_string(nextRequestId_++);
+            pending_[requestId] = pending;
         }
         try {
             emitFn_(requestId, std::string(url), std::string(headers), body);
@@ -70,14 +86,16 @@ HttpProxyResult HttpRequestBridge::sendRequest(
     int statusCode;
     {
         std::unique_lock<std::mutex> lock(pending->mutex);
-        bool ok = pending->cv.wait_for(
-            lock, std::chrono::seconds(30),
-            [&] { return pending->completed; });
+        bool ok = pending->cv.wait_for(lock, std::chrono::seconds(30),
+                                       [&] { return pending->completed; });
 
         if (!ok) {
             std::lock_guard<std::mutex> glock(mutex_);
             pending_.erase(requestId);
-            return {false, true, 0};  // timeout → retryable
+            return {false, true, 0}; // timeout → retryable
+        }
+        if (pending->cancelled) {
+            return {false, false, 0};
         }
         statusCode = pending->status_code;
     }
@@ -88,12 +106,13 @@ HttpProxyResult HttpRequestBridge::sendRequest(
     }
 
     if (statusCode == 0) {
-        return {false, true, 0};  // fetch() failed → retryable
+        return {false, true, 0}; // fetch() failed → retryable
     }
     return {true, false, statusCode};
 }
 
-void HttpRequestBridge::onResponse(const std::string& requestId, int statusCode) {
+void HttpRequestBridge::onResponse(const std::string &requestId,
+                                   int statusCode) {
     std::shared_ptr<PendingHttpRequest> pending;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -115,4 +134,4 @@ void HttpRequestBridge::onResponse(const std::string& requestId, int statusCode)
     pending->cv.notify_one();
 }
 
-}  // namespace datadog_rn_vega
+} // namespace datadog_rn_vega

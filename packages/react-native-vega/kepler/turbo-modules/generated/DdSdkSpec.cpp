@@ -20,6 +20,7 @@ DdSdkSpec::~DdSdkSpec() = default;
 void DdSdkSpec::aggregateMethods(
     MethodAggregator<KeplerTurboModule> &methodAggregator) const noexcept {
     methodAggregator.addMethod("startHttpProxy", &DdSdkSpec::startHttpProxy);
+    methodAggregator.addMethod("stopHttpProxy", &DdSdkSpec::stopHttpProxy);
     methodAggregator.addMethod("httpResponse", &DdSdkSpec::httpResponse);
 }
 

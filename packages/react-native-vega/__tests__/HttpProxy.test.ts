@@ -4,14 +4,16 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { FetchProxy } from '../../core/src/rum/instrumentation/resourceTracking/requestProxy/FetchProxy/FetchProxy';
+import type { ResourceReporter } from '../../core/src/rum/instrumentation/resourceTracking/requestProxy/common/ResourceReporter';
 import { startHttpProxy } from '../src/HttpProxy';
-import { patchCoreRumResourceTracking } from '../src/InternalResourceTracking';
 import { getNativeDdSdk } from '../src/turbo-modules/NativeDdSdk';
 
 const mockAddListener = jest.fn();
 const mockRemove = jest.fn();
 const mockHttpResponse = jest.fn();
 const mockStartHttpProxy = jest.fn();
+const mockStopHttpProxy = jest.fn();
 
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => ({
     __esModule: true,
@@ -23,7 +25,8 @@ jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => ({
 jest.mock('../src/turbo-modules/NativeDdSdk', () => ({
     getNativeDdSdk: jest.fn(() => ({
         httpResponse: mockHttpResponse,
-        startHttpProxy: mockStartHttpProxy
+        startHttpProxy: mockStartHttpProxy,
+        stopHttpProxy: mockStopHttpProxy
     }))
 }));
 
@@ -37,6 +40,14 @@ interface HttpRequestEvent {
 describe('HttpProxy', () => {
     let requestListener: (event: HttpRequestEvent) => Promise<void>;
     let fetchMock: jest.Mock;
+    let stop: (() => void) | undefined;
+
+    afterEach(async () => {
+        stop?.();
+        stop = undefined;
+        await Promise.resolve();
+        await Promise.resolve();
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -49,7 +60,7 @@ describe('HttpProxy', () => {
     });
 
     it('forwards an SDK upload without adding private HTTP headers', async () => {
-        await startHttpProxy();
+        stop = await startHttpProxy();
 
         await requestListener({
             requestId: 'request-id',
@@ -63,79 +74,150 @@ describe('HttpProxy', () => {
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: '{}'
+                body: '{}',
+                signal: expect.any(Object)
             }
         );
         expect(mockHttpResponse).toHaveBeenCalledWith('request-id', 202);
     });
 
-    it('suppresses the matching resource while the SDK upload is active', async () => {
-        let resolveFetch: (response: { status: number }) => void = () =>
-            undefined;
-        fetchMock.mockReturnValue(
+    it('excludes SDK fetches with core tracking enabled, including custom intake URLs', async () => {
+        const reportResource = jest.fn();
+        const proxy = new FetchProxy({
+            fetchGlobal: globalThis,
+            headersType: Headers,
+            resourceReporter: ({
+                reportResource
+            } as unknown) as ResourceReporter
+        });
+        const response = { status: 202, headers: new Headers() };
+        let resolveUpload!: (value: typeof response) => void;
+        fetchMock.mockResolvedValue(response).mockReturnValueOnce(
             new Promise(resolve => {
-                resolveFetch = resolve;
+                resolveUpload = resolve;
             })
         );
-        await startHttpProxy();
-
-        const url = 'https://browser-intake-datadoghq.com/api/v2/rum';
-        const request = requestListener({
-            requestId: 'request-id',
-            url,
-            headers: '',
-            body: '{}'
+        proxy.onTrackingStart({
+            tracingSamplingRate: 100,
+            firstPartyHostsRegexMap: []
         });
-        const startResource = jest.fn().mockResolvedValue(undefined);
-        const stopResource = jest.fn().mockResolvedValue(undefined);
-        const rum = { startResource, stopResource };
-        patchCoreRumResourceTracking(rum);
-
-        await rum.startResource('sdk-resource', 'POST', url);
-        resolveFetch({ status: 202 });
-        await request;
-        await rum.stopResource('sdk-resource', 202, 'xhr');
-
-        expect(startResource).not.toHaveBeenCalled();
-        expect(stopResource).not.toHaveBeenCalled();
+        try {
+            stop = await startHttpProxy();
+            const url = 'https://proxy.example.com/upload';
+            const upload = requestListener({
+                requestId: 'sdk-upload',
+                url,
+                headers: '',
+                body: '{}'
+            });
+            expect(reportResource).not.toHaveBeenCalled();
+            await fetch(url);
+            expect(reportResource).toHaveBeenCalledTimes(1);
+            resolveUpload(response);
+            await upload;
+            expect(reportResource).toHaveBeenCalledTimes(1);
+            expect(mockHttpResponse).toHaveBeenCalledWith('sdk-upload', 202);
+        } finally {
+            proxy.onTrackingStop();
+        }
     });
 
-    it('stops identifying a URL as internal when an upload fails', async () => {
+    it('reports network failures as retryable', async () => {
         fetchMock.mockRejectedValue(new Error('network failure'));
-        await startHttpProxy();
-
+        stop = await startHttpProxy();
         await requestListener({
             requestId: 'request-id',
             url: 'https://proxy.example.com/upload',
             headers: '',
             body: '{}'
         });
-
-        const startResource = jest.fn().mockResolvedValue(undefined);
-        const rum = {
-            startResource,
-            stopResource: jest.fn().mockResolvedValue(undefined)
-        };
-        patchCoreRumResourceTracking(rum);
-        await rum.startResource(
-            'customer-resource',
-            'POST',
-            'https://proxy.example.com/upload'
-        );
-
-        expect(startResource).toHaveBeenCalled();
         expect(mockHttpResponse).toHaveBeenCalledWith('request-id', 0);
     });
 
     it('removes the request listener when stopped', async () => {
-        const stop = await startHttpProxy();
+        stop = await startHttpProxy();
         stop();
+        stop();
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(mockStopHttpProxy).toHaveBeenCalledTimes(1);
         expect(mockRemove).toHaveBeenCalledTimes(1);
+    });
+
+    it('replaces an earlier listener and ignores stale cleanup and events', async () => {
+        const oldStop = await startHttpProxy();
+        const oldListener = requestListener;
+        stop = await startHttpProxy();
+        expect(mockRemove).toHaveBeenCalledTimes(1);
+        expect(mockStopHttpProxy).toHaveBeenCalledTimes(1);
+        expect(mockStopHttpProxy.mock.invocationCallOrder[0]).toBeLessThan(
+            mockStartHttpProxy.mock.invocationCallOrder[1]
+        );
+        oldStop();
+        await oldListener({
+            requestId: 'stale',
+            url: 'url',
+            headers: '',
+            body: ''
+        });
+        expect(mockRemove).toHaveBeenCalledTimes(1);
+        expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('cancels in-flight fetches and ignores late responses after cleanup', async () => {
+        let resolveFetch!: (response: { status: number }) => void;
+        fetchMock.mockReturnValue(
+            new Promise(resolve => {
+                resolveFetch = resolve;
+            })
+        );
+        stop = await startHttpProxy();
+        const request = requestListener({
+            requestId: 'pending',
+            url: 'url',
+            headers: '',
+            body: ''
+        });
+        const signal = fetchMock.mock.calls[0][1].signal;
+        stop();
+        expect(signal.aborted).toBe(true);
+        resolveFetch({ status: 202 });
+        await request;
+        expect(mockHttpResponse).not.toHaveBeenCalled();
+    });
+
+    it('serializes overlapping starts and stops', async () => {
+        let resolveStart!: () => void;
+        mockStartHttpProxy.mockReturnValueOnce(
+            new Promise<void>(resolve => {
+                resolveStart = resolve;
+            })
+        );
+        const first = startHttpProxy();
+        await Promise.resolve();
+        const second = startHttpProxy();
+        resolveStart();
+        const oldStop = await first;
+        stop = await second;
+        oldStop();
+        expect(mockRemove).toHaveBeenCalledTimes(1);
+        expect(mockStopHttpProxy).toHaveBeenCalledTimes(1);
+        expect(mockStartHttpProxy).toHaveBeenCalledTimes(2);
+    });
+
+    it('contains native teardown failures', async () => {
+        mockStopHttpProxy.mockRejectedValueOnce(
+            new Error('native unavailable')
+        );
+        stop = await startHttpProxy();
+        expect(() => stop?.()).not.toThrow();
+        await Promise.resolve();
+        await Promise.resolve();
     });
 
     it('contains failures when returning a response to native', async () => {
         mockHttpResponse.mockRejectedValueOnce(new Error('native unavailable'));
-        await startHttpProxy();
+        stop = await startHttpProxy();
         await expect(
             requestListener({
                 requestId: 'failed-response',
@@ -148,7 +230,8 @@ describe('HttpProxy', () => {
 
     it('does not start a proxy when the native module is unavailable', async () => {
         (getNativeDdSdk as jest.Mock).mockReturnValueOnce(null);
-        await expect(startHttpProxy()).resolves.toEqual(expect.any(Function));
+        stop = await startHttpProxy();
+        expect(stop).toEqual(expect.any(Function));
         expect(mockAddListener).not.toHaveBeenCalled();
     });
 
@@ -156,7 +239,8 @@ describe('HttpProxy', () => {
         (getNativeDdSdk as jest.Mock).mockImplementationOnce(() => {
             throw new Error('native module failed to load');
         });
-        await expect(startHttpProxy()).resolves.toEqual(expect.any(Function));
+        stop = await startHttpProxy();
+        expect(stop).toEqual(expect.any(Function));
         expect(mockAddListener).not.toHaveBeenCalled();
     });
 
@@ -164,7 +248,8 @@ describe('HttpProxy', () => {
         mockAddListener.mockImplementationOnce(() => {
             throw new Error('event emitter unavailable');
         });
-        await expect(startHttpProxy()).resolves.toEqual(expect.any(Function));
+        stop = await startHttpProxy();
+        expect(stop).toEqual(expect.any(Function));
     });
 
     it('registers the JS listener before enabling native uploads', async () => {
@@ -175,7 +260,7 @@ describe('HttpProxy', () => {
             );
             return Promise.resolve();
         });
-        await startHttpProxy();
+        stop = await startHttpProxy();
         expect(mockStartHttpProxy).toHaveBeenCalledTimes(1);
     });
 
@@ -183,7 +268,8 @@ describe('HttpProxy', () => {
         mockStartHttpProxy.mockRejectedValueOnce(
             new Error('native transport unavailable')
         );
-        await expect(startHttpProxy()).resolves.toEqual(expect.any(Function));
+        stop = await startHttpProxy();
+        expect(stop).toEqual(expect.any(Function));
         expect(mockRemove).toHaveBeenCalledTimes(1);
     });
 });

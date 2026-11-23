@@ -16,6 +16,7 @@ class DdSdk : public DdSdkSpec {
     ~DdSdk() noexcept override;
 
     com::amazon::kepler::turbomodule::Promise startHttpProxy() override;
+    com::amazon::kepler::turbomodule::Promise stopHttpProxy() override;
     com::amazon::kepler::turbomodule::Promise
     httpResponse(std::string requestId, double statusCode) override;
 };
