@@ -25,6 +25,7 @@
         "android/gradle.properties",
         "android/src/**",
         "ios/Sources/**",
+        "ios/Package.swift",
         "ios/DatadogInternalTesting.xcodeproj/project.xcworkspace/xcsharedata",
         "ios/DatadogInternalTesting.xcodeproj/project.xcworkspace/*.xcworkspacedata",
         "ios/DatadogInternalTesting.xcodeproj/*.pbxproj",
@@ -97,6 +98,9 @@
                 "DdInternalTesting": "DdInternalTesting"
             }
         }
+    },
+    "swiftpmConfig": {
+        "name": "DatadogInternalTesting"
     },
     "dependencies": {
         "lodash.isequal": "^4.5.0"
