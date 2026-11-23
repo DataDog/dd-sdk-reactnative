@@ -91,7 +91,7 @@ function logTrackingFailure(
     error?: unknown
 ): void {
     const failure = `${method}: ${reason}`;
-    if (reportedFailures.has(failure)) {
+    if (InternalLog.verbosity === undefined || reportedFailures.has(failure)) {
         return;
     }
     reportedFailures.add(failure);

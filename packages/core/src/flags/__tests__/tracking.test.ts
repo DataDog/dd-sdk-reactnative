@@ -6,7 +6,9 @@
 
 import { SdkVerbosity } from '../../config/types/SdkVerbosity';
 
-jest.mock('../../InternalLog', () => ({ InternalLog: { log: jest.fn() } }));
+jest.mock('../../InternalLog', () => ({
+    InternalLog: { verbosity: 'warn', log: jest.fn() }
+}));
 jest.mock('../../specs/NativeDdFlags', () => ({ getNativeDdFlags: jest.fn() }));
 
 describe.each(['trackExposure', 'trackRumEvaluation'] as const)(
@@ -15,13 +17,15 @@ describe.each(['trackExposure', 'trackRumEvaluation'] as const)(
         let native: Record<typeof method, jest.Mock>;
         let getNative: jest.Mock;
         let log: jest.Mock;
+        let internalLog: typeof import('../../InternalLog').InternalLog;
         let submit: () => void;
 
         beforeEach(() => {
             jest.resetModules();
             getNative = jest.requireMock('../../specs/NativeDdFlags')
                 .getNativeDdFlags;
-            log = jest.requireMock('../../InternalLog').InternalLog.log;
+            internalLog = jest.requireMock('../../InternalLog').InternalLog;
+            log = jest.mocked(internalLog.log);
             native = {
                 [method]: jest.fn().mockResolvedValue(undefined)
             } as Record<typeof method, jest.Mock>;
@@ -52,6 +56,39 @@ describe.each(['trackExposure', 'trackRumEvaluation'] as const)(
                 }
             };
         });
+
+        it.each([
+            'missing native module',
+            'unsupported native method',
+            'native call failed'
+        ])(
+            'preserves the warning for %s until verbosity is configured',
+            async reason => {
+                internalLog.verbosity = undefined;
+                if (reason === 'missing native module') {
+                    getNative.mockReturnValue(null);
+                } else if (reason === 'unsupported native method') {
+                    getNative.mockReturnValue({});
+                } else {
+                    native[method].mockRejectedValue(
+                        new Error('native rejected')
+                    );
+                }
+                submit();
+                await Promise.resolve();
+                expect(log).not.toHaveBeenCalled();
+
+                internalLog.verbosity = SdkVerbosity.WARN;
+                submit();
+                submit();
+                await Promise.resolve();
+                expect(log).toHaveBeenCalledTimes(1);
+                expect(log).toHaveBeenCalledWith(
+                    expect.stringContaining(`${method}: ${reason}`),
+                    SdkVerbosity.WARN
+                );
+            }
+        );
 
         it('warns once per failure reason and still retries native delivery', async () => {
             getNative.mockReturnValue(null);

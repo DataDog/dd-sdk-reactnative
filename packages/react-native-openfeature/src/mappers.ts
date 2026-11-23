@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { FlagsConfiguration } from '@datadog/flagging-core';
 import type {
     EvaluationContext as DdEvaluationContext,
     PrimitiveValue
@@ -57,4 +58,21 @@ export const withoutAssignmentToken = (
         ...evaluationContext
     } = context;
     return evaluationContext;
+};
+
+/** Keep snapshot matching consistent with runtime context normalization. */
+export const withoutEmbeddedAssignmentToken = (
+    configuration: FlagsConfiguration
+): FlagsConfiguration => {
+    const precomputed = configuration?.precomputed;
+    if (!precomputed?.context) {
+        return configuration;
+    }
+    return {
+        ...configuration,
+        precomputed: {
+            ...precomputed,
+            context: withoutAssignmentToken(precomputed.context)
+        }
+    };
 };

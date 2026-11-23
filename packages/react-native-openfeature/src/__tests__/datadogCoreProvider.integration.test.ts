@@ -22,6 +22,7 @@ import {
 import {
     matchingContext,
     precomputedConfiguration,
+    rulesConfiguration,
     rulesWire
 } from './__utils__/coreConfiguration';
 
@@ -85,6 +86,64 @@ describe('DatadogCoreProvider with OpenFeature', () => {
             'synthetic-replacement'
         );
     });
+
+    it.each([false, true])(
+        'sanitizes embedded snapshot contexts without changing configuration identity (rules: %s)',
+        async withRules => {
+            const configuration = {
+                ...precomputedConfiguration(),
+                ...(withRules ? rulesConfiguration() : {})
+            };
+            configuration.precomputed.context = {
+                ...matchingContext,
+                dd_assignment_token: 'embedded-credential'
+            };
+            const provider = new DatadogCoreProvider();
+            provider.setConfiguration(configuration);
+            await OpenFeature.setProviderAndWait(DOMAIN, provider, {
+                ...matchingContext,
+                dd_assignment_token: 'runtime-credential'
+            });
+            const client = OpenFeature.getClient(DOMAIN);
+            expect(client.providerStatus).toBe(ProviderStatus.READY);
+            expect(
+                client.getBooleanDetails('boolean-flag', false)
+            ).toMatchObject({
+                value: true,
+                reason: 'TARGETING_MATCH'
+            });
+            expect(provider.getConfiguration()).toBe(configuration);
+            expect(configuration.precomputed.context.dd_assignment_token).toBe(
+                'embedded-credential'
+            );
+
+            await OpenFeature.setContext(DOMAIN, matchingContext);
+            expect(client.providerStatus).toBe(ProviderStatus.READY);
+            expect(client.getBooleanValue('boolean-flag', false)).toBe(true);
+
+            const replacement = precomputedConfiguration();
+            replacement.precomputed.context = {
+                ...matchingContext,
+                dd_assignment_token: 'replacement-credential'
+            };
+            replacement.precomputed.response.data.attributes.flags[
+                'boolean-flag'
+            ].variationValue = false;
+            provider.setConfiguration(replacement);
+            expect(client.providerStatus).toBe(ProviderStatus.READY);
+            expect(client.getBooleanValue('boolean-flag', true)).toBe(false);
+            expect(provider.getConfiguration()).toBe(replacement);
+            expect(replacement.precomputed.context.dd_assignment_token).toBe(
+                'replacement-credential'
+            );
+
+            await OpenFeature.setContext(DOMAIN, { targetingKey: 'other' });
+            expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+            expect(
+                client.getBooleanDetails('boolean-flag', true).errorCode
+            ).toBe(ErrorCode.INVALID_CONTEXT);
+        }
+    );
 
     it('parses rules via the public helper and reevaluates when the OpenFeature context changes', async () => {
         const provider = new DatadogCoreProvider();
