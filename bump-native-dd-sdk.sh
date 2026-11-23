@@ -25,7 +25,15 @@ podspec_files=(
   "packages/internal-testing-tools/DatadogInternalTesting.podspec"
 )
 
+package_swift_files=(
+  "packages/core/ios/Package.swift"
+  "packages/react-native-session-replay/Package.swift"
+  "packages/react-native-webview/ios/Package.swift"
+  "packages/internal-testing-tools/ios/Package.swift"
+)
+
 ios_pattern="(datadog_ios_version = ')[0-9.]+'"
+package_swift_pattern='(let datadogIOSVersion: Version = ")[0-9.]+"'
 android_pattern='(com\.datadoghq:dd-sdk-android-[^:"]+):[0-9.]+'
 
 if [[ "$sdk" == "ios" ]]; then
@@ -42,37 +50,49 @@ else
   exit 1
 fi
 
-for file in "${files[@]}"; do
-  if [[ ! -f "$file" ]]; then
-    echo "❌ File not found: $file"
-    continue
-  fi
+update_files() {
+  local pattern="$1"
+  local sed_pattern="$2"
+  shift 2
 
-  echo -e "\nUpdating: $file"
+  for file in "$@"; do
+    if [[ ! -f "$file" ]]; then
+      echo "❌ File not found: $file"
+      continue
+    fi
 
-  updated=false
-  tmp_file="${file}.tmp"
+    echo -e "\nUpdating: $file"
 
-  while IFS= read -r line; do
-    if [[ "$line" =~ $pattern ]]; then
-      old_line="$line"
-      new_line=$(echo "$line" | sed -E "$sed_pattern")
-      if [[ "$new_line" != "$old_line" ]]; then
-        echo "✅ $new_line"
-        updated=true
-        echo "$new_line" >> "$tmp_file"
+    updated=false
+    tmp_file="${file}.tmp"
+
+    while IFS= read -r line; do
+      if [[ "$line" =~ $pattern ]]; then
+        old_line="$line"
+        new_line=$(echo "$line" | sed -E "$sed_pattern")
+        if [[ "$new_line" != "$old_line" ]]; then
+          echo "✅ $new_line"
+          updated=true
+          echo "$new_line" >> "$tmp_file"
+        else
+          echo "$line" >> "$tmp_file"
+        fi
       else
         echo "$line" >> "$tmp_file"
       fi
-    else
-      echo "$line" >> "$tmp_file"
-    fi
-  done < "$file"
+    done < "$file"
 
-  if $updated; then
-    mv "$tmp_file" "$file"
-  else
-    echo "ℹ️  No updates needed in $file"
-    rm "$tmp_file"
-  fi
-done
+    if $updated; then
+      mv "$tmp_file" "$file"
+    else
+      echo "ℹ️  No updates needed in $file"
+      rm "$tmp_file"
+    fi
+  done
+}
+
+update_files "$pattern" "$sed_pattern" "${files[@]}"
+
+if [[ "$sdk" == "ios" ]]; then
+  update_files "$package_swift_pattern" "s/${package_swift_pattern}/\\1${new_version}\"/" "${package_swift_files[@]}"
+fi
