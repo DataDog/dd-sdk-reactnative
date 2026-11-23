@@ -352,6 +352,65 @@ precomputed-only `configurationFromString` helper.
   `Error`. Loading a usable configuration after an error emits `Ready`, followed by
   `ConfigurationChanged`.
 
+### Fetching rules configuration
+
+Use `fetchRulesConfiguration` from the `/rules-based` entry point to fetch client-distributed
+rules and decode them into a `FlagsConfiguration`. It accepts `clientToken`, `env`, an optional
+`applicationId`, site domain, `flagSelection`, `fetch` implementation, and `AbortSignal`.
+The application ID is sent as `dd-application-id` for per-application usage attribution.
+An optional `logger` receives selection diagnostics; the default writes `DATADOG:`-prefixed
+console warnings. Fetching does not load or initialize the native SDK or require `DdFlags.enable()`.
+
+The built-in fetch requires **React Native 0.72 or later** to read binary response bodies.
+On RN 0.63-0.71, pass a fetch implementation whose `Response.arrayBuffer()` works. Earlier RN
+versions leave `FileReader.readAsArrayBuffer()` unimplemented; the helper reports this limitation
+with an actionable error and retains the original error as `cause`. It does not add a binary-read
+polyfill or change the package's React Native peer dependency.
+
+```tsx
+import {
+    DatadogCoreProvider,
+    fetchRulesConfiguration
+} from '@datadog/mobile-react-native-openfeature/rules-based';
+import { OpenFeature } from '@openfeature/react-sdk';
+
+const fetchOptions = {
+    clientToken: '<CLIENT_TOKEN>',
+    env: 'production',
+    site: 'datadoghq.com',
+    flagSelection: { tags: ['team:checkout'], keyPatterns: ['checkout-*'] }
+};
+const provider = new DatadogCoreProvider();
+provider.setConfiguration(await fetchRulesConfiguration(fetchOptions));
+await OpenFeature.setProviderAndWait('datadog-core', provider, {
+    targetingKey: 'user-123', country: 'US'
+});
+const client = OpenFeature.getClient('datadog-core');
+const enabled = client.getBooleanValue('checkout-new-flow', false);
+
+// Context changes evaluate the loaded rules locally, without another request.
+await OpenFeature.setContext('datadog-core', {
+    targetingKey: 'user-456', country: 'CA'
+});
+
+// Refresh explicitly when the application needs new rules.
+try {
+    provider.setConfiguration(await fetchRulesConfiguration(fetchOptions));
+} catch {
+    // Keep evaluating the last successfully loaded rules.
+}
+```
+
+The helper makes one request per call, with no automatic polling, retries, persistence, or tracking. It rejects on HTTP, network, cancellation, body-read, or decoding failures. The refresh example retains the active configuration when fetching fails. Use a client token; the helper only requests client-distributed configuration, never server-distributed rules.
+
+`flagSelection` requests flags matching any of the listed tags or key patterns (OR). Tags are exact, case-sensitive matches; key patterns are case-sensitive and match the whole key, with `*` matching any run of characters. Values are trimmed using Unicode whitespace, deduplicated, and sorted by UTF-8 bytes. Each list accepts at most 31 distinct nonempty values after normalization, and each value can contain at most 200 UTF-8 bytes. Empty selections are omitted quietly.
+
+Selection is best-effort: a malformed or over-limit selection, or one that makes the encoded request URL exceed 8,192 bytes, is not sent. The helper reports a diagnostic and requests the full configuration instead. A nonempty `DD-Flag-Selection-Ignored` response header also produces a diagnostic when a selection was sent. Supply `logger: { error(message) { /* route diagnostics */ } }` to customize reporting. Diagnostics do not initialize the native SDK or send telemetry, and a throwing logger does not prevent configuration loading.
+
+When the backend applies selection, flags outside it are absent from the returned configuration. Evaluating them returns your default value with `FLAG_NOT_FOUND`, so select every flag the app evaluates. Selection is not an access-control boundary: the helper retains the full returned configuration if the server ignores selection and does not filter it locally.
+
+`site` uses a domain such as `datadoghq.com` or `datadoghq.eu`, not the native SDK's `US1` or `EU1` identifiers. The default is `datadoghq.com`. Fetching and evaluation do not register tracking; use the hooks below when tracking is needed.
+
 ### Optional tracking with DatadogCoreProvider
 
 Register exposure and RUM hooks independently with the evaluation-only
