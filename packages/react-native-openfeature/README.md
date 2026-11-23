@@ -542,10 +542,10 @@ The hooks do not initialize, shut down, or change consent for the shared native 
 
 Tracking destinations are configured on the native SDK, not on individual hooks. The core
 SDK's site selects the default endpoints. For custom intake routing, pass
-`customExposureEndpoint` to `DdFlags.enable()` before creating clients. It accepts a
-base URL; the RN bridge appends `/api/v2/exposures`. These hooks do not emit evaluation
-events. RUM's endpoint is configured separately when initializing RUM. These overrides
-do not change configuration fetching.
+`customExposureEndpoint` or `customEvaluationEndpoint` to `DdFlags.enable()` before
+creating clients. Both accept base URLs; the RN bridge appends `/api/v2/exposures` or
+`/api/v2/flagevaluation`, respectively. RUM's endpoint is configured separately when
+initializing RUM. These overrides do not change configuration fetching.
 
 The exposure and evaluation hooks require `initialize()`. The RUM hook is active as soon as it
 is created, matching the browser API; its `initialize()` is optional. For each hook,
