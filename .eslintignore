@@ -1,6 +1,7 @@
 node_modules
 example
 example-new-architecture
+example-spm
 benchmarks
 dist
 lib

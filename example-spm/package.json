@@ -1,0 +1,41 @@
+{
+  "name": "DdSdkReactNativeSpmExample",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "spm": "react-native spm"
+  },
+  "dependencies": {
+    "@datadog/mobile-react-native": "workspace:packages/core",
+    "@datadog/mobile-react-native-session-replay": "workspace:packages/react-native-session-replay",
+    "@datadog/mobile-react-native-webview": "workspace:packages/react-native-webview",
+    "@datadog/react-native-internal-testing-tools": "workspace:packages/internal-testing-tools",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-webview": "patch:react-native-webview@npm%3A14.0.1#../.yarn/patches/react-native-webview-npm-14.0.1-5188b52144.patch"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native-community/cli": "20.2.0",
+    "@react-native-community/cli-platform-android": "20.2.0",
+    "@react-native-community/cli-platform-ios": "20.2.0",
+    "@react-native/babel-preset": "0.88.1",
+    "@react-native/eslint-config": "0.88.1",
+    "@react-native/metro-config": "0.88.1",
+    "@react-native/typescript-config": "0.88.1",
+    "@types/react": "^19.2.0",
+    "eslint": "^8.19.0",
+    "prettier": "2.8.8",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">= 22.11.0"
+  },
+  "installConfig": {
+    "hoistingLimits": "dependencies"
+  }
+}

@@ -20,6 +20,7 @@
       "packages/*",
       "example",
       "example-new-architecture",
+      "example-spm",
       "benchmarks"
     ]
   },
