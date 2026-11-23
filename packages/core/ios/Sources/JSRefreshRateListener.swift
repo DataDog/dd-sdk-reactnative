@@ -5,6 +5,7 @@
  */
 
 import Foundation
+import QuartzCore
 
 typealias frame_time_callback = (_ frameTime: Double, _ displayFps: Double) -> Void
 

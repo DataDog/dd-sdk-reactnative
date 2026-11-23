@@ -4,6 +4,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2019-2025 Datadog, Inc.
  */
+import Foundation
 import DatadogCore
 import DatadogInternal
 
