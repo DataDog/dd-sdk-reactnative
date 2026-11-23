@@ -4,12 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-// Import this first to prevent require cycles
-#if __has_include("DatadogSDKReactNativeSessionReplay-Swift.h")
-#import <DatadogSDKReactNativeSessionReplay-Swift.h>
-#else
-#import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
-#endif
+#import "DatadogSDKReactNativeSessionReplaySwiftBridge.h"
 
 #import "DdSessionReplay.h"
 
@@ -54,14 +49,6 @@ RCT_EXPORT_METHOD(stopRecording:(RCTPromiseResolveBlock)resolve withRejecter:(RC
     [self stopRecording:resolve reject:reject];
 }
 
-// Thanks to this guard, we won't compile this code when we build for the old architecture.
-#ifdef RCT_NEW_ARCH_ENABLED
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
-{
-    return std::make_shared<facebook::react::NativeDdSessionReplaySpecJSI>(params);
-}
-#endif
 
 - (DdSessionReplayImplementation*)ddSessionReplayImplementation
 {

@@ -14,13 +14,6 @@
 #import <react/renderer/components/DdSDKReactNativeSessionReplay/RCTComponentViewHelpers.h>
 #import <React/RCTFabricComponentsPlugins.h>
 
-
-#if __has_include("DatadogSDKReactNativeSessionReplay-Swift.h")
-#import <DatadogSDKReactNativeSessionReplay-Swift.h>
-#else
-#import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
-#endif
-
 @interface DdPrivacyViewFabric : RCTViewComponentView
 @property (nonatomic, copy) NSString *nativeID;
 @property (nonatomic, copy) NSDictionary<NSString *, NSString *> *attributes;

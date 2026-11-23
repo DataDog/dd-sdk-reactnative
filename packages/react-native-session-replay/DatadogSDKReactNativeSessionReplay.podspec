@@ -67,6 +67,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/DataDog/dd-sdk-reactnative.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/Sources/**/*.{h,m,mm,swift}"
+  # The Swift bridge header imports the pod's generated Swift header. Keep it out of the pod's
+  # umbrella header: the Swift sources are compiled against the umbrella, so the build would
+  # depend on its own output.
+  s.private_header_files = "ios/Sources/DatadogSDKReactNativeSessionReplaySwiftBridge.h"
 
   # A CocoaPods resource bundle would create a second target (`<pod>-DDSessionReplay`) whose
   # CONFIGURATION_BUILD_DIR is pinned, inline in the generated project, to the pod-scoped

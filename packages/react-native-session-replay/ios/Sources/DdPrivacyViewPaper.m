@@ -5,11 +5,7 @@
  */
 
 #import <React/RCTViewManager.h>
-#if __has_include("DatadogSDKReactNativeSessionReplay-Swift.h")
-#import <DatadogSDKReactNativeSessionReplay-Swift.h>
-#else
-#import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
-#endif
+#import "DatadogSDKReactNativeSessionReplaySwiftBridge.h"
 
 @interface DdPrivacyView : UIView
 

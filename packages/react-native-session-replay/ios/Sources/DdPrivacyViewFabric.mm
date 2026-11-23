@@ -11,13 +11,7 @@
 #import <react/renderer/components/DdSDKReactNativeSessionReplay/Props.h>
 #import <react/renderer/components/DdSDKReactNativeSessionReplay/RCTComponentViewHelpers.h>
 #import <React/RCTFabricComponentsPlugins.h>
-
-
-#if __has_include("DatadogSDKReactNativeSessionReplay-Swift.h")
-#import <DatadogSDKReactNativeSessionReplay-Swift.h>
-#else
-#import <DatadogSDKReactNativeSessionReplay/DatadogSDKReactNativeSessionReplay-Swift.h>
-#endif
+#import "DdPrivacyOverriderWrapper.h"
 #import <objc/runtime.h>
 #import "DdPrivacyViewFabric.h"
 
@@ -62,7 +56,7 @@ using namespace facebook::react;
     attributesDict[@"height"] = [NSString stringWithUTF8String:newProps.attributes.height.c_str()];
     attributesDict[@"hash"] = [NSString stringWithUTF8String:newProps.attributes.hash.c_str()];
     
-    [DdPrivacyOverrider setOverridesFor:self textPrivacy:text imagePrivacy:image touchPrivacy:touch hide:newProps.hide];
+    [DdPrivacyOverriderWrapper setOverridesForView:self textPrivacy:text imagePrivacy:image touchPrivacy:touch hide:newProps.hide];
     self.nativeID = nativeID;
     self.attributes = attributesDict;
     
