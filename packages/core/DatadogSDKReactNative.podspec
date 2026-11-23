@@ -35,6 +35,7 @@ end
 #     - DatadogSDKReactNativeSessionReplay.podspec
 #     - DatadogSDKReactNativeWebView.podspec
 #     - DatadogInternalTesting.podspec
+#     - ios/Package.swift (Swift Package Manager)
 datadog_ios_version = '3.21.0'
 datadog_ios_spm_url = 'https://github.com/DataDog/dd-sdk-ios.git'
 datadog_ios_requirement = { kind: 'exactVersion', version: datadog_ios_version }
