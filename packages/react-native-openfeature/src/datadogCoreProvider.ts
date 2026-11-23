@@ -30,6 +30,11 @@ import type {
     ResolutionDetails
 } from '@openfeature/web-sdk';
 
+import {
+    withoutAssignmentToken,
+    withoutEmbeddedAssignmentToken
+} from './mappers';
+
 /**
  * Evaluates manually supplied configurations in JavaScript using @datadog/flagging-core.
  * Ported from openfeature-js-client's browser DatadogCoreProvider.
@@ -44,6 +49,8 @@ export class DatadogCoreEvaluationProvider implements Provider {
     readonly events: ProviderEventEmitter<ProviderEvents> = new OpenFeatureEventEmitter();
 
     private flagsConfiguration: FlagsConfiguration | undefined;
+    // Normalize only the evaluation view; getConfiguration() retains the caller's object.
+    private evaluationConfiguration: FlagsConfiguration | undefined;
     private flagsConfigurationId: string | undefined;
     private context: EvaluationContext | undefined;
 
@@ -67,13 +74,19 @@ export class DatadogCoreEvaluationProvider implements Provider {
                 configuration
             );
         }
+        this.evaluationConfiguration = withoutEmbeddedAssignmentToken(
+            this.flagsConfiguration
+        );
 
         if (this.context === undefined) {
             return;
         }
 
         const error = toOpenFeatureError(
-            getFlagsConfigurationError(this.flagsConfiguration, this.context)
+            getFlagsConfigurationError(
+                this.evaluationConfiguration,
+                this.context
+            )
         );
         if (error) {
             // The web-sdk's ErrorEvent type omits errorCode, but its provider wrapper reads it.
@@ -93,9 +106,12 @@ export class DatadogCoreEvaluationProvider implements Provider {
     }
 
     initialize(context: EvaluationContext = {}): Promise<void> {
-        this.context = context;
+        this.context = withoutAssignmentToken(context);
         const error = toOpenFeatureError(
-            getFlagsConfigurationError(this.flagsConfiguration, context)
+            getFlagsConfigurationError(
+                this.evaluationConfiguration,
+                this.context
+            )
         );
         return error ? Promise.reject(error) : Promise.resolve();
     }
@@ -104,9 +120,12 @@ export class DatadogCoreEvaluationProvider implements Provider {
         _oldContext: EvaluationContext,
         newContext: EvaluationContext
     ): void {
-        this.context = newContext;
+        this.context = withoutAssignmentToken(newContext);
         const error = toOpenFeatureError(
-            getFlagsConfigurationError(this.flagsConfiguration, this.context)
+            getFlagsConfigurationError(
+                this.evaluationConfiguration,
+                this.context
+            )
         );
         if (error) {
             throw error;
@@ -165,11 +184,11 @@ export class DatadogCoreEvaluationProvider implements Provider {
         logger: Logger
     ): ResolutionDetails<FlagTypeToValue<T>> {
         const details = evaluate(
-            this.flagsConfiguration,
+            this.evaluationConfiguration,
             type,
             flagKey,
             defaultValue,
-            context,
+            withoutAssignmentToken(context),
             logger
         );
         if (
@@ -194,7 +213,10 @@ export class DatadogCoreEvaluationProvider implements Provider {
     private canEvaluateCurrentContext(): boolean {
         return (
             this.context !== undefined &&
-            !getFlagsConfigurationError(this.flagsConfiguration, this.context)
+            !getFlagsConfigurationError(
+                this.evaluationConfiguration,
+                this.context
+            )
         );
     }
 

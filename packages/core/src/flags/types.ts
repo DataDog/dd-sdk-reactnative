@@ -89,6 +89,18 @@ export interface FlagsConfiguration {
      */
     customExposureEndpoint?: string;
     /**
+     * Custom server URL for sending aggregated flag evaluation data.
+     *
+     * The provided value should only include the base URL, and the endpoint will be appended automatically.
+     * For example, 'https://flags.example.com' becomes 'https://flags.example.com/api/v2/flagevaluation'.
+     *
+     * If not set, the SDK uses the default Datadog flag evaluation endpoint for the configured site.
+     * This does not change the flag assignments, exposure, or RUM endpoints.
+     *
+     * @default undefined
+     */
+    customEvaluationEndpoint?: string;
+    /**
      * Enables exposure logging via the dedicated exposures intake endpoint.
      *
      * When enabled, flag evaluation events are sent to the exposures endpoint for analytics and monitoring.

@@ -25,7 +25,11 @@ import type {
 } from '@openfeature/web-sdk';
 
 import { DatadogCoreOpenFeatureProvider } from './coreProvider';
-import { isEmptyContext, toDdContext } from './mappers';
+import {
+    isEmptyContext,
+    toDdContext,
+    withoutEmbeddedAssignmentToken
+} from './mappers';
 import { OfflineEvaluation } from './offlineEvaluation';
 
 // The outcome of a `FlagsClient` reconcile. Derived from the client so the provider maps it to
@@ -175,7 +179,9 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
             return { status: 'error', errorCode: 'GENERAL' };
         }
         return this.flagsClient.setConfiguration(
-            configuration as ParsedFlagsConfiguration
+            withoutEmbeddedAssignmentToken(
+                configuration
+            ) as ParsedFlagsConfiguration
         );
     }
 
