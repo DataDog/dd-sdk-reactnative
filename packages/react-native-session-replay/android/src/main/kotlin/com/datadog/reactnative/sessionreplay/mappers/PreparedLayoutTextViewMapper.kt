@@ -22,6 +22,8 @@ import com.datadog.android.sessionreplay.recorder.mapper.TraverseAllChildrenMapp
 import com.datadog.android.sessionreplay.utils.AsyncJobStatusCallback
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
 import com.datadog.reactnative.sessionreplay.utils.formatAsRgba
+import java.lang.reflect.Method
+import java.util.Locale
 
 /** Maps the ViewGroup-based text implementation introduced in RN 0.89. */
 internal class PreparedLayoutTextViewMapper(
@@ -29,6 +31,22 @@ internal class PreparedLayoutTextViewMapper(
     drawableUtils: DrawableUtils = ReactViewBackgroundDrawableUtils(),
     private val obfuscator: StringObfuscator = StringObfuscator.getStringObfuscator()
 ) : DefaultMapper<ViewGroup>(drawableUtils), TraverseAllChildrenMapper<ViewGroup> {
+
+    private val fontFamilyMethod: Method? by lazy {
+        try {
+            Class.forName(
+                "com.facebook.react.views.text.internal.span.CustomStyleSpan",
+                false,
+                PreparedLayoutTextViewMapper::class.java.classLoader
+            ).getMethod("getFontFamily")
+        } catch (_: ReflectiveOperationException) {
+            null
+        } catch (_: LinkageError) {
+            null
+        } catch (_: SecurityException) {
+            null
+        }
+    }
 
     override fun map(
         view: ViewGroup,
@@ -49,7 +67,8 @@ internal class PreparedLayoutTextViewMapper(
                 height = background.height,
                 shapeStyle = background.shapeStyle,
                 border = background.border,
-                text = capturedText(prepared.text, mappingContext),
+                // Layout text includes ellipsis; source text is retained only for style spans.
+                text = capturedText(prepared.layout.text, mappingContext),
                 textStyle = textStyle(prepared, density),
                 textPosition = textPosition(view, prepared, density)
             )
@@ -75,20 +94,38 @@ internal class PreparedLayoutTextViewMapper(
 
     private fun textStyle(prepared: PreparedTextLayout, density: Float): MobileSegment.TextStyle {
         val paint = prepared.layout.paint
-        val spanColor = (prepared.text as? Spanned)
-            ?.getSpans(0, prepared.text.length, ForegroundColorSpan::class.java)
+        val spanColor = (prepared.sourceText as? Spanned)
+            ?.getSpans(0, prepared.sourceText.length, ForegroundColorSpan::class.java)
             ?.firstOrNull()?.foregroundColor
-        val family = when (paint.typeface) {
-            Typeface.MONOSPACE -> "monospace"
-            Typeface.SERIF -> "serif"
-            else -> "roboto, sans-serif"
+        val family = fontFamilyFromSpans(prepared.sourceText) ?: when (paint.typeface) {
+            Typeface.MONOSPACE -> MONOSPACE_FAMILY_NAME
+            Typeface.SERIF -> SERIF_FAMILY_NAME
+            else -> SANS_SERIF_FAMILY_NAME
         }
         return MobileSegment.TextStyle(
-            family = family,
+            family = when (family.lowercase(Locale.US)) {
+                MONOSPACE_FAMILY_NAME -> MONOSPACE_FAMILY_NAME
+                SERIF_FAMILY_NAME -> SERIF_FAMILY_NAME
+                else -> SANS_SERIF_FAMILY_NAME
+            },
             size = (paint.textSize / density).toLong(),
             color = formatAsRgba(spanColor ?: paint.color),
             truncationMode = truncationMode(prepared.layout)
         )
+    }
+
+    private fun fontFamilyFromSpans(text: CharSequence): String? {
+        val spanned = text as? Spanned ?: return null
+        val method = fontFamilyMethod ?: return null
+        val span = spanned.getSpans(0, spanned.length, method.declaringClass)
+            ?.firstOrNull() ?: return null
+        return try {
+            method.invoke(span) as? String
+        } catch (_: ReflectiveOperationException) {
+            null
+        } catch (_: SecurityException) {
+            null
+        }
     }
 
     private fun textPosition(
@@ -131,6 +168,9 @@ internal class PreparedLayoutTextViewMapper(
 
     internal companion object {
         private const val INPUT_MASK: String = "***"
+        private const val MONOSPACE_FAMILY_NAME: String = "monospace"
+        private const val SERIF_FAMILY_NAME: String = "serif"
+        private const val SANS_SERIF_FAMILY_NAME: String = "roboto, sans-serif"
 
         /** Missing classes are expected on RN versions before prepared text was introduced. */
         fun resolveViewClass(): Class<out ViewGroup>? {

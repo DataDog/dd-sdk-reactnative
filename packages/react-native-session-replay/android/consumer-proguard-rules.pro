@@ -9,7 +9,8 @@
 }
 
 # CustomStyleSpan is looked up by name via Class.forName() and its getFontFamily() method is
-# invoked reflectively (LegacyTextViewUtils) to resolve font family for RUM Session Replay.
+# invoked reflectively (LegacyTextViewUtils and PreparedLayoutTextViewMapper) to resolve font
+# family for RUM Session Replay.
 # The class name and method must both be preserved for this to keep working.
 -keep class com.facebook.react.views.text.internal.span.CustomStyleSpan {
     public java.lang.String getFontFamily();

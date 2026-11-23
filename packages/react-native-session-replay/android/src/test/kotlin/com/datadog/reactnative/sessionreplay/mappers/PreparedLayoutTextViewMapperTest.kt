@@ -6,6 +6,7 @@
 
 package com.datadog.reactnative.sessionreplay.mappers
 
+import android.graphics.Typeface
 import android.text.Layout
 import android.text.Spanned
 import android.text.TextPaint
@@ -19,10 +20,13 @@ import com.datadog.android.sessionreplay.recorder.MappingContext
 import com.datadog.android.sessionreplay.recorder.SystemInformation
 import com.datadog.android.sessionreplay.utils.AsyncJobStatusCallback
 import com.datadog.reactnative.sessionreplay.utils.DrawableUtils
+import com.facebook.react.views.text.internal.span.CustomStyleSpan
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.mock
@@ -49,7 +53,9 @@ internal class PreparedLayoutTextViewMapperTest {
         whenever(context.systemInformation).thenReturn(system)
         whenever(system.screenDensity).thenReturn(2f)
         whenever(context.textAndInputPrivacy).thenReturn(TextAndInputPrivacy.MASK_SENSITIVE_INPUTS)
+        whenever(layout.text).thenReturn("hello")
         whenever(layout.paint).thenReturn(paint)
+        whenever(paint.typeface).thenReturn(mock<Typeface>())
         whenever(paint.textSize).thenReturn(28f)
         whenever(paint.color).thenReturn(0xff000000.toInt())
         whenever(layout.alignment).thenReturn(Layout.Alignment.ALIGN_NORMAL)
@@ -165,6 +171,76 @@ internal class PreparedLayoutTextViewMapperTest {
         )
 
         assertThat(mapText().textStyle.color).isEqualTo("#00000066")
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "monospace, monospace",
+        "serif, serif",
+        "SERIF, serif",
+        "roboto, 'roboto, sans-serif'",
+        "custom-font, 'roboto, sans-serif'",
+        ", 'roboto, sans-serif'"
+    )
+    fun `M resolve font family from source spans W map()`(fontFamily: String?, expected: String) {
+        val text: Spanned = mock()
+        val span: CustomStyleSpan = mock()
+        whenever(text.length).thenReturn(5)
+        whenever(text.getSpans(0, 5, CustomStyleSpan::class.java)).thenReturn(arrayOf(span))
+        whenever(span.fontFamily).thenReturn(fontFamily)
+        mapper = PreparedLayoutTextViewMapper(
+            layoutReader = { _, _ -> PreparedTextLayout(layout, text, 0f) },
+            drawableUtils = drawableUtils,
+            obfuscator = obfuscator
+        )
+
+        assertThat(mapText().textStyle.family).isEqualTo(expected)
+    }
+
+    @Test
+    fun `M retain default font W map() { no style span }`() {
+        assertThat(mapText().textStyle.family).isEqualTo("roboto, sans-serif")
+    }
+
+    @Test
+    fun `M retain default font W map() { font accessor throws }`() {
+        val text: Spanned = mock()
+        val span: CustomStyleSpan = mock()
+        whenever(text.length).thenReturn(5)
+        whenever(text.getSpans(0, 5, CustomStyleSpan::class.java)).thenReturn(arrayOf(span))
+        whenever(span.fontFamily).thenThrow(IllegalStateException("Unavailable font family"))
+        mapper = PreparedLayoutTextViewMapper(
+            layoutReader = { _, _ -> PreparedTextLayout(layout, text, 0f) },
+            drawableUtils = drawableUtils,
+            obfuscator = obfuscator
+        )
+
+        assertThat(mapText().textStyle.family).isEqualTo("roboto, sans-serif")
+        assertThat(mapText().text).isEqualTo("hello")
+    }
+
+    @Test
+    fun `M retain typeface fallback W map() { no style span }`() {
+        whenever(paint.typeface).thenReturn(Typeface.MONOSPACE)
+
+        assertThat(mapText().textStyle.family).isEqualTo("monospace")
+    }
+
+    @Test
+    fun `M capture displayed text W map() { ellipsized layout }`() {
+        whenever(layout.text).thenReturn("he\u2026")
+
+        assertThat(mapText().text).isEqualTo("he\u2026")
+    }
+
+    @Test
+    fun `M mask displayed text W map() { ellipsized layout }`() {
+        whenever(layout.text).thenReturn("he\u2026")
+        whenever(context.textAndInputPrivacy).thenReturn(TextAndInputPrivacy.MASK_ALL)
+        whenever(obfuscator.obfuscate("he\u2026")).thenReturn("xxx")
+
+        assertThat(mapText().text).isEqualTo("xxx")
+        verify(obfuscator).obfuscate("he\u2026")
     }
 
     @Test

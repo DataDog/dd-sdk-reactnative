@@ -14,7 +14,7 @@ import java.lang.reflect.Method
 /** A snapshot of React Native's prepared text layout, read on the UI thread. */
 internal data class PreparedTextLayout(
     val layout: Layout,
-    val text: CharSequence,
+    val sourceText: CharSequence,
     val verticalOffset: Float
 )
 
@@ -34,9 +34,9 @@ internal class PreparedTextLayoutReader {
             val methods = accessors ?: return null
             val prepared = methods.preparedLayout.invoke(view) ?: return null
             val layout = methods.layout.invoke(prepared) as? Layout ?: return null
-            val text = methods.text.invoke(view) as? CharSequence ?: return null
+            val sourceText = methods.text.invoke(view) as? CharSequence ?: return null
             val offset = (methods.verticalOffset.invoke(prepared) as? Number)?.toFloat() ?: 0f
-            PreparedTextLayout(layout, text, offset)
+            PreparedTextLayout(layout, sourceText, offset)
         } catch (error: ReflectiveOperationException) {
             logFailure(logger, error)
             null
