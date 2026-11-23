@@ -4,18 +4,75 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { callWithoutResourceTracking } from '@datadog/mobile-react-native/internal';
+import {
+    callWithoutResourceTracking,
+    getGlobalInstance
+} from '@datadog/mobile-react-native/internal';
 import { NativeEventEmitter } from 'react-native';
 
 import type { DdSdk } from './turbo-modules/NativeDdSdk';
 import { getNativeDdSdk } from './turbo-modules/NativeDdSdk';
 
-let activeCleanup: (() => void) | undefined;
-let operations = Promise.resolve();
+interface HttpProxyLifecycle {
+    activeCleanup?: () => void;
+    operations: Promise<void>;
+}
+
+const lifecycle = getGlobalInstance<HttpProxyLifecycle>(
+    'com.datadog.reactnative.vega.http_proxy',
+    () => ({ operations: Promise.resolve() })
+);
+
+// Leave time to report a retryable failure before native's 30-second wait ends.
+const HTTP_REQUEST_TIMEOUT_MS = 25_000;
+
+const fetchWithDeadline = async (
+    url: string,
+    options: Parameters<typeof fetch>[1],
+    requests: Set<() => void>
+): Promise<Response | undefined> => {
+    const controller =
+        typeof AbortController === 'undefined'
+            ? undefined
+            : new AbortController();
+    let completeCancellation: () => void = () => undefined;
+    const cancellation = new Promise<undefined>(resolve => {
+        completeCancellation = () => resolve(undefined);
+    });
+    let cancelled = false;
+    const cancel = () => {
+        if (cancelled) {
+            return;
+        }
+        cancelled = true;
+        completeCancellation();
+        try {
+            controller?.abort();
+        } catch {
+            // Cancellation still settles if this Fetch cannot be aborted.
+        }
+    };
+    const timeout = setTimeout(cancel, HTTP_REQUEST_TIMEOUT_MS);
+    requests.add(cancel);
+    try {
+        return await Promise.race([
+            callWithoutResourceTracking(() =>
+                fetch(url, {
+                    ...options,
+                    ...(controller ? { signal: controller.signal } : {})
+                })
+            ),
+            cancellation
+        ]);
+    } finally {
+        clearTimeout(timeout);
+        requests.delete(cancel);
+    }
+};
 
 const enqueue = (operation: () => Promise<void>): Promise<void> => {
-    const result = operations.then(operation);
-    operations = result.catch(() => undefined);
+    const result = lifecycle.operations.then(operation);
+    lifecycle.operations = result.catch(() => undefined);
     return result;
 };
 
@@ -25,19 +82,19 @@ const enqueue = (operation: () => Promise<void>): Promise<void> => {
  * previous session; its cleanup cannot stop the replacement session.
  */
 export async function startHttpProxy(): Promise<() => void> {
-    activeCleanup?.();
+    lifecycle.activeCleanup?.();
     let active = true;
     let nativeSdk: DdSdk | null = null;
     let subscription: { remove(): void } | undefined;
-    const requests = new Set<AbortController>();
+    const requests = new Set<() => void>();
 
     const cleanup = () => {
         if (!active) {
             return;
         }
         active = false;
-        if (activeCleanup === cleanup) {
-            activeCleanup = undefined;
+        if (lifecycle.activeCleanup === cleanup) {
+            lifecycle.activeCleanup = undefined;
         }
         // Queue teardown before a replacement session can enable its emitter.
         enqueue(async () => {
@@ -54,14 +111,14 @@ export async function startHttpProxy(): Promise<() => void> {
         }
         requests.forEach(request => {
             try {
-                request.abort();
+                request();
             } catch {
                 // Some Fetch implementations do not support cancellation.
             }
         });
         requests.clear();
     };
-    activeCleanup = cleanup;
+    lifecycle.activeCleanup = cleanup;
 
     try {
         await enqueue(async () => {
@@ -86,7 +143,6 @@ export async function startHttpProxy(): Promise<() => void> {
                         return;
                     }
                     let statusCode = 0;
-                    let controller: AbortController | undefined;
                     try {
                         const headers: Record<string, string> = {};
                         event.headers.split('\n').forEach(line => {
@@ -97,27 +153,18 @@ export async function startHttpProxy(): Promise<() => void> {
                                 ] = line.substring(colon + 1).trim();
                             }
                         });
-                        if (typeof AbortController !== 'undefined') {
-                            controller = new AbortController();
-                            requests.add(controller);
-                        }
-                        const response = await callWithoutResourceTracking(() =>
-                            fetch(event.url, {
+                        const response = await fetchWithDeadline(
+                            event.url,
+                            {
                                 method: 'POST',
                                 headers,
-                                body: event.body,
-                                ...(controller
-                                    ? { signal: controller.signal }
-                                    : {})
-                            })
+                                body: event.body
+                            },
+                            requests
                         );
-                        statusCode = response.status;
+                        statusCode = response?.status ?? 0;
                     } catch {
-                        // Status 0 makes network failures retryable in native.
-                    } finally {
-                        if (controller) {
-                            requests.delete(controller);
-                        }
+                        // Status 0 makes network errors and timeouts retryable.
                     }
                     try {
                         // Native arbitrates response versus cancellation and

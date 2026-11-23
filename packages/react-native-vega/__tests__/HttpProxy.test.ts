@@ -37,6 +37,17 @@ interface HttpRequestEvent {
     body: string;
 }
 
+const loadProxyCopy = (): typeof import('../src/HttpProxy') => {
+    let copy!: typeof import('../src/HttpProxy');
+    jest.isolateModules(() => {
+        copy = jest.requireActual('../src/HttpProxy');
+    });
+    return copy;
+};
+
+const flushPromises = () =>
+    new Promise(jest.requireActual('timers').setImmediate);
+
 describe('HttpProxy', () => {
     let requestListener: (event: HttpRequestEvent) => Promise<void>;
     let fetchMock: jest.Mock;
@@ -164,6 +175,201 @@ describe('HttpProxy', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    it('coordinates listeners and upload exclusion across duplicate package copies', async () => {
+        const listeners = new Set<(event: HttpRequestEvent) => Promise<void>>();
+        mockAddListener.mockImplementation((_eventName, listener) => {
+            listeners.add(listener);
+            return {
+                remove: () => {
+                    listeners.delete(listener);
+                    mockRemove();
+                }
+            };
+        });
+        const first = loadProxyCopy();
+        const second = loadProxyCopy();
+        expect(first).not.toBe(second);
+
+        const reportResource = jest.fn();
+        const proxy = new FetchProxy({
+            fetchGlobal: globalThis,
+            headersType: Headers,
+            resourceReporter: ({
+                reportResource
+            } as unknown) as ResourceReporter
+        });
+        fetchMock.mockResolvedValue({ status: 202, headers: new Headers() });
+        proxy.onTrackingStart({
+            tracingSamplingRate: 100,
+            firstPartyHostsRegexMap: []
+        });
+        const firstStop = await first.startHttpProxy();
+        try {
+            stop = await second.startHttpProxy();
+            expect(listeners.size).toBe(1);
+            expect(mockStopHttpProxy).toHaveBeenCalledTimes(1);
+            firstStop();
+            expect(listeners.size).toBe(1);
+            expect(mockStopHttpProxy).toHaveBeenCalledTimes(1);
+            await Promise.all(
+                Array.from(listeners, listener =>
+                    listener({
+                        requestId: 'shared-upload',
+                        url: 'https://proxy.example.com/upload',
+                        headers: 'Content-Type: application/json\n',
+                        body: '{}'
+                    })
+                )
+            );
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+            expect(fetchMock.mock.calls[0][1].headers).toEqual({
+                'Content-Type': 'application/json'
+            });
+            expect(reportResource).not.toHaveBeenCalled();
+            await fetch('https://proxy.example.com/upload');
+            expect(reportResource).toHaveBeenCalledTimes(1);
+        } finally {
+            firstStop();
+            proxy.onTrackingStop();
+        }
+    });
+
+    it('serializes a pending native handshake across duplicate package copies', async () => {
+        let resolveStart!: () => void;
+        mockStartHttpProxy.mockReturnValueOnce(
+            new Promise<void>(resolve => {
+                resolveStart = resolve;
+            })
+        );
+        const first = loadProxyCopy();
+        const second = loadProxyCopy();
+        const firstStart = first.startHttpProxy();
+        await flushPromises();
+        const secondStart = second.startHttpProxy();
+        try {
+            await flushPromises();
+            expect(mockStartHttpProxy).toHaveBeenCalledTimes(1);
+            expect(mockStopHttpProxy).not.toHaveBeenCalled();
+        } finally {
+            resolveStart();
+            const firstStop = await firstStart;
+            stop = await secondStart;
+            firstStop();
+        }
+        expect(mockStopHttpProxy).toHaveBeenCalledTimes(1);
+        expect(mockStopHttpProxy.mock.invocationCallOrder[0]).toBeLessThan(
+            mockStartHttpProxy.mock.invocationCallOrder[1]
+        );
+    });
+
+    describe('request deadlines', () => {
+        beforeEach(() => jest.useFakeTimers());
+        afterEach(() => jest.useRealTimers());
+
+        it.each([true, false])(
+            'bounds a hanging fetch with AbortController available: %s',
+            async hasAbort => {
+                const g = (globalThis as unknown) as {
+                    AbortController?: typeof AbortController;
+                };
+                const originalAbort = g.AbortController;
+                if (!hasAbort) {
+                    delete g.AbortController;
+                }
+                try {
+                    fetchMock.mockReturnValue(new Promise(() => undefined));
+                    stop = await startHttpProxy();
+                    const request = requestListener({
+                        requestId: 'timeout',
+                        url: 'url',
+                        headers: '',
+                        body: ''
+                    });
+                    await jest.advanceTimersByTimeAsync(25_000);
+                    expect(mockHttpResponse).toHaveBeenCalledWith('timeout', 0);
+                    await request;
+                    if (hasAbort) {
+                        expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(
+                            true
+                        );
+                    }
+                    expect(jest.getTimerCount()).toBe(0);
+                } finally {
+                    g.AbortController = originalAbort;
+                }
+            }
+        );
+
+        it('clears the deadline when a response completes', async () => {
+            stop = await startHttpProxy();
+            await requestListener({
+                requestId: 'complete',
+                url: 'url',
+                headers: '',
+                body: ''
+            });
+            expect(mockHttpResponse).toHaveBeenCalledWith('complete', 202);
+            expect(jest.getTimerCount()).toBe(0);
+            await jest.advanceTimersByTimeAsync(30_000);
+            expect(mockHttpResponse).toHaveBeenCalledTimes(1);
+        });
+
+        it('settles a hanging request and clears its deadline when stopped', async () => {
+            fetchMock.mockReturnValue(new Promise(() => undefined));
+            stop = await startHttpProxy();
+            const request = requestListener({
+                requestId: 'stopped',
+                url: 'url',
+                headers: '',
+                body: ''
+            });
+            stop();
+            await jest.advanceTimersByTimeAsync(0);
+            expect(mockHttpResponse).toHaveBeenCalledWith('stopped', 0);
+            await request;
+            expect(jest.getTimerCount()).toBe(0);
+        });
+
+        it.each(['resolve', 'reject'])(
+            'ignores a late fetch %s after the deadline',
+            async outcome => {
+                let resolveFetch!: (response: { status: number }) => void;
+                let rejectFetch!: (error: Error) => void;
+                fetchMock.mockReturnValue(
+                    new Promise((resolve, reject) => {
+                        resolveFetch = resolve;
+                        rejectFetch = reject;
+                    })
+                );
+                const abort = jest.spyOn(AbortController.prototype, 'abort');
+                try {
+                    stop = await startHttpProxy();
+                    const request = requestListener({
+                        requestId: 'late',
+                        url: 'url',
+                        headers: '',
+                        body: ''
+                    });
+                    await jest.advanceTimersByTimeAsync(25_000);
+                    expect(mockHttpResponse).toHaveBeenCalledWith('late', 0);
+                    await request;
+                    if (outcome === 'resolve') {
+                        resolveFetch({ status: 202 });
+                    } else {
+                        rejectFetch(new Error('late network failure'));
+                    }
+                    await jest.advanceTimersByTimeAsync(0);
+                    stop();
+                    expect(abort).toHaveBeenCalledTimes(1);
+                    expect(mockHttpResponse).toHaveBeenCalledTimes(1);
+                    expect(jest.getTimerCount()).toBe(0);
+                } finally {
+                    abort.mockRestore();
+                }
+            }
+        );
+    });
+
     it('cancels in-flight fetches and forwards completed responses during cleanup', async () => {
         let resolveFetch!: (response: { status: number }) => void;
         fetchMock.mockReturnValue(
@@ -179,9 +385,11 @@ describe('HttpProxy', () => {
             body: ''
         });
         const signal = fetchMock.mock.calls[0][1].signal;
+        resolveFetch({ status: 202 });
+        // Let the response win the race before cleanup runs its cancellation.
+        await Promise.resolve();
         stop();
         expect(signal.aborted).toBe(true);
-        resolveFetch({ status: 202 });
         await request;
         expect(mockHttpResponse).toHaveBeenCalledWith('pending', 202);
     });

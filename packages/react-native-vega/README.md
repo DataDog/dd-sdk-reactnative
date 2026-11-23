@@ -10,7 +10,9 @@ separately.
 native SDK so the JavaScript listener and native emitter are ready for uploads.
 Starting again stops the previous session. Cleanup removes the listener, aborts
 active fetches where supported, and disarms native uploads, waking any pending
-requests. SDK uploads bypass automatic Fetch and XHR resource tracking without
+requests. Uploads use a 25-second JavaScript deadline alongside native's
+30-second response wait. Timeouts and cancellation keep batches eligible for
+retry. SDK uploads bypass automatic Fetch and XHR resource tracking without
 adding headers or excluding app requests to the same URL.
 
 Native modules are resolved on use, keeping package imports safe on other

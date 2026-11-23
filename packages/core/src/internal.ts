@@ -16,6 +16,7 @@ export { buildConfigurationFromPartialConfiguration } from './config/async/async
 export { DdSdkNativeConfiguration } from './config/features/CoreConfigurationNative';
 export { RUM_DEFAULTS } from './config/features/RumConfiguration';
 export { adaptLongTaskThreshold } from './utils/longTasksUtils';
+export { getGlobalInstance } from './utils/singletonUtils';
 export { version } from './version';
 export { AccountInfoSingleton } from './sdk/AccountInfoSingleton/AccountInfoSingleton';
 export { AttributesSingleton } from './sdk/AttributesSingleton/AttributesSingleton';
