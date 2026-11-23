@@ -73,23 +73,45 @@ describe('SDK wrappers are import-safe', () => {
     it('importing the internal entry performs no native lookup', () => {
         expect(requireCountingLookups('../internal').lookups).toEqual([]);
     });
+
+    it('importing the legacy internal entry performs no native lookup', () => {
+        expect(requireCountingLookups('../../internal').lookups).toEqual([]);
+    });
+
+    it('the legacy internal entry shares resource tracking state with core', () => {
+        jest.isolateModules(() => {
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            const { callWithoutResourceTracking } = require('../../internal');
+            const { isResourceTrackingDisabled } = jest.requireActual(
+                '../rum/instrumentation/resourceTracking/requestProxy/common/FetchProxyState'
+            );
+
+            expect(isResourceTrackingDisabled()).toBe(false);
+            callWithoutResourceTracking(() => {
+                expect(isResourceTrackingDisabled()).toBe(true);
+            });
+            expect(isResourceTrackingDisabled()).toBe(false);
+        });
+    });
 });
 
 describe('SDK wrappers do not rely on Proxy', () => {
     // Older Android JSC and Hermes versions supported by the SDK lack Proxy.
-    it.each(['../sdk/DdSdkInternal', '../index', '../internal'])(
-        'importing %s works without Proxy',
-        modulePath => {
-            const g = globalThis as Record<string, unknown>;
-            const originalProxy = g.Proxy;
-            try {
-                delete g.Proxy;
-                expect(() => requireCountingLookups(modulePath)).not.toThrow();
-            } finally {
-                g.Proxy = originalProxy;
-            }
+    it.each([
+        '../sdk/DdSdkInternal',
+        '../index',
+        '../internal',
+        '../../internal'
+    ])('importing %s works without Proxy', modulePath => {
+        const g = globalThis as Record<string, unknown>;
+        const originalProxy = g.Proxy;
+        try {
+            delete g.Proxy;
+            expect(() => requireCountingLookups(modulePath)).not.toThrow();
+        } finally {
+            g.Proxy = originalProxy;
         }
-    );
+    });
 
     it('DdSdkWrapper forwards every method to the native module', () => {
         jest.isolateModules(() => {

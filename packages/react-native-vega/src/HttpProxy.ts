@@ -119,12 +119,12 @@ export async function startHttpProxy(): Promise<() => void> {
                             requests.delete(controller);
                         }
                     }
-                    if (active) {
-                        try {
-                            await sdk.httpResponse(event.requestId, statusCode);
-                        } catch {
-                            // Native times out or teardown cancels the waiter.
-                        }
+                    try {
+                        // Native arbitrates response versus cancellation and
+                        // ignores IDs whose requests have already completed.
+                        await sdk.httpResponse(event.requestId, statusCode);
+                    } catch {
+                        // Native times out or teardown cancels the waiter.
                     }
                 }
             );

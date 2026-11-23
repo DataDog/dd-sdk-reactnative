@@ -164,7 +164,7 @@ describe('HttpProxy', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it('cancels in-flight fetches and ignores late responses after cleanup', async () => {
+    it('cancels in-flight fetches and forwards completed responses during cleanup', async () => {
         let resolveFetch!: (response: { status: number }) => void;
         fetchMock.mockReturnValue(
             new Promise(resolve => {
@@ -183,7 +183,7 @@ describe('HttpProxy', () => {
         expect(signal.aborted).toBe(true);
         resolveFetch({ status: 202 });
         await request;
-        expect(mockHttpResponse).not.toHaveBeenCalled();
+        expect(mockHttpResponse).toHaveBeenCalledWith('pending', 202);
     });
 
     it('serializes overlapping starts and stops', async () => {

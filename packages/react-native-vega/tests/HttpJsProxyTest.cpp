@@ -22,7 +22,8 @@ int main() {
     auto &bridge = HttpRequestBridge::getInstance();
     auto emptyBody = [](char *, size_t) { return size_t{0}; };
     bridge.setEmitFunction({});
-    assert(!bridge.sendRequest("url", "", emptyBody).success);
+    auto unavailable = bridge.sendRequest("url", "", emptyBody);
+    assert(!unavailable.success && unavailable.retryable);
 
     bridge.setEmitFunction([&](const auto &id, const auto &url,
                                const auto &headers, const auto &body) {
@@ -134,9 +135,9 @@ int main() {
         assert(request.wait_for(std::chrono::seconds(1)) ==
                std::future_status::ready);
         auto cancelled = request.get();
-        assert(!cancelled.success && !cancelled.retryable);
+        assert(!cancelled.success && cancelled.retryable);
     }
-    assert(!bridge.sendRequest("url", "", emptyBody).retryable);
+    assert(bridge.sendRequest("url", "", emptyBody).retryable);
     bridge.setEmitFunction(
         [&](const auto &id, const auto &, const auto &, const auto &) {
             // Responses from the stopped session cannot complete a new request.

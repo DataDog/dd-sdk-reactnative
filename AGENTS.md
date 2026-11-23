@@ -16,6 +16,8 @@ The SDK runs inside thousands of customer apps, on top of the native iOS and And
 
 This is a monorepo built with yarn 3 workspaces and lerna. All packages share one version, set in `lerna.json`.
 
+While private, `@datadog/mobile-react-native-vega` uses the shared base version with a `-beta` suffix. `update-version.sh` maintains that suffix and keeps its core peer dependency aligned. Remove this exception when preparing Vega for public release.
+
 | Path | npm package | What it is |
 |---|---|---|
 | `packages/core` | `@datadog/mobile-react-native` | The SDK: RUM, Logs, Trace, Flags, `DatadogProvider`, the Metro plugin, and the iOS/Android bridges |

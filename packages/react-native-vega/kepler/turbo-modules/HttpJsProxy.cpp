@@ -66,7 +66,8 @@ HttpProxyResult HttpRequestBridge::sendRequest(const char *url,
     {
         std::lock_guard<std::mutex> emitterLock(emitterMutex_);
         if (!emitFn_) {
-            return {false, false, 0};
+            // Transport unavailability must retain the batch for a later retry.
+            return {false, true, 0};
         }
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -95,7 +96,7 @@ HttpProxyResult HttpRequestBridge::sendRequest(const char *url,
             return {false, true, 0}; // timeout → retryable
         }
         if (pending->cancelled) {
-            return {false, false, 0};
+            return {false, true, 0};
         }
         statusCode = pending->status_code;
     }
