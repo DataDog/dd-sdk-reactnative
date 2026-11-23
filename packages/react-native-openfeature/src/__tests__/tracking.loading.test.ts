@@ -6,6 +6,7 @@
 
 import {
     createDatadogExposureLoggingHook,
+    createDatadogEvaluationLoggingHook,
     createDatadogRumTrackingHook
 } from '../tracking';
 
@@ -16,21 +17,20 @@ jest.mock('@datadog/mobile-react-native', () => {
 describe('tracking hooks with a failing lazy SDK import', () => {
     afterEach(() => jest.restoreAllMocks());
 
-    it.each([createDatadogExposureLoggingHook, createDatadogRumTrackingHook])(
-        'contains an SDK import failure for %p',
-        async create => {
-            const warn = jest
-                .spyOn(console, 'warn')
-                .mockImplementation(() => {});
-            const tracking = create();
+    it.each([
+        createDatadogExposureLoggingHook,
+        createDatadogEvaluationLoggingHook,
+        createDatadogRumTrackingHook
+    ])('contains an SDK import failure for %p', async create => {
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const tracking = create();
 
-            await expect(tracking.initialize()).resolves.toBeUndefined();
-            await expect(tracking.initialize()).resolves.toBeUndefined();
-            await expect(tracking.shutdown()).resolves.toBeUndefined();
-            expect(warn).toHaveBeenCalledTimes(1);
-            expect(warn).toHaveBeenCalledWith(
-                expect.stringContaining('Tracking hook disabled')
-            );
-        }
-    );
+        await expect(tracking.initialize()).resolves.toBeUndefined();
+        await expect(tracking.initialize()).resolves.toBeUndefined();
+        await expect(tracking.shutdown()).resolves.toBeUndefined();
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn).toHaveBeenCalledWith(
+            expect.stringContaining('Tracking hook disabled')
+        );
+    });
 });

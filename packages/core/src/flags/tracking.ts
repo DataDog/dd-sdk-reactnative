@@ -17,7 +17,10 @@ type FlagTrackingAssignment = Pick<
     FlagCacheEntry,
     'allocationKey' | 'variationKey' | 'doLog' | 'serialId'
 >;
-type TrackingMethod = 'trackExposure' | 'trackRumEvaluation';
+type TrackingMethod =
+    | 'trackExposure'
+    | 'trackProtectedEvaluation'
+    | 'trackRumEvaluation';
 type TrackingFailure =
     | 'missing native module'
     | 'unsupported native method'
@@ -54,7 +57,7 @@ export function __ddTrackFlagEvaluationEvent(
     telemetryTargetingKey: string | null
 ): void {
     const captured = processEvaluationContext(context);
-    submit(native =>
+    submit('trackProtectedEvaluation', native =>
         native.trackProtectedEvaluation(
             clientName,
             key,
@@ -121,7 +124,10 @@ function logTrackingFailure(
     }
     reportedFailures.add(failure);
     try {
-        const detail = error instanceof Error ? `: ${error.message}` : '';
+        const detail =
+            method !== 'trackProtectedEvaluation' && error instanceof Error
+                ? `: ${error.message}`
+                : '';
         InternalLog.log(
             `Unable to submit flag tracking (${failure})${detail}. Ensure the native SDK supports the tracking hooks and Flags is enabled.`,
             SdkVerbosity.WARN

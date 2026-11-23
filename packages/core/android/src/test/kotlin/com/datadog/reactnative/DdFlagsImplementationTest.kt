@@ -422,7 +422,7 @@ internal class DdFlagsImplementationTest {
                 )
                 assertThat(context.firstValue.targetingKey).isEqualTo("original-subject")
                 assertThat(context.firstValue.attributes)
-                    .containsEntry("dd_evaluation_telemetry_opt_out", true)
+                    .containsEntry("dd_evaluation_telemetry_opt_out", "true")
                 verifyNoMoreInteractions(proxy)
                 verifyNoInteractions(client)
                 verify(mockPromise).resolve(null)

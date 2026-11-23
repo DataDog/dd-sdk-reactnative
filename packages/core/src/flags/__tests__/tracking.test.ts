@@ -11,8 +11,12 @@ jest.mock('../../InternalLog', () => ({
 }));
 jest.mock('../../specs/NativeDdFlags', () => ({ getNativeDdFlags: jest.fn() }));
 
-describe.each(['trackExposure', 'trackRumEvaluation'] as const)(
-    '%s diagnostics',
+describe.each([
+    'trackExposure',
+    'trackProtectedEvaluation',
+    'trackRumEvaluation'
+] as const)(
+    '%s native delivery failure isolation and bounded diagnostics',
     method => {
         let native: Record<typeof method, jest.Mock>;
         let getNative: jest.Mock;
@@ -45,6 +49,16 @@ describe.each(['trackExposure', 'trackRumEvaluation'] as const)(
                             doLog: true
                         },
                         context
+                    );
+                } else if (method === 'trackProtectedEvaluation') {
+                    tracking.__ddTrackFlagEvaluationEvent(
+                        'default',
+                        'flag',
+                        null,
+                        context,
+                        null,
+                        false,
+                        'user'
                     );
                 } else {
                     tracking.__ddTrackFlagRumEvaluation(
@@ -114,27 +128,41 @@ describe.each(['trackExposure', 'trackRumEvaluation'] as const)(
                     SdkVerbosity.WARN
                 );
             }
-            expect(log).toHaveBeenCalledWith(
-                expect.stringContaining('native rejected'),
-                SdkVerbosity.WARN
-            );
+            if (method === 'trackProtectedEvaluation') {
+                expect(log).not.toHaveBeenCalledWith(
+                    expect.stringContaining('native rejected'),
+                    SdkVerbosity.WARN
+                );
+            } else {
+                expect(log).toHaveBeenCalledWith(
+                    expect.stringContaining('native rejected'),
+                    SdkVerbosity.WARN
+                );
+            }
             native[method].mockResolvedValue(undefined);
             submit();
             expect(native[method]).toHaveBeenCalledTimes(3);
             expect(log).toHaveBeenCalledTimes(3);
         });
 
-        it('contains synchronous failures and logs their message only once', () => {
+        it('contains synchronous failures and warns only once', () => {
             native[method].mockImplementation(() => {
                 throw new Error('bridge unavailable');
             });
             expect(submit).not.toThrow();
             expect(submit).not.toThrow();
             expect(log).toHaveBeenCalledTimes(1);
-            expect(log).toHaveBeenCalledWith(
-                expect.stringContaining('bridge unavailable'),
-                SdkVerbosity.WARN
-            );
+            if (method === 'trackProtectedEvaluation') {
+                expect(log).not.toHaveBeenCalledWith(
+                    expect.stringContaining('bridge unavailable'),
+                    SdkVerbosity.WARN
+                );
+            } else {
+                expect(log).toHaveBeenCalledWith(
+                    expect.stringContaining('bridge unavailable'),
+                    SdkVerbosity.WARN
+                );
+            }
         });
 
         it('contains a diagnostic failure after a rejected native call', async () => {
