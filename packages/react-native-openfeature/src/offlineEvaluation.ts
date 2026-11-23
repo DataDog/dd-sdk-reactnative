@@ -4,7 +4,11 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { configMatchesContext } from '@datadog/flagging-core';
+import {
+    configMatchesContext,
+    configurationFromString,
+    configurationToString
+} from '@datadog/flagging-core';
 import type {
     FlagsConfiguration,
     PrecomputedFlag
@@ -26,6 +30,7 @@ import type {
 
 import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
 import { withoutAssignmentToken } from './mappers';
+import { requiresEncodedPrecomputedEvaluation } from './precomputedEncoding';
 
 // Keep the bridge contract owned by FlagsClient; no OpenFeature dependency enters the core SDK.
 type CreateEvaluator = Parameters<FlagsClient['__ddSetOfflineEvaluator']>[0];
@@ -72,59 +77,80 @@ export class OfflineEvaluation implements OfflineEvaluator {
         ) {
             // A bare {} has no capability. The precomputed-only parser returns it for a rules-only wire.
             InternalLog.log(
-                'DatadogOfflineOpenFeatureProvider received no precomputed or rules configuration. configurationFromString is precomputed-only; parse rules-based wires with coreConfigurationFromString from the /rules-based entry point.',
+                'DatadogOfflineOpenFeatureProvider received no precomputed or rules configuration. The root configurationFromString is precomputed-only; parse rules-based wires with configurationFromString from the /rules-based entry point.',
                 SdkVerbosity.WARN
             );
         }
         if (precomputed) {
             try {
-                this.precomputedFlags = helpers.decodePrecomputedFlags(
-                    precomputed.response as Parameters<
-                        CompatibilityHelpers['decodePrecomputedFlags']
-                    >[0]
-                );
-                const flags: Record<
-                    string,
-                    PrecomputedFlag
-                > = Object.fromEntries(
-                    Array.from(this.precomputedFlags, ([key, flag]) => [
-                        key,
-                        {
-                            allocationKey: flag.allocationKey,
-                            variationKey: flag.variationKey,
-                            // The released client checks the value's runtime type, including integer/float
-                            // aliases and object-typed payloads containing primitives. Keep that behavior.
-                            variationType: typeof flag.value as FlagValueType,
-                            variationValue: flag.value as JsonValue,
-                            reason: flag.reason,
-                            doLog: flag.doLog,
-                            // The native decoder does not keep the split serial ID; read it from the wire.
-                            serialId:
-                                precomputed.response.data.attributes.flags[key]
-                                    ?.serialId
+                if (requiresEncodedPrecomputedEvaluation(precomputed)) {
+                    // Use the public codec for encoded validation, not core's internal parser.
+                    // Embedded context is normalized below, as for legacy plaintext snapshots.
+                    const parsed = configurationFromString(
+                        configurationToString({
+                            precomputed: { ...precomputed, context: undefined }
+                        })
+                    );
+                    if (!parsed.precomputed) {
+                        throw new Error(parsed.precomputedError);
+                    }
+                    this.configuration.precomputed = {
+                        ...parsed.precomputed,
+                        flagErrors: {
+                            ...precomputed.flagErrors,
+                            ...parsed.precomputed.flagErrors
                         }
-                    ])
-                );
-                this.configuration.precomputed = {
-                    ...precomputed,
-                    context: precomputed.context
-                        ? toOpenFeatureContext(
-                              helpers.normalizeWireContext(precomputed.context)
-                          )
-                        : undefined,
-                    // The native decoder omits malformed entries; flagging-core's parser reports them.
-                    flagErrors: precomputed.flagErrors,
-                    response: {
-                        data: {
-                            attributes: {
-                                createdAt:
-                                    precomputed.response.data.attributes
-                                        .createdAt,
-                                flags
+                    };
+                } else {
+                    this.precomputedFlags = helpers.decodePrecomputedFlags(
+                        precomputed.response as Parameters<
+                            CompatibilityHelpers['decodePrecomputedFlags']
+                        >[0]
+                    );
+                    const flags: Record<
+                        string,
+                        PrecomputedFlag
+                    > = Object.fromEntries(
+                        Array.from(this.precomputedFlags, ([key, flag]) => [
+                            key,
+                            {
+                                allocationKey: flag.allocationKey,
+                                variationKey: flag.variationKey,
+                                // The released client checks the value's runtime type, including integer/float
+                                // aliases and object-typed payloads containing primitives. Keep that behavior.
+                                variationType: typeof flag.value as FlagValueType,
+                                variationValue: flag.value as JsonValue,
+                                reason: flag.reason,
+                                doLog: flag.doLog,
+                                // The native decoder does not keep the split serial ID; read it from the wire.
+                                serialId:
+                                    precomputed.response.data.attributes.flags[
+                                        key
+                                    ]?.serialId
+                            }
+                        ])
+                    );
+                    this.configuration.precomputed = {
+                        ...precomputed,
+                        // The native decoder omits malformed entries; flagging-core's parser reports them.
+                        flagErrors: precomputed.flagErrors,
+                        response: {
+                            data: {
+                                attributes: {
+                                    createdAt:
+                                        precomputed.response.data.attributes
+                                            .createdAt,
+                                    flags
+                                }
                             }
                         }
-                    }
-                };
+                    };
+                }
+                this.configuration.precomputed.context = precomputed.context
+                    ? toOpenFeatureContext(
+                          helpers.normalizeWireContext(precomputed.context)
+                      )
+                    : undefined;
             } catch (error) {
                 // A malformed precomputed branch must not hide a usable rules branch.
                 this.configuration.precomputed = undefined;
@@ -232,7 +258,11 @@ export class OfflineEvaluation implements OfflineEvaluator {
                   value: result.value,
                   allocationKey,
                   variationKey: result.variant,
-                  variationType: type,
+                  variationType:
+                      this.servesPrecomputed &&
+                      typeof result.flagMetadata?.variationType === 'string'
+                          ? result.flagMetadata.variationType
+                          : type,
                   variationValue:
                       typeof result.value === 'object'
                           ? JSON.stringify(result.value)

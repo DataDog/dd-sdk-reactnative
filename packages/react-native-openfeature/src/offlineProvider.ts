@@ -31,6 +31,7 @@ import {
     withoutEmbeddedAssignmentToken
 } from './mappers';
 import { OfflineEvaluation } from './offlineEvaluation';
+import { requiresEncodedPrecomputedEvaluation } from './precomputedEncoding';
 
 // The outcome of a `FlagsClient` reconcile. Derived from the client so the provider maps it to
 // OpenFeature transitions; not part of the package's public API.
@@ -100,6 +101,7 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
     // It may be set before the provider is registered, so it does not necessarily mirror
     // OpenFeature's status yet.
     private configurationInError = false;
+    private compatibilityWarningLogged = false;
 
     async initialize(context: OFEvaluationContext = {}): Promise<void> {
         const result = this.applyContext(context);
@@ -132,8 +134,8 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
      * Load a configuration into the provider for offline evaluation.
      *
      * @param configuration A precomputed or rules-based configuration parsed with
-     * `coreConfigurationFromString` from the `/rules-based` entry point. The existing precomputed-only `configurationFromString`
-     * output remains supported.
+     * `configurationFromString` from the `/rules-based` entry point. The precomputed-only
+     * root parser output also remains supported.
      */
     setConfiguration(configuration: FlagsConfiguration): void {
         const result = this.installConfiguration(configuration);
@@ -170,11 +172,17 @@ export class DatadogOfflineOpenFeatureProvider extends DatadogCoreOpenFeaturePro
         // Older core SDKs predate the evaluator bridge. Keep their released precomputed behavior,
         // but never silently ignore usable rules or keep serving a stale configuration when they
         // are supplied. A rules parse error has no rules to ignore, so precomputed data still loads.
-        if (configuration?.rules) {
-            InternalLog.log(
-                'DatadogOfflineOpenFeatureProvider rules-based evaluation requires an updated @datadog/mobile-react-native SDK. Update both Datadog packages together.',
-                SdkVerbosity.WARN
-            );
+        if (
+            configuration?.rules ||
+            requiresEncodedPrecomputedEvaluation(configuration?.precomputed)
+        ) {
+            if (!this.compatibilityWarningLogged) {
+                this.compatibilityWarningLogged = true;
+                InternalLog.log(
+                    'DatadogOfflineOpenFeatureProvider rules-based or encoded precomputed evaluation requires an updated @datadog/mobile-react-native SDK. Update both Datadog packages together.',
+                    SdkVerbosity.WARN
+                );
+            }
             this.flagsClient.setConfiguration({});
             return { status: 'error', errorCode: 'GENERAL' };
         }
