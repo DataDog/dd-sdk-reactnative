@@ -5,20 +5,19 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <React/RCTBridgeModule.h>
+
 @class DdFlagsImplementation;
 
-#ifdef RCT_NEW_ARCH_ENABLED
-
-#import <DdSdkReactNative/DdSdkReactNative.h>
-@interface DdFlags: NSObject <NativeDdFlagsSpec>
-
-#else
-
-#import <React/RCTBridgeModule.h>
+// This header must stay importable from Objective-C and Swift, so it does not import the C++
+// TurboModule spec. DdFlags+TurboModule.mm adopts NativeDdFlagsSpec; the methods below are the
+// spec's methods, declared here so that the compiler checks that DdFlags implements them.
 @interface DdFlags : NSObject <RCTBridgeModule>
 
-#endif
-
 @property (nonatomic, strong) DdFlagsImplementation* ddFlagsImplementation;
+
+- (void)enable:(NSDictionary *)configuration resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void)setEvaluationContext:(NSString *)clientName targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void)trackEvaluation:(NSString *)clientName key:(NSString *)key rawFlag:(NSDictionary *)rawFlag targetingKey:(NSString *)targetingKey attributes:(NSDictionary *)attributes resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
 @end

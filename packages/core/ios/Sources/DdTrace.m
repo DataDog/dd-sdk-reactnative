@@ -3,12 +3,7 @@
  * This product includes software developed at Datadog (https://www.datadoghq.com/).
  * Copyright 2016-Present Datadog, Inc.
  */
-// Import this first to prevent require cycles
-#if __has_include("DatadogSDKReactNative-Swift.h")
-#import <DatadogSDKReactNative-Swift.h>
-#else
-#import <DatadogSDKReactNative/DatadogSDKReactNative-Swift.h>
-#endif
+#import "DatadogSDKReactNativeSwiftBridge.h"
 #import "DdTrace.h"
 
 
@@ -34,14 +29,6 @@ RCT_REMAP_METHOD(finishSpan, withSpanId:(NSString*)spanId
     [self finishSpan:spanId context:context timestampMs:timestampMs resolve:resolve reject:reject];
 }
 
-// Thanks to this guard, we won't compile this code when we build for the old architecture.
-#ifdef RCT_NEW_ARCH_ENABLED
-- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
-    (const facebook::react::ObjCTurboModule::InitParams &)params
-{
-    return std::make_shared<facebook::react::NativeDdTraceSpecJSI>(params);
-}
-#endif
 
 - (void)startSpan:(NSString *)operation context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject {
     [self.ddTraceImplementation startSpanWithOperation:operation context:context timestampMs:timestampMs resolve:resolve reject:reject];

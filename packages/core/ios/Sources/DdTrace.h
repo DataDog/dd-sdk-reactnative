@@ -5,20 +5,18 @@
  */
 
 #import <Foundation/Foundation.h>
+#import <React/RCTBridgeModule.h>
+
 @class DdTraceImplementation;
 
-#ifdef RCT_NEW_ARCH_ENABLED
-
-#import <DdSdkReactNative/DdSdkReactNative.h>
-@interface DdTrace: NSObject <NativeDdTraceSpec>
-
-#else
-
-#import <React/RCTBridgeModule.h>
+// This header must stay importable from Objective-C and Swift, so it does not import the C++
+// TurboModule spec. DdTrace+TurboModule.mm adopts NativeDdTraceSpec; the methods below are the
+// spec's methods, declared here so that the compiler checks that DdTrace implements them.
 @interface DdTrace : NSObject <RCTBridgeModule>
 
-#endif
-
 @property (nonatomic, strong) DdTraceImplementation* ddTraceImplementation;
+
+- (void)startSpan:(NSString *)operation context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
+- (void)finishSpan:(NSString *)spanId context:(NSDictionary *)context timestampMs:(double)timestampMs resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
 
 @end
