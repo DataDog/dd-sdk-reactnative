@@ -1,0 +1,8 @@
+// Swift Package Manager only (see Package.swift): exposes the text extraction wrappers to the
+// DatadogSDKReactNativeSessionReplay Swift target. The other headers in ios/Sources import C++.
+module DatadogSDKReactNativeSessionReplayText {
+    header "../../Sources/RCTTextPropertiesWrapper.h"
+    header "../../Sources/RCTFabricWrapper.h"
+    header "../../Sources/RCTTextExtractor.h"
+    export *
+}

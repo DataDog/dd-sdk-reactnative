@@ -28,6 +28,8 @@
         "android/consumer-proguard-rules.pro",
         "android/src/**",
         "ios/Sources/**",
+        "ios/SwiftPM/**",
+        "Package.swift",
         "ios/DatadogSDKReactNativeSessionReplay.xcodeproj/project.xcworkspace/xcsharedata",
         "ios/DatadogSDKReactNativeSessionReplay.xcodeproj/project.xcworkspace/*.xcworkspacedata",
         "ios/DatadogSDKReactNativeSessionReplay.xcodeproj/*.pbxproj",
@@ -96,6 +98,9 @@
                 "DdSessionReplay": "DdSessionReplay"
             }
         }
+    },
+    "swiftpmConfig": {
+        "name": "DatadogSDKReactNativeSessionReplay"
     },
     "dependencies": {
         "chokidar": "^4.0.3"

@@ -6,10 +6,17 @@
 
 import Foundation
 
+#if !SWIFT_PACKAGE
+// Swift Package Manager declares its own BundleFinder for Bundle.module.
 internal class BundleFinder {}
+#endif
 
 extension Bundle {
     static var ddSessionReplayResources: Bundle? {
+        #if SWIFT_PACKAGE
+        // Swift Package Manager builds the assets into the target's own resource bundle.
+        return Bundle.module
+        #else
         let bundle = Bundle(for: BundleFinder.self)
         if let resourceURL = bundle.url(forResource: "DDSessionReplay", withExtension: "bundle"),
            let resourceBundle = Bundle(url: resourceURL) {
@@ -20,5 +27,6 @@ extension Bundle {
         // assets as plain resources rather than in a DDSessionReplay bundle, so they sit directly
         // in the bundle we just looked in.
         return bundle
+        #endif
     }
 }

@@ -10,6 +10,10 @@ import DatadogCore
 import DatadogInternal
 import DatadogSDKReactNative
 import React
+#if SWIFT_PACKAGE
+// Swift Package Manager builds the Objective-C text extraction wrappers as a separate module.
+import DatadogSDKReactNativeSessionReplayText
+#endif
 
 internal struct SVGData: Codable {
     let offset: Int

@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+#import <UIKit/UIKit.h>
+
 @interface RCTTextPropertiesWrapper : NSObject
 
 extern NSString* const RCTTextPropertiesDefaultText;

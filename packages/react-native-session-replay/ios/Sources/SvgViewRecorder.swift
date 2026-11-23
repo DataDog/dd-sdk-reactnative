@@ -11,6 +11,10 @@ import DatadogInternal
 import DatadogSDKReactNative
 import UIKit
 import React
+#if SWIFT_PACKAGE
+// Swift Package Manager builds the Objective-C text extraction wrappers as a separate module.
+import DatadogSDKReactNativeSessionReplayText
+#endif
 
 private enum SVGConstants {
     static let attributes = "attributes"

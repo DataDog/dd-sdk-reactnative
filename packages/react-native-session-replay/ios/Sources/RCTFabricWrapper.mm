@@ -7,7 +7,11 @@
 #import "RCTFabricWrapper.h"
 
 #if RCT_NEW_ARCH_ENABLED
+#if SWIFT_PACKAGE
+#import <react/renderer/components/text/ParagraphProps.h>
+#else
 #import "ParagraphProps.h"
+#endif
 
 #if RCT_VERSION_MINOR >= 87
 #import <React/RCTParagraphComponentView.h>

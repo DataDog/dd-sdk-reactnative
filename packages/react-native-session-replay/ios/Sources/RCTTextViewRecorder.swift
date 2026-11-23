@@ -7,6 +7,10 @@
 @_spi(Internal) import DatadogSessionReplay
 import React
 import UIKit
+#if SWIFT_PACKAGE
+// Swift Package Manager builds the Objective-C text extraction wrappers as a separate module.
+import DatadogSDKReactNativeSessionReplayText
+#endif
 
 internal class RCTTextViewRecorder: SessionReplayNodeRecorder {
     internal var textObfuscator:

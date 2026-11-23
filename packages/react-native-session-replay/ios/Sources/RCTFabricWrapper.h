@@ -4,6 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import "RCTTextPropertiesWrapper.h"
 
 @interface RCTFabricWrapper : NSObject
