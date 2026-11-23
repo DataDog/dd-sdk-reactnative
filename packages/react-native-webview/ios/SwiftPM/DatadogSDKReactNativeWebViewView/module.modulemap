@@ -1,0 +1,7 @@
+// Swift Package Manager only (see ios/Package.swift): exposes RCTDatadogTrackableWebView to the
+// DatadogSDKReactNativeWebView Swift target. RCTDatadogWebView.h itself imports React headers that
+// cannot be imported into Swift.
+module DatadogSDKReactNativeWebViewView {
+    header "../../Sources/RCTDatadogTrackableWebView.h"
+    export *
+}

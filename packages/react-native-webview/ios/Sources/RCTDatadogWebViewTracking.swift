@@ -9,6 +9,10 @@ import DatadogWebViewTracking
 import DatadogSDKReactNative
 import DatadogCore
 import DatadogInternal
+#if SWIFT_PACKAGE
+// Swift Package Manager builds RCTDatadogTrackableWebView as a separate module.
+import DatadogSDKReactNativeWebViewView
+#endif
 
 @objc public class RCTDatadogWebViewTracking: NSObject {
     var webView: RCTDatadogTrackableWebView? = nil

@@ -29,6 +29,8 @@
         "android/gradle.properties",
         "android/src/**",
         "ios/Sources/**",
+        "ios/SwiftPM/**",
+        "ios/Package.swift",
         "ios/DatadogSDKReactNativeWebView.xcodeproj/project.xcworkspace/xcsharedata",
         "ios/DatadogSDKReactNativeWebView.xcodeproj/project.xcworkspace/*.xcworkspacedata",
         "ios/DatadogSDKReactNativeWebView.xcodeproj/*.pbxproj",
@@ -93,5 +95,8 @@
         "android": {
             "javaPackageName": "com.datadog.reactnative.webview"
         }
+    },
+    "swiftpmConfig": {
+        "name": "DatadogSDKReactNativeWebView"
     }
 }
