@@ -4,53 +4,56 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import { buildEndpointHost } from '@datadog/flagging-core';
+
 import { reportSelectionError } from './flagSelection';
 
-const supportedSites = new Set([
-    'datadoghq.com',
-    'us3.datadoghq.com',
-    'us5.datadoghq.com',
-    'ap1.datadoghq.com',
-    'ap2.datadoghq.com',
-    'uk1.datadoghq.com',
-    'datadoghq.eu',
-    'datad0g.com'
-]);
-const ignoredReasons: ReadonlySet<string> = new Set([
+const FLAG_SELECTION_IGNORED_REASONS: ReadonlySet<string> = new Set([
     'malformed_selection',
     'too_many_values',
     'invalid_key_pattern',
     'invalid_tag',
     'tag_load_failed'
 ]);
+const MAX_FLAG_SELECTION_IGNORED_REASON_LENGTH = 32;
+
+export const defaultLogger = {
+    error(message: string): void {
+        // Fetching must not load the native SDK; warnings also avoid LogBox errors.
+        // eslint-disable-next-line no-console
+        console.warn(`DATADOG: ${message}`);
+    }
+};
 
 export function buildConfigurationUrl(
-    site = 'datadoghq.com',
+    site: string | undefined,
     env: string,
     endpoint: 'rules' | 'precomputed'
 ): string {
-    if (!supportedSites.has(site)) {
-        throw new Error(`Unsupported site for flagging endpoints: ${site}`);
-    }
-    const host = endpoint === 'rules' ? 'ufc-client' : 'preview';
+    const host = buildEndpointHost(
+        site ?? 'datadoghq.com',
+        endpoint === 'rules' ? 'ufc-client' : 'preview'
+    );
     const path =
         endpoint === 'rules'
             ? '/api/v2/feature-flagging/config/rules-based/client'
             : '/precompute-assignments';
     // URLSearchParams.set is not implemented on all supported RN versions.
-    return `https://${host}.ff-cdn.${site}${path}?dd_env=${encodeURIComponent(
-        env
-    )}`;
+    return `https://${host}${path}?dd_env=${encodeURIComponent(env)}`;
 }
 
 export function reportIgnoredSelection(
     response: Response,
     logger: { error(message: string): void }
 ): void {
-    const value = response.headers.get('DD-Flag-Selection-Ignored');
+    const value = response.headers?.get('DD-Flag-Selection-Ignored');
     if (value) {
+        // Proxies can reflect caller data or join repeated headers; report only known reasons.
         const reason =
-            value.length <= 32 && ignoredReasons.has(value) ? value : 'unknown';
+            value.length <= MAX_FLAG_SELECTION_IGNORED_REASON_LENGTH &&
+            FLAG_SELECTION_IGNORED_REASONS.has(value)
+                ? value
+                : 'unknown';
         reportSelectionError(
             logger,
             `flagSelection was ignored by the server (${reason}). Loaded the full flag configuration.`
@@ -60,7 +63,7 @@ export function reportIgnoredSelection(
 
 export async function getErrorMessage(response: Response): Promise<string> {
     const contentType = response.headers
-        .get('content-type')
+        ?.get('content-type')
         ?.split(';')[0]
         .trim();
     if (
@@ -73,7 +76,11 @@ export async function getErrorMessage(response: Response): Promise<string> {
             if (typeof detail === 'string' && detail.length > 0) {
                 return detail;
             }
-        } catch {
+        } catch (error) {
+            const name = (error as Error)?.name;
+            if (name === 'AbortError' || name === 'TimeoutError') {
+                throw error;
+            }
             // Preserve the HTTP failure even when its error body is not valid JSON.
         }
     }

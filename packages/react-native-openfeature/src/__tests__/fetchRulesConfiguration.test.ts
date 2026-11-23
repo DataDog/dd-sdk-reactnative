@@ -737,6 +737,61 @@ describe('fetchRulesConfiguration', () => {
         ).rejects.toThrow('Failed to fetch flag configuration: Bad Gateway');
     });
 
+    it('accepts a successful selected response without optional headers', async () => {
+        const logger = { error: jest.fn() };
+        const fetch = jest
+            .fn()
+            .mockResolvedValue(response({ headers: undefined }));
+        await expect(
+            fetchRulesConfiguration({
+                ...options,
+                fetch,
+                logger,
+                flagSelection: { tags: ['mobile'] }
+            })
+        ).resolves.toHaveProperty('rules');
+        expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('uses the HTTP status text when an error response has no headers', async () => {
+        const fetch = jest.fn().mockResolvedValue(
+            response({
+                ok: false,
+                status: 503,
+                statusText: 'Service Unavailable',
+                headers: undefined
+            })
+        );
+        await expect(
+            fetchRulesConfiguration({ ...options, fetch })
+        ).rejects.toThrow(
+            'Failed to fetch flag configuration: Service Unavailable'
+        );
+    });
+
+    it.each(['AbortError', 'TimeoutError'])(
+        'preserves %s while reading an HTTP error body',
+        async name => {
+            const error = Object.assign(new Error('body interrupted'), {
+                name
+            });
+            const fetch = jest.fn().mockResolvedValue(
+                response({
+                    ok: false,
+                    status: 503,
+                    statusText: 'Service Unavailable',
+                    headers: new Headers({
+                        'content-type': 'application/json'
+                    }),
+                    json: jest.fn().mockRejectedValue(error)
+                })
+            );
+            await expect(
+                fetchRulesConfiguration({ ...options, fetch })
+            ).rejects.toBe(error);
+        }
+    );
+
     it.each(['network', 'abort'])(
         'propagates a %s rejection without retrying',
         async kind => {

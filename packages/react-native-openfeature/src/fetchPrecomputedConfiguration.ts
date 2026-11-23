@@ -20,6 +20,7 @@ import type { EvaluationContext } from '@openfeature/web-sdk';
 
 import {
     buildConfigurationUrl,
+    defaultLogger,
     getErrorMessage,
     reportIgnoredSelection
 } from './configurationFetchUtils';
@@ -39,7 +40,7 @@ export interface PrecomputedConfigurationFetchOptions {
     site?: string;
     /** Request matching tags or key patterns. Invalid or over-limit selections are not sent. */
     flagSelection?: FlagSelection;
-    /** Reports selection and assignment-token diagnostics. Defaults to console. */
+    /** Reports selection and assignment-token diagnostics. Defaults to a prefixed console warning. */
     logger?: { error(message: string): void };
     fetch?: typeof globalThis.fetch;
     signal?: AbortSignal;
@@ -50,7 +51,7 @@ export async function fetchPrecomputedConfiguration(
     options: PrecomputedConfigurationFetchOptions
 ): Promise<FlagsConfiguration> {
     const url = buildConfigurationUrl(options.site, options.env, 'precomputed');
-    const logger = options.logger ?? console;
+    const logger = options.logger ?? defaultLogger;
     const { context, attributes, assignmentToken: rawToken } = captureContext(
         options.context
     );
@@ -78,6 +79,7 @@ export async function fetchPrecomputedConfiguration(
     const fetchedAt = timeStampNow();
     const fetchImplementation = options.fetch ?? globalThis.fetch;
     let response: Response;
+    let authorizationRejected: boolean;
     try {
         response = await fetchImplementation(url, {
             method: 'POST',
@@ -95,6 +97,9 @@ export async function fetchPrecomputedConfiguration(
             body,
             signal: options.signal
         });
+        authorizationRejected = await isAssignmentAuthorizationRejection(
+            response
+        );
     } catch (error) {
         if (!assignmentToken) {
             throw error;
@@ -104,7 +109,7 @@ export async function fetchPrecomputedConfiguration(
             new Error('Failed to fetch flag configuration: transport error')
         );
     }
-    if (await isAssignmentAuthorizationRejection(response)) {
+    if (authorizationRejected) {
         throw new GeneralError(assignmentAuthorizationFailed);
     }
     if (!response.ok) {
@@ -235,7 +240,11 @@ async function isAssignmentAuthorizationRejection(
                     error?.code === assignmentAuthorizationFailed
             )
         );
-    } catch {
+    } catch (error) {
+        const name = (error as Error)?.name;
+        if (name === 'AbortError' || name === 'TimeoutError') {
+            throw error;
+        }
         return false;
     }
 }

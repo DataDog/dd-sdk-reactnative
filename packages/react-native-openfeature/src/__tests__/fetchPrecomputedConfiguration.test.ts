@@ -7,8 +7,7 @@
 import {
     configurationFromString,
     configurationToString,
-    getPrecomputedContext,
-    SUPPORTED_FLAGS_CAPABILITIES
+    getPrecomputedContext
 } from '@datadog/flagging-core';
 import { ErrorCode } from '@openfeature/web-sdk';
 import type { EvaluationContext } from '@openfeature/web-sdk';
@@ -101,11 +100,8 @@ describe('fetchPrecomputedConfiguration', () => {
                 'Content-Type': 'application/vnd.api+json',
                 'dd-client-token': options.clientToken,
                 'dd-application-id': 'test-application',
-                'X-DD-FEATURE-FLAGS-CAPABILITIES': [
-                    ...SUPPORTED_FLAGS_CAPABILITIES
-                ]
-                    .sort()
-                    .join(',')
+                'X-DD-FEATURE-FLAGS-CAPABILITIES':
+                    'assignment-encoding-flag-key-256-v1'
             },
             body: JSON.stringify({
                 data: {
@@ -135,6 +131,37 @@ describe('fetchPrecomputedConfiguration', () => {
         });
         expect(configuration.rules).toBeUndefined();
         expect(jest.getTimerCount()).toBe(0);
+    });
+
+    it('omits the application ID header when no application ID is supplied', async () => {
+        const fetch = jest.fn().mockResolvedValue(response());
+        await fetchPrecomputedConfiguration({ ...options, fetch });
+        expect(fetch.mock.calls[0][1].headers).not.toHaveProperty(
+            'dd-application-id'
+        );
+    });
+
+    it('reports default diagnostics as prefixed warnings rather than console errors', async () => {
+        const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+        const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const fetch = jest.fn().mockResolvedValue(response());
+        await expect(
+            fetchPrecomputedConfiguration({
+                ...options,
+                fetch,
+                context: {
+                    ...options.context,
+                    dd_assignment_token: 'two words'
+                },
+                flagSelection: ({ tags: 'invalid' } as unknown) as FlagSelection
+            })
+        ).resolves.toHaveProperty('precomputed');
+        expect(warn).toHaveBeenCalledTimes(2);
+        for (const [message] of warn.mock.calls) {
+            expect(message).toMatch(/^DATADOG: /);
+            expect(message).not.toContain('two words');
+        }
+        expect(error).not.toHaveBeenCalled();
     });
 
     it('captures context before the request and round-trips it without retaining caller references', async () => {
@@ -177,12 +204,14 @@ describe('fetchPrecomputedConfiguration', () => {
             list: [1, 'two'],
             nested: { key: false },
             omitted: undefined,
+            callback: () => true,
+            symbol: Symbol('omitted'),
             date: new Date('2026-01-01T00:00:00Z')
         };
         const fetch = jest.fn().mockResolvedValue(response());
         const configuration = await fetchPrecomputedConfiguration({
             ...options,
-            context: context as EvaluationContext,
+            context: (context as unknown) as EvaluationContext,
             fetch
         });
         expect(request(fetch).subject.targeting_attributes).toEqual({
@@ -315,9 +344,22 @@ describe('fetchPrecomputedConfiguration', () => {
         const fetch = jest.fn();
         await expect(
             fetchPrecomputedConfiguration({ ...options, site, fetch })
-        ).rejects.toThrow('Unsupported site');
+        ).rejects.toThrow(/Unsupported site|not supported/);
         expect(fetch).not.toHaveBeenCalled();
     });
+
+    it.each([undefined, null])(
+        'uses the default site when site is %p',
+        async site => {
+            const fetch = jest.fn().mockResolvedValue(response());
+            await fetchPrecomputedConfiguration({
+                ...options,
+                fetch,
+                site: (site as unknown) as string
+            });
+            expect(fetch.mock.calls[0][0]).toBe(url);
+        }
+    );
 
     it('uses global fetch by default and accepts an injected fetch and abort signal', async () => {
         const globalFetch = jest
@@ -622,29 +664,194 @@ describe('fetchPrecomputedConfiguration', () => {
                         ? 0
                         : 1
                 );
+                if (logger.error.mock.calls.length > 0) {
+                    expect(logger.error.mock.calls[0][0]).toBe(
+                        'Assignment token omitted: expected printable ASCII without whitespace. Continuing without an assignment token.'
+                    );
+                    expect(logger.error.mock.calls[0][0]).not.toContain(
+                        String(dd_assignment_token)
+                    );
+                }
             }
         );
 
-        it('identifies assignment authorization failures without exposing the response detail', async () => {
-            const fetch = jest.fn().mockResolvedValue(
-                response(
+        it.each([false, true])(
+            'identifies assignment authorization failures with credential=%s without exposing the response detail',
+            async hasToken => {
+                const fetch = jest.fn().mockResolvedValue(
+                    response(
+                        {
+                            errors: [
+                                {
+                                    code: 'ASSIGNMENT_AUTHORIZATION_FAILED',
+                                    detail: token
+                                }
+                            ]
+                        },
+                        { ok: false, status: 401 }
+                    )
+                );
+                await expect(
+                    fetchPrecomputedConfiguration({
+                        ...options,
+                        fetch,
+                        context: {
+                            ...options.context,
+                            ...(hasToken && { dd_assignment_token: token })
+                        }
+                    })
+                ).rejects.toMatchObject({
+                    code: ErrorCode.GENERAL,
+                    message: 'ASSIGNMENT_AUTHORIZATION_FAILED'
+                });
+            }
+        );
+
+        it.each([200, 403])(
+            'does not interpret an authorization code in an HTTP %i response',
+            async status => {
+                const received = response(
                     {
+                        ...payload(),
                         errors: [
                             {
                                 code: 'ASSIGNMENT_AUTHORIZATION_FAILED',
-                                detail: token
+                                detail: 'Ordinary HTTP failure'
                             }
                         ]
                     },
-                    { ok: false, status: 401 }
-                )
+                    { ok: status === 200, status }
+                );
+                const clone = jest.spyOn(received, 'clone');
+                const fetch = jest.fn().mockResolvedValue(received);
+                const result = fetchPrecomputedConfiguration({
+                    ...options,
+                    fetch
+                });
+                if (status === 200) {
+                    await expect(result).resolves.toHaveProperty('precomputed');
+                } else {
+                    await expect(result).rejects.toThrow(
+                        'Failed to fetch flag configuration: Ordinary HTTP failure'
+                    );
+                }
+                expect(clone).not.toHaveBeenCalled();
+            }
+        );
+
+        it('reads a cloned 401 body without consuming the ordinary HTTP error detail', async () => {
+            const received = new Response(
+                JSON.stringify({
+                    errors: [{ code: 'OTHER', detail: 'Client token rejected' }]
+                }),
+                {
+                    status: 401,
+                    statusText: 'Unauthorized',
+                    headers: { 'content-type': 'application/vnd.api+json' }
+                }
             );
+            const clone = jest.spyOn(received, 'clone');
+            const fetch = jest.fn().mockResolvedValue(received);
             await expect(
                 fetchPrecomputedConfiguration({ ...options, fetch })
-            ).rejects.toMatchObject({
-                code: ErrorCode.GENERAL,
-                message: 'ASSIGNMENT_AUTHORIZATION_FAILED'
+            ).rejects.toThrow(
+                'Failed to fetch flag configuration: Client token rejected'
+            );
+            expect(clone).toHaveBeenCalledTimes(1);
+            expect(received.bodyUsed).toBe(true);
+        });
+
+        it.each([
+            ['AbortError', false],
+            ['AbortError', true],
+            ['TimeoutError', false],
+            ['TimeoutError', true]
+        ] as const)(
+            'preserves %s from the cloned 401 body with credential=%s',
+            async (name, hasToken) => {
+                const error = Object.assign(new Error(token), {
+                    name,
+                    cause: { token },
+                    privateMetadata: token
+                });
+                const received = response(
+                    {},
+                    {
+                        ok: false,
+                        status: 401,
+                        statusText: 'Unauthorized',
+                        clone: jest.fn(() =>
+                            response(
+                                {},
+                                {
+                                    json: jest.fn().mockRejectedValue(error)
+                                }
+                            )
+                        )
+                    }
+                );
+                const fetch = jest.fn().mockResolvedValue(received);
+                const failure = await fetchPrecomputedConfiguration({
+                    ...options,
+                    fetch,
+                    context: {
+                        ...options.context,
+                        ...(hasToken && { dd_assignment_token: token })
+                    }
+                }).catch(caught => caught);
+
+                expect(failure).toMatchObject({ name });
+                if (hasToken) {
+                    expect(failure).not.toBe(error);
+                    expect(failure.message).toBe(
+                        name === 'AbortError'
+                            ? 'Assignment download aborted'
+                            : 'Assignment download timed out'
+                    );
+                    expect(failure.stack).not.toContain(token);
+                    expect(failure.cause).toBeUndefined();
+                    expect(failure.privateMetadata).toBeUndefined();
+                } else {
+                    expect(failure).toBe(error);
+                }
+                expect(received.clone).toHaveBeenCalledTimes(1);
+                expect(received.json).not.toHaveBeenCalled();
+                expect(fetch).toHaveBeenCalledTimes(1);
+            }
+        );
+
+        it('keeps an unreadable cloned 401 body as a credential-safe HTTP failure', async () => {
+            const fetch = jest.fn().mockResolvedValue(
+                response(
+                    {},
+                    {
+                        ok: false,
+                        status: 401,
+                        clone: () =>
+                            response(
+                                {},
+                                {
+                                    json: jest
+                                        .fn()
+                                        .mockRejectedValue(
+                                            new SyntaxError(token)
+                                        )
+                                }
+                            )
+                    }
+                )
+            );
+            const failure = await fetchPrecomputedConfiguration({
+                ...options,
+                fetch,
+                context: { ...options.context, dd_assignment_token: token }
+            }).catch(caught => caught);
+            expect(failure).toMatchObject({
+                name: 'Error',
+                message: 'Failed to fetch flag configuration: HTTP 401'
             });
+            expect(failure.stack).not.toContain(token);
+            expect(failure.cause).toBeUndefined();
         });
 
         it.each(['transport', 'body', 'http'])(
@@ -710,6 +917,63 @@ describe('fetchPrecomputedConfiguration', () => {
             }
         );
     });
+
+    it('accepts a successful selected response without optional headers', async () => {
+        const fetch = jest
+            .fn()
+            .mockResolvedValue(response(payload(), { headers: undefined }));
+        await expect(
+            fetchPrecomputedConfiguration({
+                ...options,
+                fetch,
+                logger,
+                flagSelection: { tags: ['mobile'] }
+            })
+        ).resolves.toHaveProperty('precomputed');
+        expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('uses the HTTP status text when an error response has no headers', async () => {
+        const fetch = jest.fn().mockResolvedValue(
+            response(
+                {},
+                {
+                    ok: false,
+                    status: 503,
+                    statusText: 'Service Unavailable',
+                    headers: undefined
+                }
+            )
+        );
+        await expect(
+            fetchPrecomputedConfiguration({ ...options, fetch })
+        ).rejects.toThrow(
+            'Failed to fetch flag configuration: Service Unavailable'
+        );
+    });
+
+    it.each(['AbortError', 'TimeoutError'])(
+        'preserves %s while reading an HTTP error body',
+        async name => {
+            const error = Object.assign(new Error('body interrupted'), {
+                name
+            });
+            const fetch = jest.fn().mockResolvedValue(
+                response(
+                    {},
+                    {
+                        ok: false,
+                        status: 503,
+                        statusText: 'Service Unavailable',
+                        json: jest.fn().mockRejectedValue(error)
+                    }
+                )
+            );
+            await expect(
+                fetchPrecomputedConfiguration({ ...options, fetch })
+            ).rejects.toBe(error);
+        }
+    );
 
     it.each([400, 401, 403, 429, 503])(
         'rejects HTTP %i without retries or a custom timer',

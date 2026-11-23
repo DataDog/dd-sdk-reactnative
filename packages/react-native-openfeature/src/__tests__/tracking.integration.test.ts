@@ -15,7 +15,8 @@ import {
     coreConfigurationFromString,
     DatadogCoreProvider,
     fetchPrecomputedConfiguration,
-    fetchRulesConfiguration
+    fetchRulesConfiguration,
+    getPrecomputedContext
 } from '../rules-based';
 import {
     composeDatadogTrackingHooks,
@@ -487,7 +488,11 @@ describe.each(['android', 'ios'] as const)(
                 const provider = new DatadogCoreProvider();
                 provider.setConfiguration(configuration);
                 const domain = `tracking-${++sequence}`;
-                await OpenFeature.setProviderAndWait(domain, provider, context);
+                await OpenFeature.setProviderAndWait(
+                    domain,
+                    provider,
+                    getPrecomputedContext(configuration)
+                );
                 const client = OpenFeature.getClient(domain);
                 expect(client.getBooleanValue('boolean-flag', false)).toBe(
                     true
@@ -528,6 +533,64 @@ describe.each(['android', 'ios'] as const)(
                 expect(native.enable).not.toHaveBeenCalled();
                 expect(native.setEvaluationContext).not.toHaveBeenCalled();
                 await tracking.shutdown();
+            }
+        );
+
+        it.each([
+            ['undefined attribute', { email: undefined }, false],
+            [
+                'Date attribute',
+                { joinedAt: new Date('2026-01-01T00:00:00Z') },
+                false
+            ],
+            ['JSON attributes', { visits: 2, profile: { active: true } }, true]
+        ] as const)(
+            'matches fetched snapshots using their captured context: %s',
+            async (_name, attributes, originalMatches) => {
+                const context = { ...matchingContext, ...attributes };
+                const fetch = jest.fn().mockResolvedValue({
+                    ok: true,
+                    json: async () =>
+                        precomputedConfiguration().precomputed.response
+                });
+                const configuration = await fetchPrecomputedConfiguration({
+                    clientToken: 'test-client-token',
+                    env: 'production',
+                    context,
+                    fetch
+                });
+                const captured = getPrecomputedContext(configuration);
+                const provider = new DatadogCoreProvider();
+                provider.setConfiguration(configuration);
+                const domain = `tracking-${++sequence}`;
+                await OpenFeature.setProviderAndWait(
+                    domain,
+                    provider,
+                    captured
+                );
+                const client = OpenFeature.getClient(domain);
+                expect(client.getBooleanValue('boolean-flag', false)).toBe(
+                    true
+                );
+
+                await OpenFeature.setContext(domain, context);
+                expect(
+                    client.getBooleanDetails('boolean-flag', false)
+                ).toMatchObject(
+                    originalMatches
+                        ? { value: true }
+                        : {
+                              value: false,
+                              errorCode: ErrorCode.INVALID_CONTEXT
+                          }
+                );
+                await OpenFeature.setContext(domain, captured ?? {});
+                expect(client.getBooleanValue('boolean-flag', false)).toBe(
+                    true
+                );
+                expect(fetch).toHaveBeenCalledTimes(1);
+                expect(native.trackExposure).not.toHaveBeenCalled();
+                expect(rum).not.toHaveBeenCalled();
             }
         );
 
