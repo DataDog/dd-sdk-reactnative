@@ -27,6 +27,7 @@ This is a monorepo built with yarn 3 workspaces and lerna. All packages share on
 | `packages/internal-testing-tools` | `@datadog/react-native-internal-testing-tools` | Internal test helpers (JS and native) |
 | `example` | | Sample app, old architecture |
 | `example-new-architecture` | | Sample app, new architecture |
+| `example-spm` | | Sample app, React Native's Swift Package Manager integration (iOS only, see its README) |
 | `benchmarks` | | Performance benchmark app |
 
 Inside `packages/core`:
@@ -37,13 +38,14 @@ Inside `packages/core`:
   - `config/`: configuration types and file-based configuration.
   - `metro/`: the Metro and Expo bundler plugin.
   - `specs/`: TurboModule specs.
-- `ios/Sources/`: the iOS bridge. Each module has an ObjC++ `DdX.mm` (React Native glue) and a Swift `DdXImplementation.swift` (logic). Tests are in `ios/Tests/`.
+- `ios/Sources/`: the iOS bridge. Each module has an Objective-C `DdX.m` (React Native glue), a small ObjC++ `DdX+TurboModule.mm` (the new-architecture `getTurboModule:`, the only part that needs C++) and a Swift `DdXImplementation.swift` (logic). Tests are in `ios/Tests/`.
+- `ios/Package.swift`: the Swift Package Manager manifest, for apps that use React Native's SwiftPM integration (`npx react-native spm`, RN 0.88+) instead of CocoaPods. Session Replay keeps its manifest at the package root, WebView and internal-testing-tools in `ios/`.
 - `android/src/main/kotlin/com/datadog/reactnative/`: the Android bridge (Kotlin). Architecture-specific code is in `android/src/{newarch,oldarchCommon,oldarch,oldarch65}`. Tests are in `android/src/test/`.
 - `jest/mock.js`: a Jest mock that we publish for customers (`@datadog/mobile-react-native/jest`).
 
 ## How a Call Reaches the Native SDK
 
-`DdRum.startView(...)` (TS wrapper) → `getNativeDdRum()` (spec in `src/specs/NativeDdRum.ts`) → `DdRum.mm` / `DdRumImplementation.kt` → `dd-sdk-ios` / `dd-sdk-android`.
+`DdRum.startView(...)` (TS wrapper) → `getNativeDdRum()` (spec in `src/specs/NativeDdRum.ts`) → `DdRum.m` / `DdRumImplementation.kt` → `dd-sdk-ios` / `dd-sdk-android`.
 
 - **Lazy resolution.**
   - Specs export a `getNativeDdX()` getter instead of resolving the module at import time.
@@ -52,12 +54,12 @@ Inside `packages/core`:
 - **Typing.** Don't import specs directly. Use the `DdNativeXType` types from `src/nativeModulesTypes.ts`, which add typing that codegen can't express.
 - **Both architectures:**
   - On the old architecture, `TurboModuleRegistry.get` falls back to `NativeModules`.
-  - On iOS, `.mm` files branch on `#ifdef RCT_NEW_ARCH_ENABLED`.
+  - On iOS, the bridge files branch on `#ifdef RCT_NEW_ARCH_ENABLED`. SwiftPM apps always use the new architecture.
   - On Android, `android/build.gradle` picks the source sets from `newArchEnabled` and the RN version. Its comment explains how to name the `oldarch<N>` source sets.
 - **Changing a bridge method.** Update all of these together:
   - the spec
   - `nativeModulesTypes.ts`
-  - the iOS `.mm` (both architecture branches) and `Implementation.swift`
+  - the iOS `DdX.h` declaration, `DdX.m` (both architecture branches) and `Implementation.swift`
   - the Android `newarch` and `oldarch*` modules and `Implementation.kt`
   - `__mocks__/react-native.ts`
   - `jest/mock.js`
@@ -105,9 +107,9 @@ An internal nightly E2E pipeline builds `expo-datadog` against the SDK across Ex
 
 ## Native SDK Coupling
 
-- Native SDK versions are pinned in each podspec (`DatadogSDKReactNative*.podspec`) and in each Android `build.gradle`. **Versions must match within a platform**: all podspecs pin the same `dd-sdk-ios` version, and all Gradle files pin the same `dd-sdk-android` version. iOS and Android are versioned independently and usually differ. Bump one platform at a time with `./bump-native-dd-sdk.sh <ios|android> <version>`. `NATIVE_SDK_VERSIONS.md` records both versions for each release.
+- Native SDK versions are pinned in each podspec (`DatadogSDKReactNative*.podspec`), in each `Package.swift` and in each Android `build.gradle`. **Versions must match within a platform**: all podspecs and `Package.swift` files pin the same `dd-sdk-ios` version, and all Gradle files pin the same `dd-sdk-android` version. iOS and Android are versioned independently and usually differ. Bump one platform at a time with `./bump-native-dd-sdk.sh <ios|android> <version>`. `NATIVE_SDK_VERSIONS.md` records both versions for each release.
 - The bridges use native internal APIs: `_InternalProxy` on Android and `._internal` on iOS. If one of them changes in `dd-sdk-android` or `dd-sdk-ios`, the bridge here must change too. Check the native SDK's changelog when you bump.
-- iOS dependencies go through CocoaPods today. An SPM migration is in progress; don't assume `Package.swift` exists on `develop`.
+- iOS apps consume the bridges either as pods (the podspecs) or as Swift packages (the `Package.swift` files). Both resolve `dd-sdk-ios` through SwiftPM. A native change must build with both: run the CocoaPods test schemes and build `example-spm`.
 
 ## Commands
 
@@ -181,7 +183,9 @@ If you changed a public export or a bridge method, also check:
 
 - **Kotlin:** ktlint and detekt run as part of `./gradlew build`; `detekt.yml` is in each `android/` folder. Bridge methods resolve or reject their `Promise`; they never throw.
 - **Swift/ObjC++:**
-  - Keep the React Native glue in `.mm` and the logic in Swift `*Implementation` classes.
+  - Keep the React Native glue in Objective-C (`.m`) and the logic in Swift `*Implementation` classes.
+  - Only `.m` files may call Swift code, through the package's `*SwiftBridge.h`. SwiftPM builds the Swift sources as a separate module, which ObjC++ cannot import. ObjC++ code that needs Swift goes through a small `.m` wrapper (for example `DdPrivacyOverriderWrapper`).
+  - Keep bridge headers free of C++: Swift and `.m` files import them. The C++ TurboModule spec is adopted in `DdX+TurboModule.mm`.
   - Guard new-architecture-only code with `RCT_NEW_ARCH_ENABLED`.
   - Code must compile for tvOS too, unless it is explicitly iOS-only (like `DatadogWebViewTracking`).
 - Keep native behaviour the same on iOS and Android. If parity isn't possible, document the difference in the PR.
