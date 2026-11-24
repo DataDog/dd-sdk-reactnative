@@ -6,12 +6,17 @@
 
 import {
     AccountInfoSingleton,
+    AttributesSingleton,
     UserInfoSingleton
 } from '@datadog/mobile-react-native/internal';
 
 import { DdSdkReactNative } from '../src/DdSdkReactNativeVega';
 
 const mockNative = {
+    addAttribute: jest.fn(),
+    removeAttribute: jest.fn(),
+    addAttributes: jest.fn(),
+    removeAttributes: jest.fn(),
     setUserInfo: jest.fn(),
     clearUserInfo: jest.fn(),
     addUserExtraInfo: jest.fn(),
@@ -29,6 +34,7 @@ describe('Vega user and account context', () => {
         jest.clearAllMocks();
         mockGet.mockReturnValue(mockNative);
         UserInfoSingleton.reset();
+        AttributesSingleton.reset();
         AccountInfoSingleton.reset();
     });
     it('sets, merges, replaces and clears user context', async () => {
@@ -102,6 +108,46 @@ describe('Vega user and account context', () => {
         expect(
             AccountInfoSingleton.getInstance().getAccountInfo()?.extraInfo
         ).toEqual({ plan: 'paid' });
+    });
+    it('retains the identity sent to native while awaiting its response', async () => {
+        let complete: (value: boolean) => void = () => undefined;
+        mockNative.setUserInfo.mockReturnValueOnce(
+            new Promise<boolean>(resolve => {
+                complete = resolve;
+            })
+        );
+        const user = { id: 'original' };
+        const update = DdSdkReactNative.setUserInfo(user);
+        user.id = 'changed';
+        complete(true);
+        await update;
+        expect(mockNative.setUserInfo).toHaveBeenLastCalledWith({
+            id: 'original'
+        });
+        expect(UserInfoSingleton.getInstance().getUserInfo()?.id).toBe(
+            'original'
+        );
+    });
+    it('keeps global, user and account context independent', async () => {
+        await DdSdkReactNative.addAttribute('plan', 'paid');
+        await DdSdkReactNative.setUserInfo({ id: 'user' });
+        await DdSdkReactNative.setAccountInfo({ id: 'account' });
+        await DdSdkReactNative.addAttributes({
+            nested: { value: [true, null] }
+        });
+        await DdSdkReactNative.clearUserInfo();
+        await DdSdkReactNative.removeAttribute('plan');
+        expect(AttributesSingleton.getInstance().getAttributes()).toEqual({
+            nested: { value: [true, null] }
+        });
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toBeUndefined();
+        expect(AccountInfoSingleton.getInstance().getAccountInfo()?.id).toBe(
+            'account'
+        );
+        expect(mockNative.addAttribute).toHaveBeenCalledWith('plan', {
+            value: 'paid'
+        });
+        expect(mockNative.removeAttribute).toHaveBeenCalledWith('plan');
     });
     it('keeps JavaScript context unchanged when native fails', async () => {
         await DdSdkReactNative.setUserInfo({ id: 'user' });

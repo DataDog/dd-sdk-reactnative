@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { ErrorSource } from '@datadog/mobile-react-native';
+
 import { DdLogs } from '../src/DdLogsVega';
 
 const mockNative = { log: jest.fn() };
@@ -79,6 +81,25 @@ describe('Vega logs', () => {
             '',
             '',
             'stack',
+            {}
+        );
+    });
+    it('accepts a source-only error overload without shifting attributes', async () => {
+        await DdLogs.error(
+            'message',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            'SOURCE' as ErrorSource
+        );
+        expect(mockNative.log).toHaveBeenCalledWith(
+            'error',
+            'message',
+            '',
+            '',
+            '',
             {}
         );
     });

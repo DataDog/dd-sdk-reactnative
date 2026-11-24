@@ -71,10 +71,13 @@ export class DdSdkReactNative extends VegaSdk {
         if (typeof info?.id !== 'string' || !info.id) {
             return;
         }
+        const snapshot = { ...info };
         if (
-            await callNative(getNativeDdSdk, native => native.setUserInfo(info))
+            await callNative(getNativeDdSdk, native =>
+                native.setUserInfo(snapshot)
+            )
         ) {
-            UserInfoSingleton.getInstance().setUserInfo({ ...info });
+            UserInfoSingleton.getInstance().setUserInfo(snapshot);
         }
     };
     static clearUserInfo = async (): Promise<void> => {
@@ -102,12 +105,13 @@ export class DdSdkReactNative extends VegaSdk {
         if (typeof info?.id !== 'string' || !info.id) {
             return;
         }
+        const snapshot = { ...info };
         if (
             await callNative(getNativeDdSdk, native =>
-                native.setAccountInfo(info)
+                native.setAccountInfo(snapshot)
             )
         ) {
-            AccountInfoSingleton.getInstance().setAccountInfo({ ...info });
+            AccountInfoSingleton.getInstance().setAccountInfo(snapshot);
         }
     };
     static clearAccountInfo = async (): Promise<void> => {

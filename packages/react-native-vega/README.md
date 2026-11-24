@@ -88,7 +88,8 @@ continuous actions, start and stop resources, report errors, update view
 attributes, stop a session, report full app display, and track feature operations.
 
 `DdSdkReactNative.addAttribute`, `addAttributes`, `removeAttribute`, and
-`removeAttributes` update global RUM attributes and the shared JavaScript context.
+`removeAttributes` update global RUM and logging attributes and the shared
+JavaScript context. They also work when only logging is enabled.
 View attributes take precedence over global attributes until removed or the view
 ends. JSON-compatible values retain their types, including nested objects,
 arrays, numbers, booleans, and null. Singular attribute calls wrap the value for
@@ -128,3 +129,8 @@ when a logs configuration is present, before starting the core. The logger uses
 `bundleLogsWithRum` to control RUM correlation (defaults to `true`). Initialization
 is added separately; importing these APIs does not initialize the SDK. Logs are
 ignored until the native logger has been configured.
+
+The optional log `source` argument does not change the C++ logger's source.
+Custom fingerprints are kept in attributes but do not control native error
+grouping in C++ SDK 0.7.0. Error symbolication and JavaScript error enrichment
+are added separately.

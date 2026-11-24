@@ -41,7 +41,8 @@ class DdLogsVega {
                 typeof args[2] === 'string' ||
                 typeof args[3] === 'string' ||
                 args[4] != null ||
-                typeof args[5] === 'string';
+                typeof args[5] === 'string' ||
+                typeof args[6] === 'string';
             if (!hasError) {
                 return native.log(
                     level,
