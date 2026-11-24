@@ -18,6 +18,15 @@ class DdSdk : public DdSdkSpec {
     com::amazon::kepler::turbomodule::Promise setTrackingConsent(std::string trackingConsent) override;
     com::amazon::kepler::turbomodule::Promise clearAllData() override;
 
+    com::amazon::kepler::turbomodule::Promise
+    addAttribute(std::string key,
+                 com::amazon::kepler::turbomodule::JSObject value) override;
+    com::amazon::kepler::turbomodule::Promise
+    removeAttribute(std::string key) override;
+    com::amazon::kepler::turbomodule::Promise addAttributes(
+        com::amazon::kepler::turbomodule::JSObject attributes) override;
+    com::amazon::kepler::turbomodule::Promise
+    removeAttributes(std::vector<std::string> keys) override;
     com::amazon::kepler::turbomodule::Promise sendTelemetryLog(
         std::string message, com::amazon::kepler::turbomodule::JSObject attributes,
         com::amazon::kepler::turbomodule::JSObject config) override;

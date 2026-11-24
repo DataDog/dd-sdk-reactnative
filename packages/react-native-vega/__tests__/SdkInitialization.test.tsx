@@ -28,7 +28,7 @@ import React from 'react';
 
 import { DatadogProvider } from '../src/DatadogProvider';
 import { startHttpProxy, isHttpProxyReady } from '../src/HttpProxy';
-import { VegaSdk } from '../src/SdkInitialization';
+import { DdSdkReactNative as VegaSdk } from '../src';
 
 const mockNative = {
     initialize: jest.fn(),

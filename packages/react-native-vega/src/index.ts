@@ -4,7 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export { VegaSdk as DdSdkReactNative } from './SdkInitialization';
+export { DdSdkReactNative } from './DdSdkReactNativeVega';
+export { DdRum } from './DdRumVega';
 export { DatadogProvider } from './DatadogProvider';
 
 export {

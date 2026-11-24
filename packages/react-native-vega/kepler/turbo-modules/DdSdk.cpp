@@ -7,6 +7,7 @@
 #include "DdSdk.h"
 #include "HttpJsProxy.h"
 #include "SdkInitialization.h"
+#include "RumBridge.h"
 #include "DatadogGlobalState.h"
 #include "EnumParsers.h"
 #include <thread>
@@ -46,6 +47,34 @@ Promise DdSdk::clearAllData() {
         try {
             promise->resolve(datadog_rn_vega::clearSdkData());
         } catch (...) { promise->resolve(false); }
+    });
+}
+
+Promise DdSdk::addAttribute(std::string key, JSObject value) {
+    return datadog_rn_vega::withRum([=](datadog::Rum &rum) {
+        rum.AddAttribute(key,
+                         datadog_rn_vega::jsWrappedValueToAttribute(value));
+    });
+}
+
+Promise DdSdk::removeAttribute(std::string key) {
+    return datadog_rn_vega::withRum(
+        [=](datadog::Rum &rum) { rum.RemoveAttribute(key); });
+}
+
+Promise DdSdk::addAttributes(JSObject attributes) {
+    return datadog_rn_vega::withRum([=](datadog::Rum &rum) {
+        for (const auto &[key, value] : attributes) {
+            rum.AddAttribute(key, datadog_rn_vega::jsValueToAttribute(value));
+        }
+    });
+}
+
+Promise DdSdk::removeAttributes(std::vector<std::string> keys) {
+    return datadog_rn_vega::withRum([=](datadog::Rum &rum) {
+        for (const auto &key : keys) {
+            rum.RemoveAttribute(key);
+        }
     });
 }
 

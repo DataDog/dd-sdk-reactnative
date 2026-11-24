@@ -50,6 +50,9 @@ endif()
 FetchContent_MakeAvailable(Datadog)
 
 set(HEADERS
+    kepler/turbo-modules/generated/DdRumSpec.h
+    kepler/turbo-modules/DdRum.h
+    kepler/turbo-modules/RumBridge.h
     kepler/turbo-modules/SdkInitialization.h
     kepler/turbo-modules/generated/DdSdkSpec.h
     kepler/turbo-modules/DdSdk.h
@@ -60,6 +63,8 @@ set(HEADERS
 )
 
 set(SOURCES
+    kepler/turbo-modules/generated/DdRumSpec.cpp
+    kepler/turbo-modules/DdRum.cpp
     kepler/turbo-modules/SdkInitialization.cpp
     kepler/turbo-modules/generated/DdSdkSpec.cpp
     kepler/turbo-modules/DdSdk.cpp

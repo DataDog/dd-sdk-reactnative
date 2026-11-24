@@ -79,3 +79,41 @@ The optional `VEGA_TEST_INITIALIZATION=ON` host test needs
 `DATADOG_CPP_SOURCE_DIR`, `KEPLER_INCLUDE_DIR`, and `NODE_API_INCLUDE_DIR`.
 It exercises actual C++ SDK setup, invalid configuration, repeated setup,
 consent, and pending-data clearing. Default host tests require no SDK headers.
+
+## Manual RUM and global attributes
+
+Import `DdRum` and `DdSdkReactNative` from `@datadog/mobile-react-native-vega`.
+After RUM is initialized, use `DdRum` to start and stop views, record discrete or
+continuous actions, start and stop resources, report errors, update view
+attributes, stop a session, report full app display, and track feature operations.
+
+`DdSdkReactNative.addAttribute`, `addAttributes`, `removeAttribute`, and
+`removeAttributes` update global RUM attributes and the shared JavaScript context.
+View attributes take precedence over global attributes until removed or the view
+ends. JSON-compatible values retain their types, including nested objects,
+arrays, numbers, booleans, and null. Singular attribute calls wrap the value for
+the bridge; that wrapper is removed before passing it to the C++ SDK.
+
+Calls resolve safely when the native module or RUM feature is unavailable. They
+are not buffered for later initialization. Native calls keep bridge order and use
+the C++ SDK's existing event queue.
+
+### Manual API limitations
+
+- `addTiming`, `addViewLoadingTime`, and `addFeatureFlagEvaluation` are safe no-ops,
+  including their native bindings. The native session getter resolves an empty
+  string; the manual JavaScript wrapper exposes `undefined`.
+- `getCurrentSessionId` resolves to `undefined`; the SDK does not expose a getter.
+- Event timestamps come from the native SDK. Optional `timestampMs` arguments are
+  accepted for compatibility but do not override that clock.
+- Custom error fingerprints are accepted but are not supported by the native SDK.
+- `BACK` actions map to the C++ SDK's `Custom` action type.
+- Event mappers, JavaScript error enrichment, and tracing helpers are not provided
+  by this manual wrapper.
+
+Attribute conversion tests can run on the host with dd-sdk-cpp 0.10.0 and the Vega
+SDK headers installed. Pass `DATADOG_CPP_SOURCE_DIR`, `KEPLER_INCLUDE_DIR` (a root
+containing `Kepler/` and `JsonContainer/`), and `NODE_API_INCLUDE_DIR` to the test
+CMake configuration. Keep platform system headers separate from those roots when
+building on macOS. The default host test command still runs the transport tests
+without these SDK dependencies.
