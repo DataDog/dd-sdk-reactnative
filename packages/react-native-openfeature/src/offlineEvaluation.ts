@@ -97,7 +97,7 @@ export class OfflineEvaluation implements OfflineEvaluator {
                             variationValue: flag.value as JsonValue,
                             reason: flag.reason,
                             doLog: flag.doLog,
-                            // The native decoder does not keep the split serial ID; read it from the wire.
+                            // flagging-core needs the numeric wire ID; the bridge uses a decimal string.
                             serialId:
                                 precomputed.response.data.attributes.flags[key]
                                     ?.serialId
@@ -219,7 +219,11 @@ export class OfflineEvaluation implements OfflineEvaluator {
             : undefined;
         const serialId = result.flagMetadata?.__dd_split_serial_id;
         const serial =
-            typeof serialId === 'number' ? { serialId: String(serialId) } : {};
+            typeof serialId === 'number' &&
+            Number.isSafeInteger(serialId) &&
+            serialId >= 0
+                ? { serialId: String(serialId) }
+                : {};
         const flag: FlagCacheEntry = precomputed
             ? { ...precomputed, ...serial }
             : {

@@ -125,6 +125,25 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
         expect(NativeDdFlags.setEvaluationContext).not.toHaveBeenCalled();
     });
 
+    it('tracks serial ID zero from a rules-only evaluation', async () => {
+        const configuration = rulesConfiguration();
+        const flag = configuration.rules.response.flags['test-flag'];
+        flag.allocations[0].splits[0].serialId = 0;
+        const { provider, name } = setup(configuration);
+        await OpenFeature.setProviderAndWait(provider, matchingContext);
+
+        expect(
+            OpenFeature.getClient().getBooleanValue('test-flag', false)
+        ).toBe(true);
+        expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledWith(
+            name,
+            'test-flag',
+            expect.objectContaining({ serialId: '0' }),
+            'user-1',
+            { country: 'US' }
+        );
+    });
+
     it('changes a rules-based value through real OpenFeature context changes and tracks the selected allocation', async () => {
         const resolve = jest.spyOn(
             DatadogCoreEvaluationProvider.prototype,
@@ -668,6 +687,28 @@ describe('Offline provider delegates to DatadogCoreProvider', () => {
             { country: 'US' }
         );
     });
+
+    it.each([-1, 1.5, Number.MAX_SAFE_INTEGER + 1])(
+        'tracks a precomputed evaluation with the invalid serial ID %s omitted',
+        async serialId => {
+            const configuration = precomputedConfiguration();
+            Object.assign(
+                configuration.precomputed.response.data.attributes.flags[
+                    'boolean-flag'
+                ],
+                { serialId }
+            );
+            const { provider } = setup(configuration);
+            await OpenFeature.setProviderAndWait(provider);
+            expect(
+                OpenFeature.getClient().getBooleanValue('boolean-flag', false)
+            ).toBe(true);
+            expect(NativeDdFlags.trackEvaluation).toHaveBeenCalledTimes(1);
+            expect(
+                NativeDdFlags.trackEvaluation.mock.calls[0][2]
+            ).not.toHaveProperty('serialId');
+        }
+    );
 
     it('names the precomputed-only parser when a rules wire yields no configuration', () => {
         const log = jest.spyOn(InternalLog, 'log');

@@ -133,12 +133,77 @@ describe('decodePrecomputedFlags', () => {
         expect(cache.get('f')?.extraLogging).toEqual({});
     });
 
-    it('tolerates a null serialId', () => {
-        const cache = decodePrecomputedFlags(
-            responseWith({ f: flag({ serialId: null }) })
+    describe('serialId', () => {
+        it('propagates a serial id as its string form', () => {
+            const cache = decodePrecomputedFlags(
+                responseWith({ f: flag({ serialId: 340132 }) })
+            );
+
+            expect(cache.get('f')?.serialId).toBe('340132');
+        });
+
+        it('propagates serial id 0', () => {
+            // Serial ids are zero-based per org, so 0 is the most common value in the fleet
+            // and the one a truthiness check would silently drop.
+            const cache = decodePrecomputedFlags(
+                responseWith({ f: flag({ serialId: 0 }) })
+            );
+
+            expect(cache.get('f')?.serialId).toBe('0');
+        });
+
+        it.each([
+            ['null', null],
+            ['undefined', undefined],
+            ['a string', '340132'],
+            ['a boolean', true],
+            ['NaN', NaN],
+            ['Infinity', Infinity],
+            ['a fraction', 1.5],
+            ['a negative integer', -1],
+            ['an unsafe integer', Number.MAX_SAFE_INTEGER + 1]
+        ])(
+            'omits the key entirely and keeps the flag when the serial id is %s',
+            (_label, serialId) => {
+                const cache = decodePrecomputedFlags(
+                    responseWith({
+                        f: flag({
+                            serialId: (serialId as unknown) as PrecomputedFlag['serialId']
+                        })
+                    })
+                );
+
+                const entry = cache.get('f');
+
+                expect(entry?.key).toBe('f');
+                expect(entry?.serialId).toBeUndefined();
+                expect('serialId' in (entry as object)).toBe(false);
+            }
         );
 
-        expect(cache.get('f')?.key).toBe('f');
+        it('keeps a sibling flag decodable when one has a malformed serial id', () => {
+            const cache = decodePrecomputedFlags(
+                responseWith({
+                    good: flag({ serialId: 7 }),
+                    bad: flag({
+                        serialId: ('x' as unknown) as PrecomputedFlag['serialId']
+                    })
+                })
+            );
+
+            expect(cache.get('good')?.serialId).toBe('7');
+            expect(cache.get('bad')?.key).toBe('bad');
+            expect(cache.get('bad')?.serialId).toBeUndefined();
+        });
+
+        it('omits the serial id from the JSON sent across the bridge', () => {
+            // JSON.stringify omits properties with undefined values. The `in` assertion above checks key presence.
+            const cache = decodePrecomputedFlags(
+                responseWith({ f: flag({ serialId: null }) })
+            );
+
+            expect(JSON.stringify(cache.get('f'))).not.toContain('serialId');
+        });
     });
 
     it('omits flags with an unsupported variation type and logs a warning', () => {
