@@ -10,6 +10,7 @@ import ReactViewBackgroundDrawableUtils
 import android.graphics.Typeface
 import android.text.Layout
 import android.text.Spanned
+import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.view.ViewGroup
@@ -65,7 +66,11 @@ internal class PreparedLayoutTextViewMapper(
                 y = background.y,
                 width = background.width,
                 height = background.height,
-                shapeStyle = background.shapeStyle,
+                shapeStyle = background.shapeStyle ?: MobileSegment.ShapeStyle(
+                    backgroundColor = "#00000000",
+                    opacity = view.alpha,
+                    cornerRadius = 0L
+                ),
                 border = background.border,
                 // Layout text includes ellipsis; source text is retained only for style spans.
                 text = capturedText(prepared.layout.text, mappingContext),
@@ -108,10 +113,19 @@ internal class PreparedLayoutTextViewMapper(
                 SERIF_FAMILY_NAME -> SERIF_FAMILY_NAME
                 else -> SANS_SERIF_FAMILY_NAME
             },
-            size = (paint.textSize / density).toLong(),
+            size = fontSize(prepared, density),
             color = formatAsRgba(spanColor ?: paint.color),
             truncationMode = truncationMode(prepared.layout)
         )
+    }
+
+    private fun fontSize(prepared: PreparedTextLayout, density: Float): Long {
+        val span = (prepared.sourceText as? Spanned)
+            ?.getSpans(0, prepared.sourceText.length, AbsoluteSizeSpan::class.java)
+            ?.firstOrNull()
+        return span?.let {
+            if (it.dip) it.size.toLong() else (it.size / density).toLong()
+        } ?: (prepared.layout.paint.textSize / density).toLong()
     }
 
     private fun fontFamilyFromSpans(text: CharSequence): String? {

@@ -7,9 +7,11 @@
 package com.datadog.reactnative.sessionreplay.mappers
 
 import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.text.Layout
 import android.text.Spanned
 import android.text.TextPaint
+import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.view.ViewGroup
 import com.datadog.android.api.InternalLogger
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.mock
@@ -61,6 +64,7 @@ internal class PreparedLayoutTextViewMapperTest {
         whenever(layout.alignment).thenReturn(Layout.Alignment.ALIGN_NORMAL)
         whenever(layout.lineCount).thenReturn(1)
         whenever(layout.getParagraphDirection(0)).thenReturn(1)
+        whenever(view.alpha).thenReturn(1f)
         mapper = PreparedLayoutTextViewMapper(
             layoutReader = { _, _ -> PreparedTextLayout(layout, "hello", 0f) },
             drawableUtils = drawableUtils,
@@ -81,6 +85,84 @@ internal class PreparedLayoutTextViewMapperTest {
         assertThat(result.textPosition?.alignment?.vertical).isEqualTo(
             MobileSegment.Vertical.TOP
         )
+    }
+
+    @ParameterizedTest
+    @CsvSource("false, 24", "true, 48")
+    fun `M resolve font size from source spans W map()`(dip: Boolean, expectedSize: Long) {
+        val text: Spanned = mock()
+        val span: AbsoluteSizeSpan = mock()
+        whenever(text.length).thenReturn(5)
+        whenever(text.getSpans(0, 5, AbsoluteSizeSpan::class.java)).thenReturn(arrayOf(span))
+        whenever(span.size).thenReturn(48)
+        whenever(span.dip).thenReturn(dip)
+        mapper = PreparedLayoutTextViewMapper(
+            layoutReader = { _, _ -> PreparedTextLayout(layout, text, 0f) },
+            drawableUtils = drawableUtils,
+            obfuscator = obfuscator
+        )
+
+        assertThat(mapText().textStyle.size).isEqualTo(expectedSize)
+    }
+
+    @Test
+    fun `M retain paint font size W map() { no size span }`() {
+        val text: Spanned = mock()
+        whenever(text.length).thenReturn(5)
+        whenever(text.getSpans(0, 5, AbsoluteSizeSpan::class.java)).thenReturn(emptyArray())
+        mapper = PreparedLayoutTextViewMapper(
+            layoutReader = { _, _ -> PreparedTextLayout(layout, text, 0f) },
+            drawableUtils = drawableUtils,
+            obfuscator = obfuscator
+        )
+
+        assertThat(mapText().textStyle.size).isEqualTo(14)
+    }
+
+    @ParameterizedTest
+    @ValueSource(floats = [0f, 0.5f, 1f])
+    fun `M preserve text opacity W map() { no background }`(opacity: Float) {
+        whenever(view.alpha).thenReturn(opacity)
+
+        val result = mapText()
+
+        assertThat(result.shapeStyle).isEqualTo(
+            MobileSegment.ShapeStyle(
+                backgroundColor = "#00000000",
+                opacity = opacity,
+                cornerRadius = 0L
+            )
+        )
+        assertThat(result.textStyle.color).isEqualTo("#000000ff")
+    }
+
+    @Test
+    fun `M preserve text opacity W map() { unsupported background }`() {
+        whenever(view.background).thenReturn(mock<Drawable>())
+        whenever(view.alpha).thenReturn(0.25f)
+
+        assertThat(mapText().shapeStyle?.opacity).isEqualTo(0.25f)
+    }
+
+    @Test
+    fun `M retain background style and border W map()`() {
+        val background: Drawable = mock()
+        val shapeStyle = MobileSegment.ShapeStyle(
+            backgroundColor = "#ff0000ff",
+            opacity = 0.5f,
+            cornerRadius = 4L
+        )
+        val border = MobileSegment.ShapeBorder(color = "#000000ff", width = 2L)
+        whenever(view.background).thenReturn(background)
+        whenever(view.alpha).thenReturn(0.5f)
+        whenever(drawableUtils.getReactBackgroundFromDrawable(background)).thenReturn(background)
+        whenever(drawableUtils.resolveShapeAndBorder(background, 0.5f, 2f))
+            .thenReturn(shapeStyle to border)
+
+        val result = mapText()
+
+        assertThat(result.shapeStyle).isEqualTo(shapeStyle)
+        assertThat(result.border).isEqualTo(border)
     }
 
     @Test

@@ -68,7 +68,8 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
         val textViewUtils = TextViewUtils.create(mockReactContext, mockLogger)
         testedExtensionSupport = ReactNativeSessionReplayExtensionSupport(
             textViewUtils,
-            internalCallback
+            internalCallback,
+            preparedTextViewClass = null
         )
     }
 
