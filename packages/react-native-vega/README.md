@@ -117,3 +117,14 @@ containing `Kepler/` and `JsonContainer/`), and `NODE_API_INCLUDE_DIR` to the te
 CMake configuration. Keep platform system headers separate from those roots when
 building on macOS. The default host test command still runs the transport tests
 without these SDK dependencies.
+
+`DdLogs` forwards debug, info, warn and error logs, with optional error kind,
+message, stack and attributes. `DdSdkReactNative` supports setting, updating and
+clearing user/account information. Native failures leave JavaScript context
+unchanged and do not reject into application code.
+
+The native initializer must call `configureLogging(core, logsConfiguration)`
+when a logs configuration is present, before starting the core. The logger uses
+`bundleLogsWithRum` to control RUM correlation (defaults to `true`). Initialization
+is added separately; importing these APIs does not initialize the SDK. Logs are
+ignored until the native logger has been configured.

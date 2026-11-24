@@ -1,0 +1,125 @@
+/*
+ * Unless explicitly stated otherwise all files in this repository are licensed under the Apache License Version 2.0.
+ * This product includes software developed at Datadog (https://www.datadoghq.com/).
+ * Copyright 2016-Present Datadog, Inc.
+ */
+
+import {
+    AccountInfoSingleton,
+    UserInfoSingleton
+} from '@datadog/mobile-react-native/internal';
+
+import { DdSdkReactNative } from '../src/DdSdkReactNativeVega';
+
+const mockNative = {
+    setUserInfo: jest.fn(),
+    clearUserInfo: jest.fn(),
+    addUserExtraInfo: jest.fn(),
+    setAccountInfo: jest.fn(),
+    clearAccountInfo: jest.fn(),
+    addAccountExtraInfo: jest.fn()
+};
+const mockGet = jest.fn();
+jest.mock('@amazon-devices/keplerscript-turbomodule-api', () => ({
+    TurboModuleRegistry: { get: (...args: unknown[]) => mockGet(...args) }
+}));
+
+describe('Vega user and account context', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockGet.mockReturnValue(mockNative);
+        UserInfoSingleton.reset();
+        AccountInfoSingleton.reset();
+    });
+    it('sets, merges, replaces and clears user context', async () => {
+        const user = {
+            id: 'user',
+            name: 'name',
+            email: 'user@example.com',
+            extraInfo: { count: 1, keep: false }
+        };
+        await DdSdkReactNative.setUserInfo(user);
+        expect(mockNative.setUserInfo).toHaveBeenCalledWith(user);
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual(user);
+        const extra = { count: 2, nested: { array: [null, true, 3] } };
+        await DdSdkReactNative.addUserExtraInfo(extra);
+        expect(mockNative.addUserExtraInfo).toHaveBeenCalledWith(extra);
+        expect(
+            UserInfoSingleton.getInstance().getUserInfo()?.extraInfo
+        ).toEqual({ ...user.extraInfo, ...extra });
+        await DdSdkReactNative.setUserInfo({ id: 'replacement' });
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+            id: 'replacement'
+        });
+        await DdSdkReactNative.clearUserInfo();
+        expect(mockNative.clearUserInfo).toHaveBeenCalledTimes(1);
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toBeUndefined();
+    });
+    it('sets, merges, replaces and clears account context', async () => {
+        const account = {
+            id: 'account',
+            name: 'team',
+            extraInfo: { plan: 'free' }
+        };
+        await DdSdkReactNative.setAccountInfo(account);
+        expect(mockNative.setAccountInfo).toHaveBeenCalledWith(account);
+        await DdSdkReactNative.addAccountExtraInfo({
+            plan: 'paid',
+            active: true
+        });
+        expect(mockNative.addAccountExtraInfo).toHaveBeenCalledWith({
+            plan: 'paid',
+            active: true
+        });
+        expect(
+            AccountInfoSingleton.getInstance().getAccountInfo()?.extraInfo
+        ).toEqual({ plan: 'paid', active: true });
+        await DdSdkReactNative.setAccountInfo({ id: 'replacement' });
+        expect(AccountInfoSingleton.getInstance().getAccountInfo()).toEqual({
+            id: 'replacement'
+        });
+        await DdSdkReactNative.clearAccountInfo();
+        expect(mockNative.clearAccountInfo).toHaveBeenCalledTimes(1);
+        expect(
+            AccountInfoSingleton.getInstance().getAccountInfo()
+        ).toBeUndefined();
+    });
+    it('ignores invalid IDs and extra info without a matching identity', async () => {
+        await DdSdkReactNative.setUserInfo({ id: '' });
+        await DdSdkReactNative.setAccountInfo({ id: '' });
+        await DdSdkReactNative.addUserExtraInfo({ value: 1 });
+        await DdSdkReactNative.addAccountExtraInfo({ value: 1 });
+        expect(mockGet).not.toHaveBeenCalled();
+    });
+    it('does not mutate account information owned by the application', async () => {
+        const account = Object.freeze({
+            id: 'account',
+            extraInfo: { plan: 'free' }
+        });
+        await DdSdkReactNative.setAccountInfo(account);
+        await DdSdkReactNative.addAccountExtraInfo({ plan: 'paid' });
+        expect(account.extraInfo).toEqual({ plan: 'free' });
+        expect(
+            AccountInfoSingleton.getInstance().getAccountInfo()?.extraInfo
+        ).toEqual({ plan: 'paid' });
+    });
+    it('keeps JavaScript context unchanged when native fails', async () => {
+        await DdSdkReactNative.setUserInfo({ id: 'user' });
+        await DdSdkReactNative.setAccountInfo({ id: 'account' });
+        mockNative.clearUserInfo.mockResolvedValueOnce(false);
+        mockNative.clearAccountInfo.mockRejectedValueOnce(Error('bridge'));
+        await DdSdkReactNative.clearUserInfo();
+        await DdSdkReactNative.clearAccountInfo();
+        expect(UserInfoSingleton.getInstance().getUserInfo()?.id).toBe('user');
+        expect(AccountInfoSingleton.getInstance().getAccountInfo()?.id).toBe(
+            'account'
+        );
+        mockGet.mockReturnValue(null);
+        await DdSdkReactNative.setUserInfo({ id: 'replacement' });
+        await DdSdkReactNative.setAccountInfo({ id: 'replacement' });
+        expect(UserInfoSingleton.getInstance().getUserInfo()?.id).toBe('user');
+        expect(AccountInfoSingleton.getInstance().getAccountInfo()?.id).toBe(
+            'account'
+        );
+    });
+});

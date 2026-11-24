@@ -34,6 +34,17 @@ class DdSdk : public DdSdkSpec {
     com::amazon::kepler::turbomodule::Promise telemetryError(
         std::string message, std::string stack, std::string kind) override;
     com::amazon::kepler::turbomodule::Promise consumeWebviewEvent(std::string message) override;
+    com::amazon::kepler::turbomodule::Promise
+    setUserInfo(com::amazon::kepler::turbomodule::JSObject info) override;
+    com::amazon::kepler::turbomodule::Promise clearUserInfo() override;
+    com::amazon::kepler::turbomodule::Promise
+    addUserExtraInfo(com::amazon::kepler::turbomodule::JSObject info) override;
+    com::amazon::kepler::turbomodule::Promise
+    setAccountInfo(com::amazon::kepler::turbomodule::JSObject info) override;
+    com::amazon::kepler::turbomodule::Promise clearAccountInfo() override;
+    com::amazon::kepler::turbomodule::Promise addAccountExtraInfo(
+        com::amazon::kepler::turbomodule::JSObject info) override;
+
     com::amazon::kepler::turbomodule::Promise startHttpProxy() override;
     com::amazon::kepler::turbomodule::Promise stopHttpProxy() override;
     com::amazon::kepler::turbomodule::Promise

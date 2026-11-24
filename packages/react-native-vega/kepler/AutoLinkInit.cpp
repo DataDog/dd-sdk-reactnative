@@ -6,12 +6,14 @@
 
 #include <Kepler/turbomodule/KeplerTurboModuleRegistration.h>
 #include "turbo-modules/DdSdk.h"
+#include "turbo-modules/DdLogs.h"
 #include "turbo-modules/DdRum.h"
 
 extern "C" {
 __attribute__((visibility("default"))) void
     autoLinkKeplerTurboModulesV1() noexcept {
         KEPLER_REGISTER_TURBO_MODULE(DdSdkTurboModule, DdSdk);
+        KEPLER_REGISTER_TURBO_MODULE(DdLogsTurboModule, DdLogs);
         KEPLER_REGISTER_TURBO_MODULE(DdRumTurboModule, DdRum);
     }
 }

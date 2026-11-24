@@ -4,14 +4,26 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { AttributesSingleton } from '@datadog/mobile-react-native/internal';
+import {
+    AttributesSingleton,
+    UserInfoSingleton,
+    AccountInfoSingleton
+} from '@datadog/mobile-react-native/internal';
 import type { Attributes } from '@datadog/mobile-react-native/internal';
 
 import { VegaSdk } from './SdkInitialization';
 import { callNative } from './callNative';
 import { getNativeDdSdk } from './turbo-modules/NativeDdSdk';
 
-/** Global attributes for future events, alongside the shared initialization APIs. */
+type UserInfo = {
+    id: string;
+    name?: string;
+    email?: string;
+    extraInfo?: Record<string, unknown>;
+};
+type AccountInfo = Omit<UserInfo, 'email'>;
+
+/** Global attributes and context, alongside the shared initialization APIs. */
 export class DdSdkReactNative extends VegaSdk {
     static addAttribute = async (
         key: string,
@@ -53,6 +65,72 @@ export class DdSdkReactNative extends VegaSdk {
             )
         ) {
             AttributesSingleton.getInstance().removeAttributes(keys);
+        }
+    };
+    static setUserInfo = async (info: UserInfo): Promise<void> => {
+        if (typeof info?.id !== 'string' || !info.id) {
+            return;
+        }
+        if (
+            await callNative(getNativeDdSdk, native => native.setUserInfo(info))
+        ) {
+            UserInfoSingleton.getInstance().setUserInfo({ ...info });
+        }
+    };
+    static clearUserInfo = async (): Promise<void> => {
+        if (
+            await callNative(getNativeDdSdk, native => native.clearUserInfo())
+        ) {
+            UserInfoSingleton.getInstance().clearUserInfo();
+        }
+    };
+    static addUserExtraInfo = async (
+        info: Record<string, unknown>
+    ): Promise<void> => {
+        if (!UserInfoSingleton.getInstance().getUserInfo()) {
+            return;
+        }
+        if (
+            await callNative(getNativeDdSdk, native =>
+                native.addUserExtraInfo(info)
+            )
+        ) {
+            UserInfoSingleton.getInstance().addUserExtraInfo(info);
+        }
+    };
+    static setAccountInfo = async (info: AccountInfo): Promise<void> => {
+        if (typeof info?.id !== 'string' || !info.id) {
+            return;
+        }
+        if (
+            await callNative(getNativeDdSdk, native =>
+                native.setAccountInfo(info)
+            )
+        ) {
+            AccountInfoSingleton.getInstance().setAccountInfo({ ...info });
+        }
+    };
+    static clearAccountInfo = async (): Promise<void> => {
+        if (
+            await callNative(getNativeDdSdk, native =>
+                native.clearAccountInfo()
+            )
+        ) {
+            AccountInfoSingleton.getInstance().clearAccountInfo();
+        }
+    };
+    static addAccountExtraInfo = async (
+        info: Record<string, unknown>
+    ): Promise<void> => {
+        if (!AccountInfoSingleton.getInstance().getAccountInfo()) {
+            return;
+        }
+        if (
+            await callNative(getNativeDdSdk, native =>
+                native.addAccountExtraInfo(info)
+            )
+        ) {
+            AccountInfoSingleton.getInstance().addAccountExtraInfo(info);
         }
     };
 }

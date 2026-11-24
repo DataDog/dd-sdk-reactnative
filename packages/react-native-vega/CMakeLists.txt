@@ -54,6 +54,9 @@ set(HEADERS
     kepler/turbo-modules/DdRum.h
     kepler/turbo-modules/RumBridge.h
     kepler/turbo-modules/SdkInitialization.h
+    kepler/turbo-modules/generated/DdLogsSpec.h
+    kepler/turbo-modules/DdLogs.h
+    kepler/turbo-modules/LoggingConfiguration.h
     kepler/turbo-modules/generated/DdSdkSpec.h
     kepler/turbo-modules/DdSdk.h
     kepler/turbo-modules/EnumParsers.h
@@ -66,6 +69,9 @@ set(SOURCES
     kepler/turbo-modules/generated/DdRumSpec.cpp
     kepler/turbo-modules/DdRum.cpp
     kepler/turbo-modules/SdkInitialization.cpp
+    kepler/turbo-modules/generated/DdLogsSpec.cpp
+    kepler/turbo-modules/DdLogs.cpp
+    kepler/turbo-modules/LoggingConfiguration.cpp
     kepler/turbo-modules/generated/DdSdkSpec.cpp
     kepler/turbo-modules/DdSdk.cpp
     kepler/turbo-modules/EnumParsers.cpp

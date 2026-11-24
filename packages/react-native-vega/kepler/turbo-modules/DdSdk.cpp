@@ -11,10 +11,64 @@
 #include "DatadogGlobalState.h"
 #include "EnumParsers.h"
 #include <thread>
+#include "AttributeConverter.h"
 
 using namespace com::amazon::kepler::turbomodule;
 
 namespace DdSdkTurboModule {
+
+namespace {
+template <typename Operation> Promise withCore(Operation operation) {
+    return Promise([operation](const std::shared_ptr<Promise> &promise) {
+        try {
+            auto core =
+                datadog_rn_vega::DatadogGlobalState::getInstance().getCore();
+            if (!core) {
+                promise->resolve(false);
+                return;
+            }
+            operation(*core);
+            promise->resolve(true);
+        } catch (...) {
+            promise->resolve(false);
+        }
+    });
+}
+
+std::string stringField(const JSObject &object, const std::string &key) {
+    const auto entry = object.find(key);
+    if (entry == object.end())
+        return {};
+    const auto value = std::get_if<std::string>(&entry->second);
+    return value ? *value : std::string();
+}
+
+datadog::Attribute extraInfo(const JSObject &object) {
+    const auto entry = object.find("extraInfo");
+    if (entry != object.end()) {
+        const auto value = std::get_if<JSObject>(&entry->second);
+        if (value)
+            return datadog_rn_vega::jsObjectToAttribute(*value);
+    }
+    return datadog::Attribute::Object();
+}
+template <typename Operation> Promise withFeatures(Operation operation) {
+    return Promise([operation](const std::shared_ptr<Promise> &promise) {
+        try {
+            auto &state = datadog_rn_vega::DatadogGlobalState::getInstance();
+            auto rum = state.getRum();
+            auto logging = state.getLogging();
+            if (rum)
+                operation(*rum);
+            if (logging)
+                operation(*logging);
+            promise->resolve(bool(rum) || bool(logging));
+        } catch (...) {
+            promise->resolve(false);
+        }
+    });
+}
+} // namespace
 
 DdSdk::DdSdk() = default;
 
@@ -51,29 +105,29 @@ Promise DdSdk::clearAllData() {
 }
 
 Promise DdSdk::addAttribute(std::string key, JSObject value) {
-    return datadog_rn_vega::withRum([=](datadog::Rum &rum) {
-        rum.AddAttribute(key,
-                         datadog_rn_vega::jsWrappedValueToAttribute(value));
+    return withFeatures([=](auto &feature) {
+        feature.AddAttribute(key,
+                             datadog_rn_vega::jsWrappedValueToAttribute(value));
     });
 }
 
 Promise DdSdk::removeAttribute(std::string key) {
-    return datadog_rn_vega::withRum(
-        [=](datadog::Rum &rum) { rum.RemoveAttribute(key); });
+    return withFeatures([=](auto &feature) { feature.RemoveAttribute(key); });
 }
 
 Promise DdSdk::addAttributes(JSObject attributes) {
-    return datadog_rn_vega::withRum([=](datadog::Rum &rum) {
+    return withFeatures([=](auto &feature) {
         for (const auto &[key, value] : attributes) {
-            rum.AddAttribute(key, datadog_rn_vega::jsValueToAttribute(value));
+            feature.AddAttribute(key,
+                                 datadog_rn_vega::jsValueToAttribute(value));
         }
     });
 }
 
 Promise DdSdk::removeAttributes(std::vector<std::string> keys) {
-    return datadog_rn_vega::withRum([=](datadog::Rum &rum) {
+    return withFeatures([=](auto &feature) {
         for (const auto &key : keys) {
-            rum.RemoveAttribute(key);
+            feature.RemoveAttribute(key);
         }
     });
 }
@@ -130,6 +184,40 @@ Promise DdSdk::httpResponse(std::string requestId, double statusCode) {
                 requestId, static_cast<int>(statusCode));
             promise->resolve(true);
         });
+}
+
+Promise DdSdk::setUserInfo(JSObject info) {
+    return withCore([info](datadog::Core &core) {
+        core.SetUserInfo(stringField(info, "id"), stringField(info, "name"),
+                         stringField(info, "email"), extraInfo(info));
+    });
+}
+
+Promise DdSdk::clearUserInfo() {
+    return withCore([](datadog::Core &core) { core.ClearUserInfo(); });
+}
+
+Promise DdSdk::addUserExtraInfo(JSObject info) {
+    return withCore([info](datadog::Core &core) {
+        core.AddUserExtraInfo(datadog_rn_vega::jsObjectToAttribute(info));
+    });
+}
+
+Promise DdSdk::setAccountInfo(JSObject info) {
+    return withCore([info](datadog::Core &core) {
+        core.SetAccountInfo(stringField(info, "id"), stringField(info, "name"),
+                            extraInfo(info));
+    });
+}
+
+Promise DdSdk::clearAccountInfo() {
+    return withCore([](datadog::Core &core) { core.ClearAccountInfo(); });
+}
+
+Promise DdSdk::addAccountExtraInfo(JSObject info) {
+    return withCore([info](datadog::Core &core) {
+        core.AddAccountExtraInfo(datadog_rn_vega::jsObjectToAttribute(info));
+    });
 }
 
 } // namespace DdSdkTurboModule

@@ -7,7 +7,7 @@ module.exports = {
                         libraryName: 'libDatadogVega.so',
                         provider: 'application',
                         linkDynamic: true,
-                        turbomodules: ['DdSdk', 'DdRum']
+                        turbomodules: ['DdSdk', 'DdRum', 'DdLogs']
                     }
                 }
             }
