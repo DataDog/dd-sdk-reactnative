@@ -134,3 +134,20 @@ The optional log `source` argument does not change the C++ logger's source.
 Custom fingerprints are kept in attributes but do not control native error
 grouping in C++ SDK 0.7.0. Error symbolication and JavaScript error enrichment
 are added separately.
+
+Anonymous user attributes are supported through `addUserExtraInfo`, matching
+core. Account attributes require an account ID to be set first.
+
+### Logging registration compatibility
+
+C++ SDK 0.7.0 returns non-null no-op objects when logging registration fails.
+Vega builds compile a private copy of that source with nullable failure returns,
+so failed registrations leave logging disabled. Repeated configuration keeps the
+working logger. The dependency checkout is never edited, including when using
+`Datadog_SOURCE_DIR`. The build rejects unexpected SDK versions or source changes
+so this adjustment is reviewed when the C++ SDK is upgraded.
+
+Set `VEGA_TEST_LOGGING_CONFIGURATION=ON` in the host test CMake configuration to
+build the actual SDK and test failed registration, repeated configuration, and
+logging-only attributes. This uses the same compatibility source as Vega builds
+and requires the SDK and include paths described above.

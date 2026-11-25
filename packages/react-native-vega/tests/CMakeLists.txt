@@ -62,3 +62,36 @@ if(VEGA_TEST_INITIALIZATION)
     add_test(NAME SdkInitialization COMMAND SdkInitializationTest "${CMAKE_CURRENT_BINARY_DIR}/sdk-test-data")
     set_tests_properties(SdkInitialization PROPERTIES TIMEOUT 15)
 endif()
+
+# Exercise logger registration against the actual pinned SDK, including its
+# compatibility patch. Opt in because this builds the complete SDK on the host.
+option(VEGA_TEST_LOGGING_CONFIGURATION "Build real SDK logging registration tests" OFF)
+if(VEGA_TEST_LOGGING_CONFIGURATION)
+    if(NOT DATADOG_CPP_SOURCE_DIR OR NOT KEPLER_INCLUDE_DIR OR NOT NODE_API_INCLUDE_DIR)
+        message(FATAL_ERROR "Logging configuration tests require the SDK and Kepler/Node include paths")
+    endif()
+    set(DD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(DD_CRASH_MODE "noop" CACHE STRING "" FORCE)
+    set(DD_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(DD_BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    set(DD_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
+    set(DD_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
+    set(DD_BUILD_PACKAGE OFF CACHE BOOL "" FORCE)
+    add_subdirectory("${DATADOG_CPP_SOURCE_DIR}" datadog)
+    include(../cmake/DatadogLoggingCompatibility.cmake)
+    datadog_vega_patch_logging_registration("${DATADOG_CPP_SOURCE_DIR}")
+    add_executable(LoggingConfigurationTest
+        LoggingConfigurationTest.cpp
+        ../kepler/turbo-modules/LoggingConfiguration.cpp
+        ../kepler/turbo-modules/DatadogGlobalState.cpp)
+    target_compile_features(LoggingConfigurationTest PRIVATE cxx_std_17)
+    target_compile_definitions(LoggingConfigurationTest PRIVATE NDEBUG)
+    target_include_directories(LoggingConfigurationTest PRIVATE
+        ../kepler/turbo-modules
+        ${KEPLER_INCLUDE_DIR}
+        ${KEPLER_INCLUDE_DIR}/Kepler/turbomodule
+        ${NODE_API_INCLUDE_DIR})
+    target_link_libraries(LoggingConfigurationTest PRIVATE Datadog::sdk)
+    add_test(NAME LoggingConfiguration COMMAND LoggingConfigurationTest "${CMAKE_CURRENT_BINARY_DIR}/logging-test-data")
+    set_tests_properties(LoggingConfiguration PROPERTIES TIMEOUT 10)
+endif()

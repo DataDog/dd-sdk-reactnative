@@ -48,6 +48,8 @@ else()
     )
 endif()
 FetchContent_MakeAvailable(Datadog)
+include(cmake/DatadogLoggingCompatibility.cmake)
+datadog_vega_patch_logging_registration("${datadog_SOURCE_DIR}")
 
 set(HEADERS
     kepler/turbo-modules/generated/DdRumSpec.h
@@ -62,6 +64,7 @@ set(HEADERS
     kepler/turbo-modules/EnumParsers.h
     kepler/turbo-modules/AttributeConverter.h
     kepler/turbo-modules/DatadogGlobalState.h
+    kepler/turbo-modules/FeatureAttributes.h
     kepler/turbo-modules/HttpJsProxy.h
 )
 

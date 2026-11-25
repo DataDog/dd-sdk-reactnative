@@ -15,6 +15,9 @@ void configureLogging(
     const com::amazon::kepler::turbomodule::JSObject &configuration) {
     if (!core)
         return;
+    auto &state = DatadogGlobalState::getInstance();
+    if (state.getLogging())
+        return;
     auto logging = datadog::Logging::Register(core);
     if (!logging)
         return;
@@ -26,7 +29,6 @@ void configureLogging(
                             : std::get_if<bool>(&entry->second);
     config.SetEnrichWithRumContext(enrich ? *enrich : true);
     auto logger = logging->CreateLogger(config);
-    auto &state = DatadogGlobalState::getInstance();
     state.setLogging(logging);
     state.setLogger(logger);
 }

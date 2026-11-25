@@ -5,13 +5,14 @@
 // (https://www.datadoghq.com/). Copyright 2016-Present Datadog, Inc.
 
 #include "DdSdk.h"
+#include "AttributeConverter.h"
+#include "DatadogGlobalState.h"
+#include "FeatureAttributes.h"
 #include "HttpJsProxy.h"
 #include "SdkInitialization.h"
 #include "RumBridge.h"
-#include "DatadogGlobalState.h"
 #include "EnumParsers.h"
 #include <thread>
-#include "AttributeConverter.h"
 
 using namespace com::amazon::kepler::turbomodule;
 
@@ -55,14 +56,7 @@ datadog::Attribute extraInfo(const JSObject &object) {
 template <typename Operation> Promise withFeatures(Operation operation) {
     return Promise([operation](const std::shared_ptr<Promise> &promise) {
         try {
-            auto &state = datadog_rn_vega::DatadogGlobalState::getInstance();
-            auto rum = state.getRum();
-            auto logging = state.getLogging();
-            if (rum)
-                operation(*rum);
-            if (logging)
-                operation(*logging);
-            promise->resolve(bool(rum) || bool(logging));
+            promise->resolve(datadog_rn_vega::applyToFeatures(operation));
         } catch (...) {
             promise->resolve(false);
         }
