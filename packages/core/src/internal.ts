@@ -40,3 +40,6 @@ export type {
     DdNativeRumType,
     DdNativeSdkType
 } from './nativeModulesTypes';
+export { DdAttributes } from './DdAttributes';
+export { debugId } from './metro/debugIdResolver';
+export { DdRumErrorTracking } from './rum/instrumentation/DdRumErrorTracking';

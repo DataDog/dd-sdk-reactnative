@@ -34,7 +34,7 @@ set(DD_UUID_USE_DEFAULT OFF CACHE BOOL "" FORCE)
 set(DD_UUID_SRC "${CMAKE_CURRENT_SOURCE_DIR}/kepler/turbo-modules/uuid_urandom.cpp" CACHE STRING "" FORCE)
 set(DD_HTTP_CLIENT "none" CACHE STRING "" FORCE)
 set(DD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-set(DD_CRASH_MODE "noop" CACHE STRING "" FORCE)
+set(DD_CRASH_MODE "inprocess" CACHE STRING "" FORCE)
 
 include(FetchContent)
 if(DEFINED Datadog_SOURCE_DIR)
@@ -52,6 +52,7 @@ include(cmake/DatadogLoggingCompatibility.cmake)
 datadog_vega_patch_logging_registration("${datadog_SOURCE_DIR}")
 
 set(HEADERS
+    kepler/turbo-modules/CrashReportingConfiguration.h
     kepler/turbo-modules/generated/DdRumSpec.h
     kepler/turbo-modules/DdRum.h
     kepler/turbo-modules/RumBridge.h
@@ -69,6 +70,7 @@ set(HEADERS
 )
 
 set(SOURCES
+    kepler/turbo-modules/CrashReportingConfiguration.cpp
     kepler/turbo-modules/generated/DdRumSpec.cpp
     kepler/turbo-modules/DdRum.cpp
     kepler/turbo-modules/SdkInitialization.cpp

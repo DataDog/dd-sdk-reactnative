@@ -80,7 +80,14 @@ describe('Vega manual RUM APIs', () => {
         [
             'addError',
             ['message', 'SOURCE', 'stack'],
-            ['message', 'SOURCE', 'stack', {}, 1234, '']
+            [
+                'message',
+                'SOURCE',
+                'stack',
+                { '_dd.error.source_type': 'react-native' },
+                1234,
+                ''
+            ]
         ],
         [
             'startView',
@@ -95,7 +102,14 @@ describe('Vega manual RUM APIs', () => {
         [
             'addError',
             ['message', 'NETWORK', 'stack', context, 99, 'group'],
-            ['message', 'NETWORK', 'stack', context, 99, 'group']
+            [
+                'message',
+                'NETWORK',
+                'stack',
+                { ...context, '_dd.error.source_type': 'react-native' },
+                99,
+                'group'
+            ]
         ],
         ['addViewAttributes', [context], [context]],
         ['removeViewAttribute', ['key'], ['key']],

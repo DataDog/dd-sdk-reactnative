@@ -692,3 +692,85 @@ class RNErrorHandlerMock {
         console.error(...params);
     };
 }
+
+it.each(['throw', 'reject'] as const)(
+    'M chain previous handlers W injected reporter %s',
+    async failure => {
+        const reporter = {
+            addError: jest.fn(() =>
+                failure === 'throw'
+                    ? (() => {
+                          throw Error('reporter');
+                      })()
+                    : Promise.reject(Error('reporter'))
+            )
+        };
+        DdRumErrorTracking.startTracking(reporter);
+        DdRumErrorTracking.onGlobalError(Error('app error'), true);
+        DdRumErrorTracking.onConsoleError('console error');
+        await flushPromises();
+        expect(reporter.addError).toHaveBeenCalledTimes(2);
+        expect(baseErrorHandlerCalled).toBe(true);
+        expect(baseConsoleErrorCalled).toBe(true);
+    }
+);
+
+it('M bound reporting W injected reporter never resolves', async () => {
+    jest.useFakeTimers();
+    try {
+        DdRumErrorTracking.startTracking({
+            addError: () => new Promise(() => undefined)
+        });
+        DdRumErrorTracking.onGlobalError(Error('app error'), true);
+        await jest.advanceTimersByTimeAsync(50);
+        expect(baseErrorHandlerCalled).toBe(true);
+    } finally {
+        jest.useRealTimers();
+    }
+});
+
+it('M replace reporter W tracking already started without wrapping handlers twice', async () => {
+    const first = { addError: jest.fn(() => Promise.resolve()) };
+    const second = { addError: jest.fn(() => Promise.resolve()) };
+    DdRumErrorTracking.startTracking(first);
+    const handler = ErrorUtils.getGlobalHandler();
+    const consoleHandler = console.error;
+    DdRumErrorTracking.startTracking(second);
+    expect(ErrorUtils.getGlobalHandler()).toBe(handler);
+    expect(console.error).toBe(consoleHandler);
+    DdRumErrorTracking.onGlobalError(Error('app error'));
+    await flushPromises();
+    expect(second.addError).toHaveBeenCalledTimes(1);
+    expect(first.addError).not.toHaveBeenCalled();
+});
+
+it('M remain safe W ErrorUtils is unavailable', () => {
+    const previous = global.ErrorUtils;
+    try {
+        Object.defineProperty(global, 'ErrorUtils', {
+            configurable: true,
+            value: undefined
+        });
+        expect(() => DdRumErrorTracking.startTracking()).not.toThrow();
+        expect(console.error).toBe(baseConsoleError);
+    } finally {
+        Object.defineProperty(global, 'ErrorUtils', {
+            configurable: true,
+            value: previous
+        });
+    }
+});
+
+it('M chain previous handlers W error properties throw during encoding', async () => {
+    const error = Object.defineProperty({}, 'message', {
+        get: () => {
+            throw Error('getter');
+        }
+    });
+    DdRumErrorTracking.startTracking();
+    DdRumErrorTracking.onGlobalError(error, true);
+    DdRumErrorTracking.onConsoleError(error);
+    await flushPromises();
+    expect(baseErrorHandlerCalled).toBe(true);
+    expect(baseConsoleErrorCalled).toBe(true);
+});

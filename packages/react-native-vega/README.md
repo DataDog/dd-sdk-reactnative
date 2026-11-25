@@ -150,3 +150,36 @@ Set `VEGA_TEST_LOGGING_CONFIGURATION=ON` in the host test CMake configuration to
 build the actual SDK and test failed registration, repeated configuration, and
 logging-only attributes. This uses the same compatibility source as Vega builds
 and requires the SDK and include paths described above.
+
+## Crash reporting and application metadata
+
+Native builds include the in-process crash backend. Setup registers it only when
+RUM is configured with a valid application ID and `nativeCrashReportEnabled` is
+`true`. Native crash capture is disabled by default. The C++ SDK installs its
+handler once per process; this is a setup setting, not a runtime toggle.
+
+RUM errors and logs with error details include the React Native source type and
+the bundle Debug ID, when available. Use the core Metro configuration to generate
+that Debug ID and upload the matching source map. Ordinary logs keep their
+existing attributes.
+
+The initializer added in RUM-20335 must use these configuration hooks:
+
+- `buildApplicationMetadata(configuration)` resolves service and version defaults
+  from the platform's existing `DeviceInfoModule` constants. Explicit `service`
+  and `version` values take precedence. It applies `versionSuffix` once and keeps
+  the SDK version separate. If app details are unavailable, the service defaults
+  to `vega` and the app version stays unset.
+- `configureApplicationMetadata(coreConfig, additionalConfiguration)` sets native
+  source, SDK version, and app version before `Core::Create`.
+- `configureCrashReporting(core, rumConfiguration)` runs after RUM registration
+  and before `Core::Start`, alongside the logging configuration hook.
+- `configureErrorTracking(configuration)` enables shared JavaScript error tracking
+  with the Vega RUM reporter when `rumConfiguration.trackErrors` is `true`.
+  Importing the package does not install handlers. SDK reporting failures do not
+  prevent the app's existing error and console handlers from running.
+
+These hooks keep initialization and provider setup in RUM-20335. Host native
+coverage can be enabled with `VEGA_TEST_CRASH_CONFIGURATION=ON`, using the SDK
+and include paths described above. It verifies signal-handler registration
+without intentionally crashing the test process.

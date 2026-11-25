@@ -67,7 +67,8 @@ describe('Vega logs', () => {
                 'stack',
                 {
                     custom: true,
-                    '_dd.error.fingerprint': 'group'
+                    '_dd.error.fingerprint': 'group',
+                    '_dd.error.source_type': 'react-native'
                 }
             );
             expect(context).toEqual({ custom: true });
@@ -81,7 +82,7 @@ describe('Vega logs', () => {
             '',
             '',
             'stack',
-            {}
+            { '_dd.error.source_type': 'react-native' }
         );
     });
     it('accepts a source-only error overload without shifting attributes', async () => {
@@ -100,7 +101,7 @@ describe('Vega logs', () => {
             '',
             '',
             '',
-            {}
+            { '_dd.error.source_type': 'react-native' }
         );
     });
     it('ignores missing, throwing, and rejecting native modules', async () => {

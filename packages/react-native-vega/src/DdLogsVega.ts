@@ -6,6 +6,7 @@
 
 import type { ErrorSource } from '@datadog/mobile-react-native';
 
+import { errorContext } from './ErrorContext';
 import { callNative } from './callNative';
 import { getNativeDdLogs } from './turbo-modules/NativeDdLogs';
 
@@ -54,7 +55,7 @@ class DdLogsVega {
                 );
             }
             const errorArgs = args as LogWithErrorArguments;
-            const context = { ...errorArgs[4] };
+            const context = errorContext(errorArgs[4] ?? {});
             if (errorArgs[5]) {
                 Object.assign(context, {
                     '_dd.error.fingerprint': errorArgs[5]

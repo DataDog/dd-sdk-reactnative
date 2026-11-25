@@ -23,6 +23,20 @@ describe('Vega transport import safety', () => {
         expect(mockGet).not.toHaveBeenCalled();
     });
 
+    it('does not look up metadata or install error handlers when importing setup hooks', () => {
+        const handler = ErrorUtils.getGlobalHandler();
+        const consoleHandler = console.error;
+        jest.isolateModules(() => {
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            require('../src/ApplicationMetadata');
+            // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+            require('../src/ErrorTracking');
+        });
+        expect(mockGet).not.toHaveBeenCalled();
+        expect(ErrorUtils.getGlobalHandler()).toBe(handler);
+        expect(console.error).toBe(consoleHandler);
+    });
+
     it('resolves the transport module only when requested', () => {
         const native = { httpResponse: jest.fn() };
         mockGet.mockReturnValueOnce(native);

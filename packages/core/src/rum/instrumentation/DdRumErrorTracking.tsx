@@ -20,11 +20,15 @@ import { ErrorSource } from '../../types';
 import { executeWithDelay } from '../../utils/jsUtils';
 import { DdRum } from '../DdRum';
 
+type RumErrorReporter = Pick<typeof DdRum, 'addError'>;
+
 /**
  * Provides RUM auto-instrumentation feature to track errors as RUM events.
  */
 export class DdRumErrorTracking {
     private static isTracking = false;
+
+    private static reporter?: RumErrorReporter;
 
     private static isInDefaultErrorHandler = false;
 
@@ -37,7 +41,8 @@ export class DdRumErrorTracking {
     /**
      * Starts tracking errors and sends a RUM Error event every time an error is detected.
      */
-    static startTracking(): void {
+    static startTracking(reporter: RumErrorReporter = DdRum): void {
+        DdRumErrorTracking.reporter = reporter;
         // extra safety to avoid wrapping the Error handler twice
         if (DdRumErrorTracking.isTracking) {
             InternalLog.log(
@@ -47,7 +52,7 @@ export class DdRumErrorTracking {
             return;
         }
 
-        if (ErrorUtils) {
+        if (typeof ErrorUtils !== 'undefined') {
             DdRumErrorTracking.defaultErrorHandler = ErrorUtils.getGlobalHandler();
             DdRumErrorTracking.defaultConsoleError = console.error;
 
@@ -68,12 +73,17 @@ export class DdRumErrorTracking {
     }
 
     static onGlobalError = (error: any, isFatal?: boolean): void => {
-        const message = getErrorMessage(error);
-        const stacktrace = getErrorStackTrace(error);
-        this.reportError(message, ErrorSource.SOURCE, stacktrace, {
-            '_dd.error.is_crash': isFatal,
-            '_dd.error.raw': errorEncoder.encode(error)
-        }).then(async () => {
+        this.reportSafely(() =>
+            this.reportError(
+                getErrorMessage(error),
+                ErrorSource.SOURCE,
+                getErrorStackTrace(error),
+                {
+                    '_dd.error.is_crash': isFatal,
+                    '_dd.error.raw': errorEncoder.encode(error)
+                }
+            )
+        ).then(async () => {
             DdRumErrorTracking.isInDefaultErrorHandler = true;
             try {
                 // On real iOS devices, the crash context is not updated soon
@@ -95,7 +105,14 @@ export class DdRumErrorTracking {
         if (DdRumErrorTracking.isInDefaultErrorHandler) {
             return;
         }
+        this.reportSafely(() => this.reportConsoleError(...params)).then(() => {
+            DdRumErrorTracking.defaultConsoleError.apply(console, params);
+        });
+    };
 
+    private static reportConsoleError = (
+        ...params: unknown[]
+    ): Promise<void> => {
         let stack: string = ERROR_EMPTY_STACKTRACE;
         let errorName: string = ERROR_DEFAULT_NAME;
         for (let i = 0; i < params.length; i += 1) {
@@ -129,9 +146,26 @@ export class DdRumErrorTracking {
             })
             .join(' ');
 
-        this.reportError(message, ErrorSource.CONSOLE, stack).then(() => {
-            DdRumErrorTracking.defaultConsoleError.apply(console, params);
-        });
+        return this.reportError(message, ErrorSource.CONSOLE, stack);
+    };
+
+    /** A failed or stalled SDK reporter must not suppress the previous handler. */
+    private static reportSafely = async (
+        report: () => Promise<void>
+    ): Promise<void> => {
+        let timeout: ReturnType<typeof setTimeout> | undefined;
+        try {
+            await Promise.race([
+                Promise.resolve(report()).catch(() => undefined),
+                new Promise<void>(resolve => {
+                    timeout = setTimeout(resolve, 50);
+                })
+            ]);
+        } catch {
+            // A reporter can throw before returning a promise.
+        } finally {
+            clearTimeout(timeout);
+        }
     };
 
     private static reportError = (
@@ -140,6 +174,11 @@ export class DdRumErrorTracking {
         stacktrace: string,
         context: object = {}
     ): Promise<void> => {
-        return DdRum.addError(message, source, stacktrace, context);
+        return (DdRumErrorTracking.reporter ?? DdRum).addError(
+            message,
+            source,
+            stacktrace,
+            context
+        );
     };
 }
