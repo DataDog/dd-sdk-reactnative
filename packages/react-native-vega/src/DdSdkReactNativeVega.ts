@@ -7,8 +7,8 @@
 import { AttributesSingleton } from '@datadog/mobile-react-native/internal';
 import type { Attributes } from '@datadog/mobile-react-native/internal';
 
-import { callNative } from './callNative';
 import { VegaSdk } from './SdkInitialization';
+import { callNative } from './callNative';
 import { getNativeDdSdk } from './turbo-modules/NativeDdSdk';
 
 /** Global attributes for future events, alongside the shared initialization APIs. */

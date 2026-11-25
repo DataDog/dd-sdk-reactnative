@@ -6,7 +6,11 @@
 
 #include "AttributeConverter.h"
 #include "EnumParsers.h"
+#include <algorithm>
+#include <cctype>
+#include <initializer_list>
 #include <stdexcept>
+#include <utility>
 
 using namespace com::amazon::kepler::turbomodule;
 using namespace datadog_rn_vega;
@@ -14,6 +18,24 @@ using datadog::ValueType;
 
 void check(bool condition) {
     if (!condition) throw std::runtime_error("Attribute conversion mismatch");
+}
+
+template <typename Enum, typename Parser>
+void checkCasings(Parser parse,
+                  std::initializer_list<std::pair<std::string, Enum>> cases) {
+    for (const auto& [token, expected] : cases) {
+        std::string lowercase = token;
+        std::transform(lowercase.begin(), lowercase.end(), lowercase.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        std::string mixed = lowercase;
+        mixed.front() = token.front();
+        for (const auto& spelling : {token, lowercase, mixed}) {
+            if (parse(spelling) != expected) {
+                throw std::runtime_error(
+                    "Unexpected enum mapping for: " + spelling);
+            }
+        }
+    }
 }
 
 int main() {
@@ -51,13 +73,34 @@ int main() {
     check(jsValueToAttribute(JSArray{}).GetArrayLen() == 0);
     check(jsObjectToAttribute({}).GetObjectPropertyCount() == 0);
 
-    check(parseActionType("TAP") == datadog::RumActionType::Tap);
-    check(parseActionType("BACK") == datadog::RumActionType::Custom);
-    check(parseResourceMethod("PATCH") == datadog::RumResourceMethod::Patch);
+    using Action = datadog::RumActionType;
+    checkCasings<Action>(parseActionType, {
+        {"TAP", Action::Tap}, {"SCROLL", Action::Scroll},
+        {"SWIPE", Action::Swipe}, {"BACK", Action::Custom},
+        {"CUSTOM", Action::Custom}, {"CLICK", Action::Click}
+    });
+    using Method = datadog::RumResourceMethod;
+    checkCasings<Method>(parseResourceMethod, {
+        {"GET", Method::Get}, {"POST", Method::Post}, {"PUT", Method::Put},
+        {"DELETE", Method::Delete}, {"HEAD", Method::Head},
+        {"PATCH", Method::Patch}, {"OPTIONS", Method::Options},
+        {"CONNECT", Method::Connect}, {"TRACE", Method::Trace}
+    });
+    using Source = datadog::RumErrorSource;
+    checkCasings<Source>(parseErrorSource, {
+        {"NETWORK", Source::Network}, {"SOURCE", Source::Source},
+        {"CONSOLE", Source::Console}, {"WEBVIEW", Source::Webview},
+        {"CUSTOM", Source::Custom}, {"LOGGER", Source::Logger},
+        {"AGENT", Source::Agent}, {"REPORT", Source::Report}
+    });
+    for (const auto& unknown : {"", "unknown", "PoSt-invalid", "\xC3\xA9"}) {
+        check(parseActionType(unknown) == Action::Custom);
+        check(parseResourceMethod(unknown) == Method::Get);
+        check(parseErrorSource(unknown) == Source::Custom);
+    }
     check(parseResourceType("fetch") == datadog::RumResourceType::Fetch);
     check(parseResourceType("xhr") == datadog::RumResourceType::Xhr);
     check(parseResourceType("invalid") == datadog::RumResourceType::Unknown);
-    check(parseErrorSource("NETWORK") == datadog::RumErrorSource::Network);
     check(parseOperationFailureReason("ERROR") == datadog::RumOperationFailureReason::Error);
     check(parseOperationFailureReason("ABANDONED") == datadog::RumOperationFailureReason::Abandoned);
     check(parseOperationFailureReason("OTHER") == datadog::RumOperationFailureReason::Other);
