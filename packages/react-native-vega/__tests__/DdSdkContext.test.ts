@@ -90,12 +90,44 @@ describe('Vega user and account context', () => {
             AccountInfoSingleton.getInstance().getAccountInfo()
         ).toBeUndefined();
     });
-    it('ignores invalid IDs and extra info without a matching identity', async () => {
+    it('ignores invalid IDs and account extra info without an account', async () => {
         await DdSdkReactNative.setUserInfo({ id: '' });
         await DdSdkReactNative.setAccountInfo({ id: '' });
-        await DdSdkReactNative.addUserExtraInfo({ value: 1 });
         await DdSdkReactNative.addAccountExtraInfo({ value: 1 });
         expect(mockGet).not.toHaveBeenCalled();
+    });
+    it('merges anonymous user attributes without requiring a user ID', async () => {
+        await DdSdkReactNative.addUserExtraInfo({
+            plan: 'free',
+            enabled: false
+        });
+        await DdSdkReactNative.addUserExtraInfo({
+            plan: 'paid',
+            nested: { values: [1, null] }
+        });
+        expect(mockNative.addUserExtraInfo).toHaveBeenNthCalledWith(1, {
+            plan: 'free',
+            enabled: false
+        });
+        expect(mockNative.addUserExtraInfo).toHaveBeenNthCalledWith(2, {
+            plan: 'paid',
+            nested: { values: [1, null] }
+        });
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toEqual({
+            extraInfo: {
+                plan: 'paid',
+                enabled: false,
+                nested: { values: [1, null] }
+            }
+        });
+    });
+    it('does not update anonymous user attributes when native rejects them', async () => {
+        mockNative.addUserExtraInfo.mockResolvedValueOnce(false);
+        await DdSdkReactNative.addUserExtraInfo({ plan: 'free' });
+        expect(mockNative.addUserExtraInfo).toHaveBeenCalledWith({
+            plan: 'free'
+        });
+        expect(UserInfoSingleton.getInstance().getUserInfo()).toBeUndefined();
     });
     it('does not mutate account information owned by the application', async () => {
         const account = Object.freeze({

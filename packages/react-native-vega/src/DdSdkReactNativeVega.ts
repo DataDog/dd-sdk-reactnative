@@ -90,9 +90,6 @@ export class DdSdkReactNative extends VegaSdk {
     static addUserExtraInfo = async (
         info: Record<string, unknown>
     ): Promise<void> => {
-        if (!UserInfoSingleton.getInstance().getUserInfo()) {
-            return;
-        }
         if (
             await callNative(getNativeDdSdk, native =>
                 native.addUserExtraInfo(info)
