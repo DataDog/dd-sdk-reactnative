@@ -159,6 +159,7 @@ internal fun ReadableArray.asFirstPartyHosts(): Map<String, Set<TracingHeaderTyp
 internal object DefaultConfiguration {
     const val nativeCrashReportEnabled = false
     const val sessionSamplingRate = 100.0
+    const val resourceTraceSampleRate = 100.0
     const val site = "US1"
     const val longTaskThresholdMs = 0.0
     const val nativeLongTaskThresholdMs = 200.0
@@ -191,7 +192,7 @@ internal fun JSONDdSdkConfiguration.asDdSdkConfiguration(): DdSdkConfiguration {
             nativeLongTaskThresholdMs = rum.nativeLongTaskThresholdMs ?: DefaultConfiguration.nativeLongTaskThresholdMs,
             nativeViewTracking = rum.nativeViewTracking ?: DefaultConfiguration.nativeViewTracking,
             nativeInteractionTracking = rum.nativeInteractionTracking ?: DefaultConfiguration.nativeInteractionTracking,
-            firstPartyHosts = rum.firstPartyHosts?.asFirstPartyHosts(),
+            firstPartyHosts = rum.firstPartyHosts?.asFirstPartyHosts() ?: emptyMap(),
             trackNonFatalAnrs = rum.trackNonFatalAnrs,
             initialResourceThreshold = rum.initialResourceThreshold ?: DefaultConfiguration.initialResourceThreshold,
             telemetrySampleRate = rum.telemetrySampleRate?.toDouble()

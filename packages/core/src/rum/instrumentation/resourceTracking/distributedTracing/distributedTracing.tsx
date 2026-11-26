@@ -75,7 +75,12 @@ export const generateTracingAttributesWithSampling = (
         spanId: TracingIdentifier.createSpanId(),
         samplingPriorityHeader: isSampled ? '1' : '0',
         tracingStrategy: 'KEEP',
-        rulePsr: tracingSamplingRate / 100,
+        // The rate the decision was made with: rebased on the session sample rate with a session.
+        rulePsr:
+            DistributedTracingSampling.effectiveSampleRate(
+                tracingSamplingRate,
+                rumSessionId
+            ) / 100,
         propagatorTypes,
         rumSessionId,
         userId,
