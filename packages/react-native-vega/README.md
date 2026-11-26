@@ -124,15 +124,14 @@ message, stack and attributes. `DdSdkReactNative` supports setting, updating and
 clearing user/account information. Native failures leave JavaScript context
 unchanged and do not reject into application code.
 
-The native initializer must call `configureLogging(core, logsConfiguration)`
+The native initializer calls `configureLogging(core, logsConfiguration)`
 when a logs configuration is present, before starting the core. The logger uses
-`bundleLogsWithRum` to control RUM correlation (defaults to `true`). Initialization
-is added separately; importing these APIs does not initialize the SDK. Logs are
-ignored until the native logger has been configured.
+`bundleLogsWithRum` to control RUM correlation (defaults to `true`). Importing these APIs does not initialize the SDK. Logs are ignored until
+the native logger has been configured.
 
 The optional log `source` argument does not change the C++ logger's source.
 Custom fingerprints are kept in attributes but do not control native error
-grouping in C++ SDK 0.7.0. Error symbolication and JavaScript error enrichment
+grouping in C++ SDK 0.10.0. Error symbolication and JavaScript error enrichment
 are added separately.
 
 Anonymous user attributes are supported through `addUserExtraInfo`, matching
@@ -140,7 +139,7 @@ core. Account attributes require an account ID to be set first.
 
 ### Logging registration compatibility
 
-C++ SDK 0.7.0 returns non-null no-op objects when logging registration fails.
+C++ SDK 0.10.0 returns non-null no-op objects when logging registration fails.
 Vega builds compile a private copy of that source with nullable failure returns,
 so failed registrations leave logging disabled. Repeated configuration keeps the
 working logger. The dependency checkout is never edited, including when using

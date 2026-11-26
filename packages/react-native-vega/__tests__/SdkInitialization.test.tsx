@@ -16,6 +16,7 @@ import {
     CoreConfiguration,
     DatadogProviderConfiguration,
     DdRum as CoreRum,
+    DdLogs as CoreLogs,
     DdSdkReactNative as CoreSdk,
     TrackingConsent,
     RumConfiguration,
@@ -48,6 +49,7 @@ const mockNative = {
     clearAllData: jest.fn()
 };
 const mockRum = { startResource: jest.fn(), addAction: jest.fn() };
+const mockLogs = { log: jest.fn() };
 jest.mock('@amazon-devices/keplerscript-turbomodule-api', () => ({
     TurboModuleRegistry: {
         get: (name: string) => {
@@ -58,6 +60,8 @@ jest.mock('@amazon-devices/keplerscript-turbomodule-api', () => ({
                 ? mockNative
                 : name === 'DdRum'
                 ? mockRum
+                : name === 'DdLogs'
+                ? mockLogs
                 : null;
         }
     }
@@ -93,6 +97,7 @@ beforeEach(() => {
     mockNative.startHttpProxy.mockResolvedValue(true);
     mockRum.startResource.mockResolvedValue(undefined);
     mockRum.addAction.mockResolvedValue(undefined);
+    mockLogs.log.mockResolvedValue(undefined);
     lifecycle.initialization = undefined;
     GlobalState.isInitialized = false;
     CoreSdk['wasAutoInstrumented'] = false;
@@ -423,4 +428,17 @@ it('contains provider callback failures without retrying successful initializati
     expect(GlobalState.isInitialized).toBe(true);
     expect(DatadogProviderState.isInitialized).toBe(true);
     act(() => tree.unmount());
+});
+
+it('routes shared core logs through the initialized Vega bridge', async () => {
+    await VegaSdk.initialize(configuration());
+    await CoreLogs.info('shared core log', { value: 42 });
+    expect(mockLogs.log).toHaveBeenCalledWith(
+        'info',
+        'shared core log',
+        '',
+        '',
+        '',
+        expect.objectContaining({ value: 42 })
+    );
 });
