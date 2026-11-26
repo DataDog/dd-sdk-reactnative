@@ -30,7 +30,7 @@ describe('Vega transport import safety', () => {
             // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
             require('../src/ApplicationMetadata');
             // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-            require('../src/ErrorTracking');
+            require('../src/CoreBridge');
         });
         expect(mockGet).not.toHaveBeenCalled();
         expect(ErrorUtils.getGlobalHandler()).toBe(handler);

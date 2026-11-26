@@ -58,6 +58,7 @@ if(VEGA_TEST_INITIALIZATION)
     add_executable(SdkInitializationTest
         SdkInitializationTest.cpp
         ../kepler/turbo-modules/SdkInitialization.cpp
+        ../kepler/turbo-modules/CrashReportingConfiguration.cpp
         ../kepler/turbo-modules/LoggingConfiguration.cpp
         ../kepler/turbo-modules/DatadogGlobalState.cpp
         ../kepler/turbo-modules/EnumParsers.cpp

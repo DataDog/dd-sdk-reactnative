@@ -10,10 +10,12 @@ import {
     GlobalState,
     getGlobalInstance,
     registerNativeModuleOverrides,
+    DdRumErrorTracking,
     DdRumResourceTracking
 } from '@datadog/mobile-react-native/internal';
 import {
     CoreConfiguration,
+    ErrorSource,
     DatadogProviderConfiguration,
     DdRum as CoreRum,
     DdLogs as CoreLogs,
@@ -48,7 +50,11 @@ const mockNative = {
     setTrackingConsent: jest.fn(),
     clearAllData: jest.fn()
 };
-const mockRum = { startResource: jest.fn(), addAction: jest.fn() };
+const mockRum = {
+    startResource: jest.fn(),
+    addAction: jest.fn(),
+    addError: jest.fn()
+};
 const mockLogs = { log: jest.fn() };
 jest.mock('@amazon-devices/keplerscript-turbomodule-api', () => ({
     TurboModuleRegistry: {
@@ -60,6 +66,13 @@ jest.mock('@amazon-devices/keplerscript-turbomodule-api', () => ({
                 ? mockNative
                 : name === 'DdRum'
                 ? mockRum
+                : name === 'DeviceInfoModule'
+                ? {
+                      getConstants: () => ({
+                          bundleId: 'example.app',
+                          appVersion: '2.1'
+                      })
+                  }
                 : name === 'DdLogs'
                 ? mockLogs
                 : null;
@@ -98,6 +111,8 @@ beforeEach(() => {
     mockRum.startResource.mockResolvedValue(undefined);
     mockRum.addAction.mockResolvedValue(undefined);
     mockLogs.log.mockResolvedValue(undefined);
+    mockRum.addError.mockResolvedValue(undefined);
+    CoreRum.unregisterErrorEventMapper();
     lifecycle.initialization = undefined;
     GlobalState.isInitialized = false;
     CoreSdk['wasAutoInstrumented'] = false;
@@ -440,5 +455,57 @@ it('routes shared core logs through the initialized Vega bridge', async () => {
         '',
         '',
         expect.objectContaining({ value: 42 })
+    );
+});
+
+it('uses platform metadata during setup without repeating the version suffix', async () => {
+    const config = configuration();
+    config.versionSuffix = 'beta';
+    await VegaSdk.initialize(config);
+    expect(mockNative.initialize).toHaveBeenCalledWith(
+        expect.objectContaining({
+            service: 'example.app',
+            additionalConfiguration: expect.objectContaining({
+                '_dd.version': '2.1-beta',
+                '_dd.sdk_version': expect.any(String)
+            })
+        })
+    );
+});
+
+it.each([false, true])(
+    'uses shared error tracking when trackErrors=%s',
+    async enabled => {
+        const start = jest
+            .spyOn(DdRumErrorTracking, 'startTracking')
+            .mockImplementation(() => undefined);
+        const config = configuration();
+        config.rumConfiguration = new RumConfiguration(
+            'test-app',
+            false,
+            false,
+            enabled
+        );
+        await VegaSdk.initialize(config);
+        expect(start).toHaveBeenCalledTimes(enabled ? 1 : 0);
+    }
+);
+
+it('keeps error mapping and enrichment on the shared core path', async () => {
+    const config = configuration();
+    config.rumConfiguration = new RumConfiguration('test-app');
+    config.rumConfiguration.errorEventMapper = event => ({
+        ...event,
+        message: 'mapped error'
+    });
+    await VegaSdk.initialize(config);
+    await CoreRum.addError('original', ErrorSource.SOURCE, 'stack', {});
+    expect(mockRum.addError).toHaveBeenCalledWith(
+        'mapped error',
+        ErrorSource.SOURCE,
+        'stack',
+        expect.objectContaining({ '_dd.error.source_type': 'react-native' }),
+        expect.any(Number),
+        ''
     );
 });

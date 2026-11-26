@@ -109,8 +109,8 @@ the C++ SDK's existing event queue.
   accepted for compatibility but do not override that clock.
 - Custom error fingerprints are accepted but are not supported by the native SDK.
 - `BACK` actions map to the C++ SDK's `Custom` action type.
-- Event mappers, JavaScript error enrichment, and tracing helpers are not provided
-  by this manual wrapper.
+- Event mappers and tracing helpers use shared core instrumentation; manual
+  Vega calls bypass those mappers. Error context includes source and Debug ID.
 
 Attribute conversion tests can run on the host with dd-sdk-cpp 0.10.0 and the Vega
 SDK headers installed. Pass `DATADOG_CPP_SOURCE_DIR`, `KEPLER_INCLUDE_DIR` (a root
@@ -126,13 +126,14 @@ unchanged and do not reject into application code.
 
 The native initializer calls `configureLogging(core, logsConfiguration)`
 when a logs configuration is present, before starting the core. The logger uses
-`bundleLogsWithRum` to control RUM correlation (defaults to `true`). Importing these APIs does not initialize the SDK. Logs are ignored until
-the native logger has been configured.
+`bundleLogsWithRum` to control RUM correlation (defaults to `true`). Importing
+these APIs does not initialize the SDK. Logs are ignored until the native
+logger has been configured.
 
 The optional log `source` argument does not change the C++ logger's source.
 Custom fingerprints are kept in attributes but do not control native error
-grouping in C++ SDK 0.10.0. Error symbolication and JavaScript error enrichment
-are added separately.
+grouping in C++ SDK 0.10.0. Error enrichment and symbolication metadata are
+described below.
 
 Anonymous user attributes are supported through `addUserExtraInfo`, matching
 core. Account attributes require an account ID to be set first.
@@ -163,7 +164,7 @@ the bundle Debug ID, when available. Use the core Metro configuration to generat
 that Debug ID and upload the matching source map. Ordinary logs keep their
 existing attributes.
 
-The initializer added in RUM-20335 must use these configuration hooks:
+SDK initialization connects these configuration hooks:
 
 - `buildApplicationMetadata(configuration)` resolves service and version defaults
   from the platform's existing `DeviceInfoModule` constants. Explicit `service`
@@ -174,14 +175,16 @@ The initializer added in RUM-20335 must use these configuration hooks:
   source, SDK version, and app version before `Core::Create`.
 - `configureCrashReporting(core, rumConfiguration)` runs after RUM registration
   and before `Core::Start`, alongside the logging configuration hook.
-- `configureErrorTracking(configuration)` enables shared JavaScript error tracking
-  with the Vega RUM reporter when `rumConfiguration.trackErrors` is `true`.
-  Importing the package does not install handlers. Fatal errors wait for native
-  reporting to settle before the crash-context delay and the app's error handler.
-  Non-fatal and console reporting have a timeout. Reporting failures still reach
-  the app's existing handlers.
 
-These hooks keep initialization and provider setup in RUM-20335. Host native
+Shared core enables JavaScript error tracking when `rumConfiguration.trackErrors`
+is `true`, using the registered Vega native bridge. This preserves core's event
+mappers, attribute encoding, and buffering without installing a second handler.
+Importing the package does not install handlers. Fatal errors wait for native
+reporting to settle before the crash-context delay and the app's error handler.
+Non-fatal and console reporting have a timeout. Reporting failures still reach
+the app's existing handlers.
+
+Host native
 coverage can be enabled with `VEGA_TEST_CRASH_CONFIGURATION=ON`, using the SDK
 and include paths described above. It verifies signal-handler registration
 without intentionally crashing the test process.

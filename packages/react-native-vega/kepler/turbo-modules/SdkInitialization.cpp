@@ -5,6 +5,7 @@
 // (https://www.datadoghq.com/). Copyright 2016-Present Datadog, Inc.
 
 #include "SdkInitialization.h"
+#include "CrashReportingConfiguration.h"
 #include "LoggingConfiguration.h"
 #include "DatadogGlobalState.h"
 #include "EnumParsers.h"
@@ -78,13 +79,9 @@ bool initializeSdk(const JSObject &configuration) {
     else if (verbosity == "info") config.SetDiagnosticThreshold(datadog::DiagnosticLevel::Status);
     else if (verbosity == "warn") config.SetDiagnosticThreshold(datadog::DiagnosticLevel::Warning);
     else if (verbosity == "error") config.SetDiagnosticThreshold(datadog::DiagnosticLevel::Error);
-    config.Internal_SetSource("react-native");
-    if (const auto additional = nested(configuration, "additionalConfiguration")) {
-        const auto sdkVersion = text(*additional, "_dd.sdk_version");
-        const auto appVersion = text(*additional, "_dd.version");
-        if (!sdkVersion.empty()) config.Internal_SetSdkVersion(sdkVersion);
-        if (!appVersion.empty()) config.SetVersion(appVersion);
-    }
+    configureApplicationMetadata(config,
+        nested(configuration, "additionalConfiguration")
+            ? *nested(configuration, "additionalConfiguration") : JSObject{});
     auto core = datadog::Core::Create(config, parseTrackingConsent(text(configuration, "trackingConsent")));
     if (!core) return false;
     try {
@@ -99,6 +96,7 @@ bool initializeSdk(const JSObject &configuration) {
                 }, rate->second);
             }
             state.setRum(datadog::Rum::Register(core, rumConfig));
+            configureCrashReporting(core, *rumSettings);
         }
         if (const auto logs = nested(configuration, "logsConfiguration")) {
             configureLogging(core, *logs);
