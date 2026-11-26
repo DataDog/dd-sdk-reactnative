@@ -94,6 +94,9 @@ public class DdFlagsImplementation: NSObject {
                 case .networkError:
                     errorCode = "NETWORK_ERROR"
                     errorMessage = "A network error occurred while fetching feature flags for client '\(clientName)'."
+                case .invalidContext:
+                    errorCode = "INVALID_CONTEXT"
+                    errorMessage = "The evaluation context for client '\(clientName)' is invalid."
                 case .initializationTimedOut:
                     errorCode = "INITIALIZATION_TIMED_OUT"
                     errorMessage = "The flags client '\(clientName)' timed out while initializing."
