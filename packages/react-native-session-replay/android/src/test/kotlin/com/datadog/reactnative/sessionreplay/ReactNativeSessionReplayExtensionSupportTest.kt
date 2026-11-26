@@ -7,7 +7,9 @@
 package com.datadog.reactnative.sessionreplay
 
 import android.content.res.AssetManager
+import android.view.ViewGroup
 import com.datadog.android.api.InternalLogger
+import com.datadog.reactnative.sessionreplay.mappers.PreparedLayoutTextViewMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactEditTextMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactNativeImageViewMapper
 import com.datadog.reactnative.sessionreplay.mappers.ReactTextMapper
@@ -66,7 +68,8 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
         val textViewUtils = TextViewUtils.create(mockReactContext, mockLogger)
         testedExtensionSupport = ReactNativeSessionReplayExtensionSupport(
             textViewUtils,
-            internalCallback
+            internalCallback,
+            preparedTextViewClass = null
         )
     }
 
@@ -95,5 +98,23 @@ internal class ReactNativeSessionReplayExtensionSupportTest {
 
         assertThat(customViewMappers[5].getUnsafeMapper())
             .isInstanceOf(ReactViewModalMapper::class.java)
+    }
+
+    @Test
+    fun `M register prepared text only when its view class is available`() {
+        val internalCallback = ReactNativeInternalCallback(mockReactContext)
+        val textViewUtils = TextViewUtils.create(mockReactContext, mockLogger)
+        val extension = ReactNativeSessionReplayExtensionSupport(
+            textViewUtils,
+            internalCallback,
+            ViewGroup::class.java
+        )
+
+        val mappers = extension.getCustomViewMappers()
+
+        assertThat(mappers).hasSize(7)
+        assertThat(mappers.last().getUnsafeMapper()).isInstanceOf(
+            PreparedLayoutTextViewMapper::class.java
+        )
     }
 }

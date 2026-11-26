@@ -9,7 +9,8 @@
 }
 
 # CustomStyleSpan is looked up by name via Class.forName() and its getFontFamily() method is
-# invoked reflectively (LegacyTextViewUtils) to resolve font family for RUM Session Replay.
+# invoked reflectively (LegacyTextViewUtils and PreparedLayoutTextViewMapper) to resolve font
+# family for RUM Session Replay.
 # The class name and method must both be preserved for this to keep working.
 -keep class com.facebook.react.views.text.internal.span.CustomStyleSpan {
     public java.lang.String getFontFamily();
@@ -42,4 +43,14 @@
 -keep class com.facebook.react.uimanager.drawable.BackgroundDrawable {
     *** computedBorderRadius;
     *** backgroundColor;
+}
+
+# Prepared text is optional on older RN versions; its public accessors are read reflectively.
+-keep class com.facebook.react.views.text.PreparedLayoutTextView {
+    public *** getPreparedLayout();
+    public java.lang.CharSequence getText();
+}
+-keep class com.facebook.react.views.text.PreparedLayout {
+    public android.text.Layout getLayout();
+    public float getVerticalOffset();
 }
