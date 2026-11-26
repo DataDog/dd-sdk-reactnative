@@ -15,6 +15,7 @@ import { getNativeDdSdk } from './turbo-modules/NativeDdSdk';
 
 interface HttpProxyLifecycle {
     activeCleanup?: () => void;
+    ready?: boolean;
     operations: Promise<void>;
 }
 
@@ -94,6 +95,7 @@ export async function startHttpProxy(): Promise<() => void> {
         }
         active = false;
         if (lifecycle.activeCleanup === cleanup) {
+            lifecycle.ready = false;
             lifecycle.activeCleanup = undefined;
         }
         // Queue teardown before a replacement session can enable its emitter.
@@ -175,10 +177,18 @@ export async function startHttpProxy(): Promise<() => void> {
                     }
                 }
             );
-            await sdk.startHttpProxy();
+            if ((await sdk.startHttpProxy()) === false) {
+                throw Error('Native HTTP emitter did not start');
+            }
+            if (active) {
+                lifecycle.ready = true;
+            }
         });
     } catch {
         cleanup();
     }
     return cleanup;
 }
+
+/** Internal readiness used by initialization before starting native upload threads. */
+export const isHttpProxyReady = (): boolean => lifecycle.ready === true;

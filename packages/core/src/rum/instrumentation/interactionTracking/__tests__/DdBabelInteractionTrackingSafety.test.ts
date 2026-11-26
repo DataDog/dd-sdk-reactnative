@@ -4,6 +4,8 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
+import type { DdNativeSdkType } from '../../../../nativeModulesTypes';
+import { registerNativeModuleOverrides } from '../../../../sdk/NativeModuleOverrides';
 import { getNativeDdSdk } from '../../../../specs/NativeDdSdk';
 import { RumActionType } from '../../../types';
 import { DdBabelInteractionTracking } from '../DdBabelInteractionTracking';
@@ -64,4 +66,18 @@ it('does not reject when reporting a failed action through missing error telemet
     await Promise.resolve();
     expect(handler).toHaveBeenCalledTimes(1);
     expect(addAction).toHaveBeenCalledTimes(1);
+});
+
+afterEach(() => registerNativeModuleOverrides({}));
+
+it('routes Babel telemetry through the platform adapter before calling the app', () => {
+    const sendTelemetryLog = jest.fn().mockResolvedValue(undefined);
+    registerNativeModuleOverrides({
+        sdk: ({ sendTelemetryLog } as unknown) as DdNativeSdkType
+    });
+    const handler = jest.fn().mockReturnValue('navigated');
+    expect(wrap(handler)('route')).toBe('navigated');
+    expect(handler).toHaveBeenCalledWith('route');
+    expect(sendTelemetryLog).toHaveBeenCalledTimes(1);
+    expect(getNativeDdSdk).not.toHaveBeenCalled();
 });

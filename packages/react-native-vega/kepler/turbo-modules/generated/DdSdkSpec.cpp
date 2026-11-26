@@ -18,6 +18,9 @@ DdSdkSpec::DdSdkSpec() : KeplerTurboModule("DdSdk") {}
 DdSdkSpec::~DdSdkSpec() = default;
 
 void DdSdkSpec::aggregateMethods(MethodAggregator<KeplerTurboModule>& methodAggregator) const noexcept {
+  methodAggregator.addMethod("initialize", &DdSdkSpec::initialize);
+  methodAggregator.addMethod("setTrackingConsent", &DdSdkSpec::setTrackingConsent);
+  methodAggregator.addMethod("clearAllData", &DdSdkSpec::clearAllData);
   methodAggregator.addMethod("startHttpProxy", &DdSdkSpec::startHttpProxy);
   methodAggregator.addMethod("sendTelemetryLog", &DdSdkSpec::sendTelemetryLog);
   methodAggregator.addMethod("telemetryDebug", &DdSdkSpec::telemetryDebug);

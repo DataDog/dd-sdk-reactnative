@@ -6,12 +6,48 @@
 
 #include "DdSdk.h"
 #include "HttpJsProxy.h"
+#include "SdkInitialization.h"
+#include "DatadogGlobalState.h"
+#include "EnumParsers.h"
+#include <thread>
 
 using namespace com::amazon::kepler::turbomodule;
 
 namespace DdSdkTurboModule {
 
 DdSdk::DdSdk() = default;
+
+Promise DdSdk::initialize(JSObject configuration) {
+    return Promise([configuration](const std::shared_ptr<Promise> &promise) {
+        try {
+            std::thread([configuration, promise]() {
+                try {
+                    promise->resolve(datadog_rn_vega::initializeSdk(configuration));
+                } catch (...) {
+                    promise->resolve(false);
+                }
+            }).detach();
+        } catch (...) {
+            promise->resolve(false);
+        }
+    });
+}
+
+Promise DdSdk::setTrackingConsent(std::string trackingConsent) {
+    return Promise([trackingConsent](const std::shared_ptr<Promise> &promise) {
+        try {
+            promise->resolve(datadog_rn_vega::setSdkConsent(trackingConsent));
+        } catch (...) { promise->resolve(false); }
+    });
+}
+
+Promise DdSdk::clearAllData() {
+    return Promise([](const std::shared_ptr<Promise> &promise) {
+        try {
+            promise->resolve(datadog_rn_vega::clearSdkData());
+        } catch (...) { promise->resolve(false); }
+    });
+}
 
 namespace {
 // Shared core may call these APIs even though Vega has no corresponding feature.

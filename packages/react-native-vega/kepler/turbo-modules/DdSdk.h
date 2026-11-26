@@ -14,6 +14,9 @@ class DdSdk : public DdSdkSpec {
   public:
     DdSdk();
     ~DdSdk() noexcept override;
+    com::amazon::kepler::turbomodule::Promise initialize(com::amazon::kepler::turbomodule::JSObject configuration) override;
+    com::amazon::kepler::turbomodule::Promise setTrackingConsent(std::string trackingConsent) override;
+    com::amazon::kepler::turbomodule::Promise clearAllData() override;
 
     com::amazon::kepler::turbomodule::Promise sendTelemetryLog(
         std::string message, com::amazon::kepler::turbomodule::JSObject attributes,

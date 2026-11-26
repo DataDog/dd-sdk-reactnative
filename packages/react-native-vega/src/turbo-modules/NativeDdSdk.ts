@@ -10,7 +10,10 @@ import { TurboModuleRegistry } from '@amazon-devices/keplerscript-turbomodule-ap
 // Kepler codegen requires Object for bridge dictionaries.
 /* eslint-disable @typescript-eslint/ban-types */
 export interface DdSdk extends KeplerTurboModule {
-    startHttpProxy(): Promise<void>;
+    initialize(configuration: Object): Promise<boolean>;
+    setTrackingConsent(trackingConsent: string): Promise<void>;
+    clearAllData(): Promise<void>;
+    startHttpProxy(): Promise<boolean>;
     // Compatibility no-ops for shared core features unavailable on Vega.
     sendTelemetryLog(
         message: string,

@@ -50,6 +50,7 @@ endif()
 FetchContent_MakeAvailable(Datadog)
 
 set(HEADERS
+    kepler/turbo-modules/SdkInitialization.h
     kepler/turbo-modules/generated/DdSdkSpec.h
     kepler/turbo-modules/DdSdk.h
     kepler/turbo-modules/EnumParsers.h
@@ -59,6 +60,7 @@ set(HEADERS
 )
 
 set(SOURCES
+    kepler/turbo-modules/SdkInitialization.cpp
     kepler/turbo-modules/generated/DdSdkSpec.cpp
     kepler/turbo-modules/DdSdk.cpp
     kepler/turbo-modules/EnumParsers.cpp

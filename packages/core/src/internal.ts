@@ -33,3 +33,10 @@ export type { TraceNativeConfiguration } from './config/features/TraceConfigurat
 export type { InitializationModeForTelemetry } from './config/types/InitializationModeForTelemetry';
 
 export { callWithoutResourceTracking } from './rum/instrumentation/resourceTracking/requestProxy/common/FetchProxyState';
+
+export { registerNativeModuleOverrides } from './sdk/NativeModuleOverrides';
+export type {
+    DdNativeLogsType,
+    DdNativeRumType,
+    DdNativeSdkType
+} from './nativeModulesTypes';
