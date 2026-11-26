@@ -7,7 +7,11 @@
 // Custom UUID implementation for Vega OS, which does not include libuuid.
 // Reads 16 random bytes from /dev/urandom to generate UUIDs.
 
+#if __has_include("datadog/impl/types/platform/uuid.hpp")
+#include "datadog/impl/types/platform/uuid.hpp"
+#else
 #include "datadog/impl/core/platform/uuid.hpp"
+#endif
 
 #include <cstdio>
 

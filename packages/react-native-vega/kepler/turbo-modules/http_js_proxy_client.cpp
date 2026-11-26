@@ -42,7 +42,12 @@ class JsProxyHttpSubsystem final : public IHttpSubsystem {
   std::string_view GetName() const override { return "js-proxy"; }
   std::string_view GetVersion() const override { return "1.0.0"; }
 
+#ifdef DD_VEGA_CPP_HTTP_OPTIONS
+  std::unique_ptr<IHttpClient> CreateClient(
+      const HttpClientOptions&, const DiagnosticLogger&) override {
+#else
   std::unique_ptr<IHttpClient> CreateClient() override {
+#endif
     return std::make_unique<JsProxyHttpClient>();
   }
 };

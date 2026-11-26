@@ -39,12 +39,12 @@ set(DD_CRASH_MODE "noop" CACHE STRING "" FORCE)
 include(FetchContent)
 if(DEFINED Datadog_SOURCE_DIR)
     message(STATUS "Using local dd-sdk-cpp: ${Datadog_SOURCE_DIR}")
-    FetchContent_Declare(Datadog SOURCE_DIR ${Datadog_SOURCE_DIR})
+    FetchContent_Declare(Datadog SOURCE_DIR "${Datadog_SOURCE_DIR}")
 else()
     message(STATUS "Fetching dd-sdk-cpp from GitHub")
     FetchContent_Declare(Datadog
         GIT_REPOSITORY https://github.com/DataDog/dd-sdk-cpp.git
-        GIT_TAG 0.7.0
+        GIT_TAG 0.10.0
     )
 endif()
 FetchContent_MakeAvailable(Datadog)
@@ -79,9 +79,13 @@ target_link_libraries(DatadogVega PRIVATE Datadog::sdk)
 # built with DD_HTTP_CLIENT=none), so DatadogVega needs dd-sdk-cpp's internal headers
 # (datadog/impl/core/http/client.hpp et al.) in addition to our own turbo-module headers.
 target_include_directories(DatadogVega PRIVATE
-    ${datadog_SOURCE_DIR}/src
+    ${datadog_SOURCE_DIR}/src/core
+    ${datadog_SOURCE_DIR}/src/types
     ${CMAKE_CURRENT_SOURCE_DIR}/kepler/turbo-modules
 )
+
+# SDK 0.10 passes HTTP client options and diagnostics to the custom transport.
+target_compile_definitions(DatadogVega PRIVATE DD_VEGA_CPP_HTTP_OPTIONS)
 
 if (CMAKE_SYSTEM_NAME STREQUAL Android)
     target_link_libraries(DatadogVega PRIVATE android log)

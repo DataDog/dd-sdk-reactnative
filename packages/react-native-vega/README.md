@@ -1,7 +1,7 @@
 # Datadog React Native SDK for Vega OS
 
 This private package provides the native bridge and HTTP transport for Vega OS.
-The bridge uses the Datadog C++ SDK and Kepler TurboModules. Native upload
+The bridge uses Datadog C++ SDK 0.10.0 and Kepler TurboModules. Native upload
 requests are forwarded through JavaScript `fetch`; responses are returned to the
 native upload thread. SDK initialization and feature APIs will be added
 separately.
@@ -37,4 +37,11 @@ Build the native module with the Vega SDK installed:
 ```sh
 cd packages/react-native-vega
 vega build -b Release
+```
+
+For local C++ SDK development, pass an explicit source directory. This builds
+its currently checked-out branch instead of downloading the pinned release:
+
+```sh
+vega build -b Release --cmakeFlags=-DDatadog_SOURCE_DIR=/path/to/dd-sdk-cpp
 ```
