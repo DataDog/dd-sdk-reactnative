@@ -44,6 +44,8 @@ class DdFlagsImplementation(
         val flagsConfig = buildFlagsConfiguration(configuration.toMap())
         if (flagsConfig != null) {
             Flags.enable(flagsConfig, sdkCore)
+            // Clients created before enable() are no-op clients and must be rebuilt.
+            clients.clear()
         } else {
             InternalLogger.UNBOUND.log(
                 InternalLogger.Level.ERROR,
@@ -130,6 +132,58 @@ class DdFlagsImplementation(
         promise.resolve(null)
     }
 
+    /**
+     * Track a flag exposure without recording an evaluation event or updating RUM.
+     * @param clientName The name of the client.
+     * @param key The key of the flag.
+     * @param rawFlag The flag assignment from JavaScript.
+     * @param targetingKey The targeting key.
+     * @param attributes The attributes for the evaluation context.
+     * @param promise The promise to resolve after the native call, without waiting for upload.
+     */
+    @Suppress("LongParameterList")
+    fun trackExposure(
+        clientName: String,
+        key: String,
+        rawFlag: ReadableMap,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
+    ) {
+        _FlagsInternalProxy(getClient(clientName)).trackFlagExposure(
+            key,
+            convertMapToUnparsedFlag(rawFlag.toMap()),
+            buildEvaluationContext(targetingKey, attributes),
+        )
+        promise.resolve(null)
+    }
+
+    /**
+     * Associate a flag evaluation with RUM without recording an exposure or evaluation event.
+     * @param clientName The name of the client.
+     * @param key The key of the flag.
+     * @param variant The evaluated flag variant.
+     * @param targetingKey The targeting key.
+     * @param attributes The attributes for the evaluation context.
+     * @param promise The promise to resolve after the native call, without waiting for upload.
+     */
+    @Suppress("LongParameterList")
+    fun trackRumEvaluation(
+        clientName: String,
+        key: String,
+        variant: String,
+        targetingKey: String,
+        attributes: ReadableMap,
+        promise: Promise,
+    ) {
+        _FlagsInternalProxy(getClient(clientName)).trackFlagRumEvaluation(
+            key,
+            variant,
+            buildEvaluationContext(targetingKey, attributes),
+        )
+        promise.resolve(null)
+    }
+
     internal companion object {
         internal const val NAME = "DdFlags"
     }
@@ -165,6 +219,9 @@ private fun buildFlagsConfiguration(configuration: Map<String, Any?>): FlagsConf
             }
             (configuration["customExposureEndpoint"] as? String)?.let {
                 useCustomExposureEndpoint("$it/api/v2/exposures")
+            }
+            (configuration["customEvaluationEndpoint"] as? String)?.let {
+                useCustomEvaluationEndpoint("$it/api/v2/flagevaluation")
             }
         }.build()
 }

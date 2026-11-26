@@ -20,3 +20,13 @@ export {
 };
 export type { DatadogOpenFeatureProviderOptions, EnrichableEvaluationContext };
 export type { FlagsConfiguration } from '@datadog/flagging-core';
+export {
+    createDatadogExposureLoggingHook,
+    createDatadogRumTrackingHook,
+    composeDatadogTrackingHooks
+} from './tracking';
+export type {
+    DatadogTrackingHook,
+    DatadogTrackingHooks,
+    DatadogTrackingHooksOptions
+} from './tracking';

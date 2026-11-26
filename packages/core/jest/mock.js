@@ -22,6 +22,8 @@ DatadogProviderMock.initialize = jest.fn().mockResolvedValue();
 
 module.exports = {
     ...actualDatadog,
+    __ddTrackFlagExposure: jest.fn(),
+    __ddTrackFlagRumEvaluation: jest.fn(),
     DdSdkReactNative: {
         initialize: jest
             .fn()

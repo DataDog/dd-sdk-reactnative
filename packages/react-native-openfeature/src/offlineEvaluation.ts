@@ -25,6 +25,7 @@ import type {
 } from '@openfeature/web-sdk';
 
 import { DatadogCoreEvaluationProvider } from './datadogCoreProvider';
+import { withoutAssignmentToken } from './mappers';
 
 // Keep the bridge contract owned by FlagsClient; no OpenFeature dependency enters the core SDK.
 type CreateEvaluator = Parameters<FlagsClient['__ddSetOfflineEvaluator']>[0];
@@ -149,6 +150,10 @@ export class OfflineEvaluation implements OfflineEvaluator {
                       attributes: withoutTargetingKey(embedded)
                   }
                 : { targetingKey: '', attributes: {} });
+        this.context = {
+            targetingKey: this.context.targetingKey,
+            attributes: withoutTargetingKey(toOpenFeatureContext(this.context))
+        };
         const normalizedContext = toOpenFeatureContext(this.context);
         // Snapshot matching retains released normalization/adoption. Only rules fallback uses the
         // original subject presence; native tracking still receives the normalized context.
@@ -287,7 +292,10 @@ export class OfflineEvaluation implements OfflineEvaluator {
 }
 
 function toOpenFeatureContext(context: EvaluationContext): OFEvaluationContext {
-    return { ...context.attributes, targetingKey: context.targetingKey };
+    return withoutAssignmentToken({
+        ...context.attributes,
+        targetingKey: context.targetingKey
+    });
 }
 
 function withoutTargetingKey(

@@ -11,7 +11,7 @@
 // end to end), the evaluation error code, and served values. Only the native TurboModule is stubbed
 // (it is unavailable under jest) so ready-state evaluation can track exposures without throwing.
 
-import { configurationFromString } from '@datadog/mobile-react-native';
+import { configurationFromString, DdFlags } from '@datadog/mobile-react-native';
 import { ErrorCode, OpenFeature, ProviderStatus } from '@openfeature/web-sdk';
 
 import { DatadogOfflineOpenFeatureProvider } from '../offlineProvider';
@@ -79,6 +79,76 @@ describe('DatadogOfflineOpenFeatureProvider (integration, real FlagsClient + Ope
         expect(client.providerStatus).toBe(ProviderStatus.READY);
         expect(client.getBooleanValue('new-feature', false)).toBe(true);
     });
+
+    it.each([false, true])(
+        'ignores embedded assignment authorization (legacy core: %s)',
+        async legacy => {
+            const { domain, clientName } = freshNames();
+            if (legacy) {
+                Object.defineProperty(
+                    DdFlags.getClient(clientName),
+                    '__ddSetOfflineEvaluator',
+                    {
+                        value: undefined,
+                        configurable: true
+                    }
+                );
+            }
+            const wire = JSON.parse(wireFor('user-123'));
+            wire.precomputed.context.dd_assignment_token =
+                'embedded-credential';
+            const configuration = configurationFromString(JSON.stringify(wire));
+            const provider = new DatadogOfflineOpenFeatureProvider({
+                clientName
+            });
+            provider.setConfiguration(configuration);
+
+            await OpenFeature.setProviderAndWait(domain, provider, {
+                targetingKey: 'user-123',
+                dd_assignment_token: 'runtime-credential'
+            });
+
+            const client = OpenFeature.getClient(domain);
+            expect(client.providerStatus).toBe(ProviderStatus.READY);
+            expect(
+                client.getBooleanDetails('new-feature', false)
+            ).toMatchObject({
+                value: true,
+                reason: 'STATIC'
+            });
+            expect(configuration.precomputed?.context).toEqual({
+                targetingKey: 'user-123',
+                dd_assignment_token: 'embedded-credential'
+            });
+            await OpenFeature.setContext(domain, { targetingKey: 'user-123' });
+            expect(client.providerStatus).toBe(ProviderStatus.READY);
+            expect(client.getBooleanValue('new-feature', false)).toBe(true);
+
+            const replacementWire = JSON.parse(wireFor('user-123'));
+            replacementWire.precomputed.context.dd_assignment_token =
+                'replacement-credential';
+            const response = JSON.parse(replacementWire.precomputed.response);
+            response.data.attributes.flags[
+                'new-feature'
+            ].variationValue = false;
+            replacementWire.precomputed.response = JSON.stringify(response);
+            const replacement = configurationFromString(
+                JSON.stringify(replacementWire)
+            );
+            provider.setConfiguration(replacement);
+            expect(client.providerStatus).toBe(ProviderStatus.READY);
+            expect(client.getBooleanValue('new-feature', true)).toBe(false);
+            expect(replacement.precomputed?.context?.dd_assignment_token).toBe(
+                'replacement-credential'
+            );
+
+            await OpenFeature.setContext(domain, { targetingKey: 'other' });
+            expect(client.providerStatus).toBe(ProviderStatus.ERROR);
+            expect(
+                client.getBooleanDetails('new-feature', true).errorCode
+            ).toBe(ErrorCode.INVALID_CONTEXT);
+        }
+    );
 
     it('enters ERROR and serves defaults on a mismatching setContext, then recovers on a matching one', async () => {
         const { domain, clientName } = freshNames();
