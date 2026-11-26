@@ -9,6 +9,7 @@ import { NativeModules } from 'react-native';
 import type { DdNativeRumType } from '../../../nativeModulesTypes';
 import { DdRumErrorTracking } from '../../../rum/instrumentation/DdRumErrorTracking';
 import { BufferSingleton } from '../../../sdk/DatadogProvider/Buffer/BufferSingleton';
+import * as jsUtils from '../../../utils/jsUtils';
 
 jest.mock('../../../utils/jsUtils');
 
@@ -33,6 +34,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     BufferSingleton.onInitialization();
     baseErrorHandlerCalled = false;
+    baseConsoleErrorCalled = false;
     originalErrorHandler = ErrorUtils.getGlobalHandler();
     ErrorUtils.setGlobalHandler(baseErrorHandler);
     originalConsoleError = console.error;
@@ -715,20 +717,6 @@ it.each(['throw', 'reject'] as const)(
     }
 );
 
-it('M bound reporting W injected reporter never resolves', async () => {
-    jest.useFakeTimers();
-    try {
-        DdRumErrorTracking.startTracking({
-            addError: () => new Promise(() => undefined)
-        });
-        DdRumErrorTracking.onGlobalError(Error('app error'), true);
-        await jest.advanceTimersByTimeAsync(50);
-        expect(baseErrorHandlerCalled).toBe(true);
-    } finally {
-        jest.useRealTimers();
-    }
-});
-
 it('M replace reporter W tracking already started without wrapping handlers twice', async () => {
     const first = { addError: jest.fn(() => Promise.resolve()) };
     const second = { addError: jest.fn(() => Promise.resolve()) };
@@ -773,4 +761,81 @@ it('M chain previous handlers W error properties throw during encoding', async (
     await flushPromises();
     expect(baseErrorHandlerCalled).toBe(true);
     expect(baseConsoleErrorCalled).toBe(true);
+});
+
+describe('error-handler timing with the real crash delay', () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+        jest.spyOn(jsUtils, 'executeWithDelay').mockImplementation(
+            jest.requireActual('../../../utils/jsUtils').executeWithDelay
+        );
+    });
+    afterEach(() => {
+        jest.restoreAllMocks();
+        jest.useRealTimers();
+    });
+
+    it.each(['resolve', 'reject'] as const)(
+        'waits for fatal reporting to %s before starting the crash delay',
+        async outcome => {
+            let settle!: () => void;
+            const pending = new Promise<void>((resolve, reject) => {
+                settle =
+                    outcome === 'resolve'
+                        ? resolve
+                        : () => reject(Error('native'));
+            });
+            const reporter = {
+                addError: jest.fn().mockResolvedValue(undefined)
+            };
+            reporter.addError.mockReturnValueOnce(pending);
+            DdRumErrorTracking.startTracking(reporter);
+            DdRumErrorTracking.onGlobalError(Error('fatal'), true);
+
+            await jest.advanceTimersByTimeAsync(250);
+            expect(baseErrorHandlerCalled).toBe(false);
+            console.error('while native reporting is pending');
+            await jest.advanceTimersByTimeAsync(0);
+            expect(baseConsoleErrorCalled).toBe(true);
+
+            baseConsoleErrorCalled = false;
+            settle();
+            await jest.advanceTimersByTimeAsync(49);
+            expect(baseErrorHandlerCalled).toBe(false);
+            console.error('during the crash-context delay');
+            await jest.advanceTimersByTimeAsync(0);
+            expect(baseConsoleErrorCalled).toBe(true);
+            await jest.advanceTimersByTimeAsync(1);
+            expect(baseErrorHandlerCalled).toBe(true);
+            expect(reporter.addError).toHaveBeenCalledTimes(3);
+            expect(jest.getTimerCount()).toBe(0);
+        }
+    );
+
+    it.each([false, undefined])(
+        'bounds a stalled non-fatal report and preserves the crash delay: %p',
+        async isFatal => {
+            DdRumErrorTracking.startTracking({
+                addError: () => new Promise(() => undefined)
+            });
+            DdRumErrorTracking.onGlobalError(Error('non-fatal'), isFatal);
+            await jest.advanceTimersByTimeAsync(99);
+            expect(baseErrorHandlerCalled).toBe(false);
+            await jest.advanceTimersByTimeAsync(1);
+            expect(baseErrorHandlerCalled).toBe(true);
+            expect(jest.getTimerCount()).toBe(0);
+        }
+    );
+
+    it('forwards console errors when SDK reporting never resolves', async () => {
+        DdRumErrorTracking.startTracking({
+            addError: () => new Promise(() => undefined)
+        });
+        console.error('console error');
+        await jest.advanceTimersByTimeAsync(49);
+        expect(baseConsoleErrorCalled).toBe(false);
+        await jest.advanceTimersByTimeAsync(1);
+        expect(baseConsoleErrorCalled).toBe(true);
+        expect(jest.getTimerCount()).toBe(0);
+    });
 });

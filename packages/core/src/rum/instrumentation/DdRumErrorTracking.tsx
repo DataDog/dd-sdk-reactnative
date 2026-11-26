@@ -73,32 +73,29 @@ export class DdRumErrorTracking {
     }
 
     static onGlobalError = (error: any, isFatal?: boolean): void => {
-        this.reportSafely(() =>
-            this.reportError(
-                getErrorMessage(error),
-                ErrorSource.SOURCE,
-                getErrorStackTrace(error),
-                {
-                    '_dd.error.is_crash': isFatal,
-                    '_dd.error.raw': errorEncoder.encode(error)
+        this.reportSafely(
+            () =>
+                this.reportError(
+                    getErrorMessage(error),
+                    ErrorSource.SOURCE,
+                    getErrorStackTrace(error),
+                    {
+                        '_dd.error.is_crash': isFatal,
+                        '_dd.error.raw': errorEncoder.encode(error)
+                    }
+                ),
+            isFatal
+        ).then(() =>
+            // The native update must settle before this crash-context delay.
+            executeWithDelay(() => {
+                DdRumErrorTracking.isInDefaultErrorHandler = true;
+                try {
+                    DdRumErrorTracking.defaultErrorHandler(error, isFatal);
+                } finally {
+                    DdRumErrorTracking.isInDefaultErrorHandler = false;
                 }
-            )
-        ).then(async () => {
-            DdRumErrorTracking.isInDefaultErrorHandler = true;
-            try {
-                // On real iOS devices, the crash context is not updated soon
-                // enough for the view update to contain the crash.
-                // Waiting for 50ms has low impact and ensures the crash context
-                // is updated before actually crashing the app.
-                await executeWithDelay(
-                    () =>
-                        DdRumErrorTracking.defaultErrorHandler(error, isFatal),
-                    50
-                );
-            } finally {
-                DdRumErrorTracking.isInDefaultErrorHandler = false;
-            }
-        });
+            }, 50)
+        );
     };
 
     static onConsoleError = (...params: unknown[]): void => {
@@ -149,14 +146,20 @@ export class DdRumErrorTracking {
         return this.reportError(message, ErrorSource.CONSOLE, stack);
     };
 
-    /** A failed or stalled SDK reporter must not suppress the previous handler. */
+    /** Fatal errors wait for the native update; other reporting has a stall cap. */
     private static reportSafely = async (
-        report: () => Promise<void>
+        report: () => Promise<void>,
+        waitForCompletion = false
     ): Promise<void> => {
         let timeout: ReturnType<typeof setTimeout> | undefined;
         try {
+            const pending = Promise.resolve(report()).catch(() => undefined);
+            if (waitForCompletion) {
+                await pending;
+                return;
+            }
             await Promise.race([
-                Promise.resolve(report()).catch(() => undefined),
+                pending,
                 new Promise<void>(resolve => {
                     timeout = setTimeout(resolve, 50);
                 })

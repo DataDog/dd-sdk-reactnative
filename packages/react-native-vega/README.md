@@ -176,8 +176,10 @@ The initializer added in RUM-20335 must use these configuration hooks:
   and before `Core::Start`, alongside the logging configuration hook.
 - `configureErrorTracking(configuration)` enables shared JavaScript error tracking
   with the Vega RUM reporter when `rumConfiguration.trackErrors` is `true`.
-  Importing the package does not install handlers. SDK reporting failures do not
-  prevent the app's existing error and console handlers from running.
+  Importing the package does not install handlers. Fatal errors wait for native
+  reporting to settle before the crash-context delay and the app's error handler.
+  Non-fatal and console reporting have a timeout. Reporting failures still reach
+  the app's existing handlers.
 
 These hooks keep initialization and provider setup in RUM-20335. Host native
 coverage can be enabled with `VEGA_TEST_CRASH_CONFIGURATION=ON`, using the SDK
