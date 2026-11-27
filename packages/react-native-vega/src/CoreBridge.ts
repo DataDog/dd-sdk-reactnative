@@ -49,7 +49,17 @@ const initialize: DdNativeSdkType['initialize'] = async configuration => {
             if (!native) {
                 throw Error('Vega native SDK is unavailable');
             }
-            const cleanup = await startHttpProxy();
+            if (
+                !configuration.rumConfiguration &&
+                !configuration.logsConfiguration
+            ) {
+                throw Error(
+                    'Vega SDK initialization requires a RUM or logging configuration'
+                );
+            }
+            const cleanup = isHttpProxyReady()
+                ? undefined
+                : await startHttpProxy();
             try {
                 if (!isHttpProxyReady()) {
                     throw Error('Vega HTTP transport did not start');
@@ -63,10 +73,12 @@ const initialize: DdNativeSdkType['initialize'] = async configuration => {
                         JSON.parse(JSON.stringify(serializable))
                     )) === false
                 ) {
-                    throw Error('Vega native SDK initialization failed');
+                    throw Error(
+                        'Vega native SDK initialization failed; check credentials and configure a supported RUM or logging feature'
+                    );
                 }
             } catch (error) {
-                cleanup();
+                cleanup?.();
                 throw error;
             }
         })();

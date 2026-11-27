@@ -16,7 +16,9 @@ describe('Vega transport import safety', () => {
     it('does not resolve a native module when importing the package', () => {
         jest.isolateModules(() => {
             // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-            require('../src');
+            const sdk = require('../src');
+            expect(sdk).not.toHaveProperty('startHttpProxy');
+            expect(sdk).not.toHaveProperty('stopHttpProxy');
         });
         expect(mockGet).not.toHaveBeenCalled();
     });

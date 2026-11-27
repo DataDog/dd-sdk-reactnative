@@ -4,7 +4,14 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { DatadogProvider as CoreProvider } from '@datadog/mobile-react-native';
+import { DatadogProviderState } from '@datadog/mobile-react-native/internal';
+import {
+    DatadogProvider as CoreProvider,
+    DatadogProviderConfiguration,
+    DdSdkReactNative as CoreSdk,
+    InternalLog,
+    SdkVerbosity
+} from '@datadog/mobile-react-native';
 import type { PartialInitializationConfiguration } from '@datadog/mobile-react-native';
 import React from 'react';
 import type { ComponentProps } from 'react';
@@ -12,11 +19,49 @@ import type { ComponentProps } from 'react';
 import { registerVegaBridge } from './CoreBridge';
 import { withVegaBridge } from './SdkInitialization';
 
-/** Uses the shared provider, including deferred setup and initialization callbacks. */
+type Props = ComponentProps<typeof CoreProvider>;
+
+const initializeProvider = async (
+    configuration: DatadogProviderConfiguration,
+    onInitialization?: () => void
+): Promise<void> => {
+    try {
+        await CoreSdk._initializeFromDatadogProvider(configuration);
+    } catch (error) {
+        DatadogProviderState._reset();
+        throw error;
+    }
+    try {
+        onInitialization?.();
+    } catch (error) {
+        InternalLog.log(
+            `Error running onInitialization callback ${error}`,
+            SdkVerbosity.WARN
+        );
+    }
+};
+
+/** Reuses shared setup; full-provider failure handling is specific to Vega. */
 export const DatadogProvider = Object.assign(
-    (props: ComponentProps<typeof CoreProvider>) => {
+    ({ configuration, onInitialization, children }: Props) => {
         registerVegaBridge();
-        return <CoreProvider {...props} />;
+        if (configuration instanceof DatadogProviderConfiguration) {
+            if (!DatadogProviderState.isInitialized) {
+                DatadogProviderState.setInitialized();
+                withVegaBridge(() =>
+                    initializeProvider(configuration, onInitialization)
+                );
+            }
+            return <>{children}</>;
+        }
+        return (
+            <CoreProvider
+                configuration={configuration}
+                onInitialization={onInitialization}
+            >
+                {children}
+            </CoreProvider>
+        );
     },
     {
         initialize: (

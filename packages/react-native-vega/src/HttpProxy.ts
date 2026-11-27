@@ -78,6 +78,7 @@ const enqueue = (operation: () => Promise<void>): Promise<void> => {
 };
 
 /**
+ * @internal Managed by SDK initialization; not part of the application API.
  * Forwards native uploads through fetch without recording them as RUM resources.
  * Await startup before enabling native uploads. Starting again replaces the
  * previous session; its cleanup cannot stop the replacement session.

@@ -62,13 +62,7 @@ const initializeDatadog = async (
     configuration: DatadogProviderConfiguration,
     onInitialization?: () => void
 ) => {
-    try {
-        await DdSdkReactNative._initializeFromDatadogProvider(configuration);
-    } catch {
-        DatadogProviderState._reset();
-        InternalLog.log('Datadog SDK initialization failed', SdkVerbosity.WARN);
-        return;
-    }
+    await DdSdkReactNative._initializeFromDatadogProvider(configuration);
     if (onInitialization) {
         try {
             onInitialization();

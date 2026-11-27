@@ -4,7 +4,6 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-export { startHttpProxy } from './HttpProxy';
 export { VegaSdk as DdSdkReactNative } from './SdkInitialization';
 export { DatadogProvider } from './DatadogProvider';
 

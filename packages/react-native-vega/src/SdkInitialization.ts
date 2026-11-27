@@ -22,9 +22,11 @@ export const withVegaBridge = async (
     try {
         registerVegaBridge();
         await operation();
-    } catch {
+    } catch (error) {
         InternalLog.log(
-            'Datadog Vega setup failed; the app can continue running',
+            error instanceof Error
+                ? error.message
+                : 'Datadog Vega setup failed; the app can continue running',
             SdkVerbosity.WARN
         );
     }

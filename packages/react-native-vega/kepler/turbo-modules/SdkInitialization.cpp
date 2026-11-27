@@ -53,6 +53,7 @@ bool initializeSdk(const JSObject &configuration) {
     const auto env = text(configuration, "env");
     if (token.empty() || env.empty()) return false;
     const auto rumSettings = nested(configuration, "rumConfiguration");
+    if (!rumSettings && !nested(configuration, "logsConfiguration")) return false;
     const auto applicationId = rumSettings ? text(*rumSettings, "applicationId") : std::string();
     if (rumSettings) {
         const auto id = datadog::UUID::Parse(applicationId);

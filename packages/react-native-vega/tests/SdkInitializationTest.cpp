@@ -29,6 +29,10 @@ int main(int argc, char **argv) {
             {"_dd.version", std::string("2.1-beta")}, {"_dd.sdk_version", std::string("3.13.0")}}},
         {"rumConfiguration", JSObject{{"applicationId", std::string("invalid")}}}};
     check(!initializeSdk(config), "invalid RUM identifier initialized the SDK");
+    auto missingRum = config;
+    missingRum.erase("rumConfiguration");
+    check(!initializeSdk(missingRum), "settings without a supported feature initialized the SDK");
+    check(!DatadogGlobalState::getInstance().getCore(), "failed setup retained a core");
     config["rumConfiguration"] = JSObject{{"applicationId", datadog::UUID::Random().ToString()}, {"sessionSampleRate", 0.0}};
     check(initializeSdk(config), "valid settings did not initialize the SDK");
     auto &state = DatadogGlobalState::getInstance();

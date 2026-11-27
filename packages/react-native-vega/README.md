@@ -6,14 +6,13 @@ requests are forwarded through JavaScript `fetch`; responses are returned to the
 native upload thread. Direct, provider-based, and deferred SDK initialization
 reuse core's shared configuration and automatic instrumentation.
 
-`startHttpProxy()` resolves to a cleanup function. Await it before starting the
-native SDK so the JavaScript listener and native emitter are ready for uploads.
-Starting again stops the previous session. Cleanup removes the listener, aborts
-active fetches where supported, and disarms native uploads, waking any pending
-requests. Uploads use a 25-second JavaScript deadline alongside native's
-30-second response wait. Timeouts and cancellation keep batches eligible for
-retry. SDK uploads bypass automatic Fetch and XHR resource tracking without
-adding headers or excluding app requests to the same URL.
+SDK initialization manages the HTTP transport internally. Applications initialize
+the SDK through `DdSdkReactNative.initialize(...)` or `DatadogProvider`; they do
+not need to start or stop the transport separately. Uploads use a 25-second
+JavaScript deadline alongside native's 30-second response wait. Timeouts and
+cancellation keep batches eligible for retry. SDK uploads bypass automatic Fetch
+and XHR resource tracking without adding headers or excluding app requests to
+the same URL.
 
 Native modules are resolved on use, keeping package imports safe on other
 platforms. This package follows the shared repository version with a `-beta`
@@ -58,11 +57,22 @@ from this package. Core's configuration translation, event mappers, attribute
 encoders, buffering, and initialization modes are reused through lazy Kepler
 adapters. Importing the package does not resolve native modules.
 
+The core must successfully register at least one configured native feature before
+it can start. A configuration without RUM or logging cannot start the core and
+leaves JavaScript uninitialized. Logging-only setup also requires the native logging
+bridge.
+
 Setup waits for the HTTP listener and emitter before starting native upload
-threads. Failed native setup leaves JavaScript uninitialized and permits retry;
-provider callbacks run only after initialization succeeds. Consent changes use
-the C++ SDK. Clearing pending data queues consent revocation and restoration,
-retaining the app's configured consent policy.
+threads. It reuses a ready internal transport and cleans up a transport it started
+if initialization fails. Failed native setup leaves JavaScript uninitialized
+and permits retry; provider callbacks run only after initialization succeeds.
+Vega handles provider failures in its own wrapper and reports warnings through
+core's existing logger, respecting the configured verbosity. Consent changes use
+the C++ SDK.
+
+`clearAllData()` currently revokes and restores consent. With C++ SDK 0.10.0,
+this removes pending-consent batches only; granted-consent batches remain
+eligible for upload. Clearing both stores requires a native C++ clear-data API.
 
 The optional `VEGA_TEST_INITIALIZATION=ON` host test needs
 `DATADOG_CPP_SOURCE_DIR`, `KEPLER_INCLUDE_DIR`, and `NODE_API_INCLUDE_DIR`.
