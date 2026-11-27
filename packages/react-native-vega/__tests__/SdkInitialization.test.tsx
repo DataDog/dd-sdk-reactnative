@@ -30,6 +30,15 @@ import { DatadogProvider } from '../src/DatadogProvider';
 import { startHttpProxy, isHttpProxyReady } from '../src/HttpProxy';
 import { DdSdkReactNative as VegaSdk } from '../src';
 
+// Use the declared provider list so missing native registrations are visible.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockAutolink = require('../react-native.config.js').dependency.platforms
+    .kepler.autolink;
+
+const mockRegisteredModules = new Set(
+    Object.values(mockAutolink).flatMap((entry: any) => entry.turbomodules)
+);
+
 const mockNative = {
     initialize: jest.fn(),
     startHttpProxy: jest.fn(),
@@ -41,8 +50,16 @@ const mockNative = {
 const mockRum = { startResource: jest.fn(), addAction: jest.fn() };
 jest.mock('@amazon-devices/keplerscript-turbomodule-api', () => ({
     TurboModuleRegistry: {
-        get: (name: string) =>
-            name === 'DdSdk' ? mockNative : name === 'DdRum' ? mockRum : null
+        get: (name: string) => {
+            if (!mockRegisteredModules.has(name)) {
+                return null;
+            }
+            return name === 'DdSdk'
+                ? mockNative
+                : name === 'DdRum'
+                ? mockRum
+                : null;
+        }
     }
 }));
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => ({
