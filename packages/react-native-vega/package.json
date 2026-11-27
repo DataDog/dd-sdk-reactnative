@@ -62,6 +62,7 @@
     "jest": {
         "preset": "react-native",
         "moduleNameMapper": {
+            "^@datadog/mobile-react-native$": "<rootDir>/../core/src/index.tsx",
             "^@datadog/mobile-react-native/internal$": "<rootDir>/../core/src/internal.ts"
         },
         "modulePathIgnorePatterns": [

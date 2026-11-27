@@ -9,6 +9,7 @@ import type { DdNativeSdkType } from '../nativeModulesTypes';
 import { getNativeDdSdk } from '../specs/NativeDdSdk';
 
 import type { AttributeEncoder } from './AttributesEncoding/types';
+import { getNativeModuleOverrides } from './NativeModuleOverrides';
 
 export type DdSdkType = DdNativeSdkType & {
     readonly attributeEncoders: AttributeEncoder<any>[];
@@ -23,7 +24,10 @@ export class DdSdkWrapper implements DdNativeSdkType {
     // Resolved on use rather than at import, so importing this module is safe
     // on platforms without the native module (e.g. Vega).
     private get nativeSdk(): DdNativeSdkType {
-        return getNativeDdSdk() as DdNativeSdkType;
+        return (
+            getNativeModuleOverrides().sdk ??
+            (getNativeDdSdk() as DdNativeSdkType)
+        );
     }
 
     initialize(configuration: DdSdkNativeConfiguration): Promise<void> {

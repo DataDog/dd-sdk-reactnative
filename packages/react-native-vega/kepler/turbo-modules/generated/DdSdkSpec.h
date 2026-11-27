@@ -32,6 +32,9 @@ protected:
 public:
   void aggregateMethods(com::amazon::kepler::turbomodule::MethodAggregator<KeplerTurboModule>& methodAggregator) const noexcept override;
 
+  virtual com::amazon::kepler::turbomodule::Promise initialize(com::amazon::kepler::turbomodule::JSObject configuration) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise setTrackingConsent(std::string trackingConsent) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise clearAllData() = 0;
   virtual com::amazon::kepler::turbomodule::Promise startHttpProxy() = 0;
   virtual com::amazon::kepler::turbomodule::Promise sendTelemetryLog(std::string message, com::amazon::kepler::turbomodule::JSObject attributes, com::amazon::kepler::turbomodule::JSObject config) = 0;
   virtual com::amazon::kepler::turbomodule::Promise telemetryDebug(std::string message) = 0;
