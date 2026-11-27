@@ -17,6 +17,12 @@ export interface DdSdk extends KeplerTurboModule {
     removeAttribute(key: string): Promise<void>;
     addAttributes(attributes: Object): Promise<void>;
     removeAttributes(keys: string[]): Promise<void>;
+    setUserInfo(info: Object): Promise<void>;
+    clearUserInfo(): Promise<void>;
+    addUserExtraInfo(info: Object): Promise<void>;
+    setAccountInfo(info: Object): Promise<void>;
+    clearAccountInfo(): Promise<void>;
+    addAccountExtraInfo(info: Object): Promise<void>;
     startHttpProxy(): Promise<boolean>;
     // Compatibility no-ops for shared core features unavailable on Vega.
     sendTelemetryLog(

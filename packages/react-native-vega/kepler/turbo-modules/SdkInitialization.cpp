@@ -5,6 +5,7 @@
 // (https://www.datadoghq.com/). Copyright 2016-Present Datadog, Inc.
 
 #include "SdkInitialization.h"
+#include "LoggingConfiguration.h"
 #include "DatadogGlobalState.h"
 #include "EnumParsers.h"
 #include "datadog/uuid.hpp"
@@ -98,6 +99,9 @@ bool initializeSdk(const JSObject &configuration) {
                 }, rate->second);
             }
             state.setRum(datadog::Rum::Register(core, rumConfig));
+        }
+        if (const auto logs = nested(configuration, "logsConfiguration")) {
+            configureLogging(core, *logs);
         }
         if (!core->Start()) {
             state.reset();

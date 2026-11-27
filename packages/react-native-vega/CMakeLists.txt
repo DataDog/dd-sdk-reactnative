@@ -48,17 +48,23 @@ else()
     )
 endif()
 FetchContent_MakeAvailable(Datadog)
+include(cmake/DatadogLoggingCompatibility.cmake)
+datadog_vega_patch_logging_registration("${datadog_SOURCE_DIR}")
 
 set(HEADERS
     kepler/turbo-modules/generated/DdRumSpec.h
     kepler/turbo-modules/DdRum.h
     kepler/turbo-modules/RumBridge.h
     kepler/turbo-modules/SdkInitialization.h
+    kepler/turbo-modules/generated/DdLogsSpec.h
+    kepler/turbo-modules/DdLogs.h
+    kepler/turbo-modules/LoggingConfiguration.h
     kepler/turbo-modules/generated/DdSdkSpec.h
     kepler/turbo-modules/DdSdk.h
     kepler/turbo-modules/EnumParsers.h
     kepler/turbo-modules/AttributeConverter.h
     kepler/turbo-modules/DatadogGlobalState.h
+    kepler/turbo-modules/FeatureAttributes.h
     kepler/turbo-modules/HttpJsProxy.h
 )
 
@@ -66,6 +72,9 @@ set(SOURCES
     kepler/turbo-modules/generated/DdRumSpec.cpp
     kepler/turbo-modules/DdRum.cpp
     kepler/turbo-modules/SdkInitialization.cpp
+    kepler/turbo-modules/generated/DdLogsSpec.cpp
+    kepler/turbo-modules/DdLogs.cpp
+    kepler/turbo-modules/LoggingConfiguration.cpp
     kepler/turbo-modules/generated/DdSdkSpec.cpp
     kepler/turbo-modules/DdSdk.cpp
     kepler/turbo-modules/EnumParsers.cpp

@@ -31,6 +31,7 @@
         "kepler/turbo-modules/*.h",
         "kepler/turbo-modules/generated/**",
         "CMakeLists.txt",
+        "cmake/**",
         "react-native.config.js"
     ],
     "types": "lib/typescript/index.d.ts",
@@ -44,7 +45,7 @@
         "test": "jest",
         "lint": "eslint src __tests__",
         "prepare": "bob build",
-        "codegen": "keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdSdk.ts -o kepler/turbo-modules/ --namespace DdSdkTurboModule --className DdSdk && keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdRum.ts -o kepler/turbo-modules/ --namespace DdRumTurboModule --className DdRum",
+        "codegen": "keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdSdk.ts -o kepler/turbo-modules/ --namespace DdSdkTurboModule --className DdSdk && keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdRum.ts -o kepler/turbo-modules/ --namespace DdRumTurboModule --className DdRum && keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdLogs.ts -o kepler/turbo-modules/ --namespace DdLogsTurboModule --className DdLogs",
         "test:native": "cmake -S tests -B build/host-tests && cmake --build build/host-tests && ctest --test-dir build/host-tests --output-on-failure"
     },
     "dependencies": {

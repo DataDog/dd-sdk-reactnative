@@ -39,6 +39,12 @@ public:
   virtual com::amazon::kepler::turbomodule::Promise removeAttribute(std::string key) = 0;
   virtual com::amazon::kepler::turbomodule::Promise addAttributes(com::amazon::kepler::turbomodule::JSObject attributes) = 0;
   virtual com::amazon::kepler::turbomodule::Promise removeAttributes(std::vector<std::string> keys) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise setUserInfo(com::amazon::kepler::turbomodule::JSObject info) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise clearUserInfo() = 0;
+  virtual com::amazon::kepler::turbomodule::Promise addUserExtraInfo(com::amazon::kepler::turbomodule::JSObject info) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise setAccountInfo(com::amazon::kepler::turbomodule::JSObject info) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise clearAccountInfo() = 0;
+  virtual com::amazon::kepler::turbomodule::Promise addAccountExtraInfo(com::amazon::kepler::turbomodule::JSObject info) = 0;
   virtual com::amazon::kepler::turbomodule::Promise startHttpProxy() = 0;
   virtual com::amazon::kepler::turbomodule::Promise sendTelemetryLog(std::string message, com::amazon::kepler::turbomodule::JSObject attributes, com::amazon::kepler::turbomodule::JSObject config) = 0;
   virtual com::amazon::kepler::turbomodule::Promise telemetryDebug(std::string message) = 0;

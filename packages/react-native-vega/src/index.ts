@@ -55,3 +55,4 @@ export type {
     PrimitiveValue,
     FlagsClient
 } from '@datadog/mobile-react-native';
+export { DdLogs } from './DdLogsVega';

@@ -11,6 +11,7 @@
 
 #include "datadog/core.hpp"
 #include "datadog/rum.hpp"
+#include "datadog/logging.hpp"
 
 namespace datadog_rn_vega {
 
@@ -29,6 +30,11 @@ class DatadogGlobalState {
     void setRum(std::shared_ptr<datadog::Rum> rum);
     std::shared_ptr<datadog::Rum> getRum();
 
+    void setLogging(std::shared_ptr<datadog::Logging> logging);
+    std::shared_ptr<datadog::Logging> getLogging();
+    void setLogger(std::shared_ptr<datadog::Logger> logger);
+    std::shared_ptr<datadog::Logger> getLogger();
+
     /** Clears the core and all registered feature pointers. */
     void reset();
 
@@ -40,6 +46,8 @@ class DatadogGlobalState {
     std::mutex mutex_;
     std::shared_ptr<datadog::Core> core_;
     std::shared_ptr<datadog::Rum> rum_;
+    std::shared_ptr<datadog::Logging> logging_;
+    std::shared_ptr<datadog::Logger> logger_;
 };
 
 }  // namespace datadog_rn_vega

@@ -34,9 +34,11 @@ int main(int argc, char **argv) {
     check(!initializeSdk(missingRum), "settings without a supported feature initialized the SDK");
     check(!DatadogGlobalState::getInstance().getCore(), "failed setup retained a core");
     config["rumConfiguration"] = JSObject{{"applicationId", datadog::UUID::Random().ToString()}, {"sessionSampleRate", 0.0}};
+    config["logsConfiguration"] = JSObject{{"bundleLogsWithRum", true}};
     check(initializeSdk(config), "valid settings did not initialize the SDK");
     auto &state = DatadogGlobalState::getInstance();
     const auto core = state.getCore();
+    check(bool(state.getLogging()) && bool(state.getLogger()), "initialization did not configure logging");
     check(bool(core) && bool(state.getRum()), "initialized feature handles are missing");
     check(initializeSdk(config) && state.getCore() == core, "repeated setup replaced the core");
     check(setSdkConsent("not_granted") && setSdkConsent("pending"), "consent changes failed");
