@@ -249,42 +249,64 @@ it('keeps resource tracking options on the shared instrumentation path', async (
     );
 });
 
-it('retries provider setup after failure and calls the callback only on success', async () => {
-    mockNative.initialize.mockResolvedValueOnce(false);
-    const done = jest.fn();
-    const config = new DatadogProviderConfiguration(
-        'test-token',
-        'test',
-        TrackingConsent.PENDING,
-        {
-            rumConfiguration: {
-                applicationId: '11111111-1111-4111-8111-111111111111',
-                trackErrors: false,
-                trackInteractions: false,
-                trackResources: false
-            }
+it.each(['transport', 'native', 'rejection'] as const)(
+    'contains %s provider failure without retrying on later renders',
+    async failure => {
+        if (failure === 'transport') {
+            mockNative.startHttpProxy.mockResolvedValueOnce(false);
+        } else if (failure === 'native') {
+            mockNative.initialize.mockResolvedValueOnce(false);
+        } else {
+            mockNative.initialize.mockRejectedValueOnce(
+                new Error('native setup failed')
+            );
         }
-    );
-    const component = (
-        <DatadogProvider configuration={config} onInitialization={done} />
-    );
-    let tree!: renderer.ReactTestRenderer;
-    await act(async () => {
-        tree = renderer.create(component);
-        await flush();
-    });
-    expect(done).not.toHaveBeenCalled();
-    expect(DatadogProviderState.isInitialized).toBe(false);
-    await act(async () => {
-        tree.update(
-            <DatadogProvider configuration={config} onInitialization={done} />
+        const done = jest.fn();
+        const child = jest.fn(() => null);
+        const config = new DatadogProviderConfiguration(
+            'test-token',
+            'test',
+            TrackingConsent.PENDING,
+            {
+                rumConfiguration: {
+                    applicationId: '11111111-1111-4111-8111-111111111111',
+                    trackErrors: false,
+                    trackResources: false,
+                    trackInteractions: false
+                }
+            }
         );
-        await flush();
-    });
-    expect(done).toHaveBeenCalledTimes(1);
-    expect(mockNative.initialize).toHaveBeenCalledTimes(2);
-    act(() => tree.unmount());
-});
+        let tree!: renderer.ReactTestRenderer;
+        const Child = child;
+        await act(async () => {
+            tree = renderer.create(
+                <DatadogProvider configuration={config} onInitialization={done}>
+                    <Child />
+                </DatadogProvider>
+            );
+            await flush();
+        });
+        expect(child).toHaveBeenCalled();
+        expect(done).not.toHaveBeenCalled();
+        expect(GlobalState.isInitialized).toBe(false);
+        expect(DatadogProviderState.isInitialized).toBe(true);
+        await act(async () => {
+            tree.update(
+                <DatadogProvider configuration={config} onInitialization={done}>
+                    <Child />
+                </DatadogProvider>
+            );
+            await flush();
+        });
+        expect(mockNative.startHttpProxy).toHaveBeenCalledTimes(1);
+        expect(mockNative.initialize).toHaveBeenCalledTimes(
+            failure === 'transport' ? 0 : 1
+        );
+        expect(done).not.toHaveBeenCalled();
+        expect(GlobalState.isInitialized).toBe(false);
+        act(() => tree.unmount());
+    }
+);
 
 it.each([true, false])(
     'reuses a ready internal proxy when native initialization returns %s',

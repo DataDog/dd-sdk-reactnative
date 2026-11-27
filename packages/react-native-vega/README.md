@@ -64,11 +64,12 @@ bridge.
 
 Setup waits for the HTTP listener and emitter before starting native upload
 threads. It reuses a ready internal transport and cleans up a transport it started
-if initialization fails. Failed native setup leaves JavaScript uninitialized
-and permits retry; provider callbacks run only after initialization succeeds.
-Vega handles provider failures in its own wrapper and reports warnings through
-core's existing logger, respecting the configured verbosity. Consent changes use
-the C++ SDK.
+if initialization fails. Failed native setup leaves JavaScript uninitialized.
+Direct `initialize()` calls can be explicitly retried after failure. Failed
+provider setup does not trigger another attempt on subsequent renders; provider
+callbacks run only after initialization succeeds. Vega contains provider failures
+and reports warnings through core's existing logger, respecting the configured
+verbosity. Consent changes use the C++ SDK.
 
 `clearAllData()` currently revokes and restores consent. With C++ SDK 0.10.0,
 this removes pending-consent batches only; granted-consent batches remain

@@ -25,12 +25,7 @@ const initializeProvider = async (
     configuration: DatadogProviderConfiguration,
     onInitialization?: () => void
 ): Promise<void> => {
-    try {
-        await CoreSdk._initializeFromDatadogProvider(configuration);
-    } catch (error) {
-        DatadogProviderState._reset();
-        throw error;
-    }
+    await CoreSdk._initializeFromDatadogProvider(configuration);
     try {
         onInitialization?.();
     } catch (error) {
