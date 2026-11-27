@@ -7,8 +7,19 @@
 import type { KeplerTurboModule } from '@amazon-devices/keplerscript-turbomodule-api';
 import { TurboModuleRegistry } from '@amazon-devices/keplerscript-turbomodule-api';
 
+// Kepler codegen requires Object for bridge dictionaries.
+/* eslint-disable @typescript-eslint/ban-types */
 export interface DdSdk extends KeplerTurboModule {
     startHttpProxy(): Promise<void>;
+    // Compatibility no-ops for shared core features unavailable on Vega.
+    sendTelemetryLog(
+        message: string,
+        attributes: Object,
+        config: Object
+    ): Promise<void>;
+    telemetryDebug(message: string): Promise<void>;
+    telemetryError(message: string, stack: string, kind: string): Promise<void>;
+    consumeWebviewEvent(message: string): Promise<void>;
     stopHttpProxy(): Promise<void>;
     httpResponse(requestId: string, statusCode: number): Promise<void>;
 }

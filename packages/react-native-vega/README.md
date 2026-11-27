@@ -45,3 +45,8 @@ its currently checked-out branch instead of downloading the pinned release:
 ```sh
 vega build -b Release --cmakeFlags=-DDatadog_SOURCE_DIR=/path/to/dd-sdk-cpp
 ```
+
+Telemetry and WebView-event bridge methods remain compatibility no-ops on Vega.
+They resolve without doing work, including when shared core calls them directly.
+Babel interaction telemetry uses the shared SDK wrapper and cannot interrupt the
+application's press handler when telemetry is missing or fails.

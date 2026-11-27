@@ -4,7 +4,7 @@
  * Copyright 2016-Present Datadog, Inc.
  */
 
-import { getNativeDdSdk } from '../../../specs/NativeDdSdk';
+import { DdSdk } from '../../../sdk/DdSdk';
 import { getGlobalInstance } from '../../../utils/singletonUtils';
 import { DefaultTimeProvider } from '../../../utils/time-provider/DefaultTimeProvider';
 import type { TimeProvider } from '../../../utils/time-provider/TimeProvider';
@@ -123,6 +123,14 @@ class BabelInteractionTracking {
             : output;
     }
 
+    private reportTelemetry(send: () => Promise<void>): void {
+        try {
+            Promise.resolve(send()).catch(() => undefined);
+        } catch {
+            // Unsupported or failing telemetry must not interrupt app handlers.
+        }
+    }
+
     wrapRumAction(
         func: (...args: any[]) => any,
         action: RumActionType,
@@ -130,13 +138,14 @@ class BabelInteractionTracking {
     ): (...args: any[]) => any {
         return (...args: any[]) => {
             if (!this.telemetrySent) {
-                getNativeDdSdk()?.sendTelemetryLog(
-                    BABEL_PLUGIN_TELEMETRY,
-                    this.getTelemetryConfig(),
-                    { onlyOnce: true }
-                );
-
                 this.telemetrySent = true;
+                this.reportTelemetry(() =>
+                    DdSdk.sendTelemetryLog(
+                        BABEL_PLUGIN_TELEMETRY,
+                        this.getTelemetryConfig(),
+                        { onlyOnce: true }
+                    )
+                );
             }
 
             const targetName = this.getTargetName(targetObject);
@@ -154,10 +163,12 @@ class BabelInteractionTracking {
                     )
                     .catch(e => {
                         if (e instanceof Error) {
-                            getNativeDdSdk()?.telemetryError(
-                                e.message,
-                                e.stack || '',
-                                'BabelActionTrack'
+                            this.reportTelemetry(() =>
+                                DdSdk.telemetryError(
+                                    e.message,
+                                    e.stack || '',
+                                    'BabelActionTrack'
+                                )
                             );
                         }
                     });

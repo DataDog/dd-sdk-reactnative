@@ -13,6 +13,24 @@ namespace DdSdkTurboModule {
 
 DdSdk::DdSdk() = default;
 
+namespace {
+// Shared core may call these APIs even though Vega has no corresponding feature.
+Promise compatibilityNoop() {
+    return Promise([](const std::shared_ptr<Promise> &promise) {
+        promise->resolve(true);
+    });
+}
+}
+
+Promise DdSdk::sendTelemetryLog(std::string, JSObject, JSObject) {
+    return compatibilityNoop();
+}
+Promise DdSdk::telemetryDebug(std::string) { return compatibilityNoop(); }
+Promise DdSdk::telemetryError(std::string, std::string, std::string) {
+    return compatibilityNoop();
+}
+Promise DdSdk::consumeWebviewEvent(std::string) { return compatibilityNoop(); }
+
 Promise DdSdk::startHttpProxy() {
     return Promise([this](const std::shared_ptr<Promise> &promise) {
         datadog_rn_vega::HttpRequestBridge::getInstance().setEmitFunction(
