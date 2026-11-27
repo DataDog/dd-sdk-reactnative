@@ -45,6 +45,7 @@ import {
     DATADOG_GRAPH_QL_VARIABLES_HEADER
 } from '../../../graphql/graphqlHeaders';
 import { compileHeaderCaptureConfig } from '../../../headerCapture/compileHeaderConfig';
+import { callWithoutResourceTracking } from '../../common/FetchProxyState';
 import { ResourceReporter } from '../../common/ResourceReporter';
 import { XHRProxy } from '../XHRProxy';
 import {
@@ -145,6 +146,32 @@ afterEach(() => {
 });
 
 describe('XHRProxy', () => {
+    it('excludes an SDK upload through XHR-backed fetch and still tracks app requests', async () => {
+        xhrProxy.onTrackingStart({
+            tracingSamplingRate: 100,
+            firstPartyHostsRegexMap: []
+        });
+        const url = 'https://proxy.example.com/upload';
+        const sdkXhr = new XMLHttpRequestMock();
+        callWithoutResourceTracking(() => {
+            sdkXhr.open('POST', url);
+            sdkXhr.send();
+        });
+        sdkXhr.notifyResponseArrived();
+        sdkXhr.complete(202, 'ok');
+        await flushPromises();
+        expect(DdNativeRum.startResource).not.toHaveBeenCalled();
+        expect(DdNativeRum.stopResource).not.toHaveBeenCalled();
+        const appXhr = new XMLHttpRequestMock();
+        appXhr.open('POST', url);
+        appXhr.send();
+        appXhr.notifyResponseArrived();
+        appXhr.complete(200, 'ok');
+        await flushPromises();
+        expect(DdNativeRum.startResource).toHaveBeenCalledTimes(1);
+        expect(DdNativeRum.stopResource).toHaveBeenCalledTimes(1);
+    });
+
     describe('resource interception', () => {
         it('intercepts XHR request when startTracking() + XHR.open() + XHR.send()', async () => {
             // GIVEN

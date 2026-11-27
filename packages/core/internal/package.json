@@ -1,6 +1,0 @@
-{
-    "private": true,
-    "main": "../lib/commonjs/internal.js",
-    "module": "../lib/module/internal.js",
-    "types": "../lib/typescript/internal.d.ts"
-}
