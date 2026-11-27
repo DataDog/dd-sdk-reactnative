@@ -53,8 +53,19 @@ std::shared_ptr<datadog::Logger> DatadogGlobalState::getLogger() {
     return logger_;
 }
 
+void DatadogGlobalState::setCrashReporting(std::shared_ptr<datadog::CrashReporting> value) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    crashReporting_ = std::move(value);
+}
+
+std::shared_ptr<datadog::CrashReporting> DatadogGlobalState::getCrashReporting() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return crashReporting_;
+}
+
 void DatadogGlobalState::reset() {
     std::lock_guard<std::mutex> lock(mutex_);
+    crashReporting_.reset();
     logger_.reset();
     logging_.reset();
     rum_.reset();

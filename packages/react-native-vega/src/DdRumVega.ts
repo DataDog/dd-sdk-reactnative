@@ -9,6 +9,7 @@ import type {
     FeatureOperationFailure
 } from '@datadog/mobile-react-native';
 
+import { errorContext } from './ErrorContext';
 import { callNative } from './callNative';
 import { getNativeDdRum } from './turbo-modules/NativeDdRum';
 import type { DdRum as NativeDdRum } from './turbo-modules/NativeDdRum';
@@ -115,7 +116,7 @@ class DdRumVega {
                 message,
                 source,
                 stacktrace,
-                context,
+                errorContext(context),
                 timestampMs,
                 fingerprint
             )

@@ -37,13 +37,22 @@ int main(int argc, char **argv) {
     config["logsConfiguration"] = JSObject{{"bundleLogsWithRum", true}};
     check(initializeSdk(config), "valid settings did not initialize the SDK");
     auto &state = DatadogGlobalState::getInstance();
-    const auto core = state.getCore();
+    auto core = state.getCore();
     check(bool(state.getLogging()) && bool(state.getLogger()), "initialization did not configure logging");
+    check(!state.getCrashReporting(), "native crashes were enabled by default");
     check(bool(core) && bool(state.getRum()), "initialized feature handles are missing");
     check(initializeSdk(config) && state.getCore() == core, "repeated setup replaced the core");
     check(setSdkConsent("not_granted") && setSdkConsent("pending"), "consent changes failed");
     check(clearSdkData() && state.getCore() == core, "clearing data replaced or stopped the core");
     core->Stop();
+    state.reset();
+    core.reset();
+    config["rumConfiguration"] = JSObject{
+        {"applicationId", datadog::UUID::Random().ToString()},
+        {"nativeCrashReportEnabled", true}, {"sessionSampleRate", 0.0}};
+    check(initializeSdk(config), "crash-enabled settings did not initialize");
+    check(bool(state.getCrashReporting()), "initialization did not configure native crashes");
+    state.getCore()->Stop();
     state.reset();
     std::cout << "Native SDK initialization tests passed" << std::endl;
 }

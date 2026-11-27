@@ -10,6 +10,7 @@
 #include <mutex>
 
 #include "datadog/core.hpp"
+#include "datadog/crash_reporting.hpp"
 #include "datadog/rum.hpp"
 #include "datadog/logging.hpp"
 
@@ -35,6 +36,9 @@ class DatadogGlobalState {
     void setLogger(std::shared_ptr<datadog::Logger> logger);
     std::shared_ptr<datadog::Logger> getLogger();
 
+    void setCrashReporting(std::shared_ptr<datadog::CrashReporting> crashReporting);
+    std::shared_ptr<datadog::CrashReporting> getCrashReporting();
+
     /** Clears the core and all registered feature pointers. */
     void reset();
 
@@ -45,6 +49,7 @@ class DatadogGlobalState {
 
     std::mutex mutex_;
     std::shared_ptr<datadog::Core> core_;
+    std::shared_ptr<datadog::CrashReporting> crashReporting_;
     std::shared_ptr<datadog::Rum> rum_;
     std::shared_ptr<datadog::Logging> logging_;
     std::shared_ptr<datadog::Logger> logger_;

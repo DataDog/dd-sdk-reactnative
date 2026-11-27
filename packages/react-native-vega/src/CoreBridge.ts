@@ -16,6 +16,7 @@ import type {
     DdNativeSdkType
 } from '@datadog/mobile-react-native/internal';
 
+import { buildApplicationMetadata } from './ApplicationMetadata';
 import { isHttpProxyReady, startHttpProxy } from './HttpProxy';
 import { getNativeDdSdk } from './turbo-modules/NativeDdSdk';
 
@@ -64,8 +65,25 @@ const initialize: DdNativeSdkType['initialize'] = async configuration => {
                 if (!isHttpProxyReady()) {
                     throw Error('Vega HTTP transport did not start');
                 }
+                // Core already combines an explicit app version and its suffix.
+                const additional = configuration.additionalConfiguration as
+                    | Record<string, unknown>
+                    | undefined;
+                const version = additional?.['_dd.version'];
+                const suffix = additional?.['_dd.version_suffix'];
+                const metadata = buildApplicationMetadata({
+                    service: configuration.service,
+                    version: typeof version === 'string' ? version : undefined,
+                    versionSuffix:
+                        !version && typeof suffix === 'string'
+                            ? suffix.replace(/^-/, '')
+                            : undefined,
+                    additionalConfiguration: additional
+                });
                 const serializable = {
                     ...configuration,
+                    service: metadata.service,
+                    additionalConfiguration: metadata.additionalConfiguration,
                     attributeEncoders: undefined
                 };
                 if (
