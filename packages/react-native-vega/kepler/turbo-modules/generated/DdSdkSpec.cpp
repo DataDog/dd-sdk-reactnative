@@ -21,6 +21,10 @@ void DdSdkSpec::aggregateMethods(MethodAggregator<KeplerTurboModule>& methodAggr
   methodAggregator.addMethod("initialize", &DdSdkSpec::initialize);
   methodAggregator.addMethod("setTrackingConsent", &DdSdkSpec::setTrackingConsent);
   methodAggregator.addMethod("clearAllData", &DdSdkSpec::clearAllData);
+  methodAggregator.addMethod("addAttribute", &DdSdkSpec::addAttribute);
+  methodAggregator.addMethod("removeAttribute", &DdSdkSpec::removeAttribute);
+  methodAggregator.addMethod("addAttributes", &DdSdkSpec::addAttributes);
+  methodAggregator.addMethod("removeAttributes", &DdSdkSpec::removeAttributes);
   methodAggregator.addMethod("startHttpProxy", &DdSdkSpec::startHttpProxy);
   methodAggregator.addMethod("sendTelemetryLog", &DdSdkSpec::sendTelemetryLog);
   methodAggregator.addMethod("telemetryDebug", &DdSdkSpec::telemetryDebug);

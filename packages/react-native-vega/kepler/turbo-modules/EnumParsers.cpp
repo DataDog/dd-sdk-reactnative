@@ -7,8 +7,19 @@
 #include "EnumParsers.h"
 
 namespace datadog_rn_vega {
+namespace {
+std::string uppercaseAscii(std::string value) {
+    for (char& c : value) {
+        if (c >= 'a' && c <= 'z') {
+            c = static_cast<char>(c - 'a' + 'A');
+        }
+    }
+    return value;
+}
+}  // namespace
 
-datadog::RumActionType parseActionType(const std::string& type) {
+datadog::RumActionType parseActionType(const std::string& input) {
+    const auto type = uppercaseAscii(input);
     if (type == "TAP") return datadog::RumActionType::Tap;
     if (type == "SCROLL") return datadog::RumActionType::Scroll;
     if (type == "SWIPE") return datadog::RumActionType::Swipe;
@@ -18,7 +29,8 @@ datadog::RumActionType parseActionType(const std::string& type) {
     return datadog::RumActionType::Custom;
 }
 
-datadog::RumResourceMethod parseResourceMethod(const std::string& method) {
+datadog::RumResourceMethod parseResourceMethod(const std::string& input) {
+    const auto method = uppercaseAscii(input);
     if (method == "GET") return datadog::RumResourceMethod::Get;
     if (method == "POST") return datadog::RumResourceMethod::Post;
     if (method == "PUT") return datadog::RumResourceMethod::Put;
@@ -46,7 +58,8 @@ datadog::RumResourceType parseResourceType(const std::string& kind) {
     return datadog::RumResourceType::Unknown;
 }
 
-datadog::RumErrorSource parseErrorSource(const std::string& source) {
+datadog::RumErrorSource parseErrorSource(const std::string& input) {
+    const auto source = uppercaseAscii(input);
     if (source == "NETWORK") return datadog::RumErrorSource::Network;
     if (source == "SOURCE") return datadog::RumErrorSource::Source;
     if (source == "CONSOLE") return datadog::RumErrorSource::Console;

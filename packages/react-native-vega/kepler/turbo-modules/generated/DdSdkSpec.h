@@ -35,6 +35,10 @@ public:
   virtual com::amazon::kepler::turbomodule::Promise initialize(com::amazon::kepler::turbomodule::JSObject configuration) = 0;
   virtual com::amazon::kepler::turbomodule::Promise setTrackingConsent(std::string trackingConsent) = 0;
   virtual com::amazon::kepler::turbomodule::Promise clearAllData() = 0;
+  virtual com::amazon::kepler::turbomodule::Promise addAttribute(std::string key, com::amazon::kepler::turbomodule::JSObject value) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise removeAttribute(std::string key) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise addAttributes(com::amazon::kepler::turbomodule::JSObject attributes) = 0;
+  virtual com::amazon::kepler::turbomodule::Promise removeAttributes(std::vector<std::string> keys) = 0;
   virtual com::amazon::kepler::turbomodule::Promise startHttpProxy() = 0;
   virtual com::amazon::kepler::turbomodule::Promise sendTelemetryLog(std::string message, com::amazon::kepler::turbomodule::JSObject attributes, com::amazon::kepler::turbomodule::JSObject config) = 0;
   virtual com::amazon::kepler::turbomodule::Promise telemetryDebug(std::string message) = 0;

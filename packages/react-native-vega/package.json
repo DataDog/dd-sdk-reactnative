@@ -44,7 +44,7 @@
         "test": "jest",
         "lint": "eslint src __tests__",
         "prepare": "bob build",
-        "codegen": "keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdSdk.ts -o kepler/turbo-modules/ --namespace DdSdkTurboModule --className DdSdk",
+        "codegen": "keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdSdk.ts -o kepler/turbo-modules/ --namespace DdSdkTurboModule --className DdSdk && keplerscript-turbomodule-api codegen src/turbo-modules/NativeDdRum.ts -o kepler/turbo-modules/ --namespace DdRumTurboModule --className DdRum",
         "test:native": "cmake -S tests -B build/host-tests && cmake --build build/host-tests && ctest --test-dir build/host-tests --output-on-failure"
     },
     "dependencies": {
